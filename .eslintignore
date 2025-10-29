@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+.next
+.turbo
+.docker
+docker
+coverage
+.vscode
+.pnp
+pnpm-lock.yaml
+/*.log

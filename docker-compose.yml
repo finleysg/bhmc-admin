@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: golf_admin
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: adminpw
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sqlite:
+    image: nouchka/sqlite3
+    restart: unless-stopped
+    volumes:
+      - ./docker/sqlite:/data
+    command: ["sqlite3", "/data/auth.db"]
+
+volumes:
+  mysql-data:
