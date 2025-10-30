@@ -1,4 +1,6 @@
 import { Module, Controller, Get } from "@nestjs/common"
+import { JwtAuthGuard } from "./auth/jwt.guard"
+import { APP_GUARD } from "@nestjs/core"
 
 @Controller()
 class HealthController {
@@ -11,6 +13,11 @@ class HealthController {
 @Module({
 	imports: [],
 	controllers: [HealthController],
-	providers: [],
+	providers: [
+		{
+			provide: APP_GUARD,
+			useClass: JwtAuthGuard,
+		},
+	],
 })
 export class AppModule {}

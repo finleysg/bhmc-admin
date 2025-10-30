@@ -5,14 +5,21 @@
 	"scripts": {
 		"dev": "next dev",
 		"build": "next build",
-		"start": "next start"
+		"start": "next start",
+		"seed:admin": "tsx scripts/seed-admin.ts"
 	},
 	"devDependencies": {
 		"@types/react": "^19.2.2",
 		"@types/react-dom": "^19.2.2",
-		"next": "14.0.0",
-		"react": "18.2.0",
-		"react-dom": "18.2.0",
+		"next": "16.0.1",
+		"react": "19.2.0",
+		"react-dom": "19.2.0",
+		"tsx": "^4.20.6",
 		"typescript": "^5.9.3"
+	},
+	"dependencies": {
+		"better-auth": "^1.3.34",
+		"better-sqlite3": "^12.4.1",
+		"kysely": "^0.28.8"
 	}
 }

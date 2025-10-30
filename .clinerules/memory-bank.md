@@ -3,7 +3,7 @@ description:
   Describes Cline's Memory Bank system, its structure, and workflows for maintaining project
   knowledge across sessions.
 author: https://github.com/nickbaumann98
-version: 1.0
+version: 1.1
 tags: ["memory-bank", "knowledge-base", "core-behavior", "documentation-protocol"]
 globs: ["memory-bank/**/*.md", "*"]
 ---
@@ -143,10 +143,44 @@ flowchart TD
     Start --> Process
 ```
 
-Note: When triggered by **update memory bank**, I MUST review every memory bank file, even if some
-don't require updates. Focus particularly on activeContext.md and progress.md as they track current
-state.
+## Updating Memory Bank During Multi-step Tasks (New Guidance)
 
-REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to
-previous work. It must be maintained with precision and clarity, as my effectiveness depends
-entirely on its accuracy.
+When a task involves multiple edits, long-running work, or user feedback, update the Memory Bank
+proactively to preserve context and make future sessions efficient:
+
+- At task start:
+
+  - Read ALL memory bank files (required).
+  - Add or update `activeContext.md` with the current goal and approach before making changes.
+
+- Mid-task (after a non-trivial milestone, e.g. creating auth flow, adding a global guard, or
+  creating seed scripts):
+
+  - Update `activeContext.md` with a short summary of what changed and why.
+  - Append to `progress.md` a brief note of current status and any known gaps (e.g., "CORS added;
+    .d.ts workaround present; seed script added").
+
+- On user feedback that changes strategy or preferences (example: "do not create .d.ts files"):
+
+  - Record the preference in `techContext.md` and `activeContext.md` so future work follows the same
+    conventions.
+  - If the preference is a policy-level change, request updating `.clinerules/` (for example, to add
+    a rule to Definition of Done).
+
+- On task completion:
+  - Ensure `progress.md` lists completed work and remaining tasks (if any).
+  - Update `activeContext.md` to reflect the new normal state and next steps.
+  - Include links or file paths to important new artifacts (e.g., `apps/web/scripts/seed-admin.ts`).
+
+### Minimum Content for Updates
+
+When updating during a task, include:
+
+- What changed (file paths and a one-line description)
+- Why it changed (decision rationale)
+- Any outstanding actions or follow-ups
+- Who approved the change (if applicable)
+
+REMEMBER: When requested to perform an "update memory bank" operation, review and update every
+memory-bank file. Focus particularly on `activeContext.md` and `progress.md` — they track the
+current state and are the most valuable for resuming work in a new session.
