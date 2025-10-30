@@ -9,6 +9,7 @@
 		"seed:admin": "tsx scripts/seed-admin.ts"
 	},
 	"devDependencies": {
+		"@better-auth/cli": "^1.3.34",
 		"@types/react": "^19.2.2",
 		"@types/react-dom": "^19.2.2",
 		"next": "16.0.1",

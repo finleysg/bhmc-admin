@@ -12,10 +12,9 @@
  * - BETTER_AUTH_JWT_SECRET: optional shared JWT secret (if you enable jwt plugin)
  */
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-// @ts-ignore: missing types for better-sqlite3 in this workspace
-import Database from "better-sqlite3"
 import { betterAuth } from "better-auth"
+import { admin, jwt } from "better-auth/plugins"
+import Database from "better-sqlite3"
 
 const dbPath = process.env.BETTER_AUTH_DATABASE || "./docker/sqlite/auth.db"
 const secret = process.env.BETTER_AUTH_SECRET
@@ -29,25 +28,20 @@ if (!secret) {
 
 const sqlite = new Database(dbPath)
 
-let plugins: any[] | undefined = undefined
-try {
-	// jwt plugin is optional — include if available and env var set
-	// Use dynamic require to avoid build-time type resolution issues.
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
-	const jwtPlugin = require("better-auth/plugins").jwt
-	if (process.env.BETTER_AUTH_JWT_SECRET && typeof jwtPlugin === "function") {
-		plugins = [jwtPlugin({ secret: process.env.BETTER_AUTH_JWT_SECRET })]
-	}
-} catch {
-	// plugin not installed — continue without it
-}
+const plugins = [admin(), jwt()]
+
+// Debug logging to verify plugin loading
+console.log(
+	"Better Auth plugins loaded:",
+	plugins.map((p) => p.id || "unknown")
+)
 
 export const auth = betterAuth({
 	database: sqlite as any,
 	emailAndPassword: {
 		enabled: true,
 	},
-	secret: secret as string | undefined,
+	secret: secret,
 	plugins,
 })
 

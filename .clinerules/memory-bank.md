@@ -153,8 +153,12 @@ proactively to preserve context and make future sessions efficient:
   - Read ALL memory bank files (required).
   - Add or update `activeContext.md` with the current goal and approach before making changes.
 
-- Mid-task (after a non-trivial milestone, e.g. creating auth flow, adding a global guard, or
-  creating seed scripts):
+- Mid-task (MANDATORY after any of these milestones):
+
+  - Fixing a critical bug that changed the approach
+  - User providing corrective feedback (e.g., "why was X removed?")
+  - Completing 50% or more of a multi-step task
+  - Before any task interruption or resumption
 
   - Update `activeContext.md` with a short summary of what changed and why.
   - Append to `progress.md` a brief note of current status and any known gaps (e.g., "CORS added;

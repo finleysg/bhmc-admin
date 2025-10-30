@@ -42,6 +42,18 @@ Documentation & PR requirements
   change.
 - Update `techContext.md` when a new workspace-wide TypeScript convention is adopted.
 
+## Handling Auto-Formatter Conflicts
+
+When an auto-formatter repeatedly removes or modifies imports:
+
+1. Check if the import is actually being used in the code
+2. If the formatter persists in removing it, consider:
+   - Adding a `// eslint-disable-next-line` comment if it's an ESLint issue
+   - Checking if there's a conflicting Prettier or editor setting
+   - Using a different import pattern that the formatter accepts
+3. Do NOT repeatedly attempt the same import pattern if it fails 3+ times
+4. Ask the user for guidance on formatter configuration
+
 Rationale
 
 - Keeps the codebase maintainable and reduces hidden type-surface area.
