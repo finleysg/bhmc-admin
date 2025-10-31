@@ -13,7 +13,6 @@ Core tools & versions
 Apps
 
 - apps/api
-
   - Framework: NestJS (TypeScript)
   - ORM: Drizzle (type-safe queries + migrations)
   - Database: MySQL (containerized via docker-compose)

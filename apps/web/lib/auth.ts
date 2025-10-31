@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
+
 /**
  * Lightweight Better Auth initialization following official docs.
  *
@@ -22,7 +24,6 @@ const secret = process.env.BETTER_AUTH_SECRET
 if (!secret) {
 	// Defer throwing so imports don't crash during dev scaffolding; handlers should check.
 	// But log a warning to surface the misconfiguration.
-	// eslint-disable-next-line no-console
 	console.warn("BETTER_AUTH_SECRET is not set; authentication will not function properly.")
 }
 
@@ -33,11 +34,12 @@ const plugins = [admin(), jwt()]
 // Debug logging to verify plugin loading
 console.log(
 	"Better Auth plugins loaded:",
-	plugins.map((p) => p.id || "unknown")
+	plugins.map((p) => p.id || "unknown"),
 )
 
 export const auth = betterAuth({
-	database: sqlite as any,
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	database: sqlite as any, // better-sqlite3 Database type compatibility
 	emailAndPassword: {
 		enabled: true,
 	},

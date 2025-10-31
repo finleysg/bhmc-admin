@@ -36,21 +36,18 @@ flowchart TD
 ### Core Files (Required)
 
 1. `projectBrief.md`
-
    - Foundation document that shapes all other files
    - Created at project start if it doesn't exist
    - Defines core requirements and goals
    - Source of truth for project scope
 
 2. `productContext.md`
-
    - Why this project exists
    - Problems it solves
    - How it should work
    - User experience goals
 
 3. `activeContext.md`
-
    - Current work focus
    - Recent changes
    - Next steps
@@ -59,7 +56,6 @@ flowchart TD
    - Learnings and project insights
 
 4. `systemPatterns.md`
-
    - System architecture
    - Key technical decisions
    - Design patterns in use
@@ -67,7 +63,6 @@ flowchart TD
    - Critical implementation paths
 
 5. `techContext.md`
-
    - Technologies used
    - Development setup
    - Technical constraints
@@ -149,12 +144,10 @@ When a task involves multiple edits, long-running work, or user feedback, update
 proactively to preserve context and make future sessions efficient:
 
 - At task start:
-
   - Read ALL memory bank files (required).
   - Add or update `activeContext.md` with the current goal and approach before making changes.
 
 - Mid-task (MANDATORY after any of these milestones):
-
   - Fixing a critical bug that changed the approach
   - User providing corrective feedback (e.g., "why was X removed?")
   - Completing 50% or more of a multi-step task
@@ -165,7 +158,6 @@ proactively to preserve context and make future sessions efficient:
     .d.ts workaround present; seed script added").
 
 - On user feedback that changes strategy or preferences (example: "do not create .d.ts files"):
-
   - Record the preference in `techContext.md` and `activeContext.md` so future work follows the same
     conventions.
   - If the preference is a policy-level change, request updating `.clinerules/` (for example, to add

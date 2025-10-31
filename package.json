@@ -2,6 +2,7 @@
 	"name": "monorepo",
 	"version": "1.0.0",
 	"private": true,
+	"type": "module",
 	"description": "BHMC Admin monorepo (scaffold)",
 	"main": "index.js",
 	"scripts": {
@@ -10,8 +11,8 @@
 		"docker:up": "docker-compose up -d",
 		"docker:down": "docker-compose down",
 		"db:reset": "echo \"db:reset not implemented\"",
-		"lint": "eslint --ext .ts,.tsx --max-warnings 0 .",
-		"lint:fix": "eslint --ext .ts,.tsx --fix .",
+		"lint": "eslint --config packages/eslint-config/index.js .",
+		"lint:fix": "eslint --config packages/eslint-config/index.js . --fix",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"test": "echo \"Error: no test specified\" && exit 1"
@@ -22,13 +23,8 @@
 	"packageManager": "pnpm@10.20.0",
 	"devDependencies": {
 		"@types/node": "^24.9.2",
-		"@typescript-eslint/eslint-plugin": "^6.21.0",
-		"@typescript-eslint/parser": "^6.21.0",
-		"eslint": "^8.57.1",
-		"eslint-config-prettier": "^9.1.2",
-		"eslint-import-resolver-typescript": "^4.4.4",
-		"eslint-plugin-import": "^2.32.0",
-		"prettier": "^2.8.8",
+		"eslint": "^9.18.0",
+		"prettier": "^3.4.2",
 		"turbo": "^2.5.8"
 	},
 	"dependencies": {

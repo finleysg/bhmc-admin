@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
 import { auth } from "../../../lib/auth"
 
-export async function POST(_req: NextRequest) {
+export async function POST() {
 	try {
 		const res = await auth.api.createUser({
 			body: {
@@ -15,7 +15,7 @@ export async function POST(_req: NextRequest) {
 		console.log("Created admin user")
 		console.log(res)
 	} catch (error) {
-		console.log("Failed to create admin user: " + error.toString())
+		console.log("Failed to create admin user:", error)
 	}
 	return NextResponse.json({ status: "ok" })
 }

@@ -1,6 +1,6 @@
 import { Module, Controller, Get } from "@nestjs/common"
-import { JwtAuthGuard } from "./auth/jwt.guard"
 import { APP_GUARD } from "@nestjs/core"
+import { JwtAuthGuard } from "./auth/jwt.guard"
 
 @Controller()
 class HealthController {
