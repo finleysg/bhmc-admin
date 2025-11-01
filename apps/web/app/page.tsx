@@ -1,19 +1,54 @@
+"use client"
+
+import { useSession } from "../lib/auth-client"
+import ActionCard from "./components/action-card"
+
 export default function Home() {
+	const { data: session } = useSession()
+	const signedIn = !!session?.user
+
 	return (
-		<main className="flex min-h-screen flex-col items-center justify-center p-24">
-			<div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm">
-				<h1 className="text-4xl font-bold text-primary">BHMC Admin</h1>
-				<p className="mt-4 text-muted-foreground">Tailwind CSS v4 with CSS Variables</p>
-				<div className="mt-8 flex gap-4">
-					<button className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
-						Primary Button
-					</button>
-					<button className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90">
-						Secondary Button
-					</button>
-					<button className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90">
-						Destructive Button
-					</button>
+		<main className="min-h-screen flex items-center justify-center p-8">
+			<div className="w-full max-w-5xl">
+				<h1 className="text-4xl font-bold text-primary mb-2">BHMC Admin</h1>
+				<p className="text-sm text-muted-foreground mb-6">
+					Administrative actions for tournament management
+				</p>
+
+				<div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
+					<ActionCard
+						title="Event Management"
+						description="Create and manage events, players, and schedules."
+						href="/events"
+						disabled={!signedIn}
+						icon={"🎯"}
+					/>
+
+					<ActionCard
+						title="Golf Genius Integration"
+						description="Configure and sync with Golf Genius."
+						href="/golf-genius"
+						disabled={!signedIn}
+						icon={"🏌️‍♂️"}
+					/>
+
+					<ActionCard
+						title="Event Reporting"
+						description="View reports and export event data."
+						href="/reports"
+						disabled={!signedIn}
+						icon={"📊"}
+					/>
+
+					{!signedIn && (
+						<ActionCard
+							title="Sign In"
+							description="Authenticate to enable admin actions."
+							href="/sign-in"
+							disabled={false}
+							icon={"🔐"}
+						/>
+					)}
 				</div>
 			</div>
 		</main>

@@ -16,6 +16,11 @@ Recent changes:
 - Added `pnpm-workspace.yaml`, `turbo.json`, and `docker-compose.yml`.
 - Added minimal `package.json` files for each workspace package.
 - Added `memory-bank/projectBrief.md` and `memory-bank/productContext.md`.
+- Implemented theme switching with emerald (light) and sunset (dark) themes:
+  - Updated daisyUI config to use emerald as default and sunset as prefersdark
+  - Created ThemeToggle component with sun/moon icons using swap animation
+  - Added theme toggle to layout header with responsive design
+  - Themes automatically respect browser/OS dark mode preference
 
 Next immediate steps:
 

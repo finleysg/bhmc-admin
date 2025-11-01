@@ -29,6 +29,12 @@ Completed
 
 - Create sign-in form using custom components and connect to better-auth implementation.
 - Integrate daisyUI 5 as the UI framework with sunset theme as default.
+- Implement theme switching system:
+  - Added emerald as light theme (default)
+  - Added sunset as dark theme (prefersdark)
+  - Created ThemeToggle component with sun/moon swap animation
+  - Added theme toggle to layout header
+  - Automatic browser/OS dark mode preference detection
 
 Blockers / Risks
 
