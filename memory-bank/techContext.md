@@ -23,7 +23,7 @@ Apps
 - apps/web
   - Framework: Next.js (App Router, TypeScript)
   - Auth: better-auth (stores auth data in SQLite file)
-  - UI: TailwindCSS + shadcn/ui
+  - UI: Tailwind CSS v4 + custom component library (semantic classes, OKLCH colors)
   - SQLite storage: mounted path `./docker/sqlite/auth.db` (accessible to local Next.js process)
   - Health endpoint: `GET /health`
 

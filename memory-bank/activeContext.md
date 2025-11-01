@@ -4,7 +4,7 @@ Current focus:
 
 - Scaffold a minimal TurboRepo monorepo (pnpm workspaces) that contains:
   - apps/api (NestJS + TypeScript) — planned to use MySQL + Drizzle
-  - apps/web (Next.js + TypeScript) — planned to use better-auth with SQLite, TailwindCSS, shadcn-ui
+  - apps/web (Next.js + TypeScript) — planned to use better-auth with SQLite, Tailwind CSS v4, custom components
   - packages/dto — shared TypeScript DTOs
 - Provide Docker Compose for MySQL and an on-disk SQLite data folder for auth.
 - Create memory bank documentation to preserve decisions and progress.
@@ -22,7 +22,7 @@ Next immediate steps:
 1. Add remaining memory bank files: `systemPatterns.md`, `techContext.md`, `progress.md`.
 2. Scaffold minimal NestJS app inside `apps/api` (basic Nest CLI structure or minimal src files) and
    wire Drizzle config to use the Docker MySQL.
-3. Scaffold minimal Next.js app inside `apps/web` (TypeScript + Tailwind + shadcn-ui) and configure
+3. Scaffold minimal Next.js app inside `apps/web` (TypeScript + Tailwind CSS v4 + custom components) and configure
    better-auth to persist to `./docker/sqlite/auth.db`.
 4. Create an initial DTO file in `packages/dto` exporting a sample type used by both apps.
 5. Add pnpm scripts and turbo pipeline tasks for dev/build.

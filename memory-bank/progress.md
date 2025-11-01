@@ -17,8 +17,10 @@ In progress / Next steps
 
 - Scaffold minimal NestJS app in `apps/api` with TypeScript and a health endpoint; wire Drizzle
   config to Docker MySQL.
-- Scaffold minimal Next.js app in `apps/web` with TypeScript, Tailwind, shadcn-ui, and better-auth
+- Scaffold minimal Next.js app in `apps/web` with TypeScript, Tailwind CSS v4, and better-auth
   configured to use `./docker/sqlite/auth.db`.
+- Build custom component library using semantic Tailwind classes and OKLCH color system.
+- Create sign-in form using custom components.
 - Add a sample DTO type file in `packages/dto` and export it.
 - Add root and per-app pnpm scripts and a basic Turbo pipeline for `dev` and `build`.
 - Create basic migration and seed scripts for MySQL (Drizzle).
