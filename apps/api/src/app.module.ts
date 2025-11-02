@@ -1,18 +1,12 @@
-import { Module, Controller, Get } from "@nestjs/common"
+import { Module } from "@nestjs/common"
 import { APP_GUARD } from "@nestjs/core"
-import { JwtAuthGuard } from "./auth/jwt.guard"
 
-@Controller()
-class HealthController {
-	@Get("health")
-	health() {
-		return { status: "ok" }
-	}
-}
+import { JwtAuthGuard } from "./auth/jwt.guard"
+import { DatabaseModule } from "./database/database.module"
+import { HealthModule } from "./health/health.module"
 
 @Module({
-	imports: [],
-	controllers: [HealthController],
+	imports: [DatabaseModule, HealthModule],
 	providers: [
 		{
 			provide: APP_GUARD,

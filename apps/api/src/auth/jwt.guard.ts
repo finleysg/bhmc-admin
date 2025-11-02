@@ -6,6 +6,12 @@ import jwt from "jsonwebtoken"
 export class JwtAuthGuard implements CanActivate {
 	canActivate(context: ExecutionContext): boolean {
 		const req = context.switchToHttp().getRequest<Request>()
+
+		// Skip JWT validation for health endpoints
+		if (req.url === "/health" || req.url === "/health/db") {
+			return true
+		}
+
 		const auth = req.headers["authorization"] || req.headers["Authorization"]
 		if (!auth || Array.isArray(auth)) return false
 
