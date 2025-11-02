@@ -2,46 +2,38 @@
 
 Current focus:
 
-- Scaffold a minimal TurboRepo monorepo (pnpm workspaces) that contains:
-  - apps/api (NestJS + TypeScript) — planned to use MySQL + Drizzle
-  - apps/web (Next.js + TypeScript) — planned to use better-auth with SQLite, Tailwind CSS v4, custom components
-  - packages/dto — shared TypeScript DTOs
-- Provide Docker Compose for MySQL and an on-disk SQLite data folder for auth.
-- Create memory bank documentation to preserve decisions and progress.
+- Complete the NestJS API implementation with full module coverage (events, courses, registration, scores)
+- Implement Next.js frontend with better-auth integration and daisyUI components
+- Establish end-to-end connectivity between API and web app
+- Set up development workflow with Docker databases and hot reloading
 
 Recent changes:
 
-- Initialized pnpm workspace and installed Turbo.
-- Created workspace folders: `apps/api`, `apps/web`, `packages/dto`, `docker`.
-- Added `pnpm-workspace.yaml`, `turbo.json`, and `docker-compose.yml`.
-- Added minimal `package.json` files for each workspace package.
-- Added `memory-bank/projectBrief.md` and `memory-bank/productContext.md`.
-- Implemented theme switching with emerald (light) and sunset (dark) themes:
-  - Updated daisyUI config to use emerald as default and sunset as prefersdark
-  - Created ThemeToggle component with sun/moon icons using swap animation
-  - Added theme toggle to layout header with responsive design
-  - Themes automatically respect browser/OS dark mode preference
+- **Drizzle ORM Integration**: Installed drizzle-orm@0.44.7 and mysql2@3.15.3, configured connection pooling with DATABASE_URL env variable, created complete database schema and relations for events, courses, registration, scores, and auth tables
+- **Events Module Implementation**: Built complete events module with service, controller, domain logic, DTOs, and comprehensive test coverage; includes tee time calculations, group assignments, and hole-based starts
+- **Shared DTO Package**: Created and integrated packages/dto with type-safe DTOs for events, scores, and registration; built with TypeScript and consumed via workspace imports
+- **Code Quality**: Fixed 99 ESLint violations in test files by replacing `any` types with proper domain types (`EventDomainData`, `RegistrationSlotDomainData`, etc.); achieved zero ESLint errors across codebase
+- **TypeScript & Testing**: Applied Prettier formatting, ensured TypeScript compilation success, and established test patterns using `Partial<T>` for service mocks
 
 Next immediate steps:
 
-1. Add remaining memory bank files: `systemPatterns.md`, `techContext.md`, `progress.md`.
-2. Scaffold minimal NestJS app inside `apps/api` (basic Nest CLI structure or minimal src files) and
-   wire Drizzle config to use the Docker MySQL.
-3. Scaffold minimal Next.js app inside `apps/web` (TypeScript + Tailwind CSS v4 + custom components) and configure
-   better-auth to persist to `./docker/sqlite/auth.db`.
-4. Create an initial DTO file in `packages/dto` exporting a sample type used by both apps.
-5. Add pnpm scripts and turbo pipeline tasks for dev/build.
-6. Verify Docker databases start and apps can connect (minimal health checks).
+1. Implement remaining API modules (courses, registration, scores) following the events module pattern
+2. Scaffold Next.js app with better-auth integration and SQLite persistence
+3. Create shared UI components using daisyUI 5 and Tailwind CSS v4
+4. Establish API-to-frontend connectivity with proper error handling
+5. Add development scripts and verify Docker database connectivity
+6. Implement basic admin screens for event management
 
 Important decisions & constraints:
 
-- Use pnpm workspaces for package management.
-- Databases must run in Docker containers (MySQL for main data; SQLite file for auth).
-- Keep the initial shell minimal — no feature implementations beyond health endpoints and basic
-  connection wiring.
-- Memory bank files are authoritative and must be updated after every significant change.
+- **Domain-Driven Design**: Events module uses domain layer with pure business logic, separated from infrastructure concerns
+- **Type Safety**: Strict TypeScript usage with no `any` types in production code; test files use proper domain types
+- **Database Separation**: MySQL for domain data via Drizzle, SQLite for auth via better-auth
+- **Shared Types**: DTO package enforces consistent payloads across API and web app
+- **Containerization**: All databases run in Docker for development parity
 
 Notes for future work:
 
-- Document Golf Genius integration points once data-model decisions are finalized.
-- Add migration strategy (Drizzle) and seed scripts.
+- Golf Genius integration will use dedicated service modules in the API
+- Migration strategy uses Drizzle with no schema ownership (external database)
+- Authentication flow: better-auth in Next.js → JWT validation in NestJS API

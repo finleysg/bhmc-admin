@@ -1,15 +1,10 @@
-export type TournamentDTO = {
-	id: string
-	name: string
-	startDate: string // ISO date
-	endDate?: string // ISO date
-	location?: string
-}
+// DTO exports
+export { CreateScorecardDto } from "./scores/create-scorecard.dto"
+export { UpdateScorecardDto } from "./scores/update-scorecard.dto"
+export { CreateScoreDto } from "./scores/create-score.dto"
+export { UpdateScoreDto } from "./scores/update-score.dto"
 
-export type PlayerDTO = {
-	id: string
-	firstName: string
-	lastName: string
-	email?: string
-	handicap?: number
-}
+// Event DTO exports
+export { EventPlayerFeeDto } from "./events/event-player-fee.dto"
+export { EventPlayerSlotDto } from "./events/event-player-slot.dto"
+export { EventRegistrationSummaryDto } from "./events/event-registration-summary.dto"

@@ -11,7 +11,7 @@
 		"rootDir": ".",
 		"baseUrl": ".",
 		"paths": {
-			"dto": ["packages/dto/src"]
+			"dto": ["packages/dto/dist"]
 		},
 		"resolveJsonModule": true,
 		"noEmit": true,

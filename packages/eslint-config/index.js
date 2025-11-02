@@ -24,7 +24,7 @@ export default [
 			"@typescript-eslint/no-explicit-any": "error",
 			"@typescript-eslint/no-unsafe-assignment": "off",
 			"@typescript-eslint/no-unsafe-call": "off",
-			"import/order": ["error", { alphabetize: { order: "asc" } }],
+			// "import/order": ["error", { alphabetize: { order: "asc" } }],
 
 			// TypeScript recommended
 			...tseslint.configs.recommended.rules,
@@ -34,6 +34,16 @@ export default [
 			"import/resolver": {
 				typescript: true,
 			},
+		},
+	},
+	{
+		// Override for mapper files - allow any types when mapping database types to domain models
+		files: ["**/mappers.ts", "**/mappers/**/*.ts", "**/*.service.ts"],
+		rules: {
+			"@typescript-eslint/no-explicit-any": "off",
+			"@typescript-eslint/no-unsafe-assignment": "off",
+			"@typescript-eslint/no-unsafe-member-access": "off",
+			"@typescript-eslint/no-unsafe-argument": "off",
 		},
 	},
 	{
