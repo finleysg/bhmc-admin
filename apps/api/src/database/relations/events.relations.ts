@@ -16,6 +16,7 @@ import {
 	tournament,
 	tournamentResult,
 } from "../schema"
+import { integrationLog } from "../schema/golf-genius.schema"
 
 export const eventRelations = relations(event, ({ many }) => ({
 	// coreMajorchampions: many(coreMajorchampion),
@@ -36,6 +37,7 @@ export const eventRelations = relations(event, ({ many }) => ({
 	eventfees: many(eventFee),
 	eventsRounds: many(round),
 	eventsTournaments: many(tournament),
+	integrationLogs: many(integrationLog),
 	// messagingAnnouncements: many(messagingAnnouncement),
 	payments: many(payment),
 	// pointsPlayerpoints: many(pointsPlayerpoints),

@@ -12,6 +12,7 @@ Recent changes:
 - **Drizzle ORM Integration**: Installed drizzle-orm@0.44.7 and mysql2@3.15.3, configured connection pooling with DATABASE_URL env variable, created complete database schema and relations for events, courses, registration, scores, and auth tables
 - **Events Module Implementation**: Built complete events module with service, controller, domain logic, DTOs, and comprehensive test coverage; includes tee time calculations, group assignments, and hole-based starts
 - **Golf Genius Integration Module**: Complete bidirectional integration with Golf Genius API v2 including event sync, member roster sync, roster export, scores import, and comprehensive error handling with retry logic and rate limiting
+- **Integration Logging**: Applied `@UseInterceptors(LogIntegrationInterceptor)` to Golf Genius event endpoints (sync, export-roster, import-scores) for automatic audit logging of full JSON results and complete error details including stack traces; excluded member sync endpoints as utility commands
 - **Shared DTO Package**: Created and integrated packages/dto with type-safe DTOs for events, scores, and registration; built with TypeScript and consumed via workspace imports
 - **Code Quality**: Fixed 99 ESLint violations in test files by replacing `any` types with proper domain types (`EventDomainData`, `RegistrationSlotDomainData`, etc.); achieved zero ESLint errors across codebase
 - **TypeScript & Testing**: Applied Prettier formatting, ensured TypeScript compilation success, and established test patterns using `Partial<T>` for service mocks

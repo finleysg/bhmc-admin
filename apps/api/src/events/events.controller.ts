@@ -112,12 +112,12 @@ export class EventsController {
 
 			// Build fees array from the fee definitions
 			const fees: EventPlayerFeeDto[] = feeDefinitions.map((fd) => {
-				const paid = (s.fees ?? []).some(
-					(f) => f.eventFee?.id === fd.eventFee?.id && Number(f.fee?.isPaid) === 1,
-				)
+				const fee = (s.fees ?? []).find((f) => f.eventFee?.id === fd.eventFee?.id)
+				const paid = fee?.isPaid === 1
+				const amount = paid ? fee?.amount : "0"
 				return {
 					name: fd.name,
-					amount: paid ? 1 : 0, // Using 1/0 for paid/unpaid status
+					amount,
 				}
 			})
 
