@@ -6,6 +6,7 @@ Completed
 - **Memory Bank**: Created comprehensive documentation system with all core files (`projectBrief.md`, `productContext.md`, `activeContext.md`, `systemPatterns.md`, `techContext.md`, `progress.md`)
 - **Drizzle ORM Integration**: Installed drizzle-orm@0.44.7 and mysql2@3.15.3, configured connection pooling with DATABASE_URL env variable, created complete database schema and relations for events, courses, registration, scores, and auth tables
 - **Events Module**: Built complete events module with service, controller, domain logic, DTOs, and comprehensive test coverage; includes tee time calculations, group assignments, hole-based starts, and REST API endpoints
+- **Golf Genius Integration Module**: Complete bidirectional integration with Golf Genius API v2 including event sync, member roster sync, roster export, scores import, and comprehensive error handling with retry logic and rate limiting
 - **Shared DTO Package**: Created and integrated packages/dto with type-safe DTOs for events, scores, and registration; built with TypeScript and consumed via workspace imports
 - **Code Quality**: Fixed 99 ESLint violations in test files by replacing `any` types with proper domain types; achieved zero ESLint errors across codebase; applied Prettier formatting consistently
 - **TypeScript & Testing**: Ensured TypeScript compilation success, established test patterns using `Partial<T>` for service mocks, and maintained type safety throughout

@@ -35,9 +35,9 @@ Testing & quality patterns
 
 Auth & Integration patterns
 
-- **better-auth integration**: Planned for Next.js app with SQLite persistence under `docker/sqlite`
+- **better-auth integration**: Planned for Next.js app with SQLite persistence
 - **JWT validation**: NestJS API validates tokens from better-auth for protected admin endpoints
-- **Golf Genius integration**: Dedicated service modules in API with interface abstraction for testing
+- **Golf Genius integration**: Complete bidirectional API integration with dedicated service modules, comprehensive error handling, retry logic, and audit logging
 
 Observability & health
 

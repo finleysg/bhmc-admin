@@ -33,6 +33,15 @@ Packages
   - Contains DTOs for events, scores, registration, and player data
   - Example: `import { EventDto } from '@repo/dto'`
 
+Golf Genius Integration
+
+- **API Client**: Axios-based HTTP client with retry logic, rate limiting, and error handling
+- **Configuration**: Environment variables for API key, base URL, timeout, retries, and category filtering
+- **Services**: 5 specialized services (EventSync, MemberSync, RosterExport, ScoresImport, IntegrationLog)
+- **Database**: Integration audit trail stored in `core_golfgeniusintegrationlog` table
+- **Error Handling**: Custom error classes (ApiError, AuthError, RateLimitError) with detailed logging
+- **REST Endpoints**: 6 endpoints for roster sync, event sync, roster export, scores import, and logs
+
 Databases & Docker
 
 - **docker-compose.yml** orchestrates:
