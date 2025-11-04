@@ -169,7 +169,6 @@ export const tournamentResult = mysqlTable(
 		flight: varchar({ length: 20 }),
 		position: int().notNull(),
 		score: int(),
-		points: int(),
 		amount: decimal({ precision: 6, scale: 2 }).notNull(),
 		details: varchar({ length: 120 }),
 		playerId: int("player_id")
@@ -179,9 +178,38 @@ export const tournamentResult = mysqlTable(
 			.notNull()
 			.references(() => tournament.id),
 		teamId: varchar("team_id", { length: 22 }),
+		createDate: datetime("create_date", { mode: "string", fsp: 6 }),
+		payoutDate: datetime("payout_date", { mode: "string", fsp: 6 }),
+		payoutStatus: varchar("payout_status", { length: 10 }),
+		payoutTo: varchar("payout_to", { length: 10 }),
+		payoutType: varchar("payout_type", { length: 10 }),
+		summary: varchar({ length: 40 }),
 	},
 	(table) => [
 		primaryKey({ columns: [table.id], name: "events_tournamentresult_id" }),
 		unique("unique_tournament_player").on(table.tournamentId, table.playerId),
+	],
+)
+
+export const eventPoints = mysqlTable(
+	"damcup_eventpoints",
+	{
+		id: int().autoincrement().notNull(),
+		position: int().notNull(),
+		score: int(),
+		points: int().notNull(),
+		isNet: tinyint("is_net").notNull(),
+		createDate: datetime("create_date", { mode: "string", fsp: 6 }).notNull(),
+		division: varchar({ length: 40 }),
+		eventId: int("event_id")
+			.notNull()
+			.references(() => event.id),
+		playerId: int("player_id")
+			.notNull()
+			.references(() => player.id),
+	},
+	(table) => [
+		primaryKey({ columns: [table.id], name: "damcup_eventpoints_id" }),
+		unique("unique_points").on(table.eventId, table.playerId, table.isNet),
 	],
 )

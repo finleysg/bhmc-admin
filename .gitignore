@@ -54,3 +54,4 @@ docker/*.log
 /*.mcp.json
 /.cursor/
 .MCP
+.turbo/

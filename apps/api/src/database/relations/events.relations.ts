@@ -5,6 +5,7 @@ import {
 	event,
 	eventCourses,
 	eventFee,
+	eventPoints,
 	eventScorecard,
 	feeType,
 	payment,
@@ -28,6 +29,7 @@ export const eventRelations = relations(event, ({ many }) => ({
 	// }),
 	// damcupScores: many(damcupScores),
 	// damcupSeasonlongpoints: many(damcupSeasonlongpoints),
+	damcupEventPoints: many(eventPoints),
 	// documentsDocuments: many(documentsDocument),
 	// contentTag: one(contentTag, {
 	// 	fields: [event.defaultTagId],
@@ -101,5 +103,16 @@ export const eventsTournamentResultRelations = relations(tournamentResult, ({ on
 	tournament: one(tournament, {
 		fields: [tournamentResult.tournamentId],
 		references: [tournament.id],
+	}),
+}))
+
+export const eventPointsRelations = relations(eventPoints, ({ one }) => ({
+	event: one(event, {
+		fields: [eventPoints.eventId],
+		references: [event.id],
+	}),
+	player: one(player, {
+		fields: [eventPoints.playerId],
+		references: [player.id],
 	}),
 }))

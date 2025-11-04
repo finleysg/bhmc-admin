@@ -37,10 +37,11 @@ Golf Genius Integration
 
 - **API Client**: Axios-based HTTP client with retry logic, rate limiting, and error handling
 - **Configuration**: Environment variables for API key, base URL, timeout, retries, and category filtering
-- **Services**: 5 specialized services (EventSync, MemberSync, RosterExport, ScoresImport, IntegrationLog)
+- **Services**: 6 specialized services (EventSync, MemberSync, RosterExport, ScoresImport, ResultsImport, IntegrationLog)
 - **Database**: Integration audit trail stored in `core_golfgeniusintegrationlog` table
 - **Error Handling**: Custom error classes (ApiError, AuthError, RateLimitError) with detailed logging
-- **REST Endpoints**: 6 endpoints for roster sync, event sync, roster export, scores import, and logs
+- **REST Endpoints**: 10 endpoints for roster sync, event sync, roster export, scores import, tournament results import (points/skins/proxy/stroke), and logs
+- **Tournament Results**: Format-specific parsers (points, skins, proxy, stroke play) with flexible DTOs; idempotent operations; ordinal position formatting; comprehensive unit tests
 
 Databases & Docker
 

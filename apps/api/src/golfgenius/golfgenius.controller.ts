@@ -4,6 +4,7 @@ import { LogIntegrationInterceptor } from "./interceptors/log-integration.interc
 import { EventSyncService } from "./services/event-sync.service"
 import { IntegrationLogService } from "./services/integration-log.service"
 import { MemberSyncService } from "./services/member-sync.service"
+import { ResultsImportService } from "./services/results-import.service"
 import { RosterExportService } from "./services/roster-export.service"
 import { ScoresImportService } from "./services/scores-import.service"
 
@@ -14,6 +15,7 @@ export class GolfgeniusController {
 		private readonly eventSync: EventSyncService,
 		private readonly scoresImport: ScoresImportService,
 		private readonly rosterExport: RosterExportService,
+		private readonly resultsImport: ResultsImportService,
 		private readonly integrationLog: IntegrationLogService,
 	) {}
 
@@ -47,6 +49,34 @@ export class GolfgeniusController {
 	async importEventScores(@Param("id") id: string) {
 		const eid = parseInt(id, 10)
 		return this.scoresImport.importScoresForEvent(eid)
+	}
+
+	@Post("/events/:id/import-results/points")
+	@UseInterceptors(LogIntegrationInterceptor)
+	async importPointsResults(@Param("id") id: string) {
+		const eid = parseInt(id, 10)
+		return this.resultsImport.importPointsResults(eid)
+	}
+
+	@Post("/events/:id/import-results/skins")
+	@UseInterceptors(LogIntegrationInterceptor)
+	async importSkinsResults(@Param("id") id: string) {
+		const eid = parseInt(id, 10)
+		return this.resultsImport.importSkinsResults(eid)
+	}
+
+	@Post("/events/:id/import-results/proxy")
+	@UseInterceptors(LogIntegrationInterceptor)
+	async importProxyResults(@Param("id") id: string) {
+		const eid = parseInt(id, 10)
+		return this.resultsImport.importProxyResults(eid)
+	}
+
+	@Post("/events/:id/import-results/stroke")
+	@UseInterceptors(LogIntegrationInterceptor)
+	async importStrokePlayResults(@Param("id") id: string) {
+		const eid = parseInt(id, 10)
+		return this.resultsImport.importStrokePlayResults(eid)
 	}
 
 	@Get("/events/:id/logs")
