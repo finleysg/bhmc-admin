@@ -69,6 +69,8 @@ Type & linting
 - **ESLint**: Shared config in `packages/eslint-config` with strict rules
 - **Prettier**: Configured with consistent formatting
 - **Type Safety**: No `any` types in production; domain types used throughout
+- **Advanced TypeScript Practices**: Comprehensive guidelines in `.clinerules/typescript-practices.md` covering type-first development, generic parsers, discriminated unions, type guards, utility types, and strict configuration requirements
+- **Type Assertion Guidelines**: Clear rules for when `as` assertions are acceptable with documentation requirements
 
 Secrets & env
 

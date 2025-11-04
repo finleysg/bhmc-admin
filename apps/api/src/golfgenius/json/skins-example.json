@@ -1,0 +1,1510 @@
+{
+	"event": {
+		"name": "Net Skins - East Net Skins",
+		"adjusted": true,
+		"scopes": [
+			{
+				"name": "Flight 1",
+				"id": 11916383880929659576,
+				"id_str": "11916383880929659576",
+				"aggregates": [
+					{
+						"id": 11916390829951863738,
+						"id_str": "11916390829951863738",
+						"member_ids": [11913466649350556176],
+						"member_ids_str": ["11913466649350556176"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11913466649350556176,
+								"member_id_str": "11913466649350556176",
+								"member_card_id": 3586223729769761572,
+								"member_card_id_str": "3586223729769761572"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 3586223729769761572,
+								"member_card_id_str": "3586223729769761572",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"name": "Aaron Sorenson",
+						"total": "3",
+						"purse": "$39.00",
+						"details": "Eagle on 1, Birdie on 7, Birdie on 9",
+						"disposition": "",
+						"disposition_cause": "",
+						"custom_logos": [],
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							3,
+							3,
+							3,
+							6,
+							4,
+							4,
+							2,
+							5,
+							4,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 34,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11916390829918309285,
+						"id_str": "11916390829918309285",
+						"member_ids": [11913466648612359157],
+						"member_ids_str": ["11913466648612359157"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11913466648612359157,
+								"member_id_str": "11913466648612359157",
+								"member_card_id": 3586223804260600825,
+								"member_card_id_str": "3586223804260600825"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 3586223804260600825,
+								"member_card_id_str": "3586223804260600825",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"name": "Brandon Korus",
+						"total": "1",
+						"purse": "$13.00",
+						"details": "Birdie on 4",
+						"disposition": "",
+						"disposition_cause": "",
+						"custom_logos": [],
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							5,
+							5,
+							3,
+							4,
+							4,
+							6,
+							4,
+							4,
+							7,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 42,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11916390829918309265,
+						"id_str": "11916390829918309265",
+						"member_ids": [11913466647874161626],
+						"member_ids_str": ["11913466647874161626"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11913466647874161626,
+								"member_id_str": "11913466647874161626",
+								"member_card_id": 8422732943948040915,
+								"member_card_id_str": "8422732943948040915"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 8422732943948040915,
+								"member_card_id_str": "8422732943948040915",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"name": "Connor Danis",
+						"total": "0",
+						"purse": "$0.00",
+						"details": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"custom_logos": [],
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							4,
+							5,
+							3,
+							5,
+							6,
+							5,
+							3,
+							3,
+							4,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 38,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11916390829918309266,
+						"id_str": "11916390829918309266",
+						"member_ids": [11913466647941270492],
+						"member_ids_str": ["11913466647941270492"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11913466647941270492,
+								"member_id_str": "11913466647941270492",
+								"member_card_id": 3575694338908277569,
+								"member_card_id_str": "3575694338908277569"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 3575694338908277569,
+								"member_card_id_str": "3575694338908277569",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"name": "Pete Collins",
+						"total": "0",
+						"purse": "$0.00",
+						"details": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"custom_logos": [],
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							4,
+							6,
+							4,
+							5,
+							3,
+							5,
+							4,
+							4,
+							6,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 41,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11916390829918309286,
+						"id_str": "11916390829918309286",
+						"member_ids": [11913466648645913590],
+						"member_ids_str": ["11913466648645913590"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11913466648645913590,
+								"member_id_str": "11913466648645913590",
+								"member_card_id": 3586223722052242194,
+								"member_card_id_str": "3586223722052242194"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 3586223722052242194,
+								"member_card_id_str": "3586223722052242194",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"name": "Jeremy Laberda",
+						"total": "0",
+						"purse": "$0.00",
+						"details": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"custom_logos": [],
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							5,
+							4,
+							3,
+							5,
+							4,
+							5,
+							4,
+							5,
+							5,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 40,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11916390829918309288,
+						"id_str": "11916390829918309288",
+						"member_ids": [11913466648713022456],
+						"member_ids_str": ["11913466648713022456"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11913466648713022456,
+								"member_id_str": "11913466648713022456",
+								"member_card_id": 5197902219223026624,
+								"member_card_id_str": "5197902219223026624"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 5197902219223026624,
+								"member_card_id_str": "5197902219223026624",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"name": "Rob O'Connell",
+						"total": "0",
+						"purse": "$0.00",
+						"details": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"custom_logos": [],
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							5,
+							4,
+							4,
+							5,
+							5,
+							4,
+							3,
+							3,
+							6,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 39,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11916390829951863734,
+						"id_str": "11916390829951863734",
+						"member_ids": [11913466649216338442],
+						"member_ids_str": ["11913466649216338442"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11913466649216338442,
+								"member_id_str": "11913466649216338442",
+								"member_card_id": 4182985900940118635,
+								"member_card_id_str": "4182985900940118635"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 4182985900940118635,
+								"member_card_id_str": "4182985900940118635",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"name": "Alex Wheaton",
+						"total": "0",
+						"purse": "$0.00",
+						"details": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"custom_logos": [],
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							5,
+							4,
+							3,
+							5,
+							4,
+							7,
+							5,
+							5,
+							5,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 43,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11916390829951863748,
+						"id_str": "11916390829951863748",
+						"member_ids": [11913466649719654942],
+						"member_ids_str": ["11913466649719654942"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11913466649719654942,
+								"member_id_str": "11913466649719654942",
+								"member_card_id": 11498159791415544608,
+								"member_card_id_str": "11498159791415544608"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 11498159791415544608,
+								"member_card_id_str": "11498159791415544608",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"name": "Branden Lee",
+						"total": "0",
+						"purse": "$0.00",
+						"details": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"custom_logos": [],
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							4,
+							3,
+							4,
+							5,
+							6,
+							4,
+							4,
+							5,
+							6,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 41,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11916390829951863750,
+						"id_str": "11916390829951863750",
+						"member_ids": [11913466649853872676],
+						"member_ids_str": ["11913466649853872676"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11913466649853872676,
+								"member_id_str": "11913466649853872676",
+								"member_card_id": 8550024956216396355,
+								"member_card_id_str": "8550024956216396355"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 8550024956216396355,
+								"member_card_id_str": "8550024956216396355",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"name": "Sam Miller",
+						"total": "0",
+						"purse": "$0.00",
+						"details": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"custom_logos": [],
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							5,
+							4,
+							3,
+							5,
+							6,
+							5,
+							6,
+							4,
+							5,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 43,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11916390829951863751,
+						"id_str": "11916390829951863751",
+						"member_ids": [11913466649920981543],
+						"member_ids_str": ["11913466649920981543"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11913466649920981543,
+								"member_id_str": "11913466649920981543",
+								"member_card_id": 3586223805334342652,
+								"member_card_id_str": "3586223805334342652"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 3586223805334342652,
+								"member_card_id_str": "3586223805334342652",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"name": "Jeffrey Cannon",
+						"total": "0",
+						"purse": "$0.00",
+						"details": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"custom_logos": [],
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							4,
+							5,
+							3,
+							5,
+							3,
+							5,
+							4,
+							3,
+							5,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 37,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11916390829951863743,
+						"id_str": "11916390829951863743",
+						"member_ids": [11913466649484773911],
+						"member_ids_str": ["11913466649484773911"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11913466649484773911,
+								"member_id_str": "11913466649484773911",
+								"member_card_id": 8422732951061580501,
+								"member_card_id_str": "8422732951061580501"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 8422732951061580501,
+								"member_card_id_str": "8422732951061580501",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"name": "Mark Hannah",
+						"total": "0",
+						"purse": "$0.00",
+						"details": "",
+						"disposition": "NS",
+						"disposition_cause": "",
+						"custom_logos": [],
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					}
+				]
+			}
+		],
+		"season_points": [],
+		"id": 11913542822206163769,
+		"id_str": "11913542822206163769",
+		"column_visibility": {
+			"position": false,
+			"name": true,
+			"affiliation": false,
+			"score": false,
+			"thru": false,
+			"total": true,
+			"purse": true,
+			"points": false,
+			"details": true
+		},
+		"column_names": {
+			"name": "Player",
+			"total": "Skins",
+			"purse": "Purse",
+			"details": "Details"
+		},
+		"horizontal_leaderboard": false
+	}
+}

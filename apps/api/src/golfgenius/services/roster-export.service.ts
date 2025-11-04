@@ -12,6 +12,11 @@ import { RosterMemberDto, RosterMemberSyncDto } from "../dto/internal.dto"
 
 type ExportError = { slotId?: number; playerId?: number; email?: string; error: string }
 
+interface GgMemberResponse {
+	member_id_str?: string
+	[key: string]: unknown
+}
+
 @Injectable()
 export class RosterExportService {
 	private readonly logger = new Logger(RosterExportService.name)
@@ -259,7 +264,7 @@ export class RosterExportService {
 						result.skipped += 1
 						// still ensure local ggId is saved
 						try {
-							const memberId = this.extractMemberId(existing)
+							const memberId = this.extractMemberIdFromRoster(existing)
 							if (memberId) {
 								await this.registration.updateRegistrationSlotGgId(slot.id!, String(memberId))
 							}
@@ -269,7 +274,7 @@ export class RosterExportService {
 					} else {
 						// UPDATE
 						try {
-							const memberId = this.extractMemberId(existing)
+							const memberId = this.extractMemberIdFromRoster(existing)
 							if (!memberId) {
 								// fallback: attempt create if no id present
 								const res = await this.apiClient.createMemberRegistration(
@@ -309,9 +314,15 @@ export class RosterExportService {
 		return result
 	}
 
-	private extractMemberId(res: any): string | null {
+	private extractMemberId(res: GgMemberResponse): string | null {
 		if (!res) return null
 		// Prefer the string form returned by Golf Genius to avoid JS integer overflow
-		return (res?.member_id_str as string | undefined) ?? null
+		return res.member_id_str ?? null
+	}
+
+	private extractMemberIdFromRoster(rosterMember: RosterMemberDto): string | null {
+		if (!rosterMember) return null
+		// RosterMemberDto.id is the member ID
+		return rosterMember.id ?? null
 	}
 }

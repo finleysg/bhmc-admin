@@ -1,0 +1,3716 @@
+{
+	"event": {
+		"name": "Net 3 of 5 - West",
+		"adjusted": false,
+		"scopes": [
+			{
+				"id": 11835203195292928741,
+				"id_str": "11835203195292928741",
+				"aggregates": [
+					{
+						"id": 11835209853465316125,
+						"id_str": "11835209853465316125",
+						"member_ids": [
+							11832345030754880413, 11832345030654217112, 11832345030788434847,
+							11832345030788434848, 11832345030821989281
+						],
+						"member_ids_str": [
+							"11832345030754880413",
+							"11832345030654217112",
+							"11832345030788434847",
+							"11832345030788434848",
+							"11832345030821989281"
+						],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11832345030754880413,
+								"member_id_str": "11832345030754880413",
+								"member_card_id": 4195466187347380794,
+								"member_card_id_str": "4195466187347380794"
+							},
+							{
+								"member_id": 11832345030654217112,
+								"member_id_str": "11832345030654217112",
+								"member_card_id": 10553773211709917790,
+								"member_card_id_str": "10553773211709917790"
+							},
+							{
+								"member_id": 11832345030788434847,
+								"member_id_str": "11832345030788434847",
+								"member_card_id": 3495862773265517468,
+								"member_card_id_str": "3495862773265517468"
+							},
+							{
+								"member_id": 11832345030788434848,
+								"member_id_str": "11832345030788434848",
+								"member_card_id": 3586223853988268675,
+								"member_card_id_str": "3586223853988268675"
+							},
+							{
+								"member_id": 11832345030821989281,
+								"member_id_str": "11832345030821989281",
+								"member_card_id": 7306613326010698641,
+								"member_card_id_str": "7306613326010698641"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 4195466187347380794,
+								"member_card_id_str": "4195466187347380794",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 10553773211709917790,
+								"member_card_id_str": "10553773211709917790",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 3495862773265517468,
+								"member_card_id_str": "3495862773265517468",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 3586223853988268675,
+								"member_card_id_str": "3586223853988268675",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 7306613326010698641,
+								"member_card_id_str": "7306613326010698641",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"position": "1",
+						"rank": "1",
+						"name": "Rick McElvain + Bl[Tim Ley] + Kenneth Havlik + Doug Wolfe + Michael Benson",
+						"score": "-11",
+						"stableford": null,
+						"total": "97",
+						"purse": "$40.00",
+						"disposition": "",
+						"disposition_cause": "",
+						"individual_results": [
+							{
+								"member_id": 11832345030754880413,
+								"member_id_str": "11832345030754880413",
+								"name": "Rick McElvain",
+								"gross_scores": [
+									5,
+									5,
+									4,
+									4,
+									5,
+									6,
+									4,
+									4,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									5,
+									4,
+									3,
+									4,
+									5,
+									3,
+									3,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									1,
+									0,
+									1,
+									0,
+									0,
+									2,
+									0,
+									1,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									0,
+									1,
+									-1,
+									-1,
+									1,
+									-1,
+									0,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 42,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 35,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 6,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": -1,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345030654217112,
+								"member_id_str": "11832345030654217112",
+								"name": "Bl[Tim Ley]",
+								"gross_scores": [
+									6,
+									6,
+									4,
+									5,
+									6,
+									5,
+									5,
+									4,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									5,
+									3,
+									4,
+									5,
+									4,
+									3,
+									3,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									1,
+									1,
+									1,
+									1,
+									1,
+									1,
+									1,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									0,
+									0,
+									0,
+									0,
+									0,
+									-1,
+									0,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 46,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 35,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 10,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": -1,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345030788434847,
+								"member_id_str": "11832345030788434847",
+								"name": "Kenneth Havlik",
+								"gross_scores": [
+									7,
+									4,
+									4,
+									5,
+									6,
+									6,
+									5,
+									4,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									6,
+									4,
+									4,
+									4,
+									6,
+									5,
+									4,
+									4,
+									3,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									3,
+									-1,
+									1,
+									1,
+									1,
+									2,
+									1,
+									1,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									2,
+									-1,
+									1,
+									0,
+									1,
+									1,
+									0,
+									1,
+									-1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 45,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 40,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 9,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 4,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345030788434848,
+								"member_id_str": "11832345030788434848",
+								"name": "Doug Wolfe",
+								"gross_scores": [
+									5,
+									7,
+									4,
+									4,
+									6,
+									5,
+									6,
+									4,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									7,
+									3,
+									3,
+									5,
+									4,
+									5,
+									3,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									1,
+									2,
+									1,
+									0,
+									1,
+									1,
+									2,
+									1,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									2,
+									0,
+									-1,
+									0,
+									0,
+									1,
+									0,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 46,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 38,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 10,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 2,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345030821989281,
+								"member_id_str": "11832345030821989281",
+								"name": "Michael Benson",
+								"gross_scores": [
+									5,
+									6,
+									4,
+									7,
+									7,
+									6,
+									7,
+									4,
+									6,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									3,
+									4,
+									2,
+									6,
+									5,
+									4,
+									5,
+									2,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									1,
+									1,
+									1,
+									3,
+									2,
+									2,
+									3,
+									1,
+									2,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									-1,
+									-1,
+									-1,
+									2,
+									0,
+									0,
+									1,
+									-1,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 52,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 35,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 16,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": -1,
+										"in": null,
+										"total": null
+									}
+								}
+							}
+						],
+						"net_scores": [
+							11,
+							13,
+							8,
+							10,
+							14,
+							12,
+							10,
+							8,
+							11,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							15,
+							15,
+							12,
+							13,
+							17,
+							16,
+							14,
+							12,
+							14,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							-1,
+							-2,
+							-1,
+							-2,
+							-1,
+							0,
+							-2,
+							-1,
+							-1,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							-1,
+							-2,
+							-1,
+							-2,
+							-1,
+							0,
+							-2,
+							-1,
+							-1,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": 97,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 128,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": -11,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": -11,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11835209853465316134,
+						"id_str": "11835209853465316134",
+						"member_ids": [
+							11832345031727958984, 11832345031761513417, 11832345031761513418,
+							11832345031795067851, 11832345031795067852
+						],
+						"member_ids_str": [
+							"11832345031727958984",
+							"11832345031761513417",
+							"11832345031761513418",
+							"11832345031795067851",
+							"11832345031795067852"
+						],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11832345031727958984,
+								"member_id_str": "11832345031727958984",
+								"member_card_id": 3575694345417837407,
+								"member_card_id_str": "3575694345417837407"
+							},
+							{
+								"member_id": 11832345031761513417,
+								"member_id_str": "11832345031761513417",
+								"member_card_id": 3586223840432278111,
+								"member_card_id_str": "3586223840432278111"
+							},
+							{
+								"member_id": 11832345031761513418,
+								"member_id_str": "11832345031761513418",
+								"member_card_id": 3586223728058485537,
+								"member_card_id_str": "3586223728058485537"
+							},
+							{
+								"member_id": 11832345031795067851,
+								"member_id_str": "11832345031795067851",
+								"member_card_id": 3586223749197777753,
+								"member_card_id_str": "3586223749197777753"
+							},
+							{
+								"member_id": 11832345031795067852,
+								"member_id_str": "11832345031795067852",
+								"member_card_id": 7367803181897665243,
+								"member_card_id_str": "7367803181897665243"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 3575694345417837407,
+								"member_card_id_str": "3575694345417837407",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 3586223840432278111,
+								"member_card_id_str": "3586223840432278111",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 3586223728058485537,
+								"member_card_id_str": "3586223728058485537",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 3586223749197777753,
+								"member_card_id_str": "3586223749197777753",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 7367803181897665243,
+								"member_card_id_str": "7367803181897665243",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"position": "2",
+						"rank": "2",
+						"name": "Brian Stump + Tomm Berquist + Mike Crea + Randy Johnson + Mike Worthington",
+						"score": "-11",
+						"stableford": null,
+						"total": "97",
+						"purse": "$24.00",
+						"disposition": "",
+						"disposition_cause": "",
+						"individual_results": [
+							{
+								"member_id": 11832345031727958984,
+								"member_id_str": "11832345031727958984",
+								"name": "Brian Stump",
+								"gross_scores": [
+									5,
+									5,
+									4,
+									4,
+									5,
+									7,
+									4,
+									6,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									4,
+									3,
+									4,
+									4,
+									6,
+									3,
+									5,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									1,
+									0,
+									1,
+									0,
+									0,
+									3,
+									0,
+									3,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									-1,
+									0,
+									0,
+									-1,
+									2,
+									-1,
+									2,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 45,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 37,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 9,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 1,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345031761513417,
+								"member_id_str": "11832345031761513417",
+								"name": "Tomm Berquist",
+								"gross_scores": [
+									8,
+									6,
+									7,
+									5,
+									6,
+									4,
+									6,
+									5,
+									7,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									6,
+									4,
+									6,
+									4,
+									5,
+									2,
+									4,
+									3,
+									6,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									4,
+									1,
+									4,
+									1,
+									1,
+									0,
+									2,
+									2,
+									3,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									2,
+									-1,
+									3,
+									0,
+									0,
+									-2,
+									0,
+									0,
+									2,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 54,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 40,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 18,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 4,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345031761513418,
+								"member_id_str": "11832345031761513418",
+								"name": "Mike Crea",
+								"gross_scores": [
+									5,
+									6,
+									4,
+									6,
+									5,
+									5,
+									6,
+									3,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									6,
+									4,
+									5,
+									5,
+									4,
+									5,
+									3,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									1,
+									1,
+									1,
+									2,
+									0,
+									1,
+									2,
+									0,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									1,
+									1,
+									1,
+									0,
+									0,
+									1,
+									0,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 45,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 40,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 9,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 4,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345031795067851,
+								"member_id_str": "11832345031795067851",
+								"name": "Randy Johnson",
+								"gross_scores": [
+									5,
+									7,
+									4,
+									4,
+									7,
+									4,
+									7,
+									3,
+									6,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									6,
+									3,
+									3,
+									6,
+									3,
+									6,
+									2,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									1,
+									2,
+									1,
+									0,
+									2,
+									0,
+									3,
+									0,
+									2,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									1,
+									0,
+									-1,
+									1,
+									-1,
+									2,
+									-1,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 47,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 38,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 11,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 2,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345031795067852,
+								"member_id_str": "11832345031795067852",
+								"name": "Mike Worthington",
+								"gross_scores": [
+									6,
+									5,
+									3,
+									5,
+									6,
+									5,
+									7,
+									5,
+									6,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									5,
+									4,
+									2,
+									4,
+									5,
+									3,
+									5,
+									4,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									0,
+									0,
+									1,
+									1,
+									1,
+									3,
+									2,
+									2,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									1,
+									-1,
+									-1,
+									0,
+									0,
+									-1,
+									1,
+									1,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 48,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 36,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 12,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 0,
+										"in": null,
+										"total": null
+									}
+								}
+							}
+						],
+						"net_scores": [
+							12,
+							12,
+							8,
+							11,
+							14,
+							8,
+							12,
+							8,
+							12,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							15,
+							16,
+							11,
+							13,
+							16,
+							13,
+							16,
+							11,
+							16,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							0,
+							-3,
+							-1,
+							-1,
+							-1,
+							-4,
+							0,
+							-1,
+							0,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							0,
+							-3,
+							-1,
+							-1,
+							-1,
+							-4,
+							0,
+							-1,
+							0,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": 97,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 127,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": -11,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": -11,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11835209853498870572,
+						"id_str": "11835209853498870572",
+						"member_ids": [
+							11832345032331938787, 11832345030654217112, 11832345032365493221,
+							11832345032399047654, 11832345032399047655
+						],
+						"member_ids_str": [
+							"11832345032331938787",
+							"11832345030654217112",
+							"11832345032365493221",
+							"11832345032399047654",
+							"11832345032399047655"
+						],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11832345032331938787,
+								"member_id_str": "11832345032331938787",
+								"member_card_id": 9437527343879998324,
+								"member_card_id_str": "9437527343879998324"
+							},
+							{
+								"member_id": 11832345030654217112,
+								"member_id_str": "11832345030654217112",
+								"member_card_id": 10553773211709917790,
+								"member_card_id_str": "10553773211709917790"
+							},
+							{
+								"member_id": 11832345032365493221,
+								"member_id_str": "11832345032365493221",
+								"member_card_id": 9437527349382925176,
+								"member_card_id_str": "9437527349382925176"
+							},
+							{
+								"member_id": 11832345032399047654,
+								"member_id_str": "11832345032399047654",
+								"member_card_id": 9437527295293180759,
+								"member_card_id_str": "9437527295293180759"
+							},
+							{
+								"member_id": 11832345032399047655,
+								"member_id_str": "11832345032399047655",
+								"member_card_id": 11498159626663283467,
+								"member_card_id_str": "11498159626663283467"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 9437527343879998324,
+								"member_card_id_str": "9437527343879998324",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 10553773211709917790,
+								"member_card_id_str": "10553773211709917790",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 9437527349382925176,
+								"member_card_id_str": "9437527349382925176",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 9437527295293180759,
+								"member_card_id_str": "9437527295293180759",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 11498159626663283467,
+								"member_card_id_str": "11498159626663283467",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"position": "3",
+						"rank": "3",
+						"name": "Thomas Martin + Bl[Tim Ley] + Jon Kampp + Gerald Giorgio + Richard Garland",
+						"score": "-10",
+						"stableford": null,
+						"total": "98",
+						"purse": "$16.00",
+						"disposition": "",
+						"disposition_cause": "",
+						"individual_results": [
+							{
+								"member_id": 11832345032331938787,
+								"member_id_str": "11832345032331938787",
+								"name": "Thomas Martin",
+								"gross_scores": [
+									6,
+									7,
+									4,
+									6,
+									6,
+									6,
+									6,
+									4,
+									6,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									6,
+									3,
+									5,
+									5,
+									4,
+									4,
+									3,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									2,
+									1,
+									2,
+									1,
+									2,
+									2,
+									1,
+									2,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									1,
+									0,
+									1,
+									0,
+									0,
+									0,
+									0,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 51,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 38,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 15,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 2,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345030654217112,
+								"member_id_str": "11832345030654217112",
+								"name": "Bl[Tim Ley]",
+								"gross_scores": [
+									6,
+									6,
+									4,
+									5,
+									6,
+									5,
+									5,
+									4,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									5,
+									3,
+									4,
+									5,
+									4,
+									3,
+									3,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									1,
+									1,
+									1,
+									1,
+									1,
+									1,
+									1,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									0,
+									0,
+									0,
+									0,
+									0,
+									-1,
+									0,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 46,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 35,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 10,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": -1,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345032365493221,
+								"member_id_str": "11832345032365493221",
+								"name": "Jon Kampp",
+								"gross_scores": [
+									6,
+									7,
+									5,
+									3,
+									6,
+									5,
+									5,
+									4,
+									6,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									6,
+									4,
+									2,
+									5,
+									4,
+									3,
+									3,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									2,
+									2,
+									-1,
+									1,
+									1,
+									1,
+									1,
+									2,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									1,
+									1,
+									-2,
+									0,
+									0,
+									-1,
+									0,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 47,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 36,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 11,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 0,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345032399047654,
+								"member_id_str": "11832345032399047654",
+								"name": "Gerald Giorgio",
+								"gross_scores": [
+									6,
+									5,
+									4,
+									5,
+									5,
+									9,
+									8,
+									3,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									5,
+									4,
+									3,
+									4,
+									4,
+									7,
+									6,
+									2,
+									2,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									0,
+									1,
+									1,
+									0,
+									5,
+									4,
+									0,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									1,
+									-1,
+									0,
+									0,
+									-1,
+									3,
+									2,
+									-1,
+									-2,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 49,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 37,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 13,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 1,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345032399047655,
+								"member_id_str": "11832345032399047655",
+								"name": "Richard Garland",
+								"gross_scores": [
+									6,
+									7,
+									5,
+									6,
+									6,
+									6,
+									6,
+									2,
+									6,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									5,
+									6,
+									4,
+									5,
+									5,
+									5,
+									5,
+									1,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									2,
+									2,
+									2,
+									1,
+									2,
+									2,
+									-1,
+									2,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									1,
+									1,
+									1,
+									1,
+									0,
+									1,
+									1,
+									-2,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 50,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 41,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 14,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 5,
+										"in": null,
+										"total": null
+									}
+								}
+							}
+						],
+						"net_scores": [
+							12,
+							15,
+							9,
+							10,
+							14,
+							12,
+							10,
+							6,
+							10,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							18,
+							18,
+							12,
+							13,
+							17,
+							16,
+							16,
+							9,
+							15,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							0,
+							0,
+							0,
+							-2,
+							-1,
+							0,
+							-2,
+							-3,
+							-2,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							0,
+							0,
+							0,
+							-2,
+							-1,
+							0,
+							-2,
+							-3,
+							-2,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": 98,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 134,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": -10,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": -10,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11835209853465316132,
+						"id_str": "11835209853465316132",
+						"member_ids": [
+							11832345031526632382, 11832345031526632383, 11832345031560186816,
+							11832345031560186817, 11832345031593741250
+						],
+						"member_ids_str": [
+							"11832345031526632382",
+							"11832345031526632383",
+							"11832345031560186816",
+							"11832345031560186817",
+							"11832345031593741250"
+						],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11832345031526632382,
+								"member_id_str": "11832345031526632382",
+								"member_card_id": 3495862775882763173,
+								"member_card_id_str": "3495862775882763173"
+							},
+							{
+								"member_id": 11832345031526632383,
+								"member_id_str": "11832345031526632383",
+								"member_card_id": 10492854234645580378,
+								"member_card_id_str": "10492854234645580378"
+							},
+							{
+								"member_id": 11832345031560186816,
+								"member_id_str": "11832345031560186816",
+								"member_card_id": 10492854239779408475,
+								"member_card_id_str": "10492854239779408475"
+							},
+							{
+								"member_id": 11832345031560186817,
+								"member_id_str": "11832345031560186817",
+								"member_card_id": 3586223720139639566,
+								"member_card_id_str": "3586223720139639566"
+							},
+							{
+								"member_id": 11832345031593741250,
+								"member_id_str": "11832345031593741250",
+								"member_card_id": 6741177318347164633,
+								"member_card_id_str": "6741177318347164633"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 3495862775882763173,
+								"member_card_id_str": "3495862775882763173",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 10492854234645580378,
+								"member_card_id_str": "10492854234645580378",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 10492854239779408475,
+								"member_card_id_str": "10492854239779408475",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 3586223720139639566,
+								"member_card_id_str": "3586223720139639566",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 6741177318347164633,
+								"member_card_id_str": "6741177318347164633",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"position": "--",
+						"rank": "4",
+						"name": "Les Lamkins + Kevin Cruitt + Jeffrey Kieper + Topher Baron + Brett Snaza",
+						"score": "-10",
+						"stableford": null,
+						"total": "98",
+						"purse": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"individual_results": [
+							{
+								"member_id": 11832345031526632382,
+								"member_id_str": "11832345031526632382",
+								"name": "Les Lamkins",
+								"gross_scores": [
+									4,
+									7,
+									4,
+									4,
+									5,
+									4,
+									5,
+									6,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									3,
+									7,
+									4,
+									3,
+									4,
+									3,
+									4,
+									5,
+									3,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									0,
+									2,
+									1,
+									0,
+									0,
+									0,
+									1,
+									3,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									-1,
+									2,
+									1,
+									-1,
+									-1,
+									-1,
+									0,
+									2,
+									-1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 43,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 36,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 7,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 0,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345031526632383,
+								"member_id_str": "11832345031526632383",
+								"name": "Kevin Cruitt",
+								"gross_scores": [
+									6,
+									6,
+									3,
+									5,
+									4,
+									7,
+									5,
+									4,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									5,
+									2,
+									4,
+									3,
+									6,
+									4,
+									3,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									1,
+									0,
+									1,
+									-1,
+									3,
+									1,
+									1,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									0,
+									-1,
+									0,
+									-2,
+									2,
+									0,
+									0,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 45,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 35,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 9,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": -1,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345031560186816,
+								"member_id_str": "11832345031560186816",
+								"name": "Jeffrey Kieper",
+								"gross_scores": [
+									4,
+									6,
+									4,
+									5,
+									5,
+									6,
+									4,
+									4,
+									3,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									3,
+									6,
+									4,
+									5,
+									5,
+									6,
+									3,
+									3,
+									3,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									0,
+									1,
+									1,
+									1,
+									0,
+									2,
+									0,
+									1,
+									-1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									-1,
+									1,
+									1,
+									1,
+									0,
+									2,
+									-1,
+									0,
+									-1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 41,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 38,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 5,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 2,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345031560186817,
+								"member_id_str": "11832345031560186817",
+								"name": "Topher Baron",
+								"gross_scores": [
+									4,
+									5,
+									4,
+									4,
+									5,
+									5,
+									4,
+									2,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									5,
+									4,
+									4,
+									5,
+									5,
+									4,
+									2,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									0,
+									0,
+									1,
+									0,
+									0,
+									1,
+									0,
+									-1,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									0,
+									1,
+									0,
+									0,
+									1,
+									0,
+									-1,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 38,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 38,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 2,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 2,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345031593741250,
+								"member_id_str": "11832345031593741250",
+								"name": "Brett Snaza",
+								"gross_scores": [
+									5,
+									5,
+									4,
+									5,
+									6,
+									5,
+									5,
+									2,
+									6,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									5,
+									4,
+									5,
+									6,
+									5,
+									4,
+									1,
+									6,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									1,
+									0,
+									1,
+									1,
+									1,
+									1,
+									1,
+									-1,
+									2,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									0,
+									1,
+									1,
+									1,
+									1,
+									0,
+									-2,
+									2,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 43,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 40,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 7,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 4,
+										"in": null,
+										"total": null
+									}
+								}
+							}
+						],
+						"net_scores": [
+							10,
+							15,
+							10,
+							11,
+							12,
+							13,
+							11,
+							6,
+							10,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							12,
+							16,
+							11,
+							13,
+							14,
+							14,
+							13,
+							8,
+							12,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							-2,
+							0,
+							1,
+							-1,
+							-3,
+							1,
+							-1,
+							-3,
+							-2,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							-2,
+							0,
+							1,
+							-1,
+							-3,
+							1,
+							-1,
+							-3,
+							-2,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": 98,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 113,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": -10,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": -10,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11835209853498870573,
+						"id_str": "11835209853498870573",
+						"member_ids": [
+							11832345032432602088, 11832345032432602089, 11832345030654217112,
+							11832345032499710955, 11832345032499710956
+						],
+						"member_ids_str": [
+							"11832345032432602088",
+							"11832345032432602089",
+							"11832345030654217112",
+							"11832345032499710955",
+							"11832345032499710956"
+						],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11832345032432602088,
+								"member_id_str": "11832345032432602088",
+								"member_card_id": 8382167572287638454,
+								"member_card_id_str": "8382167572287638454"
+							},
+							{
+								"member_id": 11832345032432602089,
+								"member_id_str": "11832345032432602089",
+								"member_card_id": 10492854081436043860,
+								"member_card_id_str": "10492854081436043860"
+							},
+							{
+								"member_id": 11832345030654217112,
+								"member_id_str": "11832345030654217112",
+								"member_card_id": 10553773211709917790,
+								"member_card_id_str": "10553773211709917790"
+							},
+							{
+								"member_id": 11832345032499710955,
+								"member_id_str": "11832345032499710955",
+								"member_card_id": 11498159868523629354,
+								"member_card_id_str": "11498159868523629354"
+							},
+							{
+								"member_id": 11832345032499710956,
+								"member_id_str": "11832345032499710956",
+								"member_card_id": 7512723384921279056,
+								"member_card_id_str": "7512723384921279056"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 8382167572287638454,
+								"member_card_id_str": "8382167572287638454",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 10492854081436043860,
+								"member_card_id_str": "10492854081436043860",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 10553773211709917790,
+								"member_card_id_str": "10553773211709917790",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 11498159868523629354,
+								"member_card_id_str": "11498159868523629354",
+								"status": "completed"
+							},
+							{
+								"member_card_id": 7512723384921279056,
+								"member_card_id_str": "7512723384921279056",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"position": "4",
+						"rank": "5",
+						"name": "Zack Kessler + Paul Wagenbach + Bl[Tim Ley] + Justin Erdmann + Jake Krebs",
+						"score": "-10",
+						"stableford": null,
+						"total": "98",
+						"purse": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"individual_results": [
+							{
+								"member_id": 11832345032432602088,
+								"member_id_str": "11832345032432602088",
+								"name": "Zack Kessler",
+								"gross_scores": [
+									6,
+									6,
+									4,
+									4,
+									4,
+									6,
+									5,
+									4,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									5,
+									5,
+									3,
+									4,
+									3,
+									5,
+									4,
+									3,
+									3,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									1,
+									1,
+									0,
+									-1,
+									2,
+									1,
+									1,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									1,
+									0,
+									0,
+									0,
+									-2,
+									1,
+									0,
+									0,
+									-1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 43,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 35,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 7,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": -1,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345032432602089,
+								"member_id_str": "11832345032432602089",
+								"name": "Paul Wagenbach",
+								"gross_scores": [
+									6,
+									8,
+									5,
+									5,
+									6,
+									4,
+									6,
+									5,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									6,
+									4,
+									4,
+									4,
+									2,
+									4,
+									3,
+									3,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									3,
+									2,
+									1,
+									1,
+									0,
+									2,
+									2,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									1,
+									1,
+									0,
+									-1,
+									-2,
+									0,
+									0,
+									-1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 50,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 34,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 14,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": -2,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345030654217112,
+								"member_id_str": "11832345030654217112",
+								"name": "Bl[Tim Ley]",
+								"gross_scores": [
+									6,
+									6,
+									4,
+									5,
+									6,
+									5,
+									5,
+									4,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									5,
+									3,
+									4,
+									5,
+									4,
+									3,
+									3,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									1,
+									1,
+									1,
+									1,
+									1,
+									1,
+									1,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									0,
+									0,
+									0,
+									0,
+									0,
+									-1,
+									0,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 46,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 35,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 10,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": -1,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345032499710955,
+								"member_id_str": "11832345032499710955",
+								"name": "Justin Erdmann",
+								"gross_scores": [
+									6,
+									7,
+									4,
+									6,
+									6,
+									7,
+									8,
+									5,
+									5,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									4,
+									6,
+									3,
+									5,
+									5,
+									5,
+									6,
+									3,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									2,
+									2,
+									1,
+									2,
+									1,
+									3,
+									4,
+									2,
+									1,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									0,
+									1,
+									0,
+									1,
+									0,
+									1,
+									2,
+									0,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 54,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 41,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 18,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 5,
+										"in": null,
+										"total": null
+									}
+								}
+							},
+							{
+								"member_id": 11832345032499710956,
+								"member_id_str": "11832345032499710956",
+								"name": "Jake Krebs",
+								"gross_scores": [
+									4,
+									5,
+									3,
+									5,
+									7,
+									5,
+									5,
+									4,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"net_scores": [
+									3,
+									4,
+									3,
+									5,
+									7,
+									4,
+									4,
+									3,
+									4,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"gross_extra_holes": [],
+								"net_extra_holes": [],
+								"to_par_gross": [
+									0,
+									0,
+									0,
+									1,
+									2,
+									1,
+									1,
+									1,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"to_par_net": [
+									-1,
+									-1,
+									0,
+									1,
+									2,
+									0,
+									0,
+									0,
+									0,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null,
+									null
+								],
+								"totals": {
+									"gross_scores": {
+										"out": 42,
+										"in": null,
+										"total": null
+									},
+									"net_scores": {
+										"out": 37,
+										"in": null,
+										"total": null
+									},
+									"to_par_gross": {
+										"out": 6,
+										"in": null,
+										"total": null
+									},
+									"to_par_net": {
+										"out": 1,
+										"in": null,
+										"total": null
+									}
+								}
+							}
+						],
+						"net_scores": [
+							11,
+							14,
+							9,
+							12,
+							12,
+							10,
+							11,
+							9,
+							10,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							16,
+							17,
+							11,
+							14,
+							16,
+							14,
+							15,
+							12,
+							13,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"to_par_net": [
+							-1,
+							-1,
+							0,
+							0,
+							-3,
+							-2,
+							-1,
+							0,
+							-2,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"to_par_gross": [
+							-1,
+							-1,
+							0,
+							0,
+							-3,
+							-2,
+							-1,
+							0,
+							-2,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"totals": {
+							"net_scores": {
+								"out": 98,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 128,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": -10,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": -10,
+								"in": null,
+								"total": null
+							}
+						}
+					}
+				]
+			}
+		],
+		"season_points": [],
+		"id": 11832341935291419344,
+		"id_str": "11832341935291419344",
+		"column_visibility": {
+			"position": true,
+			"name": true,
+			"affiliation": false,
+			"score": true,
+			"thru": false,
+			"total": true,
+			"purse": true,
+			"points": false,
+			"details": false
+		},
+		"column_names": {
+			"position": "Pos",
+			"name": "Foursome",
+			"score": "To Par<br/>Net",
+			"total": "Total<br/>Net",
+			"purse": "Purse"
+		},
+		"horizontal_leaderboard": false
+	}
+}

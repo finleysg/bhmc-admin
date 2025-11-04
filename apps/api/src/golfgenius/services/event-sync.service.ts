@@ -3,6 +3,12 @@ import { Injectable, Logger } from "@nestjs/common"
 import { EventsService } from "../../events/events.service"
 import { ApiClient } from "../api-client"
 
+interface EventSyncSummary {
+	eventUpdated: boolean
+	roundsCreated: number
+	tournamentsCreated: number
+}
+
 @Injectable()
 export class EventSyncService {
 	private readonly logger = new Logger(EventSyncService.name)
@@ -16,7 +22,7 @@ export class EventSyncService {
 	 * Synchronize a single local event with Golf Genius data.
 	 * Returns a summary of created/updated records.
 	 */
-	async syncEvent(eventId: number) {
+	async syncEvent(eventId: number): Promise<EventSyncSummary> {
 		const summary = {
 			eventUpdated: false,
 			roundsCreated: 0,

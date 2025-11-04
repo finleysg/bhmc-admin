@@ -40,7 +40,9 @@ export class BaseResultParser {
  * Parser for points tournament results (saves to damcup_eventpoints)
  */
 export class PointsResultParser extends BaseResultParser {
-	static parsePlayerData(aggregate: GGAggregate, memberCard: GGMemberCard) {
+	static parsePlayerData<
+		T extends { rank?: string; points?: string; position?: string; total?: string; name?: string },
+	>(aggregate: T, memberCard: GGMemberCard) {
 		return {
 			rank: aggregate.rank || "",
 			points: aggregate.points || "",
@@ -87,7 +89,9 @@ export class PointsResultParser extends BaseResultParser {
  * Parser for skins tournament results (saves to events_tournamentresult)
  */
 export class SkinsResultParser extends BaseResultParser {
-	static parsePlayerData(aggregate: GGAggregate, memberCard: GGMemberCard) {
+	static parsePlayerData<
+		T extends { purse?: string; total?: string; details?: string; name?: string },
+	>(aggregate: T, memberCard: GGMemberCard) {
 		return {
 			purse: aggregate.purse || "$0.00",
 			total: aggregate.total || "",
@@ -102,7 +106,10 @@ export class SkinsResultParser extends BaseResultParser {
  * Parser for proxy/user-scored tournament results (saves to events_tournamentresult)
  */
 export class ProxyResultParser extends BaseResultParser {
-	static parsePlayerData(aggregate: GGAggregate, memberCard: GGMemberCard) {
+	static parsePlayerData<T extends { purse?: string; rank?: string; name?: string }>(
+		aggregate: T,
+		memberCard: GGMemberCard,
+	) {
 		return {
 			purse: aggregate.purse || "$0.00",
 			rank: aggregate.rank || "",
@@ -116,7 +123,9 @@ export class ProxyResultParser extends BaseResultParser {
  * Parser for stroke play tournament results (saves to events_tournamentresult)
  */
 export class StrokePlayResultParser extends BaseResultParser {
-	static parsePlayerData(aggregate: GGAggregate, memberCard: GGMemberCard) {
+	static parsePlayerData<
+		T extends { purse?: string; position?: string; total?: string; name?: string },
+	>(aggregate: T, memberCard: GGMemberCard) {
 		return {
 			purse: aggregate.purse || "$0.00",
 			position: aggregate.position || "",

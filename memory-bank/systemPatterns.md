@@ -32,6 +32,8 @@ Testing & quality patterns
 - **Domain type usage**: Tests use actual domain types (`EventDomainData`, `RegistrationSlotDomainData`) instead of `any`
 - **Zero ESLint errors**: Strict linting rules enforced with shared ESLint config
 - **Prettier formatting**: Consistent code formatting applied across all files
+- **Advanced Type Safety**: Generic parsers with constrained types, discriminated unions for variants, type guards over assertions, and strict type assertion guidelines
+- **Type-First Development**: Interfaces and types defined before implementation, with clear guidelines for when to extend vs create separate interfaces
 
 Auth & Integration patterns
 

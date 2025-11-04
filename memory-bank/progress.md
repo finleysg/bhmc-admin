@@ -11,6 +11,8 @@ Completed
 - **Shared DTO Package**: Created and integrated packages/dto with type-safe DTOs for events, scores, and registration; built with TypeScript and consumed via workspace imports
 - **Code Quality**: Fixed 99 ESLint violations in test files by replacing `any` types with proper domain types; achieved zero ESLint errors across codebase; applied Prettier formatting consistently
 - **TypeScript & Testing**: Ensured TypeScript compilation success, established test patterns using `Partial<T>` for service mocks, and maintained type safety throughout
+- **Advanced Type Safety**: Implemented comprehensive TypeScript improvements across Golf Genius services including generic parsers with constrained types, discriminated unions for tournament formats, type guards over assertions, and strict type assertion guidelines; eliminated unsafe `as any` casts while maintaining parser compatibility
+- **Development Guidelines**: Updated TypeScript practices rule file with comprehensive guidelines covering type-first development, generic parser patterns, discriminated unions, utility types, type guards, interface extension strategies, and strict configuration requirements
 
 In progress / Next steps
 

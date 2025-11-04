@@ -1,0 +1,317 @@
+{
+	"event": {
+		"name": "6 North Proxy",
+		"adjusted": true,
+		"scopes": [
+			{
+				"id": 11651996969617902184,
+				"id_str": "11651996969617902184",
+				"aggregates": [
+					{
+						"id": 11652003176248298287,
+						"id_str": "11652003176248298287",
+						"member_ids": [11649625922688043961],
+						"member_ids_str": ["11649625922688043961"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11649625922688043961,
+								"member_id_str": "11649625922688043961",
+								"member_card_id": 3586223796710853606,
+								"member_card_id_str": "3586223796710853606"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 3586223796710853606,
+								"member_card_id_str": "3586223796710853606",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"position": "1",
+						"rank": "1",
+						"name": "Joe Gadtke",
+						"purse": "$25.00",
+						"details": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							5,
+							4,
+							4,
+							6,
+							6,
+							2,
+							4,
+							3,
+							6,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 40,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11652003176449625027,
+						"id_str": "11652003176449625027",
+						"member_ids": [11649625926748129869],
+						"member_ids_str": ["11649625926748129869"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11649625926748129869,
+								"member_id_str": "11649625926748129869",
+								"member_card_id": 3586223828151355964,
+								"member_card_id_str": "3586223828151355964"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 3586223828151355964,
+								"member_card_id_str": "3586223828151355964",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"position": "T2",
+						"rank": "999",
+						"name": "Aaron Moberg",
+						"purse": "$0.00",
+						"details": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							5,
+							7,
+							3,
+							5,
+							6,
+							4,
+							4,
+							4,
+							6,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 44,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					},
+					{
+						"id": 11652003176281852737,
+						"id_str": "11652003176281852737",
+						"member_ids": [11649625923292023755],
+						"member_ids_str": ["11649625923292023755"],
+						"points_summary_team_id": null,
+						"member_cards": [
+							{
+								"member_id": 11649625923292023755,
+								"member_id_str": "11649625923292023755",
+								"member_card_id": 9437527167081696069,
+								"member_card_id_str": "9437527167081696069"
+							}
+						],
+						"scorecard_statuses": [
+							{
+								"member_card_id": 9437527167081696069,
+								"member_card_id_str": "9437527167081696069",
+								"status": "completed"
+							}
+						],
+						"tour_id": "",
+						"position": "T2",
+						"rank": "999",
+						"name": "Aaron Nyberg",
+						"purse": "$0.00",
+						"details": "",
+						"disposition": "",
+						"disposition_cause": "",
+						"net_scores": [
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"gross_scores": [
+							4,
+							5,
+							5,
+							5,
+							4,
+							3,
+							6,
+							3,
+							3,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						],
+						"net_extra_holes": [],
+						"gross_extra_holes": [],
+						"totals": {
+							"net_scores": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"gross_scores": {
+								"out": 38,
+								"in": null,
+								"total": null
+							},
+							"to_par_net": {
+								"out": null,
+								"in": null,
+								"total": null
+							},
+							"to_par_gross": {
+								"out": null,
+								"in": null,
+								"total": null
+							}
+						}
+					}
+				]
+			}
+		],
+		"season_points": [],
+		"id": 11649608667925367703,
+		"id_str": "11649608667925367703",
+		"column_visibility": {
+			"position": true,
+			"name": true,
+			"affiliation": false,
+			"score": false,
+			"thru": false,
+			"total": false,
+			"purse": true,
+			"points": false,
+			"details": true
+		},
+		"column_names": {
+			"position": "Pos",
+			"name": "Player",
+			"purse": "Purse",
+			"details": "Details"
+		},
+		"horizontal_leaderboard": false
+	}
+}
