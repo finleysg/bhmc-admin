@@ -19,11 +19,11 @@ Apps
   - Health endpoint: `GET /health`
 
 - **apps/web**
-  - Framework: Next.js 15+ (App Router, TypeScript)
-  - Auth: better-auth (planned, stores auth data in SQLite file)
+  - Framework: Next.js 16.0.1 (App Router, TypeScript)
+  - Auth: better-auth v1.3.34 with better-sqlite3 and Kysely ORM
   - UI: Tailwind CSS v4 + daisyUI 5 (emerald/sunset themes)
-  - SQLite storage: mounted path `./docker/sqlite/auth.db`
-  - Health endpoint: `GET /health` (planned)
+  - SQLite storage: file path `./apps/web/data/auth.db`
+  - Health endpoint: `GET /health`
 
 Packages
 
@@ -47,7 +47,7 @@ Databases & Docker
 
 - **docker-compose.yml** orchestrates:
   - mysql: image `mysql:8.0`, port 3306, volume `mysql-data`
-  - sqlite: file-backed under `./docker/sqlite` (auth.db planned)
+  - sqlite: file-backed under `./apps/web/data` (auth.db implemented)
 - Databases run in Docker containers for development parity
 - Drizzle configured for MySQL with no schema ownership (external database)
 

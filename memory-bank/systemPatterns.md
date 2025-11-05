@@ -30,17 +30,52 @@ Testing & quality patterns
 
 - **Type-safe testing**: Jest configured with `Partial<T>` patterns for service mocks
 - **Domain type usage**: Tests use actual domain types (`EventDomainData`, `RegistrationSlotDomainData`) instead of `any`
+- **Test data factories**: Consistent test fixture creation with typed factory functions
+- **Mock strategies**: Service dependency mocking using `Partial<T>` with proper interface compliance
+- **Integration testing**: API endpoint testing with realistic data and error scenarios
 - **Zero ESLint errors**: Strict linting rules enforced with shared ESLint config
 - **Prettier formatting**: Consistent code formatting applied across all files
 - **Advanced Type Safety**: Generic parsers with constrained types, discriminated unions for variants, type guards over assertions, and strict type assertion guidelines
 - **Type-First Development**: Interfaces and types defined before implementation, with clear guidelines for when to extend vs create separate interfaces
 
+Code organization patterns
+
+- **Feature-based modules**: Each domain area (events, courses, registration) organized as self-contained modules
+- **Layer separation**: domain/dto/services/controllers structure within each module
+- **Shared package boundaries**: Strict import rules preventing circular dependencies
+- **File naming conventions**: Consistent kebab-case for files, PascalCase for classes/interfaces
+- **Test organization**: Test files mirror source structure with descriptive naming
+- **Configuration grouping**: Related configuration grouped by domain/feature
+
 Auth & Integration patterns
 
-- **better-auth integration**: Planned for Next.js app with SQLite persistence
+- **better-auth integration**: Implemented in Next.js app with SQLite persistence using better-sqlite3 and Kysely ORM
 - **JWT validation**: NestJS API validates tokens from better-auth for protected admin endpoints
 - **Golf Genius integration**: Complete bidirectional API integration with dedicated service modules, comprehensive error handling, retry logic, and audit logging
 - **Tournament Results Import**: Format-specific parsers (points, skins, proxy, stroke play) with flexible DTOs accommodating API inconsistencies; idempotent operations with result deletion before import; ordinal position formatting (1st, 2nd, T3rd); comprehensive unit test coverage
+
+Error handling patterns
+
+- **Custom error classes**: ApiError, AuthError, RateLimitError with consistent error interfaces and metadata
+- **Global exception filters**: NestJS exception filters for standardized HTTP error responses
+- **Integration interceptors**: Automatic audit logging for Golf Genius operations with full request/response details
+- **Retry strategies**: Exponential backoff for external API calls with configurable retry limits
+- **Error classification**: Structured error types for different failure modes (network, auth, rate limit, data validation)
+
+Configuration patterns
+
+- **Environment validation**: Joi schemas for runtime configuration validation on startup
+- **Centralized config modules**: Type-safe configuration access with environment-specific loading
+- **Configuration hierarchy**: Environment variables → validation schemas → typed config objects
+- **Secret management**: Environment-based secrets with validation and secure defaults
+
+API integration patterns
+
+- **HTTP client configuration**: Axios clients with request/response interceptors for logging and error handling
+- **Rate limiting**: Configurable rate limits with queue management and backoff strategies
+- **Request monitoring**: Comprehensive logging of all external API interactions
+- **Idempotent operations**: Safe retry patterns for non-idempotent operations
+- **Response normalization**: Consistent error handling and data transformation across integrations
 
 Observability & health
 

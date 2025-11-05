@@ -5,7 +5,6 @@ Current focus:
 - Complete the NestJS API implementation with full module coverage (events, courses, registration, scores)
 - Implement Next.js frontend with better-auth integration and daisyUI components
 - Establish end-to-end connectivity between API and web app
-- Set up development workflow with Docker databases and hot reloading
 
 Recent changes:
 
@@ -19,15 +18,6 @@ Recent changes:
 - **TypeScript & Testing**: Applied Prettier formatting, ensured TypeScript compilation success, and established test patterns using `Partial<T>` for service mocks
 - **Advanced Type Safety**: Implemented comprehensive TypeScript improvements across Golf Genius services including generic parsers, discriminated unions for tournament formats, type guards over assertions, and strict type assertion guidelines; eliminated unsafe `as any` casts while maintaining parser compatibility
 - **Development Guidelines**: Updated TypeScript practices rule file with comprehensive guidelines covering type-first development, generic parser patterns, discriminated unions, utility types, type guards, interface extension strategies, and strict configuration requirements
-
-Next immediate steps:
-
-1. Implement remaining API modules (courses, registration, scores) following the events module pattern
-2. Scaffold Next.js app with better-auth integration and SQLite persistence
-3. Create shared UI components using daisyUI 5 and Tailwind CSS v4
-4. Establish API-to-frontend connectivity with proper error handling
-5. Add development scripts and verify Docker database connectivity
-6. Implement basic admin screens for event management
 
 Important decisions & constraints:
 

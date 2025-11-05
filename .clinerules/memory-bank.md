@@ -1,24 +1,19 @@
 ---
-description:
-  Describes Cline's Memory Bank system, its structure, and workflows for maintaining project
-  knowledge across sessions.
-author: https://github.com/nickbaumann98
-version: 1.1
+description: Describes Cline's Memory Bank system, its structure, and workflows for maintaining project knowledge across sessions.
+author: https://github.com/nickbaumann98 https://github.com/chisleu
+version: 1.0
 tags: ["memory-bank", "knowledge-base", "core-behavior", "documentation-protocol"]
 globs: ["memory-bank/**/*.md", "*"]
 ---
 
-# Cline's Memory Bank
+# Cline's Memory Bank (Time-Aware Version)
 
-My memory resets completely between sessions. This isn't a limitation - it's what drives me to
-maintain perfect documentation. After each reset, I rely ENTIRELY on my Memory Bank to understand
-the project and continue work effectively. I MUST read ALL memory bank files at the start of EVERY
-task - this is not optional.
+I am Cline, an expert software engineer with a unique characteristic: my memory resets completely between sessions. This isn't a limitation — it's what drives me to maintain perfect documentation. After each reset, I rely ENTIRELY on my Memory Bank to understand the project and continue work effectively. I MUST read ALL memory bank files at the start of EVERY task — this is not optional.
 
 ## Memory Bank Structure
 
-The Memory Bank consists of core files and optional context files, all in Markdown format. Files
-build upon each other in a clear hierarchy:
+The Memory Bank is located in a folder called 'memory-bank'. Create it if it does not already exist.
+The Memory Bank consists of core files and optional context files, all in Markdown format. Files build upon each other in a clear hierarchy:
 
 ```mermaid
 flowchart TD
@@ -31,6 +26,7 @@ flowchart TD
     TC --> AC
 
     AC --> P[progress.md]
+    AC --> CL[changelog.md]
 ```
 
 ### Core Files (Required)
@@ -54,6 +50,9 @@ flowchart TD
    - Active decisions and considerations
    - Important patterns and preferences
    - Learnings and project insights
+   - Maintain a sliding window of the **10 most recent events** (date + summary).
+   - When a new event is added (the 11th), delete the oldest to retain only 10.
+   - This helps me reason about recent changes without bloating the file.
 
 4. `systemPatterns.md`
    - System architecture
@@ -76,15 +75,29 @@ flowchart TD
    - Known issues
    - Evolution of project decisions
 
-### Additional Context
+7. `changelog.md`
+   - Chronological log of key changes, decisions, or versions
+   - Follows a `CHANGELOG.md` convention with version/date headers
+   - Example format:
 
-Create additional files/folders within memory-bank/ when they help organize:
+     ```markdown
+     ## [1.0.3] - 2025-06-14
 
-- Complex feature documentation
-- Integration specifications
-- API documentation
-- Testing strategies
-- Deployment procedures
+     ### Changed
+
+     - Switched from REST to GraphQL
+     - Refactored notification system for async retries
+
+     ### Fixed
+
+     - Resolved mobile auth bug on Android
+
+     ### Added
+
+     - Timeline.md summary added to support project retrospectives
+     ```
+
+---
 
 ## Core Workflows
 
@@ -113,14 +126,19 @@ flowchart TD
     Execute --> Document[Document Changes]
 ```
 
+---
+
 ## Documentation Updates
 
-Memory Bank updates occur when:
+Updates occur when:
 
 1. Discovering new project patterns
-2. After implementing significant changes
-3. When user requests with **update memory bank** (MUST review ALL files)
-4. When context needs clarification
+2. After significant changes
+3. When user requests **update memory bank**
+4. When context changes or decisions occur
+5. When **time-based updates** are needed
+
+### Update Process
 
 ```mermaid
 flowchart TD
@@ -131,52 +149,18 @@ flowchart TD
         P2[Document Current State]
         P3[Clarify Next Steps]
         P4[Document Insights & Patterns]
+        P5[Update progress.md]
+        P6[Slide activeContext.md to keep latest 10 entries]
+        P7[Append changelog.md]
 
-        P1 --> P2 --> P3 --> P4
+        P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7
     end
 
     Start --> Process
 ```
 
-## Updating Memory Bank During Multi-step Tasks (New Guidance)
+---
 
-When a task involves multiple edits, long-running work, or user feedback, update the Memory Bank
-proactively to preserve context and make future sessions efficient:
+## Reminder
 
-- At task start:
-  - Read ALL memory bank files (required).
-  - Add or update `activeContext.md` with the current goal and approach before making changes.
-
-- Mid-task (MANDATORY after any of these milestones):
-  - Fixing a critical bug that changed the approach
-  - User providing corrective feedback (e.g., "why was X removed?")
-  - Completing 50% or more of a multi-step task
-  - Before any task interruption or resumption
-
-  - Update `activeContext.md` with a short summary of what changed and why.
-  - Append to `progress.md` a brief note of current status and any known gaps (e.g., "CORS added;
-    .d.ts workaround present; seed script added").
-
-- On user feedback that changes strategy or preferences (example: "do not create .d.ts files"):
-  - Record the preference in `techContext.md` and `activeContext.md` so future work follows the same
-    conventions.
-  - If the preference is a policy-level change, request updating `.clinerules/` (for example, to add
-    a rule to Definition of Done).
-
-- On task completion:
-  - Ensure `progress.md` lists completed work and remaining tasks (if any).
-  - Update `activeContext.md` to reflect the new normal state and next steps.
-  - Include links or file paths to important new artifacts (e.g., `apps/web/scripts/seed-admin.ts`).
-
-### Minimum Content for Updates
-
-When updating during a task, include:
-
-- What changed (file paths and a one-line description)
-- Why it changed (decision rationale)
-- Any outstanding actions or follow-ups
-- Who approved the change (if applicable)
-
-REMEMBER: When requested to perform an "update memory bank" operation, review and update every
-memory-bank file. Focus particularly on `activeContext.md` and `progress.md` — they track the
-current state and are the most valuable for resuming work in a new session.
+After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity — especially with time-aware reasoning. Read, interpret, and act on temporal data carefully.
