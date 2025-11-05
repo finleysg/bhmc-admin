@@ -21,7 +21,7 @@ export default function Home() {
 						description="Create and manage events, players, and schedules."
 						href="/events"
 						disabled={!signedIn}
-						icon={"🎯"}
+						icon={"🏌️‍♂️"}
 					/>
 
 					<ActionCard
@@ -29,7 +29,7 @@ export default function Home() {
 						description="Configure and sync with Golf Genius."
 						href="/golf-genius"
 						disabled={!signedIn}
-						icon={"🏌️‍♂️"}
+						icon={"🧠"}
 					/>
 
 					<ActionCard

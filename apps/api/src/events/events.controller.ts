@@ -1,5 +1,10 @@
-import { Controller, Get, Param, ParseIntPipe } from "@nestjs/common"
-import { EventPlayerFeeDto, EventPlayerSlotDto, EventRegistrationSummaryDto } from "@repo/dto"
+import { Controller, Get, Param, ParseIntPipe, Query } from "@nestjs/common"
+import {
+	EventDto,
+	EventPlayerFeeDto,
+	EventPlayerSlotDto,
+	EventRegistrationSummaryDto,
+} from "@repo/dto"
 
 import { CoursesService } from "../courses/courses.service"
 import { HoleDto } from "../courses/dto/hole.dto"
@@ -145,5 +150,13 @@ export class EventsController {
 		})
 
 		return { eventId, total: transformed.length, slots: transformed }
+	}
+
+	@Get("search")
+	async searchEventsByDate(@Query("date") date: string): Promise<EventDto[]> {
+		if (!date) {
+			throw new Error("Date query parameter is required")
+		}
+		return this.events.findEventsByDate(date)
 	}
 }

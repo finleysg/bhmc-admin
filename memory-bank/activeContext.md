@@ -8,16 +8,16 @@ Current focus:
 
 Recent changes:
 
+- **JWT Authentication Implementation**: Complete end-to-end authentication flow between Next.js (Better Auth) and NestJS API; implemented JWT token re-signing pattern where EdDSA tokens from Better Auth are converted to HS256 tokens for backend validation using shared secret
+- **API Route Proxy**: Created `apps/web/app/api/events/search/route.ts` as server-side authentication bridge that validates sessions, generates JWT tokens, and proxies requests to backend API with proper authorization headers
+- **Backend JWT Guard**: Modified `apps/api/src/auth/jwt.guard.ts` to validate HS256 JWT tokens using `jsonwebtoken` library with shared `BETTER_AUTH_JWT_SECRET` environment variable
+- **Golf Genius Frontend Integration**: Updated golf-genius page to use `EventDto` from shared `@repo/dto` package and call real API endpoint instead of mock data; removed `TournamentEvent` interface in favor of shared types
+- **Better Auth Configuration**: Enabled JWT plugin in Next.js app with EdDSA algorithm for secure client-side tokens; configured shared JWT secret for cross-service authentication
+- **Environment Configuration**: Added `API_URL=http://localhost:3333` to web app environment for backend API communication; ensured shared JWT secret consistency across services
 - **Drizzle ORM Integration**: Installed drizzle-orm@0.44.7 and mysql2@3.15.3, configured connection pooling with DATABASE_URL env variable, created complete database schema and relations for events, courses, registration, scores, and auth tables
 - **Events Module Implementation**: Built complete events module with service, controller, domain logic, DTOs, and comprehensive test coverage; includes tee time calculations, group assignments, and hole-based starts
 - **Golf Genius Integration Module**: Complete bidirectional integration with Golf Genius API v2 including event sync, member roster sync, roster export, scores import, and comprehensive error handling with retry logic and rate limiting
 - **Tournament Results Import**: Implemented comprehensive TypeScript solution for importing Golf Genius tournament results with format-specific parsers (points, skins, proxy, stroke play); includes flexible DTOs, result parsers with ordinal logic, service skeleton, controller endpoints, and comprehensive unit tests
-- **Integration Logging**: Applied `@UseInterceptors(LogIntegrationInterceptor)` to Golf Genius event endpoints (sync, export-roster, import-scores) for automatic audit logging of full JSON results and complete error details including stack traces; excluded member sync endpoints as utility commands
-- **Shared DTO Package**: Created and integrated packages/dto with type-safe DTOs for events, scores, and registration; built with TypeScript and consumed via workspace imports
-- **Code Quality**: Fixed 99 ESLint violations in test files by replacing `any` types with proper domain types (`EventDomainData`, `RegistrationSlotDomainData`, etc.); achieved zero ESLint errors across codebase
-- **TypeScript & Testing**: Applied Prettier formatting, ensured TypeScript compilation success, and established test patterns using `Partial<T>` for service mocks
-- **Advanced Type Safety**: Implemented comprehensive TypeScript improvements across Golf Genius services including generic parsers, discriminated unions for tournament formats, type guards over assertions, and strict type assertion guidelines; eliminated unsafe `as any` casts while maintaining parser compatibility
-- **Development Guidelines**: Updated TypeScript practices rule file with comprehensive guidelines covering type-first development, generic parser patterns, discriminated unions, utility types, type guards, interface extension strategies, and strict configuration requirements
 
 Important decisions & constraints:
 

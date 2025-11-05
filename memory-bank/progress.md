@@ -4,6 +4,9 @@ Completed
 
 - **Monorepo Setup**: Initialized pnpm workspace with Turbo, created workspace folders (`apps/api`, `apps/web`, `packages/dto`, `docker`), configured `pnpm-workspace.yaml`, `turbo.json`, and `docker-compose.yml`
 - **Memory Bank**: Created comprehensive documentation system with all core files (`projectBrief.md`, `productContext.md`, `activeContext.md`, `systemPatterns.md`, `techContext.md`, `progress.md`)
+- **JWT Authentication Flow**: Complete end-to-end authentication between Next.js (Better Auth) and NestJS API; implemented JWT token re-signing pattern (EdDSA → HS256) with shared secret validation; created API route proxy for session-to-token conversion
+- **Frontend-Backend Integration**: Established working API connectivity with authenticated requests; updated Golf Genius page to use shared `EventDto` types and real API calls instead of mock data
+- **Better Auth Integration**: Configured Better Auth in Next.js with SQLite persistence, JWT plugin, and secure session management; implemented server-side authentication validation
 - **Drizzle ORM Integration**: Installed drizzle-orm@0.44.7 and mysql2@3.15.3, configured connection pooling with DATABASE_URL env variable, created complete database schema and relations for events, courses, registration, scores, and auth tables
 - **Events Module**: Built complete events module with service, controller, domain logic, DTOs, and comprehensive test coverage; includes tee time calculations, group assignments, hole-based starts, and REST API endpoints
 - **Golf Genius Integration Module**: Complete bidirectional integration with Golf Genius API v2 including event sync, member roster sync, roster export, scores import, and comprehensive error handling with retry logic and rate limiting
@@ -17,11 +20,10 @@ Completed
 In progress / Next steps
 
 - Implement remaining API modules (courses, registration, scores) following the events module pattern
-- Scaffold Next.js app with better-auth integration and SQLite persistence
+- Expand Golf Genius page with tournament management interface and event selection
 - Create shared UI components using daisyUI 5 and Tailwind CSS v4
-- Establish API-to-frontend connectivity with proper error handling
 - Add development scripts and verify Docker database connectivity
-- Implement basic admin screens for event management
+- Implement basic admin screens for event management and user authentication flows
 
 Completed
 
@@ -32,9 +34,9 @@ Completed
 
 Blockers / Risks
 
-- Next.js frontend scaffolding not yet started; web app remains minimal
 - Docker database connectivity not yet verified end-to-end
-- Better-auth integration requires Next.js app setup and SQLite configuration
+- Need to expand Golf Genius page with full tournament management interface
+- Remaining API modules (courses, registration, scores) need implementation
 
 Notes
 

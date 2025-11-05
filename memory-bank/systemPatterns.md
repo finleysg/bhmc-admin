@@ -49,8 +49,12 @@ Code organization patterns
 
 Auth & Integration patterns
 
-- **better-auth integration**: Implemented in Next.js app with SQLite persistence using better-sqlite3 and Kysely ORM
-- **JWT validation**: NestJS API validates tokens from better-auth for protected admin endpoints
+- **JWT Token Re-signing Pattern**: Better Auth generates EdDSA tokens (asymmetric) for client security, Next.js API route converts to HS256 tokens (symmetric) for backend validation using shared secret; provides clean security boundary between public and internal authentication
+- **Server-Side Authentication Bridge**: Next.js API routes act as authentication proxies that validate Better Auth sessions, generate appropriate JWT tokens, and forward authenticated requests to backend APIs with proper authorization headers
+- **Shared Secret Authentication**: Backend validates HS256 JWT tokens using `jsonwebtoken` library with `BETTER_AUTH_JWT_SECRET` environment variable for symmetric key validation
+- **Cookie-Based Session Management**: Better Auth manages secure HTTP-only cookies for session persistence; server-side validation extracts session data for token generation
+- **better-auth integration**: Implemented in Next.js app with SQLite persistence using better-sqlite3 and Kysely ORM; JWT plugin enabled for token generation
+- **JWT validation**: NestJS API validates tokens from better-auth for protected admin endpoints using shared secret approach
 - **Golf Genius integration**: Complete bidirectional API integration with dedicated service modules, comprehensive error handling, retry logic, and audit logging
 - **Tournament Results Import**: Format-specific parsers (points, skins, proxy, stroke play) with flexible DTOs accommodating API inconsistencies; idempotent operations with result deletion before import; ordinal position formatting (1st, 2nd, T3rd); comprehensive unit test coverage
 

@@ -2,7 +2,7 @@ import "./global.css"
 
 import type { Metadata } from "next"
 
-import ThemeToggle from "./components/theme-toggle"
+import Header from "./components/header"
 
 export const metadata: Metadata = {
 	title: "BHMC Event Administration",
@@ -28,14 +28,7 @@ document.documentElement.setAttribute('data-theme', theme);
 			</head>
 			<body>
 				<div className="min-h-screen bg-base-100 text-base-content">
-					<header className="navbar bg-base-200 container mx-auto pl-4 pr-4">
-						<div className="flex-1">
-							<h1 className="text-xl font-bold">BHMC Event Admin</h1>
-						</div>
-						<div className="flex-none">
-							<ThemeToggle />
-						</div>
-					</header>
+					<Header />
 					<main className="container bg-base-200 mx-auto p-4">{children}</main>
 				</div>
 			</body>

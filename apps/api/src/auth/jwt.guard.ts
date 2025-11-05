@@ -1,6 +1,7 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common"
 import { Request } from "express"
 import jwt from "jsonwebtoken"
+
+import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common"
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {

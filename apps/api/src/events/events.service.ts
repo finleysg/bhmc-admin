@@ -25,6 +25,11 @@ export class EventsService {
 		return evt ? mapToEventDto(evt) : null
 	}
 
+	async findEventsByDate(date: string): Promise<EventDto[]> {
+		const results = await this.drizzle.db.select().from(event).where(eq(event.startDate, date))
+		return results.map(mapToEventDto)
+	}
+
 	async updateEvent(id: number, data: UpdateEventDto) {
 		await this.drizzle.db
 			.update(event)
