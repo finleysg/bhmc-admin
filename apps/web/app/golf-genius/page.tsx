@@ -16,7 +16,7 @@ export default function GolfGeniusPage() {
 
 	// Auto-search when date changes
 	useEffect(() => {
-		handleSearch()
+		void handleSearch()
 	}, [selectedDate])
 
 	const handleDateSelect = (date: Date | undefined) => {
@@ -39,7 +39,7 @@ export default function GolfGeniusPage() {
 				throw new Error(`API request failed: ${response.status}`)
 			}
 
-			const events: EventDto[] = await response.json()
+			const events = (await response.json()) as EventDto[]
 			setSearchResults(events)
 
 			// Auto-select if only one event found

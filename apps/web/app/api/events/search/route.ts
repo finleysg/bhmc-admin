@@ -1,6 +1,15 @@
+import jwt from "jsonwebtoken"
 import { NextRequest, NextResponse } from "next/server"
 
 import auth from "../../../../lib/auth"
+
+interface TokenResponse {
+	token: string
+}
+
+interface DecodedToken {
+	payload: Record<string, unknown>
+}
 
 export async function GET(request: NextRequest) {
 	const { searchParams } = new URL(request.url)
@@ -31,12 +40,13 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ error: "Failed to generate JWT token" }, { status: 500 })
 		}
 
-		const { token: eddsaToken } = await tokenResponse.json()
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		const tokenResponseData: TokenResponse = await tokenResponse.json()
+		const { token: eddsaToken } = tokenResponseData
 		console.log("Generated EdDSA JWT token:", eddsaToken)
 
 		// Decode the EdDSA token and re-sign with HS256 for backend compatibility
-		const jwt = require("jsonwebtoken")
-		const decoded = jwt.decode(eddsaToken, { complete: true })
+		const decoded = jwt.decode(eddsaToken, { complete: true }) as DecodedToken | null
 		if (!decoded || !decoded.payload) {
 			return NextResponse.json({ error: "Failed to decode JWT token" }, { status: 500 })
 		}
@@ -68,7 +78,7 @@ export async function GET(request: NextRequest) {
 			)
 		}
 
-		const data = await response.json()
+		const data: unknown = await response.json()
 		return NextResponse.json(data)
 	} catch (error) {
 		console.error("Error proxying to backend API:", error)
