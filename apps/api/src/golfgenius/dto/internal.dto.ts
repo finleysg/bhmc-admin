@@ -3,6 +3,8 @@
  * Keep these narrow: only the fields our application consumes.
  */
 
+import { IntegrationActionName } from "@repo/dto"
+
 import { CustomFields } from "./golf-genius.dto"
 
 export interface MemberDto {
@@ -67,34 +69,12 @@ export interface RosterMemberSyncDto {
 }
 
 /**
- * Allowed action names for integration logging
- */
-export type IntegrationActionName =
-	| "Event Synced"
-	| "Roster Exported"
-	| "Scores Imported"
-	| "Results Imported"
-	| "Event Completed"
-
-/**
  * DTO for creating integration log entries
  */
 export interface CreateIntegrationLogDto {
 	actionName: IntegrationActionName
 	actionDate: string
 	details?: string | null
-	eventId: number
-	isSuccessful: boolean
-}
-
-/**
- * DTO for integration log entries
- */
-export interface IntegrationLogDto {
-	id: number
-	actionName: IntegrationActionName
-	actionDate: string
-	details: string | null
 	eventId: number
 	isSuccessful: boolean
 }

@@ -9,3 +9,6 @@ export { EventDto } from "./events/event.dto"
 export { EventPlayerFeeDto } from "./events/event-player-fee.dto"
 export { EventPlayerSlotDto } from "./events/event-player-slot.dto"
 export { EventRegistrationSummaryDto } from "./events/event-registration-summary.dto"
+
+// Golf Genius DTO exports
+export { IntegrationActionName, IntegrationLogDto } from "./golf-genius/integration-log.dto"

@@ -1,8 +1,8 @@
 import { catchError, from, Observable, tap } from "rxjs"
 
 import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } from "@nestjs/common"
+import { IntegrationActionName } from "@repo/dto"
 
-import { IntegrationActionName } from "../dto/internal.dto"
 import { IntegrationLogService } from "../services/integration-log.service"
 
 interface RequestWithParams {
@@ -34,13 +34,12 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 					}),
 				).subscribe()
 			}),
-			catchError((error: Error) => {
+			catchError((error: unknown) => {
 				// Error case - log the full error including stack trace
 				const errorDetails = {
-					...error, // Include all error properties first
-					message: error.message, // Override with explicit values to ensure they're included
-					stack: error.stack,
-					name: error.name,
+					message: error instanceof Error ? error.message : String(error),
+					stack: error instanceof Error ? error.stack : undefined,
+					name: error instanceof Error ? error.name : "UnknownError",
 				}
 
 				from(
@@ -53,7 +52,7 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 					}),
 				).subscribe()
 
-				throw error // Re-throw to maintain normal error handling
+				throw error as Error // Re-throw to maintain normal error handling
 			}),
 		)
 	}
@@ -61,15 +60,23 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 	private determineActionName(request: RequestWithParams): IntegrationActionName {
 		const url = request.url
 
-		if (url.includes("/events/") && url.includes("/sync")) {
-			return "Event Synced"
+		if (url.includes("/events/") && url.includes("/sync-event")) {
+			return "Sync Event"
 		} else if (url.includes("/events/") && url.includes("/export-roster")) {
-			return "Roster Exported"
+			return "Export Roster"
 		} else if (url.includes("/events/") && url.includes("/import-scores")) {
-			return "Scores Imported"
+			return "Import Scores"
+		} else if (url.includes("/events/") && url.includes("/import-scores")) {
+			return "Import Points"
+		} else if (url.includes("/events/") && url.includes("/import-points")) {
+			return "Import Results"
+		} else if (url.includes("/events/") && url.includes("/import-results")) {
+			return "Import Skins"
+		} else if (url.includes("/events/") && url.includes("/import-skins")) {
+			return "Import Proxies"
 		} else {
 			this.logger.warn(`Unknown integration action for URL: ${url}`)
-			return "Event Synced" // fallback
+			return "Close Event" // fallback
 		}
 	}
 

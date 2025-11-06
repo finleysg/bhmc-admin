@@ -1,3 +1,5 @@
+import { IntegrationLogDto } from "@repo/dto"
+
 import {
 	GgCreateMemberDto,
 	GgEventDto,
@@ -8,7 +10,6 @@ import {
 } from "./golf-genius.dto"
 import {
 	EventDto,
-	IntegrationLogDto,
 	MasterRosterItemDto,
 	RosterMemberDto,
 	RosterMemberSyncDto,

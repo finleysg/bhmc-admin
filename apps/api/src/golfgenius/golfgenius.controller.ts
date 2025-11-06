@@ -1,4 +1,5 @@
-import { Controller, Get, Param, Post, UseInterceptors } from "@nestjs/common"
+import { Controller, Get, Param, Post, Query, UseInterceptors } from "@nestjs/common"
+import { IntegrationActionName } from "@repo/dto"
 
 import { LogIntegrationInterceptor } from "./interceptors/log-integration.interceptor"
 import { EventSyncService } from "./services/event-sync.service"
@@ -30,7 +31,7 @@ export class GolfgeniusController {
 		return this.memberSync.syncPlayer(pid)
 	}
 
-	@Post("/events/:id/sync")
+	@Post("/events/:id/sync-event")
 	@UseInterceptors(LogIntegrationInterceptor)
 	async syncEvent(@Param("id") id: string) {
 		const eid = parseInt(id, 10)
@@ -51,28 +52,28 @@ export class GolfgeniusController {
 		return this.scoresImport.importScoresForEvent(eid)
 	}
 
-	@Post("/events/:id/import-results/points")
+	@Post("/events/:id/import-points")
 	@UseInterceptors(LogIntegrationInterceptor)
 	async importPointsResults(@Param("id") id: string) {
 		const eid = parseInt(id, 10)
 		return this.resultsImport.importPointsResults(eid)
 	}
 
-	@Post("/events/:id/import-results/skins")
+	@Post("/events/:id/import-skins")
 	@UseInterceptors(LogIntegrationInterceptor)
 	async importSkinsResults(@Param("id") id: string) {
 		const eid = parseInt(id, 10)
 		return this.resultsImport.importSkinsResults(eid)
 	}
 
-	@Post("/events/:id/import-results/proxy")
+	@Post("/events/:id/import-proxies")
 	@UseInterceptors(LogIntegrationInterceptor)
 	async importProxyResults(@Param("id") id: string) {
 		const eid = parseInt(id, 10)
 		return this.resultsImport.importProxyResults(eid)
 	}
 
-	@Post("/events/:id/import-results/stroke")
+	@Post("/events/:id/import-results")
 	@UseInterceptors(LogIntegrationInterceptor)
 	async importStrokePlayResults(@Param("id") id: string) {
 		const eid = parseInt(id, 10)
@@ -80,8 +81,8 @@ export class GolfgeniusController {
 	}
 
 	@Get("/events/:id/logs")
-	async getEventLogs(@Param("id") id: string) {
+	async getEventLogs(@Param("id") id: string, @Query("actionName") actionName?: string) {
 		const eid = parseInt(id, 10)
-		return this.integrationLog.getLogsByEventId(eid)
+		return this.integrationLog.getLogsByEventId(eid, actionName as IntegrationActionName)
 	}
 }
