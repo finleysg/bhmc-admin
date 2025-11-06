@@ -18,6 +18,7 @@ Recent changes:
 - **Events Module Implementation**: Built complete events module with service, controller, domain logic, DTOs, and comprehensive test coverage; includes tee time calculations, group assignments, and hole-based starts
 - **Golf Genius Integration Module**: Complete bidirectional integration with Golf Genius API v2 including event sync, member roster sync, roster export, scores import, and comprehensive error handling with retry logic and rate limiting
 - **Tournament Results Import**: Implemented comprehensive TypeScript solution for importing Golf Genius tournament results with format-specific parsers (points, skins, proxy, stroke play); includes flexible DTOs, result parsers with ordinal logic, service skeleton, controller endpoints, and comprehensive unit tests
+- **Close Event Feature**: Added POST /events/:eventId/close endpoint that updates all tournament result payoutStatus to "Confirmed" and payoutDate to current timestamp; includes comprehensive validation (event must have tournaments and results, cannot be already closed) and proper error handling
 
 Important decisions & constraints:
 

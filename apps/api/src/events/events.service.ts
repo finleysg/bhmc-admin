@@ -1,8 +1,16 @@
-import { eq } from "drizzle-orm"
+import { eq, inArray } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 
-import { DrizzleService, event, eventFee, feeType, round, tournament } from "../database"
+import {
+	DrizzleService,
+	event,
+	eventFee,
+	feeType,
+	round,
+	tournament,
+	tournamentResult,
+} from "../database"
 import { EventFeeWithTypeDto } from "./dto/event-fee.dto"
 import { EventDto } from "./dto/event.dto"
 import {
@@ -106,5 +114,57 @@ export class EventsService {
 		const res = await this.drizzle.db.delete(round).where(eq(round.eventId, event_id))
 		const r = res as unknown as { affectedRows?: number; affected_rows?: number }
 		return r.affectedRows ?? r.affected_rows ?? 0
+	}
+
+	/**
+	 * Close an event by confirming all tournament result payouts.
+	 * Updates payoutStatus to "Confirmed" and payoutDate to current timestamp.
+	 * Validates that the event has tournaments and results, and is not already closed.
+	 */
+	async closeEvent(eventId: number) {
+		// Find all tournaments for this event
+		const tournaments = await this.findTournamentsByEventId(eventId)
+
+		// Validate: Event must have tournaments
+		if (tournaments.length === 0) {
+			throw new Error("Cannot close event: No tournaments found")
+		}
+
+		// Get tournament IDs (filter out undefined)
+		const tournamentIds = tournaments
+			.map((t) => t.id)
+			.filter((id): id is number => id !== undefined)
+
+		// Check for existing results
+		const results = await this.drizzle.db
+			.select()
+			.from(tournamentResult)
+			.where(inArray(tournamentResult.tournamentId, tournamentIds))
+
+		// Validate: Must have results to close
+		if (results.length === 0) {
+			throw new Error("Cannot close event: No tournament results found")
+		}
+
+		// Validate: Event must not already be closed
+		if (results.some((r) => r.payoutStatus === "Confirmed")) {
+			throw new Error("Event is already closed")
+		}
+
+		// Update all results
+		const now = new Date().toISOString().slice(0, 19).replace("T", " ")
+		await this.drizzle.db
+			.update(tournamentResult)
+			.set({
+				payoutStatus: "Confirmed",
+				payoutDate: now,
+			})
+			.where(inArray(tournamentResult.tournamentId, tournamentIds))
+
+		return {
+			eventId,
+			resultsUpdated: results.length,
+			payoutDate: now,
+		}
 	}
 }

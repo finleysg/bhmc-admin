@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from "@nestjs/common"
+import { Controller, Get, Param, ParseIntPipe, Post, Query } from "@nestjs/common"
 import {
 	EventDto,
 	EventPlayerFeeDto,
@@ -158,5 +158,10 @@ export class EventsController {
 			throw new Error("Date query parameter is required")
 		}
 		return this.events.findEventsByDate(date)
+	}
+
+	@Post(":eventId/close")
+	async closeEvent(@Param("eventId", ParseIntPipe) eventId: number) {
+		return this.events.closeEvent(eventId)
 	}
 }
