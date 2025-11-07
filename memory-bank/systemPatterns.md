@@ -47,6 +47,14 @@ Code organization patterns
 - **Test organization**: Test files mirror source structure with descriptive naming
 - **Configuration grouping**: Related configuration grouped by domain/feature
 
+UI patterns
+
+- **Phase-Based Orchestration**: Linear stepper pattern for multi-step workflows with automatic state derivation from audit logs; displays event context as "{start date}: {event name}"
+- **Derived State Management**: Phase progression calculated from integration logs (single source of truth) rather than stored separately; enables automatic workflow advancement
+- **Action Mapping Pattern**: Centralized mapping of action names to API endpoints with type-safe helper functions; single dynamic route handles all integration actions
+- **Component Callback Pattern**: Parent-child communication through completion callbacks for state refresh and real-time UI updates
+- **Integration Action Cards**: Reusable cards with loading states, error handling, and collapsible details sections for audit log viewing
+
 Auth & Integration patterns
 
 - **JWT Token Re-signing Pattern**: Better Auth generates EdDSA tokens (asymmetric) for client security, Next.js API route converts to HS256 tokens (symmetric) for backend validation using shared secret; provides clean security boundary between public and internal authentication

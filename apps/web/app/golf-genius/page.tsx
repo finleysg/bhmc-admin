@@ -8,6 +8,8 @@ import { DayPicker } from "react-day-picker"
 
 import { EventDto } from "@repo/dto"
 
+import IntegrationOrchestrator from "./components/integration-orchestrator"
+
 export default function GolfGeniusPage() {
 	const [selectedDate, setSelectedDate] = useState<Date>(new Date())
 	const [isSearching, setIsSearching] = useState(false)
@@ -191,14 +193,11 @@ export default function GolfGeniusPage() {
 					</div>
 				</div>
 
-				{/* Action Footer */}
+				{/* Integration Orchestrator */}
 				{selectedEvent && (
-					<div className="mt-8 text-center">
-						<div className="alert alert-neutral">
-							<span>
-								<strong>Next:</strong> Tournament management interface will be implemented here
-							</span>
-						</div>
+					<div className="mt-8">
+						<h2 className="text-2xl font-bold mb-6">Golf Genius Integration</h2>
+						<IntegrationOrchestrator selectedEvent={selectedEvent} />
 					</div>
 				)}
 			</div>

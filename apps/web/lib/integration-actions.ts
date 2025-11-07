@@ -1,0 +1,24 @@
+import { IntegrationActionName } from "@repo/dto"
+
+/**
+ * Maps IntegrationActionName to backend endpoint paths
+ * All endpoints are on the golfgenius controller
+ */
+export const INTEGRATION_ACTION_ENDPOINTS: Record<IntegrationActionName, string> = {
+	"Sync Event": "sync-event",
+	"Export Roster": "export-roster",
+	"Import Scores": "import-scores",
+	"Import Points": "import-points",
+	"Import Results": "import-results",
+	"Import Skins": "import-skins",
+	"Import Proxies": "import-proxies",
+	"Close Event": "close-event",
+}
+
+/**
+ * Generates the full API proxy path for an integration action
+ */
+export function getActionApiPath(eventId: number, actionName: IntegrationActionName): string {
+	const endpoint = INTEGRATION_ACTION_ENDPOINTS[actionName]
+	return `/api/golfgenius/events/${eventId}/${endpoint}`
+}

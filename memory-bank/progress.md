@@ -16,11 +16,12 @@ Completed
 - **TypeScript & Testing**: Ensured TypeScript compilation success, established test patterns using `Partial<T>` for service mocks, and maintained type safety throughout
 - **Advanced Type Safety**: Implemented comprehensive TypeScript improvements across Golf Genius services including generic parsers with constrained types, discriminated unions for tournament formats, type guards over assertions, and strict type assertion guidelines; eliminated unsafe `as any` casts while maintaining parser compatibility
 - **Development Guidelines**: Updated TypeScript practices rule file with comprehensive guidelines covering type-first development, generic parser patterns, discriminated unions, utility types, type guards, interface extension strategies, and strict configuration requirements
+- **Golf Genius Orchestrator UI**: Complete phase-based integration workflow with visual stepper, automatic phase detection from logs, and guided execution path for 8 integration actions; displays event context as "{start date}: {event name}"
+- **Integration Action Infrastructure**: Centralized endpoint mapping, dynamic API proxy routes, and real-time action execution with comprehensive error handling and loading states
 
 In progress / Next steps
 
 - Implement remaining API modules (courses, registration, scores) following the events module pattern
-- Expand Golf Genius page with tournament management interface and event selection
 - Create shared UI components using daisyUI 5 and Tailwind CSS v4
 - Add development scripts and verify Docker database connectivity
 - Implement basic admin screens for event management and user authentication flows

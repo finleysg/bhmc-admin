@@ -10,7 +10,7 @@ Recent changes:
 
 - **JWT Authentication Implementation**: Complete end-to-end authentication flow between Next.js (Better Auth) and NestJS API; implemented JWT token re-signing pattern where EdDSA tokens from Better Auth are converted to HS256 tokens for backend validation using shared secret
 - **API Route Proxy**: Created `apps/web/app/api/events/search/route.ts` as server-side authentication bridge that validates sessions, generates JWT tokens, and proxies requests to backend API with proper authorization headers
-- **Backend JWT Guard**: Modified `apps/api/src/auth/jwt.guard.ts` to validate HS256 JWT tokens using `jsonwebtoken` library with shared `BETTER_AUTH_JWT_SECRET` environment variable
+- **Backend JWT Guard**: Modified `apps/api/src/auth/jwt.guard.ts` to validate HS256 JWT tokens using `jsonwebtoken` library with shared secret validation
 - **Golf Genius Frontend Integration**: Updated golf-genius page to use `EventDto` from shared `@repo/dto` package and call real API endpoint instead of mock data; removed `TournamentEvent` interface in favor of shared types
 - **Better Auth Configuration**: Enabled JWT plugin in Next.js app with EdDSA algorithm for secure client-side tokens; configured shared JWT secret for cross-service authentication
 - **Environment Configuration**: Added `API_URL=http://localhost:3333` to web app environment for backend API communication; ensured shared JWT secret consistency across services
@@ -19,6 +19,11 @@ Recent changes:
 - **Golf Genius Integration Module**: Complete bidirectional integration with Golf Genius API v2 including event sync, member roster sync, roster export, scores import, and comprehensive error handling with retry logic and rate limiting
 - **Tournament Results Import**: Implemented comprehensive TypeScript solution for importing Golf Genius tournament results with format-specific parsers (points, skins, proxy, stroke play); includes flexible DTOs, result parsers with ordinal logic, service skeleton, controller endpoints, and comprehensive unit tests
 - **Close Event Feature**: Added POST /events/:eventId/close endpoint that updates all tournament result payoutStatus to "Confirmed" and payoutDate to current timestamp; includes comprehensive validation (event must have tournaments and results, cannot be already closed) and proper error handling
+- **Golf Genius Integration Orchestrator UI**: Implemented linear stepper workflow with 3 phases (Setup, Import Results, Finalize); phase progression driven by integration logs with automatic state derivation; displays event context as "{start date}: {event name}"
+- **Action-to-Endpoint Mapping**: Created centralized mapping system in `apps/web/lib/integration-actions.ts` that maps all 8 IntegrationActionName values to backend endpoints with type-safe helper functions
+- **Dynamic API Proxy Route**: Single dynamic route `/api/golfgenius/events/[id]/[action]` handles all integration actions through Next.js API proxy with validation and authentication
+- **Real Integration Action Execution**: Updated IntegrationActionCard with live API calls, loading states, error handling, and automatic log refresh on completion; added onComplete callback pattern for parent-child communication
+- **Phase-Based Workflow**: Three-phase orchestration (Setup → Import Results → Finalize) with smart gating, sequential requirements, numbered action indicators, and phase navigation controls
 
 Important decisions & constraints:
 
