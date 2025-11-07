@@ -53,12 +53,12 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 
 	const getStatusBadge = () => {
 		if (!lastRun) {
-			return <span className="badge badge-neutral">Not Run</span>
+			return <span className="badge badge-neutral text-neutral-content">Not Run</span>
 		}
 		return lastRun.isSuccessful ? (
-			<span className="badge badge-success">Success</span>
+			<span className="badge badge-success text-success-content">Success</span>
 		) : (
-			<span className="badge badge-error">Failed</span>
+			<span className="badge badge-error text-error-content">Failed</span>
 		)
 	}
 
@@ -131,7 +131,7 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 				{/* Action Button */}
 				<div className="card-actions justify-end mt-4">
 					<button
-						className="btn btn-primary"
+						className="btn btn-primary text-primary-content"
 						disabled={!enabled || isRunning}
 						onClick={handleStart}
 					>

@@ -221,8 +221,8 @@ function EventHeader({ event }: { event: EventDto }) {
 	})
 
 	return (
-		<div className="p-4 bg-base-200 rounded-lg">
-			<h2 className="text-2xl font-bold">
+		<div className="p-4 bg-info rounded-lg">
+			<h2 className="font-bold text-info-content">
 				{formattedDate}: {event.name}
 			</h2>
 		</div>
@@ -273,8 +273,8 @@ function PhasePanel({
 		<div className="card bg-base-100 shadow-xl">
 			<div className="card-body">
 				<div className="flex items-center justify-between mb-4">
-					<h3 className="card-title">{phase.title}</h3>
-					{isComplete && <span className="badge badge-success">Complete</span>}
+					<h3 className="card-title text-info">{phase.title}</h3>
+					{isComplete && <span className="badge badge-success text-success-content">Complete</span>}
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -329,7 +329,11 @@ function PhaseNavigation({
 				Previous Phase
 			</button>
 
-			<button className="btn btn-primary" disabled={!canAdvance} onClick={onNext}>
+			<button
+				className="btn btn-primary text-primary-content"
+				disabled={!canAdvance}
+				onClick={onNext}
+			>
 				Next Phase
 			</button>
 		</div>
