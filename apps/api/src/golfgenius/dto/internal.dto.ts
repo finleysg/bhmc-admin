@@ -74,7 +74,7 @@ export interface RosterMemberSyncDto {
 export interface CreateIntegrationLogDto {
 	actionName: IntegrationActionName
 	actionDate: string
-	details?: string | null
+	details?: string | object | null
 	eventId: number
 	isSuccessful: boolean
 }

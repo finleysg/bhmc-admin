@@ -81,6 +81,8 @@ export class ApiClient {
 
 		let lastError: any = null
 
+		console.debug(`Sending ${method} request to ${this.baseUrl}${url}`)
+
 		for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
 			try {
 				const res = await this.client.request({
@@ -118,6 +120,7 @@ export class ApiClient {
 					)
 				}
 
+				console.debug(`Response status ${res.status}`)
 				return res.data
 			} catch (err) {
 				lastError = err
@@ -174,8 +177,13 @@ export class ApiClient {
 		const endpoint = `/api_v2/${this.apiKey}/seasons`
 		const res = await this.request("get", endpoint)
 		if (!res) return []
-		if (Array.isArray(res)) return res.map(mapSeason)
-		if (res && res.seasons) return (res.seasons as any[]).map(mapSeason)
+		if (Array.isArray(res)) {
+			// Unwrap the "season" property from each item
+			return res.map((item) => mapSeason(item.season || item))
+		}
+		if (res && res.seasons) {
+			return (res.seasons as any[]).map((item) => mapSeason(item.season || item))
+		}
 		return []
 	}
 
@@ -305,8 +313,13 @@ export class ApiClient {
 		const endpoint = `/api_v2/${this.apiKey}/events`
 		const res = await this.request("get", endpoint, { params })
 		if (!res) return []
-		if (Array.isArray(res)) return res.map(mapEvent)
-		if (res && res.events) return (res.events as any[]).map(mapEvent)
+		if (Array.isArray(res)) {
+			// Unwrap the "event" property from each item
+			return res.map((item) => mapEvent(item.event || item))
+		}
+		if (res && res.events) {
+			return (res.events as any[]).map((item) => mapEvent(item.event || item))
+		}
 		return []
 	}
 
@@ -314,8 +327,13 @@ export class ApiClient {
 		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds`
 		const res = await this.request("get", endpoint)
 		if (!res) return []
-		if (Array.isArray(res)) return res.map(mapRound)
-		if (res && res.rounds) return (res.rounds as any[]).map(mapRound)
+		if (Array.isArray(res)) {
+			// Unwrap the "round" property from each item
+			return res.map((item) => mapRound(item.round || item))
+		}
+		if (res && res.rounds) {
+			return (res.rounds as any[]).map((item) => mapRound(item.round || item))
+		}
 		return []
 	}
 
@@ -323,8 +341,13 @@ export class ApiClient {
 		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments`
 		const res = await this.request("get", endpoint)
 		if (!res) return []
-		if (Array.isArray(res)) return res.map(mapTournament)
-		if (res && res.tournaments) return (res.tournaments as any[]).map(mapTournament)
+		if (Array.isArray(res)) {
+			// Unwrap the "event" property from each item (Golf Genius wraps tournaments in "event")
+			return res.map((item) => mapTournament(item.event || item))
+		}
+		if (res && res.tournaments) {
+			return (res.tournaments as any[]).map((item) => mapTournament(item.event || item))
+		}
 		return []
 	}
 
@@ -372,20 +395,7 @@ export class ApiClient {
 		roundId: string,
 		tournamentId: string,
 	): Promise<GolfGeniusTournamentResults> {
-		const path = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments/${tournamentId}.json`
-
-		try {
-			const response = await this.client.get<GolfGeniusTournamentResults>(`${this.baseUrl}${path}`)
-			return response.data
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error)
-			this.logger.error("Failed to fetch tournament results", {
-				eventId,
-				roundId,
-				tournamentId,
-				error: errorMessage,
-			})
-			throw new Error(`Failed to fetch tournament results: ${errorMessage}`)
-		}
+		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments/${tournamentId}.json`
+		return this.request("get", endpoint)
 	}
 }

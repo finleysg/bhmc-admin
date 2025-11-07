@@ -13,15 +13,31 @@ export class IntegrationLogService {
 	constructor(private readonly drizzle: DrizzleService) {}
 
 	async createLogEntry(dto: CreateIntegrationLogDto): Promise<IntegrationLogDto> {
-		const [result] = await this.drizzle.db.insert(integrationLog).values({
-			actionName: dto.actionName,
-			actionDate: dto.actionDate,
-			details: dto.details,
-			eventId: dto.eventId,
-			isSuccessful: dto.isSuccessful ? 1 : 0,
-		} as any)
+		const detailText = dto.details
+			? typeof dto.details === "string"
+				? dto.details
+				: JSON.stringify(dto.details)
+			: null
 
-		return this.findLogById(Number(result.insertId))
+		try {
+			const [result] = await this.drizzle.db.insert(integrationLog).values({
+				actionName: dto.actionName,
+				actionDate: new Date(dto.actionDate),
+				details: detailText,
+				eventId: dto.eventId,
+				isSuccessful: dto.isSuccessful ? 1 : 0,
+			} as any)
+
+			return this.findLogById(Number(result.insertId))
+		} catch (error) {
+			console.error("Full database error:", error)
+			if (error instanceof Error) {
+				console.error("Error message:", error.message)
+				console.error("Error code:", (error as any).code)
+				console.error("Error sqlMessage:", (error as any).sqlMessage)
+			}
+			throw error
+		}
 	}
 
 	async getLogsByEventId(eventId: number, actionName?: string): Promise<IntegrationLogDto[]> {

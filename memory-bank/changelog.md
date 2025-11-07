@@ -21,11 +21,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Golf Genius Page**: Replaced static action cards with dynamic IntegrationOrchestrator component
 - **IntegrationActionCard**: Added onComplete callback prop and real API execution instead of placeholder alerts
 
+### Fixed
+
+- **Golf Genius API Integration**: Fixed database insertion errors during event synchronization by correcting API response unwrapping patterns and datetime handling
+- **Tournament Unwrapping**: Discovered tournaments are wrapped in `event` property (not `tournament`), fixed all API client methods to use defensive unwrapping: `item.event || item`
+- **Datetime Format Issues**: Resolved MySQL datetime insertion errors by changing schema from `mode: "string"` to `mode: "date"` and converting ISO strings to Date objects
+- **Integration Logging**: Enhanced error logging to reveal actual MySQL errors masked by generic Drizzle messages; fixed double JSON.stringify issue in details field
+
 ### Technical
 
 - **UI Patterns**: Added phase-based orchestration, derived state management, action mapping, and component callback patterns
 - **Type Safety**: Maintained strict TypeScript usage with proper error handling and loading states
 - **API Architecture**: Single dynamic route pattern for integration actions with validation and authentication
+- **Golf Genius API Patterns**: Established defensive unwrapping patterns for inconsistent API response structures
+- **Drizzle ORM Datetime Handling**: Documented schema mode differences and datetime conversion requirements for MySQL compatibility
 
 ## [0.5.0] - 2025-11-06
 

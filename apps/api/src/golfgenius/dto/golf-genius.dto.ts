@@ -72,8 +72,8 @@ export interface GgRoundDto {
 }
 
 export interface GgTournamentDto {
-	name: string
-	id: string
-	score_format: string
-	handicap_format: string
+	name?: string | null
+	id?: string | null
+	score_format?: string | null
+	handicap_format?: string | null
 }

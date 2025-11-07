@@ -76,6 +76,12 @@ export function mapRound(round: GgRoundDto): RoundDto {
 }
 
 export function mapTournament(tournament: GgTournamentDto): TournamentDto {
+	if (!tournament.id || !tournament.name) {
+		throw new Error(
+			`Tournament missing required fields: id=${tournament.id}, name=${tournament.name}`,
+		)
+	}
+
 	let scoreFormat = tournament.score_format
 
 	if (scoreFormat === "stroke" && tournament.name.toLowerCase().includes("points")) {
@@ -85,8 +91,8 @@ export function mapTournament(tournament: GgTournamentDto): TournamentDto {
 	return {
 		id: tournament.id,
 		name: tournament.name,
-		scoreFormat,
-		handicapFormat: tournament.handicap_format,
+		scoreFormat: scoreFormat ?? "",
+		handicapFormat: tournament.handicap_format ?? "",
 	}
 }
 

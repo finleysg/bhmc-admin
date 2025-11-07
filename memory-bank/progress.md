@@ -18,6 +18,7 @@ Completed
 - **Development Guidelines**: Updated TypeScript practices rule file with comprehensive guidelines covering type-first development, generic parser patterns, discriminated unions, utility types, type guards, interface extension strategies, and strict configuration requirements
 - **Golf Genius Orchestrator UI**: Complete phase-based integration workflow with visual stepper, automatic phase detection from logs, and guided execution path for 8 integration actions; displays event context as "{start date}: {event name}"
 - **Integration Action Infrastructure**: Centralized endpoint mapping, dynamic API proxy routes, and real-time action execution with comprehensive error handling and loading states
+- **Golf Genius Event Synchronization**: Fixed database insertion errors, corrected API response unwrapping patterns, resolved datetime format issues, and established defensive unwrapping patterns for inconsistent API structures
 
 In progress / Next steps
 

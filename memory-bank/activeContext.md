@@ -33,7 +33,14 @@ Important decisions & constraints:
 - **Shared Types**: DTO package enforces consistent payloads across API and web app
 - **Containerization**: All databases run in Docker for development parity
 
+Recent learnings:
+
+- **Golf Genius API Behavior**: Inconsistent response wrapping patterns - seasons/events/rounds wrapped in nested objects, tournaments wrapped in `event` property (not `tournament`), defensive unwrapping required: `item.wrapper || item`
+- **Drizzle ORM Datetime Handling**: Schema `mode: "date"` expects Date objects (calls `.toISOString()`), `mode: "string"` expects strings; MySQL rejects ISO 8601 format with `T`/`Z` when using string mode
+- **Integration Logging**: Enhanced error logging revealed actual MySQL errors masked by generic Drizzle messages; datetime conversion from ISO string to Date object required for proper database insertion
+
 Notes for future work:
 
 - Migration strategy uses Drizzle with no schema ownership (external database)
 - Authentication flow: better-auth in Next.js → JWT validation in NestJS API
+- Golf Genius API integration requires defensive unwrapping patterns for all endpoints

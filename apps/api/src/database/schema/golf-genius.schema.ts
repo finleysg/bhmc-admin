@@ -15,7 +15,7 @@ export const integrationLog = mysqlTable(
 	{
 		id: int().autoincrement().notNull(),
 		actionName: varchar("action_name", { length: 20 }).notNull(),
-		actionDate: datetime("action_date", { mode: "string", fsp: 6 }).notNull(),
+		actionDate: datetime("action_date", { mode: "date", fsp: 6 }).notNull(),
 		details: longtext(),
 		eventId: int("event_id")
 			.notNull()
