@@ -385,6 +385,10 @@ export class ResultsImportService {
 			amount: amount.toFixed(2),
 			details: null,
 			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			payoutDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			payoutStatus: "Pending",
+			payoutTo: "Individual",
+			payoutType: "Credit",
 		})
 
 		result.resultsImported += 1
@@ -449,6 +453,10 @@ export class ResultsImportService {
 			summary: playerData.details,
 			details: null,
 			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			payoutDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			payoutStatus: "Pending",
+			payoutTo: "Individual", // TODO: Implement team handling for team skins
+			payoutType: "Cash",
 		})
 
 		result.resultsImported += 1
@@ -524,6 +532,10 @@ export class ResultsImportService {
 			details: null,
 			summary: null,
 			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			payoutDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			payoutStatus: "Pending",
+			payoutTo: "Individual",
+			payoutType: "Credit",
 		})
 
 		result.resultsImported += 1
