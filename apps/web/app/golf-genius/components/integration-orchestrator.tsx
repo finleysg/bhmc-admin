@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 
 import { EventDto, IntegrationActionName, IntegrationLogDto } from "@repo/dto"
 
-import IntegrationActionCard from "../../components/integration-action-card"
+import IntegrationActionCard from "./integration-action-card"
 
 interface PhaseInfo {
 	currentPhase: 1 | 2 | 3
@@ -16,32 +16,24 @@ interface PhaseInfo {
 interface Phase {
 	number: 1 | 2 | 3
 	title: string
-	description: string
 	actions: IntegrationActionName[]
-	instructions?: string
 }
 
 const PHASES: Phase[] = [
 	{
 		number: 1,
 		title: "Setup",
-		description: "Prepare the event in BHMC system",
 		actions: ["Sync Event", "Export Roster"],
-		instructions: "Complete these tasks before players arrive. Then finish setup in Golf Genius.",
 	},
 	{
 		number: 2,
 		title: "Import Results",
-		description: "Import data after players finish",
 		actions: ["Import Scores", "Import Points", "Import Results", "Import Skins", "Import Proxies"],
-		instructions: "Run these after all players have finished and entered scores in Golf Genius.",
 	},
 	{
 		number: 3,
 		title: "Finalize",
-		description: "Close out the event",
 		actions: ["Close Event"],
-		instructions: "Run this after reviewing all results and confirming everything is correct.",
 	},
 ]
 
@@ -230,13 +222,9 @@ function EventHeader({ event }: { event: EventDto }) {
 
 	return (
 		<div className="p-4 bg-base-200 rounded-lg">
-			<div className="text-sm text-base-content/60 mb-1">Working on</div>
 			<h2 className="text-2xl font-bold">
 				{formattedDate}: {event.name}
 			</h2>
-			<div className="text-sm text-base-content/70 mt-2">
-				{event.eventType} • {event.registrationType}
-			</div>
 		</div>
 	)
 }
@@ -288,14 +276,6 @@ function PhasePanel({
 					<h3 className="card-title">{phase.title}</h3>
 					{isComplete && <span className="badge badge-success">Complete</span>}
 				</div>
-
-				<p className="text-base-content/70 mb-4">{phase.description}</p>
-
-				{phase.instructions && (
-					<div className="alert alert-info mb-6">
-						<span>{phase.instructions}</span>
-					</div>
-				)}
 
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{phase.actions.map((actionName, index) => {
