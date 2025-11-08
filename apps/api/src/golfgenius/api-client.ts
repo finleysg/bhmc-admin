@@ -81,8 +81,6 @@ export class ApiClient {
 
 		let lastError: any = null
 
-		console.debug(`Sending ${method} request to ${this.baseUrl}${url}`)
-
 		for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
 			try {
 				const res = await this.client.request({
@@ -120,7 +118,6 @@ export class ApiClient {
 					)
 				}
 
-				console.debug(`Response status ${res.status}`)
 				return res.data
 			} catch (err) {
 				lastError = err
@@ -362,7 +359,7 @@ export class ApiClient {
 			if (!res) break
 			if (Array.isArray(res)) {
 				for (const item of res) {
-					members.push(mapRosterMember(item))
+					members.push(mapRosterMember(item.member || item))
 				}
 			} else break
 			if (res.length < 100) break

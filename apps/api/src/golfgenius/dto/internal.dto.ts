@@ -25,6 +25,7 @@ export interface RosterMemberDto {
 	lastName: string
 	email?: string | null
 	ghin?: string | null
+	externalId?: string | null
 }
 
 export interface SeasonDto {

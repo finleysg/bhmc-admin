@@ -43,6 +43,7 @@ export function mapRosterMember(member: GgMemberDto): RosterMemberDto {
 		lastName: member.last_name,
 		email: member.email ?? undefined,
 		ghin: member.handicap?.handicap_network_id,
+		externalId: member.external_id,
 	}
 }
 
