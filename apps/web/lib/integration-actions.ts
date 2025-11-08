@@ -16,6 +16,25 @@ export const INTEGRATION_ACTION_ENDPOINTS: Record<IntegrationActionName, string>
 }
 
 /**
+ * Actions that support real-time streaming progress updates
+ */
+export const STREAMING_ACTIONS: Set<IntegrationActionName> = new Set([
+	"Export Roster",
+	"Import Scores",
+	"Import Points",
+	"Import Results",
+	"Import Skins",
+	"Import Proxies",
+])
+
+/**
+ * Checks if an integration action supports streaming progress updates
+ */
+export function supportsStreaming(actionName: IntegrationActionName): boolean {
+	return STREAMING_ACTIONS.has(actionName)
+}
+
+/**
  * Generates the full API proxy path for an integration action
  */
 export function getActionApiPath(eventId: number, actionName: IntegrationActionName): string {

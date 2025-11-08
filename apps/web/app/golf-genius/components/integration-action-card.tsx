@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 
-import { getActionApiPath } from "@/lib/integration-actions"
+import { getActionApiPath, supportsStreaming } from "@/lib/integration-actions"
 import { IntegrationActionName, IntegrationLogDto, ProgressEventDto } from "@repo/dto"
 
 import IntegrationProgress from "./integration-progress"
@@ -119,11 +119,11 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 		setProgress(null)
 		setError(null)
 
-		const supportsProgress = actionName === "Export Roster"
+		const supportsProgress = supportsStreaming(actionName)
 
 		if (supportsProgress) {
-			// Connect to SSE endpoint which will auto-start the export
-			const eventSource = new EventSource(`/api/golfgenius/events/${eventId}/export-roster`)
+			// Connect to SSE endpoint which will auto-start the import/export
+			const eventSource = new EventSource(getActionApiPath(eventId, actionName))
 
 			eventSource.onmessage = (event) => {
 				try {

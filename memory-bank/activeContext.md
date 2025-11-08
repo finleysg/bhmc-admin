@@ -8,6 +8,7 @@ Current focus:
 
 Recent changes:
 
+- **Per-Player Progress Emissions**: Completed implementation of per-player progress callbacks for all 4 Golf Genius results import methods (points, skins, proxy, stroke); updated `processResults` method to accept optional `onPlayerProcessed` callback, modified player processing loop to emit progress after each player, and updated all format-specific processor methods to pass through the callback parameter
 - **SSE Roster Export Fix**: Resolved "Connection lost" issue by implementing streaming-first architecture; eliminated race condition between export initialization and SSE connection by returning RxJS Subject synchronously while processing export asynchronously in background; simplified frontend to use single SSE endpoint that auto-starts export
 - **Type Safety Improvements**: Completed comprehensive type safety enhancements for GolfGenius results import service including discriminated union types for tournament aggregates, proper API response types replacing `any`, circular dependency resolution with barrel file exports, and VS Code settings updates to prevent auto-removal of imports
 - **Commit Policy Rule**: Added `.clinerules/commit-policy.md` requiring explicit user approval before any git commits to prevent accidental commits of incomplete or untested changes
@@ -17,7 +18,6 @@ Recent changes:
 - **Backend JWT Guard**: Modified `apps/api/src/auth/jwt.guard.ts` to validate HS256 JWT tokens using `jsonwebtoken` library with shared secret validation
 - **Golf Genius Frontend Integration**: Updated golf-genius page to use `EventDto` from shared `@repo/dto` package and call real API endpoint instead of mock data; removed `TournamentEvent` interface in favor of shared types
 - **Better Auth Configuration**: Enabled JWT plugin in Next.js app with EdDSA algorithm for secure client-side tokens; configured shared JWT secret for cross-service authentication
-- **Environment Configuration**: Added `API_URL=http://localhost:3333` to web app environment for backend API communication; ensured shared JWT secret consistency across services
 - **Drizzle ORM Integration**: Installed drizzle-orm@0.44.7 and mysql2@3.15.3, configured connection pooling with DATABASE_URL env variable, created complete database schema and relations for events, courses, registration, scores, and auth tables
 - **Events Module Implementation**: Built complete events module with service, controller, domain logic, DTOs, and comprehensive test coverage; includes tee time calculations, group assignments, and hole-based starts
 - **Golf Genius Integration Module**: Complete bidirectional integration with Golf Genius API v2 including event sync, member roster sync, roster export, scores import, and comprehensive error handling with retry logic and rate limiting

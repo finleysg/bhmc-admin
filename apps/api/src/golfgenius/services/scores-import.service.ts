@@ -1,4 +1,10 @@
+import {
+	Observable,
+	Subject,
+} from "rxjs"
+
 import { Injectable } from "@nestjs/common"
+import { ProgressEventDto } from "@repo/dto"
 
 import { CoursesService } from "../../courses/courses.service"
 import { EventsService } from "../../events/events.service"
@@ -7,6 +13,8 @@ import { ScoreDto } from "../../scores/dto/score.dto"
 import { ScoresService } from "../../scores/scores.service"
 import { ApiClient } from "../api-client"
 import { GgTeeSheetPlayerDto } from "../dto/golf-genius.dto"
+import { ProgressTracker } from "./progress-tracker"
+import { ImportResult } from "./progress-tracker.types"
 
 interface ImportScoresResult {
 	scorecards: {
@@ -50,51 +58,68 @@ export class ScoresImportService {
 		private readonly registrationService: RegistrationService,
 		private readonly coursesService: CoursesService,
 		private readonly eventsService: EventsService,
+		private readonly progressTracker: ProgressTracker,
 	) {}
 
-	async importScoresForRound(
-		eventId: number,
-		eventGgId: string,
-		roundGgId: string,
-	): Promise<ImportScoresResult> {
+async importScoresForRound(
+eventId: number,
+eventGgId: string,
+roundGgId: string,
+onPlayerProcessed?: (playerCount: number) => void,
+): Promise<ImportScoresResult> {
 		const teeSheet = await this.apiClient.getRoundTeeSheet(eventGgId.toString(), roundGgId)
 		const results: ImportScoresResult = {
 			scorecards: { created: 0, updated: 0, skipped: 0 },
 			errors: [],
 		}
 
-		for (const pairing of teeSheet) {
-			for (const player of pairing.pairing_group.players) {
-				try {
-					const playerId = await this.identifyPlayer(player, eventId)
-					if (!playerId) {
-						results.errors.push({
-							playerName: player.name,
-							reason: "Player could not be identified",
-						})
-						results.scorecards.skipped++
-						continue
-					}
+for (const pairing of teeSheet) {
+for (const player of pairing.pairing_group.players) {
+try {
+const playerId = await this.identifyPlayer(player, eventId)
+if (!playerId) {
+results.errors.push({
+playerName: player.name,
+reason: "Player could not be identified",
+})
+results.scorecards.skipped++
 
-					const { courseId, teeId } = await this.lookupCourseAndTee(player)
-					const scorecard = await this.createOrUpdateScorecard(
-						eventId,
-						playerId,
-						player,
-						courseId,
-						teeId,
-						results,
-					)
-					await this.createOrUpdateScores(scorecard!.id!, player, courseId)
-				} catch (error) {
-					results.errors.push({
-						playerName: player.name,
-						reason: (error as any).message,
-						details: error,
-					})
-				}
-			}
-		}
+// Emit progress for skipped player
+if (onPlayerProcessed) {
+onPlayerProcessed(1)
+}
+continue
+}
+
+const { courseId, teeId } = await this.lookupCourseAndTee(player)
+const scorecard = await this.createOrUpdateScorecard(
+eventId,
+playerId,
+player,
+courseId,
+teeId,
+results,
+)
+await this.createOrUpdateScores(scorecard!.id!, player, courseId)
+
+// Emit progress for successfully processed player
+if (onPlayerProcessed) {
+onPlayerProcessed(1)
+}
+} catch (error) {
+results.errors.push({
+playerName: player.name,
+reason: (error as any).message,
+details: error,
+})
+
+// Emit progress for failed player
+if (onPlayerProcessed) {
+onPlayerProcessed(1)
+}
+}
+}
+}
 
 		return results
 	}
@@ -277,5 +302,107 @@ export class ScoresImportService {
 		}
 
 		return result
+	}
+
+	getProgressObservable(eventId: number): Subject<ProgressEventDto> | null {
+		return this.progressTracker.getProgressObservable(eventId)
+	}
+
+	async importScoresForEventStream(eventId: number): Promise<Observable<ProgressEventDto>> {
+		const event = await this.eventsService.findEventById(eventId)
+		const rounds = await this.eventsService.findRoundsByEventId(eventId)
+
+		// Validation: event is not null and rounds.length > 0
+		if (!event || !event.id) {
+			throw new Error("No event found with an id of " + eventId.toString())
+		}
+		if (!rounds || rounds.length === 0) {
+			throw new Error("No rounds found for an event with an id of " + eventId.toString())
+		}
+
+		// Calculate total players across all rounds for progress tracking
+		let totalPlayers = 0
+		for (const round of rounds) {
+			try {
+				const teeSheet = await this.apiClient.getRoundTeeSheet(event.ggId!, round.ggId!)
+				for (const pairing of teeSheet) {
+					totalPlayers += pairing.pairing_group.players.length
+				}
+			} catch {
+				// Continue counting, we'll handle errors during actual processing
+			}
+		}
+
+		// Start tracking progress
+		const progressObservable = this.progressTracker.startTracking(eventId, totalPlayers)
+
+		void (async () => {
+			const result: ImportResult = {
+				eventId,
+				actionName: "Import Scores",
+				totalProcessed: 0,
+				created: 0,
+				updated: 0,
+				skipped: 0,
+				errors: [],
+			}
+
+			let processedPlayers = 0
+
+try {
+for (const round of rounds) {
+this.progressTracker.emitProgress(eventId, {
+totalPlayers,
+processedPlayers,
+status: "processing",
+message: `Processing round ${round.roundNumber}...`,
+})
+
+const roundResult = await this.importScoresForRound(
+eventId,
+event.ggId!,
+round.ggId!,
+(count) => {
+processedPlayers += count
+this.progressTracker.emitProgress(eventId, {
+totalPlayers,
+processedPlayers,
+status: processedPlayers >= totalPlayers ? "complete" : "processing",
+message: `Processed ${processedPlayers} of ${totalPlayers} players`,
+})
+}
+)
+
+// Aggregate results
+result.created += roundResult.scorecards.created
+result.updated += roundResult.scorecards.updated
+result.skipped += roundResult.scorecards.skipped
+result.totalProcessed +=
+roundResult.scorecards.created +
+roundResult.scorecards.updated +
+roundResult.scorecards.skipped
+
+// Convert errors to ImportError format
+result.errors.push(
+...roundResult.errors.map((err) => ({
+itemId: err.playerName,
+itemName: err.playerName,
+error: err.reason,
+})),
+)
+}
+
+				// Complete the operation
+				await this.progressTracker.completeOperation(eventId, result)
+			} catch (error) {
+				await this.progressTracker.errorOperation(
+					eventId,
+					"Import Scores",
+					(error as Error).message,
+				)
+			}
+		})()
+
+		return progressObservable
 	}
 }

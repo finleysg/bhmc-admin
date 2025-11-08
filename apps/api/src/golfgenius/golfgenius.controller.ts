@@ -114,4 +114,159 @@ export class GolfgeniusController {
 			})
 		}
 	}
+
+	@Sse("/events/:id/import-scores-stream")
+	// @UseInterceptors(LogIntegrationInterceptor)
+	async importScoresStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
+		const eid = parseInt(id, 10)
+
+		// Check if import is already running
+		const existingSubject = this.scoresImport.getProgressObservable(eid)
+		if (existingSubject) {
+			return existingSubject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		}
+
+		// Start new import and return progress stream
+		try {
+			const subject = await this.scoresImport.importScoresForEventStream(eid)
+
+			return subject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		} catch (error) {
+			return new Observable<{ data: string }>((subscriber) => {
+				subscriber.error(error)
+			})
+		}
+	}
+
+	@Sse("/events/:id/import-points-stream")
+	// @UseInterceptors(LogIntegrationInterceptor)
+	async importPointsStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
+		const eid = parseInt(id, 10)
+
+		// Check if import is already running
+		const existingSubject = this.resultsImport.getProgressObservable(eid)
+		if (existingSubject) {
+			return existingSubject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		}
+
+		// Start new import and return progress stream
+		try {
+			const subject = await this.resultsImport.importPointsResultsStream(eid)
+
+			return subject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		} catch (error) {
+			return new Observable<{ data: string }>((subscriber) => {
+				subscriber.error(error)
+			})
+		}
+	}
+
+	@Sse("/events/:id/import-skins-stream")
+	// @UseInterceptors(LogIntegrationInterceptor)
+	async importSkinsStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
+		const eid = parseInt(id, 10)
+
+		// Check if import is already running
+		const existingSubject = this.resultsImport.getProgressObservable(eid)
+		if (existingSubject) {
+			return existingSubject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		}
+
+		// Start new import and return progress stream
+		try {
+			const subject = await this.resultsImport.importSkinsResultsStream(eid)
+
+			return subject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		} catch (error) {
+			return new Observable<{ data: string }>((subscriber) => {
+				subscriber.error(error)
+			})
+		}
+	}
+
+	@Sse("/events/:id/import-proxies-stream")
+	// @UseInterceptors(LogIntegrationInterceptor)
+	async importProxiesStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
+		const eid = parseInt(id, 10)
+
+		// Check if import is already running
+		const existingSubject = this.resultsImport.getProgressObservable(eid)
+		if (existingSubject) {
+			return existingSubject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		}
+
+		// Start new import and return progress stream
+		try {
+			const subject = await this.resultsImport.importProxyResultsStream(eid)
+
+			return subject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		} catch (error) {
+			return new Observable<{ data: string }>((subscriber) => {
+				subscriber.error(error)
+			})
+		}
+	}
+
+	@Sse("/events/:id/import-results-stream")
+	// @UseInterceptors(LogIntegrationInterceptor)
+	async importResultsStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
+		const eid = parseInt(id, 10)
+
+		// Check if import is already running
+		const existingSubject = this.resultsImport.getProgressObservable(eid)
+		if (existingSubject) {
+			return existingSubject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		}
+
+		// Start new import and return progress stream
+		try {
+			const subject = await this.resultsImport.importStrokePlayResultsStream(eid)
+
+			return subject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		} catch (error) {
+			return new Observable<{ data: string }>((subscriber) => {
+				subscriber.error(error)
+			})
+		}
+	}
 }
