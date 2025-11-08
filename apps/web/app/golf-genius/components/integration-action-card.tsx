@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react"
 
 import { getActionApiPath } from "@/lib/integration-actions"
-import { IntegrationActionName, IntegrationLogDto } from "@repo/dto"
+import { IntegrationActionName, IntegrationLogDto, ProgressEventDto } from "@repo/dto"
+
+import IntegrationProgress from "./integration-progress"
 
 interface Props {
 	eventId: number
@@ -14,15 +16,14 @@ interface Props {
 
 export default function IntegrationActionCard({ eventId, actionName, enabled, onComplete }: Props) {
 	const [lastRun, setLastRun] = useState<IntegrationLogDto | null>(null)
-	const [isLoading, setIsLoading] = useState(false)
 	const [isRunning, setIsRunning] = useState(false)
+	const [progress, setProgress] = useState<ProgressEventDto | null>(null)
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
 		if (!enabled) return
 
 		const fetchLogs = async () => {
-			setIsLoading(true)
 			try {
 				const response = await fetch(
 					`/api/golfgenius/events/${eventId}/logs?actionName=${encodeURIComponent(actionName)}`,
@@ -40,11 +41,9 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 				)[0]
 
 				setLastRun(mostRecentLog || null)
-			} catch (error) {
-				console.error("Failed to fetch integration logs:", error)
+			} catch (_error) {
+				console.error("Failed to fetch integration logs:", _error)
 				setLastRun(null)
-			} finally {
-				setIsLoading(false)
 			}
 		}
 
@@ -70,11 +69,18 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 		)
 	}
 
+	interface ParsedResult {
+		errors?: unknown[]
+		roundResults?: Array<{
+			errors?: unknown[]
+		}>
+	}
+
 	const getErrorCount = (detailsJson: string | null): number => {
 		if (!detailsJson) return 0
 
 		try {
-			const result = JSON.parse(detailsJson)
+			const result = JSON.parse(detailsJson) as ParsedResult
 			let totalErrors = 0
 
 			// Count errors in main errors array
@@ -84,7 +90,7 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 
 			// For scores import, also count roundResults errors
 			if (result.roundResults && Array.isArray(result.roundResults)) {
-				result.roundResults.forEach((round: any) => {
+				result.roundResults.forEach((round) => {
 					if (round.errors && Array.isArray(round.errors)) {
 						totalErrors += round.errors.length
 					}
@@ -92,7 +98,7 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 			}
 
 			return totalErrors
-		} catch (error) {
+		} catch {
 			return 0
 		}
 	}
@@ -110,29 +116,70 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 
 	const handleStart = async () => {
 		setIsRunning(true)
+		setProgress(null)
 		setError(null)
 
-		try {
-			const apiPath = getActionApiPath(eventId, actionName)
-			const response = await fetch(apiPath, {
-				method: "POST",
-			})
+		const supportsProgress = actionName === "Export Roster"
 
-			if (!response.ok) {
-				const errorData = await response.json()
-				throw new Error(errorData.error || "Action failed")
+		if (supportsProgress) {
+			// Connect to SSE endpoint which will auto-start the export
+			const eventSource = new EventSource(`/api/golfgenius/events/${eventId}/export-roster`)
+
+			eventSource.onmessage = (event) => {
+				try {
+					const progressData = JSON.parse(event.data as string) as ProgressEventDto
+					setProgress(progressData)
+
+					if (progressData.status === "complete") {
+						setIsRunning(false)
+						eventSource.close()
+						// Refresh logs after completion
+						setTimeout(() => {
+							if (onComplete) onComplete()
+						}, 1000)
+					} else if (progressData.status === "error") {
+						setError(progressData.message || "Export failed")
+						setIsRunning(false)
+						eventSource.close()
+					}
+				} catch (err: unknown) {
+					const errorMessage = err instanceof Error ? err.message : "Failed to parse progress data"
+					console.error(errorMessage)
+					setError(errorMessage)
+					setIsRunning(false)
+					eventSource.close()
+				}
 			}
 
-			// Success! Notify parent to refresh logs
-			if (onComplete) {
-				onComplete()
+			eventSource.onerror = () => {
+				setError("Connection lost")
+				setIsRunning(false)
+				eventSource.close()
 			}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : "Unknown error"
-			setError(errorMessage)
-			console.error(`Failed to execute ${actionName}:`, err)
-		} finally {
-			setIsRunning(false)
+		} else {
+			// Original behavior for non-progress actions
+			try {
+				const apiPath = getActionApiPath(eventId, actionName)
+				const response = await fetch(apiPath, {
+					method: "POST",
+				})
+
+				if (!response.ok) {
+					const errorData = (await response.json()) as { error?: string }
+					throw new Error(errorData.error || "Action failed")
+				}
+
+				// Success! Notify parent to refresh logs
+				if (onComplete) {
+					onComplete()
+				}
+			} catch (err: unknown) {
+				const errorMessage = err instanceof Error ? err.message : "Unknown error"
+				setError(errorMessage)
+				console.error(errorMessage)
+			} finally {
+				setIsRunning(false)
+			}
 		}
 	}
 
@@ -145,10 +192,16 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 					{getStatusBadge()}
 				</div>
 
-				{/* Last Run Info */}
-				<p className="text-sm text-base-content/70">
-					Last run: {lastRun ? formatTimestamp(lastRun.actionDate) : "Never"}
-				</p>
+				{/* Last Run Info or Progress */}
+				{isRunning && progress ? (
+					<div className="my-4">
+						<IntegrationProgress progress={progress} />
+					</div>
+				) : (
+					<p className="text-sm text-base-content/70">
+						Last run: {lastRun ? formatTimestamp(lastRun.actionDate) : "Never"}
+					</p>
+				)}
 
 				{/* Collapsible Details Section */}
 				{lastRun && (
@@ -168,7 +221,7 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 					<button
 						className="btn btn-primary text-primary-content"
 						disabled={!enabled || isRunning}
-						onClick={handleStart}
+						onClick={() => void handleStart()}
 					>
 						{isRunning ? (
 							<>

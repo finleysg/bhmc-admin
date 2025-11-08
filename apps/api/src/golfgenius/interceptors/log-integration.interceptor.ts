@@ -4,6 +4,7 @@ import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } fr
 import { IntegrationActionName } from "@repo/dto"
 
 import { IntegrationLogService } from "../services/integration-log.service"
+import { RosterExportService } from "../services/roster-export.service"
 
 interface RequestWithParams {
 	url: string
@@ -14,7 +15,10 @@ interface RequestWithParams {
 export class LogIntegrationInterceptor implements NestInterceptor {
 	private readonly logger = new Logger(LogIntegrationInterceptor.name)
 
-	constructor(private readonly integrationLogService: IntegrationLogService) {}
+	constructor(
+		private readonly integrationLogService: IntegrationLogService,
+		private readonly rosterExportService: RosterExportService,
+	) {}
 
 	intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
 		const request = context.switchToHttp().getRequest<RequestWithParams>()
@@ -24,11 +28,21 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 		return next.handle().pipe(
 			tap((result) => {
 				// Success case - log the result
+				let logResult: unknown = result
+
+				// For export roster, get the actual export result instead of SSE progress data
+				if (actionName === "Export Roster") {
+					const exportResult = this.rosterExportService.getExportResult(eventId)
+					if (exportResult) {
+						logResult = exportResult
+					}
+				}
+
 				from(
 					this.integrationLogService.createLogEntry({
 						actionName,
 						actionDate: new Date().toISOString(),
-						details: JSON.stringify(result, null, 2),
+						details: JSON.stringify(logResult, null, 2),
 						eventId,
 						isSuccessful: true,
 					}),

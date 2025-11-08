@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **SSE Roster Export**: Resolved "Connection lost" issue by implementing streaming-first architecture; eliminated race condition between export initialization and SSE connection by returning RxJS Subject synchronously while processing export asynchronously in background; simplified frontend to use single SSE endpoint that auto-starts export
 - **Roster Export Service**: Implemented parallel processing for roster export operations, fixed TypeScript type issues in roster-export.service.ts, added proper types for processSinglePlayer parameters, improved result aggregation method typing, and fixed getEventRoster to unwrap Golf Genius API member objects before mapping
 - **Golf Genius API Integration**: Fixed database insertion errors during event synchronization by correcting API response unwrapping patterns and datetime handling
 - **Tournament Unwrapping**: Discovered tournaments are wrapped in `event` property (not `tournament`), fixed all API client methods to use defensive unwrapping: `item.event || item`
@@ -32,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical
 
+- **SSE Streaming Pattern**: Established streaming-first architecture for real-time operations; return RxJS Subject synchronously from service methods while processing work asynchronously in background; eliminates race conditions between operation initialization and progress streaming connections
 - **UI Patterns**: Added phase-based orchestration, derived state management, action mapping, and component callback patterns
 - **Type Safety**: Maintained strict TypeScript usage with proper error handling and loading states
 - **API Architecture**: Single dynamic route pattern for integration actions with validation and authentication

@@ -21,6 +21,7 @@ Completed
 - **Type Safety Enhancements**: Completed comprehensive type safety improvements for GolfGenius results import service including discriminated union types for tournament aggregates, proper API response types replacing `any`, circular dependency resolution with barrel file exports, and VS Code settings updates to prevent auto-removal of imports
 - **Golf Genius Event Synchronization**: Fixed database insertion errors, corrected API response unwrapping patterns, resolved datetime format issues, and established defensive unwrapping patterns for inconsistent API structures
 - **Roster Export Improvements**: Implemented parallel processing for roster export operations, fixed TypeScript type issues, added proper types for processSinglePlayer parameters, improved result aggregation method typing, and fixed getEventRoster to unwrap Golf Genius API member objects before mapping
+- **SSE Roster Export Fix**: Resolved "Connection lost" issue by implementing streaming-first architecture; eliminated race condition between export initialization and SSE connection by returning RxJS Subject synchronously while processing export asynchronously in background; simplified frontend to use single SSE endpoint that auto-starts export
 
 In progress / Next steps
 

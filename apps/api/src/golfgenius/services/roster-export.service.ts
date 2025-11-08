@@ -1,11 +1,20 @@
-import { Injectable, Logger } from "@nestjs/common"
+import { Subject } from "rxjs"
+
+import {
+	Injectable,
+	Logger,
+} from "@nestjs/common"
+import { ProgressEventDto } from "@repo/dto"
 
 import { CoursesService } from "../../courses/courses.service"
 import { CourseDto } from "../../courses/dto/course.dto"
 import { HoleDto } from "../../courses/dto/hole.dto"
 import { getStart } from "../../events/domain/event.domain"
 import { getGroup } from "../../events/domain/group.domain"
-import { toHoleDomain, toSlotDomain } from "../../events/domain/mappers"
+import {
+	toHoleDomain,
+	toSlotDomain,
+} from "../../events/domain/mappers"
 import { EventDto } from "../../events/dto/event.dto"
 import { RoundDto } from "../../events/dto/round.dto"
 import { EventsService } from "../../events/events.service"
@@ -19,7 +28,11 @@ import { RegistrationSlotDto } from "../../registration/dto/registration-slot.dt
 import { RegistrationDto } from "../../registration/dto/registration.dto"
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
-import { RosterMemberDto, RosterMemberSyncDto } from "../dto/internal.dto"
+import {
+	RosterMemberDto,
+	RosterMemberSyncDto,
+} from "../dto/internal.dto"
+import { IntegrationLogService } from "./integration-log.service"
 
 type ExportError = { slotId?: number; playerId?: number; email?: string; error: string }
 
@@ -38,12 +51,142 @@ interface GgMemberResponse {
 export class RosterExportService {
 	private readonly logger = new Logger(RosterExportService.name)
 
+	private readonly activeExports = new Map<number, Subject<ProgressEventDto>>()
+	private readonly exportResults = new Map<number, unknown>()
+
 	constructor(
 		private readonly events: EventsService,
 		private readonly registration: RegistrationService,
 		private readonly courses: CoursesService,
 		private readonly apiClient: ApiClient,
+		private readonly integrationLog: IntegrationLogService,
 	) {}
+
+	getProgressObservable(eventId: number): Subject<ProgressEventDto> | null {
+		return this.activeExports.get(eventId) ?? null
+	}
+
+	setExportResult(eventId: number, result: unknown) {
+		this.exportResults.set(eventId, result)
+
+		// Auto-cleanup result after 10 minutes
+		setTimeout(
+			() => {
+				this.exportResults.delete(eventId)
+			},
+			10 * 60 * 1000,
+		)
+	}
+
+	getExportResult(eventId: number): unknown {
+		return this.exportResults.get(eventId)
+	}
+
+	private emitProgress(eventId: number, progress: ProgressEventDto) {
+		const subject = this.activeExports.get(eventId)
+		if (subject) {
+			subject.next(progress)
+		}
+	}
+
+	private startExport(eventId: number, totalPlayers: number) {
+		const subject = new Subject<ProgressEventDto>()
+		this.activeExports.set(eventId, subject)
+
+		// Auto-cleanup after 5 minutes
+		setTimeout(
+			() => {
+				this.cleanupExport(eventId)
+			},
+			5 * 60 * 1000,
+		)
+
+		this.emitProgress(eventId, {
+			totalPlayers,
+			processedPlayers: 0,
+			status: "processing",
+			message: "Starting export...",
+		})
+
+		return subject
+	}
+
+	private completeExport(eventId: number, totalPlayers: number) {
+		this.emitProgress(eventId, {
+			totalPlayers,
+			processedPlayers: totalPlayers,
+			status: "complete",
+			message: "Export complete",
+		})
+
+		// Log successful export completion
+		const exportResult = this.getExportResult(eventId)
+		this.integrationLog
+			.createLogEntry({
+				actionName: "Export Roster",
+				actionDate: new Date().toISOString(),
+				details: JSON.stringify(exportResult, null, 2),
+				eventId,
+				isSuccessful: true,
+			})
+			.catch((error: unknown) => {
+				this.logger.error("Failed to log successful roster export", {
+					eventId,
+					error: String(error),
+				})
+			})
+
+		// Cleanup after a short delay to allow final event to be sent
+		setTimeout(() => {
+			this.cleanupExport(eventId)
+		}, 1000)
+	}
+
+	private errorExport(eventId: number, totalPlayers: number, error: string) {
+		this.emitProgress(eventId, {
+			totalPlayers,
+			processedPlayers: 0,
+			status: "error",
+			message: error,
+		})
+
+		// Log failed export
+		const exportResult = this.getExportResult(eventId)
+		this.integrationLog
+			.createLogEntry({
+				actionName: "Export Roster",
+				actionDate: new Date().toISOString(),
+				details: JSON.stringify(
+					{
+						error,
+						result: exportResult,
+					},
+					null,
+					2,
+				),
+				eventId,
+				isSuccessful: false,
+			})
+			.catch((logError: unknown) => {
+				this.logger.error("Failed to log failed roster export", {
+					eventId,
+					logError: String(logError),
+				})
+			})
+
+		// Cleanup after a short delay
+		setTimeout(() => {
+			this.cleanupExport(eventId)
+		}, 1000)
+	}
+
+	private cleanupExport(eventId: number) {
+		const subject = this.activeExports.get(eventId)
+		if (subject) {
+			subject.complete()
+			this.activeExports.delete(eventId)
+		}
+	}
 
 	// ---------- Helpers for master roster sync (original functionality) ----------
 
@@ -71,7 +214,7 @@ export class RosterExportService {
 		rosterBySlotId: Map<number, RosterMemberDto>,
 	): Promise<{
 		success: boolean
-		action: "created" | "skipped" | "error"
+		action: "created" | "skipped" | "updated" | "error"
 		error?: ExportError
 	}> {
 		try {
@@ -173,8 +316,7 @@ export class RosterExportService {
 			}
 
 			if (!existing) {
-				// CREATE
-				this.logger.debug(`Did not find player: ${player.email}`)
+				this.logger.debug(`CREATE: Did not find player: ${player.email}`)
 				try {
 					const res = await this.apiClient.createMemberRegistration(String(event.ggId), member)
 					const memberId = this.extractMemberId(res)
@@ -196,8 +338,9 @@ export class RosterExportService {
 					}
 				}
 			} else {
-				this.logger.debug(`Player ${player.email} has already been exported.`)
-				return { success: true, action: "skipped" }
+				this.logger.debug(`UPDATE: Player ${player.email} has already been exported.`)
+				await this.apiClient.updateMemberRegistration(String(event.ggId), existing.id, member)
+				return { success: true, action: "updated" }
 			}
 		} catch (err: any) {
 			this.logger.error("Unexpected error exporting slot", { err: String(err) })
@@ -237,9 +380,9 @@ export class RosterExportService {
 
 	/**
 	 * Export roster for an event to Golf Genius.
-	 * Returns summary with counts and any errors encountered.
+	 * Returns the progress Subject immediately, then processes export asynchronously.
 	 */
-	async exportEventRoster(eventId: number) {
+	exportEventRoster(eventId: number): Subject<ProgressEventDto> {
 		const result = {
 			eventId,
 			totalPlayers: 0,
@@ -249,135 +392,206 @@ export class RosterExportService {
 			errors: [] as ExportError[],
 		}
 
-		// 1. Validate event
-		const event = await this.events.findEventById(eventId)
-		if (!event) throw new Error(`Event ${eventId} not found`)
-		// registration must be closed (signupEnd in past)
-		// if (!event.signupEnd || new Date(event.signupEnd) > new Date()) {
-		//     throw new Error(`Registration for event ${eventId} is not closed`)
-		// }
-		// must have GG id
-		if (!event.ggId) {
-			throw new Error(`Event ${eventId} does not have a Golf Genius ID (ggId)`)
+		// Check if export is already running for this event
+		if (this.activeExports.has(eventId)) {
+			throw new Error(`Export already in progress for event ${eventId}`)
 		}
 
-		// rounds & tournaments
-		const rounds = await this.events.findRoundsByEventId(eventId)
-		if (!rounds || rounds.length === 0) {
-			throw new Error(`Event ${eventId} has no rounds`)
-		}
-		const roundGgIds = (rounds ?? []).map((r) => r.ggId).filter(Boolean)
-		if (roundGgIds.length !== rounds.length) {
-			throw new Error(`Not all rounds for event ${eventId} have Golf Genius IDs`)
-		}
+		// Start progress tracking and return subject immediately
+		const subject = this.startExport(eventId, 0) // We'll update totalPlayers later
 
-		const tournaments = await this.events.findTournamentsByEventId(eventId)
-		if (!tournaments || tournaments.length === 0) {
-			throw new Error(`Event ${eventId} has no tournaments`)
-		}
+		// Process export asynchronously
+		this.processExportAsync(eventId, result).catch((error) => {
+			const errorMessage = error instanceof Error ? error.message : "Unknown error"
+			this.logger.error(`Export failed for event ${eventId}:`, error)
+			this.errorExport(eventId, result.totalPlayers || 0, errorMessage)
+		})
 
-		// 2. Get existing roster from GG for idempotency
-		let existingRoster: RosterMemberDto[] = []
+		return subject
+	}
+
+	/**
+	 * Process the export asynchronously after returning the Subject
+	 */
+	private async processExportAsync(
+		eventId: number,
+		result: {
+			eventId: number
+			totalPlayers: number
+			created: number
+			updated: number
+			skipped: number
+			errors: ExportError[]
+		},
+	) {
 		try {
-			existingRoster = await this.apiClient.getEventRoster(String(event.ggId))
-		} catch (err: unknown) {
-			this.logger.warn("Failed to fetch existing roster from Golf Genius", { err: String(err) })
-			// proceed; we'll treat as empty roster and create entries
-			existingRoster = []
-		}
+			// 1. Validate event
+			const event = await this.events.findEventById(eventId)
+			if (!event) throw new Error(`Event ${eventId} not found`)
+			// registration must be closed (signupEnd in past)
+			// if (!event.signupEnd || new Date(event.signupEnd) > new Date()) {
+			//     throw new Error(`Registration for event ${eventId} is not closed`)
+			// }
+			// must have GG id
+			if (!event.ggId) {
+				throw new Error(`Event ${eventId} does not have a Golf Genius ID (ggId)`)
+			}
 
-		const rosterByGhin = new Map<string, RosterMemberDto>()
-		const rosterBySlotId = new Map<number, RosterMemberDto>()
-		for (const mem of existingRoster) {
-			// Prefer matching by GHIN (handicap_network_id) - normalize to strip leading zeros
-			const rawGhin = mem?.ghin ?? null
-			const normalized = this.normalizeGhin(rawGhin)
-			if (normalized) rosterByGhin.set(normalized, mem)
-			if (mem?.externalId) rosterBySlotId.set(+mem.externalId, mem)
-		}
+			// rounds & tournaments
+			const rounds = await this.events.findRoundsByEventId(eventId)
+			if (!rounds || rounds.length === 0) {
+				throw new Error(`Event ${eventId} has no rounds`)
+			}
+			const roundGgIds = (rounds ?? []).map((r) => r.ggId).filter(Boolean)
+			if (roundGgIds.length !== rounds.length) {
+				throw new Error(`Not all rounds for event ${eventId} have Golf Genius IDs`)
+			}
 
-		// 3. Get all registration slots with relations
-		const slots = await this.registration.getRegisteredPlayers(eventId)
-		if (!slots || slots.length === 0) {
-			return { ...result, totalPlayers: 0 }
-		}
+			const tournaments = await this.events.findTournamentsByEventId(eventId)
+			if (!tournaments || tournaments.length === 0) {
+				throw new Error(`Event ${eventId} has no tournaments`)
+			}
 
-		// Collect course ids and fetch holes
-		const courseIdSet = new Set<number>()
-		for (const s of slots) {
-			if (!s) continue
-			const cid = s.course?.id ?? s.registration?.courseId
-			if (cid !== null && cid !== undefined) courseIdSet.add(cid)
-		}
+			// 2. Get existing roster from GG for idempotency
+			let existingRoster: RosterMemberDto[] = []
+			try {
+				existingRoster = await this.apiClient.getEventRoster(String(event.ggId))
+			} catch (err: unknown) {
+				this.logger.warn("Failed to fetch existing roster from Golf Genius", { err: String(err) })
+				// proceed; we'll treat as empty roster and create entries
+				existingRoster = []
+			}
 
-		const holesMap = new Map<number, HoleDto[]>()
-		await Promise.all(
-			Array.from(courseIdSet).map(async (cid) => {
-				try {
-					const holes = await this.courses.findHolesByCourseId(cid)
-					holesMap.set(cid, holes ?? [])
-				} catch {
-					holesMap.set(cid, [])
-				}
-			}),
-		)
+			const rosterByGhin = new Map<string, RosterMemberDto>()
+			const rosterBySlotId = new Map<number, RosterMemberDto>()
+			for (const mem of existingRoster) {
+				// Prefer matching by GHIN (handicap_network_id) - normalize to strip leading zeros
+				const rawGhin = mem?.ghin ?? null
+				const normalized = this.normalizeGhin(rawGhin)
+				if (normalized) rosterByGhin.set(normalized, mem)
+				if (mem?.externalId) rosterBySlotId.set(+mem.externalId, mem)
+			}
 
-		// event fees (for skins dynamic columns)
-		const eventFees = await this.events.listEventFeesByEvent(eventId)
-		const feeDefinitions = (eventFees ?? [])
-			.filter((f) => f.feeType.name.endsWith("Skins"))
-			.map((ef) => {
-				return {
-					eventFee: ef.eventFee,
-					feeType: ef.feeType,
-					name: ef.feeType.name.toLowerCase().replace(" ", "_"),
-				}
+			// 3. Get all registration slots with relations
+			const slots = await this.registration.getRegisteredPlayers(eventId)
+			if (!slots || slots.length === 0) {
+				this.setExportResult(eventId, { ...result, totalPlayers: 0 })
+				this.completeExport(eventId, 0)
+				return
+			}
+
+			// Update progress with actual player count
+			this.emitProgress(eventId, {
+				totalPlayers: slots.length,
+				processedPlayers: 0,
+				status: "processing",
+				message: "Starting export...",
 			})
 
-		// 4. Process players in parallel batches
-		const CONCURRENCY_LIMIT = 10 // Tune this based on API rate limits
-		const playerTasks: Array<
-			Promise<{
-				success: boolean
-				action: "created" | "updated" | "skipped" | "error"
-				error?: ExportError
-			}>
-		> = []
+			// Collect course ids and fetch holes
+			const courseIdSet = new Set<number>()
+			for (const s of slots) {
+				if (!s) continue
+				const cid = s.course?.id ?? s.registration?.courseId
+				if (cid !== null && cid !== undefined) courseIdSet.add(cid)
+			}
 
-		for (const s of slots) {
-			if (!s) continue
-
-			const task = this.processSinglePlayer(
-				s.slot,
-				s.player,
-				s.registration,
-				s.course,
-				event,
-				rounds,
-				holesMap,
-				feeDefinitions,
-				slots,
-				rosterByGhin,
-				rosterBySlotId,
+			const holesMap = new Map<number, HoleDto[]>()
+			await Promise.all(
+				Array.from(courseIdSet).map(async (cid) => {
+					try {
+						const holes = await this.courses.findHolesByCourseId(cid)
+						holesMap.set(cid, holes ?? [])
+					} catch {
+						holesMap.set(cid, [])
+					}
+				}),
 			)
 
-			playerTasks.push(task)
+			// event fees (for skins dynamic columns)
+			const eventFees = await this.events.listEventFeesByEvent(eventId)
+			const feeDefinitions = (eventFees ?? [])
+				.filter((f) => f.feeType.name.endsWith("Skins"))
+				.map((ef) => {
+					return {
+						eventFee: ef.eventFee,
+						feeType: ef.feeType,
+						name: ef.feeType.name.toLowerCase().replace(" ", "_"),
+					}
+				})
 
-			// Process in batches of CONCURRENCY_LIMIT
-			if (playerTasks.length >= CONCURRENCY_LIMIT) {
+			// 4. Process players in parallel batches
+			const CONCURRENCY_LIMIT = 10 // Tune this based on API rate limits
+			const playerTasks: Array<
+				Promise<{
+					success: boolean
+					action: "created" | "updated" | "skipped" | "error"
+					error?: ExportError
+				}>
+			> = []
+
+			for (const s of slots) {
+				if (!s) continue
+
+				const task = this.processSinglePlayer(
+					s.slot,
+					s.player,
+					s.registration,
+					s.course,
+					event,
+					rounds,
+					holesMap,
+					feeDefinitions,
+					slots,
+					rosterByGhin,
+					rosterBySlotId,
+				)
+
+				playerTasks.push(task)
+
+				// Process in batches of CONCURRENCY_LIMIT
+				if (playerTasks.length >= CONCURRENCY_LIMIT) {
+					const batchResults = await Promise.all(playerTasks)
+					this.aggregateResults(result, batchResults)
+
+					// Emit progress after each batch (throttled)
+					this.emitProgress(eventId, {
+						totalPlayers: slots.length,
+						processedPlayers: result.totalPlayers,
+						status: "processing",
+						message: `Processed ${result.totalPlayers} players...`,
+					})
+
+					playerTasks.length = 0 // Clear the batch
+				}
+			}
+
+			// Process any remaining tasks
+			if (playerTasks.length > 0) {
 				const batchResults = await Promise.all(playerTasks)
 				this.aggregateResults(result, batchResults)
-				playerTasks.length = 0 // Clear the batch
+
+				// Final progress update
+				this.emitProgress(eventId, {
+					totalPlayers: slots.length,
+					processedPlayers: result.totalPlayers,
+					status: "processing",
+					message: `Processed ${result.totalPlayers} players...`,
+				})
 			}
-		}
 
-		// Process any remaining tasks
-		if (playerTasks.length > 0) {
-			const batchResults = await Promise.all(playerTasks)
-			this.aggregateResults(result, batchResults)
-		}
+			// Complete the export
+			this.setExportResult(eventId, result)
+			this.completeExport(eventId, result.totalPlayers)
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : "Unknown error"
+			this.logger.error(`Export failed for event ${eventId}:`, error)
 
-		return result
+			// Emit error progress
+			this.errorExport(eventId, result.totalPlayers || 0, errorMessage)
+			this.setExportResult(eventId, { error: errorMessage })
+			throw error
+		}
 	}
 
 	private extractMemberId(res: GgMemberResponse): string | null {

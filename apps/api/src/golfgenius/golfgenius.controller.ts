@@ -1,4 +1,7 @@
-import { Controller, Get, Param, Post, Query, UseInterceptors } from "@nestjs/common"
+import { Observable } from "rxjs"
+import { map } from "rxjs/operators"
+
+import { Controller, Get, Logger, Param, Post, Query, Sse, UseInterceptors } from "@nestjs/common"
 import { IntegrationActionName } from "@repo/dto"
 
 import { LogIntegrationInterceptor } from "./interceptors/log-integration.interceptor"
@@ -11,6 +14,8 @@ import { ScoresImportService } from "./services/scores-import.service"
 
 @Controller("golfgenius")
 export class GolfgeniusController {
+	private readonly logger = new Logger(GolfgeniusController.name)
+
 	constructor(
 		private readonly memberSync: MemberSyncService,
 		private readonly eventSync: EventSyncService,
@@ -36,13 +41,6 @@ export class GolfgeniusController {
 	async syncEvent(@Param("id") id: string) {
 		const eid = parseInt(id, 10)
 		return this.eventSync.syncEvent(eid)
-	}
-
-	@Post("/events/:id/export-roster")
-	@UseInterceptors(LogIntegrationInterceptor)
-	async exportRoster(@Param("id") id: string) {
-		const eid = parseInt(id, 10)
-		return this.rosterExport.exportEventRoster(eid)
 	}
 
 	@Post("/events/:id/import-scores")
@@ -84,5 +82,36 @@ export class GolfgeniusController {
 	async getEventLogs(@Param("id") id: string, @Query("actionName") actionName?: string) {
 		const eid = parseInt(id, 10)
 		return this.integrationLog.getLogsByEventId(eid, actionName as IntegrationActionName)
+	}
+
+	@Sse("/events/:id/export-roster")
+	// @UseInterceptors(LogIntegrationInterceptor)
+	exportRoster(@Param("id") id: string): Observable<{ data: string }> {
+		const eid = parseInt(id, 10)
+
+		// Check if export is already running
+		const existingSubject = this.rosterExport.getProgressObservable(eid)
+		if (existingSubject) {
+			return existingSubject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		}
+
+		// Start new export and return progress stream
+		try {
+			const subject = this.rosterExport.exportEventRoster(eid)
+
+			return subject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		} catch (error) {
+			return new Observable<{ data: string }>((subscriber) => {
+				subscriber.error(error)
+			})
+		}
 	}
 }

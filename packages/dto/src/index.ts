@@ -12,3 +12,4 @@ export { EventRegistrationSummaryDto } from "./events/event-registration-summary
 
 // Golf Genius DTO exports
 export { IntegrationActionName, IntegrationLogDto } from "./golf-genius/integration-log.dto"
+export { ProgressEventDto } from "./golf-genius/progress-event.dto"

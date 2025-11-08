@@ -117,7 +117,7 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 
 	// Fetch all logs when event changes
 	useEffect(() => {
-		fetchLogsForEvent(selectedEvent.id)
+		void fetchLogsForEvent(selectedEvent.id)
 	}, [selectedEvent.id])
 
 	const fetchLogsForEvent = async (eventId: number) => {
@@ -210,7 +210,7 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 
 	const handleActionComplete = () => {
 		// Refresh logs after action completion
-		refreshLogs()
+		void refreshLogs()
 	}
 
 	if (isLoadingLogs) {

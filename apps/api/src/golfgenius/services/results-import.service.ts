@@ -1,21 +1,9 @@
-import {
-	and,
-	eq,
-} from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 
-import {
-	Injectable,
-	Logger,
-} from "@nestjs/common"
+import { Injectable, Logger } from "@nestjs/common"
 
 import { DrizzleService } from "../../database/drizzle.service"
-import {
-	event,
-	round,
-	tournament,
-	tournamentPoints,
-	tournamentResult,
-} from "../../database/schema"
+import { event, round, tournament, tournamentPoints, tournamentResult } from "../../database/schema"
 import { ApiClient } from "../api-client"
 import {
 	GGAggregate,
