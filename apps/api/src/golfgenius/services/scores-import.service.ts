@@ -159,7 +159,7 @@ export class ScoresImportService {
 			return await this.scoresService.updateScorecard(existing.id!, {
 				eventId,
 				playerId,
-				handicapIndex: handicapIndex?.toString() ?? "",
+				handicapIndex: handicapIndex?.toString() ?? null,
 				courseHandicap: courseHandicap ?? 0,
 				courseId,
 				teeId,
@@ -169,7 +169,7 @@ export class ScoresImportService {
 			return await this.scoresService.createScorecard({
 				eventId,
 				playerId,
-				handicapIndex: handicapIndex?.toString() ?? "",
+				handicapIndex: handicapIndex?.toString() ?? null,
 				courseHandicap: courseHandicap ?? 0,
 				courseId,
 				teeId,
