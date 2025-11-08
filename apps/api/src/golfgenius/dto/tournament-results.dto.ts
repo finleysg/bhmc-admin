@@ -43,6 +43,45 @@ export interface GGAggregate {
 	[key: string]: unknown // Allow additional properties
 }
 
+// Tournament format types for discriminated unions
+export type TournamentFormat = "points" | "skins" | "user_scored" | "stroke"
+
+// Discriminated union for tournament aggregates - extends GGAggregate for compatibility
+export type TournamentAggregate =
+	| PointsTournamentAggregate
+	| SkinsTournamentAggregate
+	| ProxyTournamentAggregate
+	| StrokeTournamentAggregate
+
+export interface PointsTournamentAggregate extends GGAggregate {
+	format: "points"
+	rank?: string
+	points?: string
+	position?: string
+	total?: string
+}
+
+export interface SkinsTournamentAggregate extends GGAggregate {
+	format: "skins"
+	total?: string
+	purse?: string
+	details?: string
+}
+
+export interface ProxyTournamentAggregate extends GGAggregate {
+	format: "user_scored"
+	position?: string
+	purse?: string
+	rank?: string
+}
+
+export interface StrokeTournamentAggregate extends GGAggregate {
+	format: "stroke"
+	position?: string
+	purse?: string
+	total?: string
+}
+
 // Member Card = Player Identifier
 export interface GGMemberCard {
 	member_id: number | string

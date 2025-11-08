@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Type Safety Improvements**: Completed comprehensive type safety enhancements for GolfGenius results import service including discriminated union types for tournament aggregates (Points, Skins, Proxy, Stroke), proper API response types replacing `any`, circular dependency resolution with barrel file exports, and VS Code settings updates to prevent auto-removal of imports
 - **Golf Genius Integration Orchestrator UI**: Complete phase-based workflow with 3 phases (Setup, Import Results, Finalize); automatic state derivation from integration logs
 - **Action-to-Endpoint Mapping System**: Centralized mapping in `apps/web/lib/integration-actions.ts` for all 8 IntegrationActionName values to backend endpoints
 - **Dynamic API Proxy Route**: Single route `/api/golfgenius/events/[id]/[action]` handles all integration actions through Next.js API proxy with validation

@@ -8,6 +8,7 @@ Current focus:
 
 Recent changes:
 
+- **Type Safety Improvements**: Completed comprehensive type safety enhancements for GolfGenius results import service including discriminated union types for tournament aggregates, proper API response types replacing `any`, circular dependency resolution with barrel file exports, and VS Code settings updates to prevent auto-removal of imports
 - **Commit Policy Rule**: Added `.clinerules/commit-policy.md` requiring explicit user approval before any git commits to prevent accidental commits of incomplete or untested changes
 - **Roster Export Fixes**: Implemented parallel processing for roster export operations, fixed TypeScript type issues in roster-export.service.ts, added proper types for processSinglePlayer parameters, improved result aggregation method typing, and fixed getEventRoster to unwrap Golf Genius API member objects before mapping
 - **JWT Authentication Implementation**: Complete end-to-end authentication flow between Next.js (Better Auth) and NestJS API; implemented JWT token re-signing pattern where EdDSA tokens from Better Auth are converted to HS256 tokens for backend validation using shared secret

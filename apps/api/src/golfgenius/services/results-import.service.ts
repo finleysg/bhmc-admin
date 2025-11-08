@@ -1,11 +1,31 @@
-import { and, eq } from "drizzle-orm"
+import {
+	and,
+	eq,
+} from "drizzle-orm"
 
-import { Injectable, Logger } from "@nestjs/common"
+import {
+	Injectable,
+	Logger,
+} from "@nestjs/common"
 
 import { DrizzleService } from "../../database/drizzle.service"
-import { event, round, tournament, tournamentPoints, tournamentResult } from "../../database/schema"
+import {
+	event,
+	round,
+	tournament,
+	tournamentPoints,
+	tournamentResult,
+} from "../../database/schema"
 import { ApiClient } from "../api-client"
-import { GGAggregate, ImportResultSummary } from "../dto/tournament-results.dto"
+import {
+	GGAggregate,
+	GolfGeniusTournamentResults,
+	ImportResultSummary,
+	PointsTournamentAggregate,
+	ProxyTournamentAggregate,
+	SkinsTournamentAggregate,
+	StrokeTournamentAggregate,
+} from "../dto/tournament-results.dto"
 import {
 	PointsResultParser,
 	ProxyResultParser,
@@ -25,28 +45,32 @@ type TournamentData = {
 	roundGgId: string
 }
 
-interface PointsAggregate {
-	name?: string
-	[key: string]: unknown
+interface PreparedTournamentResult {
+	tournamentId: number
+	playerId: number
+	flight: string | null
+	position: number
+	score: number | null
+	amount: string
+	summary: string | null
+	details: string | null
+	createDate: string
+	payoutDate: string | null
+	payoutStatus: string | null
+	payoutTo: string | null
+	payoutType: string | null
+	teamId: string | null
 }
 
-interface SkinsAggregate {
-	total?: string
-	name?: string
-	[key: string]: unknown
+interface PlayerRecord {
+	id: number
+	firstName: string
+	lastName: string
+	email: string
+	phone?: string
 }
 
-interface ProxyAggregate {
-	position?: string
-	name?: string
-	[key: string]: unknown
-}
-
-interface StrokeAggregate {
-	purse?: string
-	name?: string
-	[key: string]: unknown
-}
+type PlayerMap = Map<string, PlayerRecord>
 
 @Injectable()
 export class ResultsImportService {
@@ -83,7 +107,8 @@ export class ResultsImportService {
 		processor: (
 			tournamentData: TournamentData,
 			result: ImportResultSummary,
-			ggResults: any,
+			ggResults: GolfGeniusTournamentResults,
+			playerMap: PlayerMap,
 		) => Promise<void>,
 	): Promise<ImportResultSummary[]> {
 		const tournaments = await this.drizzle.db
@@ -118,12 +143,56 @@ export class ResultsImportService {
 		return results
 	}
 
+	private async fetchPlayerMapForEvent(eventId: number): Promise<PlayerMap> {
+		const { player, registrationSlot } = await import("../../database/schema/registration.schema")
+
+		const playerRecords = await this.drizzle.db
+			.select({
+				ggId: registrationSlot.ggId,
+				id: player.id,
+				firstName: player.firstName,
+				lastName: player.lastName,
+				email: player.email,
+			})
+			.from(registrationSlot)
+			.innerJoin(player, eq(registrationSlot.playerId, player.id))
+			.where(eq(registrationSlot.eventId, eventId))
+
+		const playerMap = new Map<string, PlayerRecord>()
+		for (const record of playerRecords) {
+			if (record.ggId) {
+				// Only include records with valid ggId
+				playerMap.set(record.ggId, {
+					id: record.id,
+					firstName: record.firstName,
+					lastName: record.lastName,
+					email: record.email,
+				})
+			}
+		}
+		return playerMap
+	}
+
+	private resolvePlayerFromMap(
+		memberId: string,
+		playerMap: PlayerMap,
+		result: ImportResultSummary,
+	): PlayerRecord | null {
+		const player = playerMap.get(memberId)
+		if (!player) {
+			result.errors.push(`No player found for id ${memberId}`)
+			return null
+		}
+		return player
+	}
+
 	private async importTournamentResults(
 		tournamentData: TournamentData,
 		processor: (
 			tournamentData: TournamentData,
 			result: ImportResultSummary,
-			ggResults: any,
+			ggResults: GolfGeniusTournamentResults,
+			playerMap: PlayerMap,
 		) => Promise<void>,
 	): Promise<ImportResultSummary> {
 		const result: ImportResultSummary = {
@@ -140,6 +209,9 @@ export class ResultsImportService {
 				return result
 			}
 
+			// Fetch player map for this event (optimization: single query instead of N+1)
+			const playerMap = await this.fetchPlayerMapForEvent(tournamentData.eventId)
+
 			// Delete existing results (idempotent)
 			await this.deleteExistingResults(tournamentData)
 
@@ -150,7 +222,7 @@ export class ResultsImportService {
 			}
 
 			// Process results using the provided processor
-			await processor(tournamentData, result, ggResults)
+			await processor(tournamentData, result, ggResults, playerMap)
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
 			result.errors.push(`Unexpected error: ${errorMessage}`)
@@ -219,65 +291,166 @@ export class ResultsImportService {
 		}
 	}
 
-	// ============= FORMAT-SPECIFIC PROCESSORS =============
-
-	private async processPointsResults(
+	private async processResults<T extends GGAggregate>(
 		tournamentData: TournamentData,
 		result: ImportResultSummary,
-		ggResults: any,
+		ggResults: GolfGeniusTournamentResults,
+		playerMap: PlayerMap,
+		parser: {
+			validateResponse: (ggResults: GolfGeniusTournamentResults) => string | null
+			extractScopes: (ggResults: GolfGeniusTournamentResults) => any[]
+			extractFlightName: (scope: any) => string
+			extractAggregates: (scope: any) => GGAggregate[]
+		},
+		prepareRecord: (
+			tournamentData: TournamentData,
+			aggregate: T,
+			flightName: string,
+			result: ImportResultSummary,
+			playerMap: PlayerMap,
+		) => PreparedTournamentResult | null,
 	): Promise<void> {
 		// Validate response structure
-		const error = PointsResultParser.validateResponse(ggResults)
+		const error = parser.validateResponse(ggResults)
 		if (error) {
 			result.errors.push(error)
 			return
 		}
 
 		// Extract scopes (flights/divisions)
-		const scopes = PointsResultParser.extractScopes(ggResults)
+		const scopes = parser.extractScopes(ggResults)
+
+		const preparedRecords: PreparedTournamentResult[] = []
 
 		// Process each scope
 		for (const scope of scopes) {
-			const flightName = PointsResultParser.extractFlightName(scope)
-			const aggregates = PointsResultParser.extractAggregates(scope)
+			const flightName = parser.extractFlightName(scope)
+			const aggregates = parser.extractAggregates(scope)
 
 			// Process each player result
 			for (const aggregate of aggregates) {
 				try {
-					await this.processPointsPlayerResult(tournamentData, aggregate, flightName, result)
+					const preparedRecord = prepareRecord(
+						tournamentData,
+						aggregate as T,
+						flightName,
+						result,
+						playerMap,
+					)
+					if (preparedRecord) {
+						preparedRecords.push(preparedRecord)
+					}
 				} catch (error) {
 					const errorMessage = error instanceof Error ? error.message : String(error)
-					result.errors.push(`Error processing points player result: ${errorMessage}`)
-					this.logger.error("Error processing points player result", {
+					result.errors.push(`Error processing player result: ${errorMessage}`)
+					this.logger.error("Error processing player result", {
 						tournamentId: tournamentData.id,
 						error: errorMessage,
 					})
 				}
 			}
 		}
+
+		// Batch insert all prepared records
+		if (preparedRecords.length > 0) {
+			await this.drizzle.db.insert(tournamentResult).values(preparedRecords)
+			result.resultsImported += preparedRecords.length
+
+			this.logger.log("Batch inserted results", {
+				tournamentId: tournamentData.id,
+				recordsInserted: preparedRecords.length,
+			})
+		}
 	}
 
-	private async processPointsPlayerResult(
+	// ============= FORMAT-SPECIFIC PROCESSORS =============
+
+	private async processPointsResults(
 		tournamentData: TournamentData,
-		aggregate: PointsAggregate,
+		result: ImportResultSummary,
+		ggResults: GolfGeniusTournamentResults,
+		playerMap: PlayerMap,
+	): Promise<void> {
+		return this.processResults<PointsTournamentAggregate>(
+			tournamentData,
+			result,
+			ggResults,
+			playerMap,
+			PointsResultParser,
+			this.preparePointsPlayerResult.bind(this),
+		)
+	}
+
+	private async processSkinsResults(
+		tournamentData: TournamentData,
+		result: ImportResultSummary,
+		ggResults: GolfGeniusTournamentResults,
+		playerMap: PlayerMap,
+	): Promise<void> {
+		return this.processResults<SkinsTournamentAggregate>(
+			tournamentData,
+			result,
+			ggResults,
+			playerMap,
+			SkinsResultParser,
+			this.prepareSkinsPlayerResult.bind(this),
+		)
+	}
+
+	private async processProxyResults(
+		tournamentData: TournamentData,
+		result: ImportResultSummary,
+		ggResults: GolfGeniusTournamentResults,
+		playerMap: PlayerMap,
+	): Promise<void> {
+		return this.processResults<ProxyTournamentAggregate>(
+			tournamentData,
+			result,
+			ggResults,
+			playerMap,
+			ProxyResultParser,
+			this.prepareProxyPlayerResult.bind(this),
+		)
+	}
+
+	private async processStrokeResults(
+		tournamentData: TournamentData,
+		result: ImportResultSummary,
+		ggResults: GolfGeniusTournamentResults,
+		playerMap: PlayerMap,
+	): Promise<void> {
+		return this.processResults<StrokeTournamentAggregate>(
+			tournamentData,
+			result,
+			ggResults,
+			playerMap,
+			StrokePlayResultParser,
+			this.prepareStrokePlayerResult.bind(this),
+		)
+	}
+
+	private preparePointsPlayerResult(
+		tournamentData: TournamentData,
+		aggregate: PointsTournamentAggregate,
 		flightName: string,
 		result: ImportResultSummary,
-	): Promise<void> {
+		playerMap: PlayerMap,
+	): PreparedTournamentResult | null {
 		// Extract member cards and get first member card
 		const memberCards = PointsResultParser.extractMemberCards(aggregate as GGAggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
-			return
+			return null
 		}
 		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
 		const playerData = PointsResultParser.parsePlayerData(aggregate, memberCards[0])
 
-		// Resolve player using member card ID
-		const player = await this.resolvePlayerByMemberId(memberId, result)
+		// Resolve player using pre-fetched player map
+		const player = this.resolvePlayerFromMap(memberId, playerMap, result)
 		if (!player) {
-			return
+			return null
 		}
 
 		// Parse position from rank attribute
@@ -287,16 +460,6 @@ export class ResultsImportService {
 			position = rankStr && rankStr.trim() !== "" ? parseInt(rankStr, 10) : 0
 		} catch {
 			position = 0
-		}
-
-		// Parse points and convert to whole number with proper rounding
-		const pointsStr = playerData.points
-		let points: number
-		if (pointsStr === "0.00") {
-			points = 0
-		} else {
-			const pointsDecimal = parseFloat(pointsStr)
-			points = Math.round(pointsDecimal) // ROUND_HALF_UP behavior
 		}
 
 		// Parse score (total strokes) if available
@@ -312,53 +475,52 @@ export class ResultsImportService {
 		const positionDetails = PointsResultParser.formatPositionDetails(playerData.position)
 		const details = `${tournamentData.name}${flightName ? " - " : ""}${flightName ?? ""}: ${positionDetails}`
 
-		try {
-			await this.drizzle.db.insert(tournamentPoints).values({
-				tournamentId: tournamentData.id,
-				playerId: player.id,
-				position,
-				score,
-				points,
-				details,
-				createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
-			})
-			result.resultsImported += 1
-		} catch (error) {
-			this.logger.error("Full database error:", error)
-			if (error instanceof Error) {
-				this.logger.error("Error sqlMessage:", (error as any).sqlMessage)
-			}
-			result.errors.push(JSON.stringify(error))
-			throw error
+		// Return prepared data instead of inserting
+		return {
+			tournamentId: tournamentData.id,
+			playerId: player.id,
+			flight: flightName || null,
+			position,
+			score,
+			amount: "0.00",
+			summary: null,
+			details,
+			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			payoutDate: null,
+			payoutStatus: null,
+			payoutTo: null,
+			payoutType: null,
+			teamId: null,
 		}
 	}
 
-	private async processProxyPlayerResult(
+	private prepareProxyPlayerResult(
 		tournamentData: TournamentData,
-		aggregate: ProxyAggregate,
+		aggregate: ProxyTournamentAggregate,
 		flightName: string,
 		result: ImportResultSummary,
-	): Promise<void> {
+		playerMap: PlayerMap,
+	): PreparedTournamentResult | null {
 		// Only process winners (position === "1")
 		if (aggregate.position !== "1") {
-			return // Skip non-winners
+			return null // Skip non-winners
 		}
 
 		// Extract member cards and get first member card
 		const memberCards = ProxyResultParser.extractMemberCards(aggregate as GGAggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
-			return
+			return null
 		}
 		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
-		const playerData = ProxyResultParser.parsePlayerData(aggregate, memberCards[0])
+		const playerData = ProxyResultParser.parsePlayerData(aggregate as GGAggregate, memberCards[0])
 
-		// Resolve player using member card ID
-		const player = await this.resolvePlayerByMemberId(memberId, result)
+		// Resolve player using pre-fetched player map
+		const player = this.resolvePlayerFromMap(memberId, playerMap, result)
 		if (!player) {
-			return
+			return null
 		}
 
 		// Parse position (should always be 1 for winners)
@@ -368,14 +530,14 @@ export class ResultsImportService {
 		const amount = this.parsePurseAmount(playerData.purse)
 		if (amount === null) {
 			result.errors.push(`Invalid purse amount for winner: ${playerData.purse}`)
-			return
+			return null
 		}
 
 		// Score is not relevant for proxy tournaments
 		const score: number | null = null
 
-		// Create tournamentResult record
-		await this.drizzle.db.insert(tournamentResult).values({
+		// Return prepared data instead of inserting
+		return {
 			tournamentId: tournamentData.id,
 			playerId: player.id,
 			flight: flightName || null,
@@ -383,50 +545,44 @@ export class ResultsImportService {
 			score,
 			amount: amount.toFixed(2),
 			details: null,
+			summary: null,
 			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
 			payoutDate: new Date().toISOString().slice(0, 19).replace("T", " "),
 			payoutStatus: "Pending",
 			payoutTo: "Individual",
 			payoutType: "Credit",
-		})
-
-		result.resultsImported += 1
-		this.logger.debug("Proxy result created", {
-			tournamentId: tournamentData.id,
-			playerId: player.id,
-			position,
-			amount,
-			score,
-		})
+			teamId: null,
+		}
 	}
 
-	private async processSkinsPlayerResult(
+	private prepareSkinsPlayerResult(
 		tournamentData: TournamentData,
-		aggregate: SkinsAggregate,
+		aggregate: SkinsTournamentAggregate,
 		flightName: string,
 		result: ImportResultSummary,
-	): Promise<void> {
+		playerMap: PlayerMap,
+	): PreparedTournamentResult | null {
 		// Only process players who won skins (total > 0)
 		const totalSkins = parseInt(aggregate.total || "0", 10)
 		if (isNaN(totalSkins) || totalSkins <= 0) {
-			return // Skip players who didn't win skins
+			return null // Skip players who didn't win skins
 		}
 
 		// Extract member cards and get first member card
 		const memberCards = SkinsResultParser.extractMemberCards(aggregate as GGAggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
-			return
+			return null
 		}
 		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
 		const playerData = SkinsResultParser.parsePlayerData(aggregate, memberCards[0])
 
-		// Resolve player using member card ID
-		const player = await this.resolvePlayerByMemberId(memberId, result)
+		// Resolve player using pre-fetched player map
+		const player = this.resolvePlayerFromMap(memberId, playerMap, result)
 		if (!player) {
-			return
+			return null
 		}
 
 		// Position is the number of skins won
@@ -436,14 +592,14 @@ export class ResultsImportService {
 		const amount = this.parsePurseAmount(playerData.purse)
 		if (amount === null) {
 			result.errors.push(`Invalid purse amount for skins winner: ${playerData.purse}`)
-			return
+			return null
 		}
 
 		// Score is not relevant for skins tournaments
 		const score: number | null = null
 
-		// Create tournamentResult record
-		await this.drizzle.db.insert(tournamentResult).values({
+		// Return prepared data instead of inserting
+		return {
 			tournamentId: tournamentData.id,
 			playerId: player.id,
 			flight: flightName || null,
@@ -457,44 +613,40 @@ export class ResultsImportService {
 			payoutStatus: "Pending",
 			payoutTo: "Individual", // TODO: Implement team handling for team skins
 			payoutType: "Cash",
-		})
-
-		result.resultsImported += 1
-		this.logger.debug("Skins result created", {
-			tournamentId: tournamentData.id,
-			playerId: player.id,
-			position,
-			amount,
-			summary: playerData.details,
-		})
+			teamId: null,
+		}
 	}
 
-	private async processStrokePlayerResult(
+	private prepareStrokePlayerResult(
 		tournamentData: TournamentData,
-		aggregate: StrokeAggregate,
+		aggregate: StrokeTournamentAggregate,
 		flightName: string,
 		result: ImportResultSummary,
-	): Promise<void> {
+		playerMap: PlayerMap,
+	): PreparedTournamentResult | null {
 		// Only process players who won money (purse is not empty)
 		if (!aggregate.purse || aggregate.purse.trim() === "") {
-			return // Skip players who didn't win money
+			return null // Skip players who didn't win money
 		}
 
 		// Extract member cards and get first member card
 		const memberCards = StrokePlayResultParser.extractMemberCards(aggregate as GGAggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
-			return
+			return null
 		}
 		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
-		const playerData = StrokePlayResultParser.parsePlayerData(aggregate, memberCards[0])
+		const playerData = StrokePlayResultParser.parsePlayerData(
+			aggregate as GGAggregate,
+			memberCards[0],
+		)
 
-		// Resolve player using member card ID
-		const player = await this.resolvePlayerByMemberId(memberId, result)
+		// Resolve player using pre-fetched player map
+		const player = this.resolvePlayerFromMap(memberId, playerMap, result)
 		if (!player) {
-			return
+			return null
 		}
 
 		// Parse position from aggregate.position
@@ -519,11 +671,11 @@ export class ResultsImportService {
 		const amount = this.parsePurseAmount(playerData.purse)
 		if (amount === null) {
 			result.errors.push(`Invalid purse amount for stroke play winner: ${playerData.purse}`)
-			return
+			return null
 		}
 
-		// Create tournamentResult record
-		await this.drizzle.db.insert(tournamentResult).values({
+		// Return prepared data instead of inserting
+		return {
 			tournamentId: tournamentData.id,
 			playerId: player.id,
 			flight: flightName || null,
@@ -537,157 +689,7 @@ export class ResultsImportService {
 			payoutStatus: "Pending",
 			payoutTo: "Individual",
 			payoutType: "Credit",
-		})
-
-		result.resultsImported += 1
-		this.logger.debug("Stroke play result created", {
-			tournamentId: tournamentData.id,
-			playerId: player.id,
-			position,
-			score,
-			amount,
-		})
-	}
-
-	/**
-	 * Find the player on the given slot using the memberId (gg_id)
-	 * saved to the slot record when we saved the roster.
-	 * @param memberId Event-specific id for a player from golf genius
-	 * @param result
-	 * @returns
-	 */
-	private async resolvePlayerByMemberId(
-		memberId: string,
-		result: ImportResultSummary,
-	): Promise<any> {
-		try {
-			// Use dynamic import to avoid circular dependency issues
-			const { player, registrationSlot } = await import("../../database/schema/registration.schema")
-			const foundPlayer = await this.drizzle.db
-				.select({ player })
-				.from(registrationSlot)
-				.innerJoin(player, eq(registrationSlot.playerId, player.id))
-				.where(eq(registrationSlot.ggId, memberId))
-				.limit(1)
-
-			if (!foundPlayer || foundPlayer.length === 0) {
-				result.errors.push(`No player found for id ${memberId}`)
-				return null
-			}
-
-			return foundPlayer[0].player
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error)
-			result.errors.push(`Error resolving player ${memberId}: ${errorMessage}`)
-			return null
-		}
-	}
-
-	private async processSkinsResults(
-		tournamentData: TournamentData,
-		result: ImportResultSummary,
-		ggResults: any,
-	): Promise<void> {
-		// Validate response structure
-		const error = SkinsResultParser.validateResponse(ggResults)
-		if (error) {
-			result.errors.push(error)
-			return
-		}
-
-		// Extract scopes (flights/divisions)
-		const scopes = SkinsResultParser.extractScopes(ggResults)
-
-		// Process each scope
-		for (const scope of scopes) {
-			const flightName = SkinsResultParser.extractFlightName(scope)
-			const aggregates = SkinsResultParser.extractAggregates(scope)
-
-			// Process each player result (only those who won skins)
-			for (const aggregate of aggregates) {
-				try {
-					await this.processSkinsPlayerResult(tournamentData, aggregate, flightName, result)
-				} catch (error) {
-					const errorMessage = error instanceof Error ? error.message : String(error)
-					result.errors.push(`Error processing skins player result: ${errorMessage}`)
-					this.logger.error("Error processing skins player result", {
-						tournamentId: tournamentData.id,
-						error: errorMessage,
-					})
-				}
-			}
-		}
-	}
-
-	private async processProxyResults(
-		tournamentData: TournamentData,
-		result: ImportResultSummary,
-		ggResults: any,
-	): Promise<void> {
-		// Validate response structure
-		const error = ProxyResultParser.validateResponse(ggResults)
-		if (error) {
-			result.errors.push(error)
-			return
-		}
-
-		// Extract scopes (flights/divisions)
-		const scopes = ProxyResultParser.extractScopes(ggResults)
-
-		// Process each scope
-		for (const scope of scopes) {
-			const flightName = ProxyResultParser.extractFlightName(scope)
-			const aggregates = ProxyResultParser.extractAggregates(scope)
-
-			// Process each player result (only winners)
-			for (const aggregate of aggregates) {
-				try {
-					await this.processProxyPlayerResult(tournamentData, aggregate, flightName, result)
-				} catch (error) {
-					const errorMessage = error instanceof Error ? error.message : String(error)
-					result.errors.push(`Error processing proxy player result: ${errorMessage}`)
-					this.logger.error("Error processing proxy player result", {
-						tournamentId: tournamentData.id,
-						error: errorMessage,
-					})
-				}
-			}
-		}
-	}
-
-	private async processStrokeResults(
-		tournamentData: TournamentData,
-		result: ImportResultSummary,
-		ggResults: any,
-	): Promise<void> {
-		// Validate response structure
-		const error = StrokePlayResultParser.validateResponse(ggResults)
-		if (error) {
-			result.errors.push(error)
-			return
-		}
-
-		// Extract scopes (flights/divisions)
-		const scopes = StrokePlayResultParser.extractScopes(ggResults)
-
-		// Process each scope
-		for (const scope of scopes) {
-			const flightName = StrokePlayResultParser.extractFlightName(scope)
-			const aggregates = StrokePlayResultParser.extractAggregates(scope)
-
-			// Process each player result (only those who won money)
-			for (const aggregate of aggregates) {
-				try {
-					await this.processStrokePlayerResult(tournamentData, aggregate, flightName, result)
-				} catch (error) {
-					const errorMessage = error instanceof Error ? error.message : String(error)
-					result.errors.push(`Error processing stroke player result: ${errorMessage}`)
-					this.logger.error("Error processing stroke player result", {
-						tournamentId: tournamentData.id,
-						error: errorMessage,
-					})
-				}
-			}
+			teamId: null,
 		}
 	}
 }
