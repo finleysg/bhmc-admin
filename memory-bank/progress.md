@@ -19,6 +19,7 @@ Completed
 - **Golf Genius Orchestrator UI**: Complete phase-based integration workflow with visual stepper, automatic phase detection from logs, and guided execution path for 8 integration actions; displays event context as "{start date}: {event name}"
 - **Integration Action Infrastructure**: Centralized endpoint mapping, dynamic API proxy routes, and real-time action execution with comprehensive error handling and loading states
 - **Golf Genius Event Synchronization**: Fixed database insertion errors, corrected API response unwrapping patterns, resolved datetime format issues, and established defensive unwrapping patterns for inconsistent API structures
+- **Roster Export Improvements**: Implemented parallel processing for roster export operations, fixed TypeScript type issues, added proper types for processSinglePlayer parameters, improved result aggregation method typing, and fixed getEventRoster to unwrap Golf Genius API member objects before mapping
 
 In progress / Next steps
 

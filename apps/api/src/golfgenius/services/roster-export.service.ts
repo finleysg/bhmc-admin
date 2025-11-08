@@ -174,7 +174,7 @@ export class RosterExportService {
 
 			if (!existing) {
 				// CREATE
-				console.log(`Did not find player: ${player.email}`)
+				this.logger.debug(`Did not find player: ${player.email}`)
 				try {
 					const res = await this.apiClient.createMemberRegistration(String(event.ggId), member)
 					const memberId = this.extractMemberId(res)
@@ -196,7 +196,7 @@ export class RosterExportService {
 					}
 				}
 			} else {
-				console.log(`Player ${player.email} has already been exported.`)
+				this.logger.debug(`Player ${player.email} has already been exported.`)
 				return { success: true, action: "skipped" }
 			}
 		} catch (err: any) {

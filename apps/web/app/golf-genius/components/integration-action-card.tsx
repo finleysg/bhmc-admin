@@ -55,11 +55,46 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 		if (!lastRun) {
 			return <span className="badge badge-neutral text-neutral-content">Not Run</span>
 		}
+
+		// Check if the result contains errors, even if marked as successful
+		const errorCount = getErrorCount(lastRun.details)
+
+		if (errorCount > 0) {
+			return <span className="badge badge-error text-error-content">Error ({errorCount})</span>
+		}
+
 		return lastRun.isSuccessful ? (
 			<span className="badge badge-success text-success-content">Success</span>
 		) : (
 			<span className="badge badge-error text-error-content">Failed</span>
 		)
+	}
+
+	const getErrorCount = (detailsJson: string | null): number => {
+		if (!detailsJson) return 0
+
+		try {
+			const result = JSON.parse(detailsJson)
+			let totalErrors = 0
+
+			// Count errors in main errors array
+			if (result.errors && Array.isArray(result.errors)) {
+				totalErrors += result.errors.length
+			}
+
+			// For scores import, also count roundResults errors
+			if (result.roundResults && Array.isArray(result.roundResults)) {
+				result.roundResults.forEach((round: any) => {
+					if (round.errors && Array.isArray(round.errors)) {
+						totalErrors += round.errors.length
+					}
+				})
+			}
+
+			return totalErrors
+		} catch (error) {
+			return 0
+		}
 	}
 
 	const formatTimestamp = (dateString: string) => {

@@ -149,8 +149,49 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 	// Derive phase state from logs
 	const phaseInfo = useMemo(() => {
 		const derivedPhase = determinePhase(logs)
-		// Allow phase override for navigation
-		return phaseOverride ? { ...derivedPhase, currentPhase: phaseOverride } : derivedPhase
+
+		if (!phaseOverride) {
+			return derivedPhase
+		}
+
+		// Helper function for checking successful runs
+		const hasSuccessfulRun = (action: IntegrationActionName) =>
+			logs.some((log) => log.actionName === action && log.isSuccessful)
+
+		// When overriding phase for navigation, recalculate completion status
+		// for the overridden phase
+		if (phaseOverride === 1) {
+			const phase1Complete = hasSuccessfulRun("Sync Event") && hasSuccessfulRun("Export Roster")
+			return {
+				currentPhase: 1,
+				isPhaseComplete: phase1Complete,
+				canAdvanceToNext: phase1Complete, // Can advance if phase 1 is complete
+				nextActionToRun: derivedPhase.nextActionToRun,
+			}
+		}
+
+		if (phaseOverride === 2) {
+			const phase2Complete =
+				hasSuccessfulRun("Import Scores") &&
+				hasSuccessfulRun("Import Points") &&
+				hasSuccessfulRun("Import Results") &&
+				hasSuccessfulRun("Import Skins") &&
+				hasSuccessfulRun("Import Proxies")
+			return {
+				currentPhase: 2,
+				isPhaseComplete: phase2Complete,
+				canAdvanceToNext: phase2Complete, // Can advance if phase 2 is complete
+				nextActionToRun: derivedPhase.nextActionToRun,
+			}
+		}
+
+		// Phase 3
+		return {
+			currentPhase: 3,
+			isPhaseComplete: derivedPhase.isPhaseComplete,
+			canAdvanceToNext: false, // No phase after 3
+			nextActionToRun: derivedPhase.nextActionToRun,
+		}
 	}, [logs, phaseOverride])
 
 	const currentPhaseConfig = PHASES[phaseInfo.currentPhase - 1]
@@ -278,26 +319,20 @@ function PhasePanel({
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{phase.actions.map((actionName, index) => {
+					{phase.actions.map((actionName) => {
 						const isEnabled =
 							phase.number === 1
 								? actionName === "Sync Event" || hasSuccessfulRun("Sync Event")
 								: true // Phase 2 and 3 actions are all enabled
 
 						return (
-							<div key={actionName} className="relative">
-								{phase.number === 2 && (
-									<div className="absolute -top-2 -left-2 w-6 h-6 bg-primary text-primary-content rounded-full flex items-center justify-center text-sm font-bold z-10">
-										{index + 1}
-									</div>
-								)}
-								<IntegrationActionCard
-									eventId={eventId}
-									actionName={actionName}
-									enabled={isEnabled}
-									onComplete={onActionComplete}
-								/>
-							</div>
+							<IntegrationActionCard
+								key={actionName}
+								eventId={eventId}
+								actionName={actionName}
+								enabled={isEnabled}
+								onComplete={onActionComplete}
+							/>
 						)
 					})}
 				</div>

@@ -52,7 +52,6 @@ export async function fetchWithAuth({
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const tokenResponseData: TokenResponse = await tokenResponse.json()
 		const { token: eddsaToken } = tokenResponseData
-		console.log("Generated EdDSA JWT token:", eddsaToken)
 
 		// Decode the EdDSA token and re-sign with HS256 for backend compatibility
 		const decoded = jwt.decode(eddsaToken, { complete: true }) as DecodedToken | null
@@ -62,7 +61,6 @@ export async function fetchWithAuth({
 
 		// Re-sign with HS256 using the shared secret
 		const token = jwt.sign(decoded.payload, process.env.BETTER_AUTH_JWT_SECRET || "")
-		console.log("Re-signed HS256 token:", token)
 
 		// Forward the request to the backend API with the JWT token
 		const apiUrl = process.env.API_URL

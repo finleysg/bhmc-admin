@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common"
 import { CoursesService } from "../../courses/courses.service"
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
+import { ScoreDto } from "../../scores/dto/score.dto"
 import { ScoresService } from "../../scores/scores.service"
 import { ApiClient } from "../api-client"
 import { GgTeeSheetPlayerDto } from "../dto/golf-genius.dto"
@@ -186,6 +187,7 @@ export class ScoresImportService {
 		await this.scoresService.deleteScoresByScorecard(scoreCardId)
 
 		const holes = await this.coursesService.findHolesByCourseId(courseId)
+		const allScores: ScoreDto[] = []
 
 		for (let i = 0; i < playerData.score_array.length; i++) {
 			const grossScore = playerData.score_array[i]
@@ -194,25 +196,28 @@ export class ScoresImportService {
 			const hole = holes.find((h) => h.holeNumber === i + 1)
 			if (!hole) continue
 
-			// Create gross score
-			await this.scoresService.createScore({
+			// Prepare gross score
+			allScores.push({
 				scoreCardId,
 				holeId: hole.id!,
 				score: grossScore,
 				isNet: false,
 			})
 
-			// Calculate and create net score
+			// Calculate and prepare net score
 			const handicapDots = playerData.handicap_dots_by_hole[i] || 0
 			const netScore = grossScore - handicapDots
 
-			await this.scoresService.createScore({
+			allScores.push({
 				scoreCardId,
 				holeId: hole.id!,
 				score: netScore,
 				isNet: true,
 			})
 		}
+
+		// Batch insert all scores (gross + net) in one query
+		await this.scoresService.batchCreateScores(allScores)
 	}
 
 	private parseHandicap(value: string): number | null {

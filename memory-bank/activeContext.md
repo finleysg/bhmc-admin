@@ -8,6 +8,8 @@ Current focus:
 
 Recent changes:
 
+- **Commit Policy Rule**: Added `.clinerules/commit-policy.md` requiring explicit user approval before any git commits to prevent accidental commits of incomplete or untested changes
+- **Roster Export Fixes**: Implemented parallel processing for roster export operations, fixed TypeScript type issues in roster-export.service.ts, added proper types for processSinglePlayer parameters, improved result aggregation method typing, and fixed getEventRoster to unwrap Golf Genius API member objects before mapping
 - **JWT Authentication Implementation**: Complete end-to-end authentication flow between Next.js (Better Auth) and NestJS API; implemented JWT token re-signing pattern where EdDSA tokens from Better Auth are converted to HS256 tokens for backend validation using shared secret
 - **API Route Proxy**: Created `apps/web/app/api/events/search/route.ts` as server-side authentication bridge that validates sessions, generates JWT tokens, and proxies requests to backend API with proper authorization headers
 - **Backend JWT Guard**: Modified `apps/api/src/auth/jwt.guard.ts` to validate HS256 JWT tokens using `jsonwebtoken` library with shared secret validation

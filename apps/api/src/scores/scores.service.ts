@@ -80,4 +80,11 @@ export class ScoresService {
 	async deleteScoresByScorecard(scorecardId: number) {
 		await this.drizzle.db.delete(eventScore).where(eq(eventScore.scorecardId, scorecardId))
 	}
+
+	async batchCreateScores(scores: ScoreDto[]) {
+		if (scores.length === 0) return
+
+		const data = scores.map(mapScoreDtoToEntity)
+		await this.drizzle.db.insert(eventScore).values(data)
+	}
 }
