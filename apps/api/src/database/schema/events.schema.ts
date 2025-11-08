@@ -191,25 +191,24 @@ export const tournamentResult = mysqlTable(
 	],
 )
 
-export const eventPoints = mysqlTable(
-	"damcup_eventpoints",
+export const tournamentPoints = mysqlTable(
+	"events_tournamentpoints",
 	{
 		id: int().autoincrement().notNull(),
 		position: int().notNull(),
 		score: int(),
 		points: int().notNull(),
-		isNet: tinyint("is_net").notNull(),
 		createDate: datetime("create_date", { mode: "string", fsp: 6 }).notNull(),
-		division: varchar({ length: 40 }),
-		eventId: int("event_id")
+		details: varchar({ length: 120 }),
+		tournamentId: int("tournament_id")
 			.notNull()
-			.references(() => event.id),
+			.references(() => tournament.id),
 		playerId: int("player_id")
 			.notNull()
 			.references(() => player.id),
 	},
 	(table) => [
-		primaryKey({ columns: [table.id], name: "damcup_eventpoints_id" }),
-		unique("unique_points").on(table.eventId, table.playerId, table.isNet),
+		primaryKey({ columns: [table.id], name: "events_tournamentpoints_id" }),
+		unique("unique_points").on(table.tournamentId, table.playerId),
 	],
 )

@@ -5,7 +5,6 @@ import {
 	event,
 	eventCourses,
 	eventFee,
-	eventPoints,
 	eventScorecard,
 	feeType,
 	payment,
@@ -15,6 +14,7 @@ import {
 	registrationSlot,
 	round,
 	tournament,
+	tournamentPoints,
 	tournamentResult,
 } from "../schema"
 import { integrationLog } from "../schema/golf-genius.schema"
@@ -29,7 +29,6 @@ export const eventRelations = relations(event, ({ many }) => ({
 	// }),
 	// damcupScores: many(damcupScores),
 	// damcupSeasonlongpoints: many(damcupSeasonlongpoints),
-	damcupEventPoints: many(eventPoints),
 	// documentsDocuments: many(documentsDocument),
 	// contentTag: one(contentTag, {
 	// 	fields: [event.defaultTagId],
@@ -71,11 +70,11 @@ export const eventfeeRelations = relations(eventFee, ({ one, many }) => ({
 	registrationfees: many(registrationFee),
 }))
 
-export const eventsFeetypeRelations = relations(feeType, ({ many }) => ({
+export const feetypeRelations = relations(feeType, ({ many }) => ({
 	eventfees: many(eventFee),
 }))
 
-export const eventsRoundRelations = relations(round, ({ one, many }) => ({
+export const roundRelations = relations(round, ({ one, many }) => ({
 	event: one(event, {
 		fields: [round.eventId],
 		references: [event.id],
@@ -83,7 +82,7 @@ export const eventsRoundRelations = relations(round, ({ one, many }) => ({
 	tournaments: many(tournament),
 }))
 
-export const eventsTournamentRelations = relations(tournament, ({ one, many }) => ({
+export const tournamentRelations = relations(tournament, ({ one, many }) => ({
 	event: one(event, {
 		fields: [tournament.eventId],
 		references: [event.id],
@@ -95,7 +94,7 @@ export const eventsTournamentRelations = relations(tournament, ({ one, many }) =
 	tournamentResults: many(tournamentResult),
 }))
 
-export const eventsTournamentResultRelations = relations(tournamentResult, ({ one }) => ({
+export const tournamentResultRelations = relations(tournamentResult, ({ one }) => ({
 	player: one(player, {
 		fields: [tournamentResult.playerId],
 		references: [player.id],
@@ -106,13 +105,13 @@ export const eventsTournamentResultRelations = relations(tournamentResult, ({ on
 	}),
 }))
 
-export const eventPointsRelations = relations(eventPoints, ({ one }) => ({
-	event: one(event, {
-		fields: [eventPoints.eventId],
-		references: [event.id],
-	}),
+export const tournamentPointsRelations = relations(tournamentPoints, ({ one }) => ({
 	player: one(player, {
-		fields: [eventPoints.playerId],
+		fields: [tournamentPoints.playerId],
 		references: [player.id],
+	}),
+	tournament: one(tournament, {
+		fields: [tournamentPoints.tournamentId],
+		references: [tournament.id],
 	}),
 }))

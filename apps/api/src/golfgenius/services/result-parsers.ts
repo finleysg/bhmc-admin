@@ -31,13 +31,13 @@ export class BaseResultParser {
 		return aggregate.member_cards || []
 	}
 
-	static extractFlightName(scope: GGScope, defaultValue = "N/A"): string {
+	static extractFlightName(scope: GGScope, defaultValue = ""): string {
 		return scope.name || defaultValue
 	}
 }
 
 /**
- * Parser for points tournament results (saves to damcup_eventpoints)
+ * Parser for points tournament results
  */
 export class PointsResultParser extends BaseResultParser {
 	static parsePlayerData<
@@ -48,6 +48,7 @@ export class PointsResultParser extends BaseResultParser {
 			points: aggregate.points || "",
 			position: aggregate.position || "",
 			total: aggregate.total || "",
+			memberId: memberCard.member_id_str,
 			memberCardId: memberCard.member_card_id_str,
 			playerName: aggregate.name || "Unknown",
 		}
@@ -60,12 +61,12 @@ export class PointsResultParser extends BaseResultParser {
 			const tiePosition = parseInt(positionText.substring(1), 10)
 			if (isNaN(tiePosition) || tiePosition <= 0) return "No points awarded"
 			const ordinal = this.getOrdinalSuffix(tiePosition)
-			return `Tied for ${tiePosition}${ordinal} place points`
+			return `Tied for ${tiePosition}${ordinal}`
 		} else {
 			const posNum = parseInt(positionText, 10)
 			if (isNaN(posNum) || posNum <= 0) return "No points awarded"
 			const ordinal = this.getOrdinalSuffix(posNum)
-			return `${posNum}${ordinal} place points`
+			return `${posNum}${ordinal}`
 		}
 	}
 
@@ -96,6 +97,7 @@ export class SkinsResultParser extends BaseResultParser {
 			purse: aggregate.purse || "$0.00",
 			total: aggregate.total || "",
 			details: aggregate.details || null,
+			memberId: memberCard.member_id_str,
 			memberCardId: memberCard.member_card_id_str,
 			playerName: aggregate.name || "Unknown",
 		}
@@ -113,6 +115,7 @@ export class ProxyResultParser extends BaseResultParser {
 		return {
 			purse: aggregate.purse || "$0.00",
 			rank: aggregate.rank || "",
+			memberId: memberCard.member_id_str,
 			memberCardId: memberCard.member_card_id_str,
 			playerName: aggregate.name || "Unknown",
 		}
@@ -130,6 +133,7 @@ export class StrokePlayResultParser extends BaseResultParser {
 			purse: aggregate.purse || "$0.00",
 			position: aggregate.position || "",
 			total: aggregate.total || "",
+			memberId: memberCard.member_id_str,
 			memberCardId: memberCard.member_card_id_str,
 			playerName: aggregate.name || "Unknown",
 		}

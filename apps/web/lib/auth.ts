@@ -31,12 +31,6 @@ const sqlite = new Database(dbPath)
 
 const plugins = [admin(), jwt()]
 
-// Debug logging to verify plugin loading
-console.log(
-	"Better Auth plugins loaded:",
-	plugins.map((p) => p.id || "unknown"),
-)
-
 export const auth = betterAuth({
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	database: sqlite as any, // better-sqlite3 Database type compatibility

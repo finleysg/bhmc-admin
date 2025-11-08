@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm"
 import { Injectable, Logger } from "@nestjs/common"
 
 import { DrizzleService } from "../../database/drizzle.service"
-import { event, eventPoints, round, tournament, tournamentResult } from "../../database/schema"
+import { event, round, tournament, tournamentPoints, tournamentResult } from "../../database/schema"
 import { ApiClient } from "../api-client"
 import { GGAggregate, ImportResultSummary } from "../dto/tournament-results.dto"
 import {
@@ -176,6 +176,9 @@ export class ResultsImportService {
 		await this.drizzle.db
 			.delete(tournamentResult)
 			.where(eq(tournamentResult.tournamentId, tournamentData.id))
+		await this.drizzle.db
+			.delete(tournamentPoints)
+			.where(eq(tournamentPoints.tournamentId, tournamentData.id))
 
 		this.logger.log("Deleted existing results", { tournamentId: tournamentData.id })
 	}
@@ -223,11 +226,6 @@ export class ResultsImportService {
 		result: ImportResultSummary,
 		ggResults: any,
 	): Promise<void> {
-		// Delete existing points for this event (not tournament)
-		await this.drizzle.db.delete(eventPoints).where(eq(eventPoints.eventId, tournamentData.eventId))
-
-		this.logger.log("Deleted existing points for event", { eventId: tournamentData.eventId })
-
 		// Validate response structure
 		const error = PointsResultParser.validateResponse(ggResults)
 		if (error) {
@@ -271,12 +269,13 @@ export class ResultsImportService {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return
 		}
+		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
 		const playerData = PointsResultParser.parsePlayerData(aggregate, memberCards[0])
 
 		// Resolve player using member card ID
-		const player = await this.resolvePlayerFromMemberCard(memberCards[0], result)
+		const player = await this.resolvePlayerByMemberId(memberId, result)
 		if (!player) {
 			return
 		}
@@ -309,30 +308,29 @@ export class ResultsImportService {
 			score = null
 		}
 
-		// Build division string: tournament name + scope name + position details
+		// Build details string
 		const positionDetails = PointsResultParser.formatPositionDetails(playerData.position)
-		const division = `${tournamentData.name} - ${flightName || "N/A"} - ${positionDetails}`
+		const details = `${tournamentData.name}${flightName ? " - " : ""}${flightName ?? ""}: ${positionDetails}`
 
-		// Create eventPoints record
-		await this.drizzle.db.insert(eventPoints).values({
-			eventId: tournamentData.eventId,
-			playerId: player.id,
-			position,
-			score,
-			points,
-			isNet: tournamentData.isNet,
-			division,
-			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
-		})
-
-		result.resultsImported += 1
-		this.logger.debug("Points result created", {
-			eventId: tournamentData.eventId,
-			playerId: player.id,
-			position,
-			points,
-			division,
-		})
+		try {
+			await this.drizzle.db.insert(tournamentPoints).values({
+				tournamentId: tournamentData.id,
+				playerId: player.id,
+				position,
+				score,
+				points,
+				details,
+				createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			})
+			result.resultsImported += 1
+		} catch (error) {
+			this.logger.error("Full database error:", error)
+			if (error instanceof Error) {
+				this.logger.error("Error sqlMessage:", (error as any).sqlMessage)
+			}
+			result.errors.push(JSON.stringify(error))
+			throw error
+		}
 	}
 
 	private async processProxyPlayerResult(
@@ -352,12 +350,13 @@ export class ResultsImportService {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return
 		}
+		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
 		const playerData = ProxyResultParser.parsePlayerData(aggregate, memberCards[0])
 
 		// Resolve player using member card ID
-		const player = await this.resolvePlayerFromMemberCard(memberCards[0], result)
+		const player = await this.resolvePlayerByMemberId(memberId, result)
 		if (!player) {
 			return
 		}
@@ -419,12 +418,13 @@ export class ResultsImportService {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return
 		}
+		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
 		const playerData = SkinsResultParser.parsePlayerData(aggregate, memberCards[0])
 
 		// Resolve player using member card ID
-		const player = await this.resolvePlayerFromMemberCard(memberCards[0], result)
+		const player = await this.resolvePlayerByMemberId(memberId, result)
 		if (!player) {
 			return
 		}
@@ -486,12 +486,13 @@ export class ResultsImportService {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return
 		}
+		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
 		const playerData = StrokePlayResultParser.parsePlayerData(aggregate, memberCards[0])
 
 		// Resolve player using member card ID
-		const player = await this.resolvePlayerFromMemberCard(memberCards[0], result)
+		const player = await this.resolvePlayerByMemberId(memberId, result)
 		if (!player) {
 			return
 		}
@@ -548,29 +549,36 @@ export class ResultsImportService {
 		})
 	}
 
-	private async resolvePlayerFromMemberCard(
-		memberCard: any,
+	/**
+	 * Find the player on the given slot using the memberId (gg_id)
+	 * saved to the slot record when we saved the roster.
+	 * @param memberId Event-specific id for a player from golf genius
+	 * @param result
+	 * @returns
+	 */
+	private async resolvePlayerByMemberId(
+		memberId: string,
 		result: ImportResultSummary,
 	): Promise<any> {
-		const memberCardId = memberCard.member_card_id_str
 		try {
 			// Use dynamic import to avoid circular dependency issues
-			const { player } = await import("../../database/schema/registration.schema")
+			const { player, registrationSlot } = await import("../../database/schema/registration.schema")
 			const foundPlayer = await this.drizzle.db
-				.select()
-				.from(player)
-				.where(eq(player.ggId, memberCardId))
+				.select({ player })
+				.from(registrationSlot)
+				.innerJoin(player, eq(registrationSlot.playerId, player.id))
+				.where(eq(registrationSlot.ggId, memberId))
 				.limit(1)
 
 			if (!foundPlayer || foundPlayer.length === 0) {
-				result.errors.push(`Player not found with Golf Genius ID ${memberCardId}`)
+				result.errors.push(`No player found for id ${memberId}`)
 				return null
 			}
 
-			return foundPlayer[0]
+			return foundPlayer[0].player
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
-			result.errors.push(`Error resolving player ${memberCardId}: ${errorMessage}`)
+			result.errors.push(`Error resolving player ${memberId}: ${errorMessage}`)
 			return null
 		}
 	}
