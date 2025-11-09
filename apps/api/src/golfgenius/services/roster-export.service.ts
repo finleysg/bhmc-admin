@@ -15,14 +15,10 @@ import { RegistrationSlotDto } from "../../registration/dto/registration-slot.dt
 import { RegistrationDto } from "../../registration/dto/registration.dto"
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
+import { ExportError, ExportResult, FeeDefinition, TransformationContext } from "../dto"
 import { RosterMemberDto } from "../dto/internal.dto"
 import { ProgressTracker } from "./progress-tracker"
-import { ExportError, ExportResult } from "./progress-tracker.types"
-import {
-	FeeDefinition,
-	RosterPlayerTransformer,
-	TransformationContext,
-} from "./roster-player-transformer"
+import { RosterPlayerTransformer } from "./roster-player-transformer"
 
 interface GgMemberResponse {
 	member_id_str?: string

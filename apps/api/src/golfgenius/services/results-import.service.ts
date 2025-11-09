@@ -1,30 +1,13 @@
-import {
-	and,
-	eq,
-} from "drizzle-orm"
-import {
-	Observable,
-	Subject,
-} from "rxjs"
+import { and, eq } from "drizzle-orm"
+import { Observable, Subject } from "rxjs"
 
-import {
-	Injectable,
-	Logger,
-} from "@nestjs/common"
-import {
-	IntegrationActionName,
-	ProgressEventDto,
-} from "@repo/dto"
+import { Injectable, Logger } from "@nestjs/common"
+import { IntegrationActionName, ProgressEventDto } from "@repo/dto"
 
 import { DrizzleService } from "../../database/drizzle.service"
-import {
-	event,
-	round,
-	tournament,
-	tournamentPoints,
-	tournamentResult,
-} from "../../database/schema"
+import { event, round, tournament, tournamentPoints, tournamentResult } from "../../database/schema"
 import { ApiClient } from "../api-client"
+import { ImportResult } from "../dto"
 import {
 	GGAggregate,
 	GolfGeniusTournamentResults,
@@ -35,7 +18,6 @@ import {
 	StrokeTournamentAggregate,
 } from "../dto/tournament-results.dto"
 import { ProgressTracker } from "./progress-tracker"
-import { ImportResult } from "./progress-tracker.types"
 import {
 	PointsResultParser,
 	ProxyResultParser,

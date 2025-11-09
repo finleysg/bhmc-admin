@@ -2,15 +2,9 @@ import { Injectable, Logger } from "@nestjs/common"
 
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
+import { MemberSyncResult } from "../dto"
 import { MasterRosterItemDto } from "../dto/internal.dto"
 import { ApiError, AuthError, RateLimitError } from "../errors"
-
-export interface MemberSyncResult {
-	total_players: number
-	updated_players: number
-	errors: { name?: string; message: string }[]
-	unmatched: { id?: number; name?: string; ghin?: string | null }[]
-}
 
 @Injectable()
 export class MemberSyncService {
@@ -74,24 +68,24 @@ export class MemberSyncService {
 			if (err instanceof RateLimitError) {
 				const msg = `Rate limited while loading master roster: retryAfter=${err.retryAfter}`
 				this.logger.error(msg, { details: err.details })
-				result.errors.push({ message: msg })
+				result.errors.push({ error: msg })
 				return result
 			}
 			if (err instanceof AuthError) {
 				const msg = `Authentication failed loading master roster: ${err.message}`
 				this.logger.error(msg, { details: err.details })
-				result.errors.push({ message: msg })
+				result.errors.push({ error: msg })
 				return result
 			}
 			if (err instanceof ApiError) {
 				const msg = `API error loading master roster: status=${err.status}`
 				this.logger.error(msg, { status: err.status, response: err.response })
-				result.errors.push({ message: msg })
+				result.errors.push({ error: msg })
 				return result
 			}
 			const msg = `Failed to load master roster: ${String(err)}`
 			this.logger.error(msg)
-			result.errors.push({ message: msg })
+			result.errors.push({ error: msg })
 			return result
 		}
 
@@ -125,7 +119,7 @@ export class MemberSyncService {
 				const name = `${player.firstName ?? ""} ${player.lastName ?? ""}`.trim()
 				const msg = `Failed to update player ${name || player.id}: ${String(err)}`
 				this.logger.error(msg)
-				result.errors.push({ name: name || undefined, message: msg })
+				result.errors.push({ error: msg })
 			}
 		}
 

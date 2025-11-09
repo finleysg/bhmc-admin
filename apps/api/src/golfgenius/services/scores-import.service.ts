@@ -9,9 +9,9 @@ import { RegistrationService } from "../../registration/registration.service"
 import { ScoreDto } from "../../scores/dto/score.dto"
 import { ScoresService } from "../../scores/scores.service"
 import { ApiClient } from "../api-client"
+import { ImportResult } from "../dto"
 import { GgTeeSheetPlayerDto } from "../dto/golf-genius.dto"
 import { ProgressTracker } from "./progress-tracker"
-import { ImportResult } from "./progress-tracker.types"
 
 interface ImportScoresResult {
 	scorecards: {

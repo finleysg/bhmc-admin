@@ -1,12 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common"
 
-import { CourseDto } from "../../courses/dto/course.dto"
 import { HoleDto } from "../../courses/dto/hole.dto"
 import { getStart } from "../../events/domain/event.domain"
 import { getGroup } from "../../events/domain/group.domain"
 import { toHoleDomain, toSlotDomain } from "../../events/domain/mappers"
 import { EventDto } from "../../events/dto/event.dto"
-import { RoundDto } from "../../events/dto/round.dto"
 import { PlayerDto } from "../../registration/dto/player.dto"
 import {
 	EventFeeDto,
@@ -16,21 +14,7 @@ import {
 import { RegistrationSlotDto } from "../../registration/dto/registration-slot.dto"
 import { RegistrationDto } from "../../registration/dto/registration.dto"
 import { RosterMemberSyncDto } from "../dto/internal.dto"
-
-export interface FeeDefinition {
-	eventFee?: EventFeeDto
-	feeType: FeeTypeDto
-	name: string
-}
-
-export interface TransformationContext {
-	event: EventDto
-	rounds: RoundDto[]
-	course?: CourseDto
-	holes: HoleDto[]
-	feeDefinitions: FeeDefinition[]
-	allSlotsInRegistration: RegisteredPlayerDto[]
-}
+import { FeeDefinition, TransformationContext } from "../dto/roster.dto"
 
 @Injectable()
 export class RosterPlayerTransformer {
@@ -163,7 +147,7 @@ export class RosterPlayerTransformer {
 				eventFee: ef.eventFee,
 				feeType: ef.feeType,
 				name: ef.feeType.name.toLowerCase().replace(" ", "_"),
-			}))
+			})) as FeeDefinition[]
 	}
 
 	/**
