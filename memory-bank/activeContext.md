@@ -5,6 +5,7 @@ Current focus:
 - Complete the NestJS API implementation with full module coverage (events, courses, registration, scores)
 - Implement Next.js frontend with better-auth integration and daisyUI components
 - Establish end-to-end connectivity between API and web app
+- API module barrel exports completed - all major modules now have clean public APIs
 
 Recent changes:
 

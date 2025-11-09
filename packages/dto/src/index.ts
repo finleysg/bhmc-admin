@@ -14,3 +14,6 @@ export { EventRegistrationSummaryDto } from "./events/event-registration-summary
 export { IntegrationActionName, IntegrationLogDto } from "./golf-genius/integration-log.dto"
 export { ProgressEventDto } from "./golf-genius/progress-event.dto"
 export { ProgressTournamentDto } from "./golf-genius/progress-tournament.dto"
+export { TournamentData } from "./golf-genius/tournament-data.dto"
+export { PlayerMap, PlayerRecord } from "./golf-genius/player-map.dto"
+export { PreparedTournamentResult } from "./golf-genius/tournament-result.dto"

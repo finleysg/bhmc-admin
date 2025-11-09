@@ -90,3 +90,4 @@ Notes & constraints
 - **Type Safety First**: Strict TypeScript with comprehensive test coverage
 - **External Schema**: Drizzle configured without migrations (no schema ownership)
 - **Shared Types**: DTO package enforces consistency across API and web app
+- **Module Organization**: Each API module (scores, registration, events, courses) has a barrel export (`index.ts`) defining its public API; public exports include DTOs used in API responses/integrations and service classes; private elements like mappers and domain logic remain internal; cross-module dependencies use barrel imports for cleaner code (e.g., `import { PlayerDto } from '../registration'`); this pattern reduces import path complexity and enforces module boundaries

@@ -6,11 +6,11 @@ import {
 	EventRegistrationSummaryDto,
 } from "@repo/dto"
 
+import { HoleDto } from "../courses"
 import { CoursesService } from "../courses/courses.service"
-import { HoleDto } from "../courses/dto/hole.dto"
+import { RegisteredPlayerDto } from "../registration"
 import { toPlayerDomain } from "../registration/domain/mappers"
 import { getAge, getFullName } from "../registration/domain/player.domain"
-import { RegisteredPlayerDto } from "../registration/dto/registered-player.dto"
 import { RegistrationService } from "../registration/registration.service"
 import { getStart } from "./domain/event.domain"
 import { getGroup } from "./domain/group.domain"

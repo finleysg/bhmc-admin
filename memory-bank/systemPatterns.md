@@ -42,6 +42,33 @@ Code organization patterns
 
 - **Feature-based modules**: Each domain area (events, courses, registration) organized as self-contained modules
 - **Layer separation**: domain/dto/services/controllers structure within each module
+- **Barrel Export Pattern**: Each module defines public API through `index.ts` barrel exports; only exports DTOs and services intended for external use; enables cleaner imports and explicit public/private boundaries
+
+  **Implementation**:
+  - Create `index.ts` in each module root (e.g., `apps/api/src/scores/index.ts`)
+  - Export only public DTOs and services: `export { PublicDto } from './dto/public.dto'`
+  - Keep mappers, domain logic, and private types internal
+  - Update cross-module imports to use module root: `import { PublicDto } from '../scores'`
+
+  **Benefits**:
+  - Cleaner, shorter import statements
+  - Explicit public API definition
+  - Easier refactoring of internal structures
+  - Consistent across modules (scores, registration, events, courses)
+
+  **Example** (scores module):
+
+  ```typescript
+  // Public DTOs
+  export { ScoreDto } from "./dto/score.dto"
+  export { ScorecardDto } from "./dto/scorecard.dto"
+
+  // Public services
+  export { ScoresService } from "./scores.service"
+  ```
+
+  **Usage**: Other modules import from module root instead of deep paths like `'../scores/dto/score.dto'`.
+
 - **Shared package boundaries**: Strict import rules preventing circular dependencies
 - **File naming conventions**: Consistent kebab-case for files, PascalCase for classes/interfaces
 - **Test organization**: Test files mirror source structure with descriptive naming

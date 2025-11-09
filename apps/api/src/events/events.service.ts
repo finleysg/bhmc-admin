@@ -1,6 +1,7 @@
-import { eq, inArray } from "drizzle-orm"
+import { and, eq, inArray } from "drizzle-orm"
 
-import { Injectable } from "@nestjs/common"
+import { Injectable, Logger } from "@nestjs/common"
+import { PreparedTournamentResult, TournamentData } from "@repo/dto"
 
 import {
 	DrizzleService,
@@ -9,6 +10,7 @@ import {
 	feeType,
 	round,
 	tournament,
+	tournamentPoints,
 	tournamentResult,
 } from "../database"
 import { EventFeeWithTypeDto } from "./dto/event-fee.dto"
@@ -25,6 +27,8 @@ import { UpdateEventDto } from "./dto/update-event.dto"
 
 @Injectable()
 export class EventsService {
+	private readonly logger = new Logger(EventsService.name)
+
 	constructor(private drizzle: DrizzleService) {}
 
 	// events_event
@@ -97,6 +101,29 @@ export class EventsService {
 	}
 
 	/**
+	 * Get tournaments by event ID and format for Golf Genius integration.
+	 * Returns tournament data with associated event and round Golf Genius IDs.
+	 */
+	async getTournamentsByEventAndFormat(eventId: number, format: string): Promise<TournamentData[]> {
+		return this.drizzle.db
+			.select({
+				id: tournament.id,
+				name: tournament.name,
+				format: tournament.format,
+				isNet: tournament.isNet,
+				ggId: tournament.ggId,
+				eventId: tournament.eventId,
+				roundId: tournament.roundId,
+				eventGgId: event.ggId,
+				roundGgId: round.ggId,
+			})
+			.from(tournament)
+			.innerJoin(event, eq(tournament.eventId, event.id))
+			.innerJoin(round, eq(tournament.roundId, round.id))
+			.where(and(eq(tournament.eventId, eventId), eq(tournament.format, format)))
+	}
+
+	/**
 	 * Bulk delete all tournaments for an event.
 	 * Returns the number of rows deleted when available.
 	 */
@@ -165,6 +192,34 @@ export class EventsService {
 			eventId,
 			resultsUpdated: results.length,
 			payoutDate: now,
+		}
+	}
+
+	/**
+	 * Delete existing tournament results and points for a tournament.
+	 * Used during Golf Genius result imports to ensure idempotent operations.
+	 */
+	async deleteTournamentResults(tournamentId: number): Promise<void> {
+		await this.drizzle.db
+			.delete(tournamentResult)
+			.where(eq(tournamentResult.tournamentId, tournamentId))
+		await this.drizzle.db
+			.delete(tournamentPoints)
+			.where(eq(tournamentPoints.tournamentId, tournamentId))
+
+		this.logger.log("Deleted existing results", { tournamentId })
+	}
+
+	/**
+	 * Batch insert tournament results.
+	 * Used during Golf Genius result imports to efficiently insert multiple records.
+	 */
+	async insertTournamentResults(results: PreparedTournamentResult[]): Promise<void> {
+		if (results.length > 0) {
+			await this.drizzle.db.insert(tournamentResult).values(results)
+			this.logger.log("Batch inserted results", {
+				recordsInserted: results.length,
+			})
 		}
 	}
 }

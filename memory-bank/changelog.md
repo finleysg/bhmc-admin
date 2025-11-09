@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Module Barrel Exports**: Implemented consistent barrel export pattern across all major API modules (scores, registration, events, courses); created `index.ts` files in each module root exporting public DTOs and services; updated cross-module imports to use cleaner module-level imports instead of deep relative paths; benefits include clearer public APIs, easier refactoring, and consistent NestJS patterns
+
 - **Per-Player Progress Emissions**: Completed implementation of per-player progress callbacks for all 4 Golf Genius results import methods (points, skins, proxy, stroke); updated `processResults` method to accept optional `onPlayerProcessed` callback, modified player processing loop to emit progress after each player, and updated all format-specific processor methods to pass through the callback parameter
 - **Type Safety Improvements**: Completed comprehensive type safety enhancements for GolfGenius results import service including discriminated union types for tournament aggregates (Points, Skins, Proxy, Stroke), proper API response types replacing `any`, circular dependency resolution with barrel file exports, and VS Code settings updates to prevent auto-removal of imports
 - **Golf Genius Integration Orchestrator UI**: Complete phase-based workflow with 3 phases (Setup, Import Results, Finalize); automatic state derivation from integration logs

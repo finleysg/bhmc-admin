@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNotNull } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
+import { PlayerMap, PlayerRecord } from "@repo/dto"
 
 import {
 	course,
@@ -152,5 +153,37 @@ export class RegistrationService {
 			.where(eq(registrationSlot.ggId, ggId))
 			.limit(1)
 		return slot ? mapToRegistrationSlotDto(slot) : null
+	}
+
+	/**
+	 * Get a map of Golf Genius member IDs to player records for an event.
+	 * Used for efficient player lookups during Golf Genius integration operations.
+	 */
+	async getPlayerMapForEvent(eventId: number): Promise<PlayerMap> {
+		const playerRecords = await this.drizzle.db
+			.select({
+				ggId: registrationSlot.ggId,
+				id: player.id,
+				firstName: player.firstName,
+				lastName: player.lastName,
+				email: player.email,
+			})
+			.from(registrationSlot)
+			.innerJoin(player, eq(registrationSlot.playerId, player.id))
+			.where(eq(registrationSlot.eventId, eventId))
+
+		const playerMap = new Map<string, PlayerRecord>()
+		for (const record of playerRecords) {
+			if (record.ggId) {
+				// Only include records with valid ggId
+				playerMap.set(record.ggId, {
+					id: record.id,
+					firstName: record.firstName,
+					lastName: record.lastName,
+					email: record.email,
+				})
+			}
+		}
+		return playerMap
 	}
 }

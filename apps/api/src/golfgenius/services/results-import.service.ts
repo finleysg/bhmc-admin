@@ -1,11 +1,18 @@
-import { and, eq } from "drizzle-orm"
 import { Observable, Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
-import { IntegrationActionName, ProgressEventDto, ProgressTournamentDto } from "@repo/dto"
+import {
+	IntegrationActionName,
+	PlayerMap,
+	PlayerRecord,
+	PreparedTournamentResult,
+	ProgressEventDto,
+	ProgressTournamentDto,
+	TournamentData,
+} from "@repo/dto"
 
-import { DrizzleService } from "../../database/drizzle.service"
-import { event, round, tournament, tournamentPoints, tournamentResult } from "../../database/schema"
+import { EventsService } from "../../events/events.service"
+import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import {
@@ -25,53 +32,15 @@ import {
 	StrokePlayResultParser,
 } from "./result-parsers"
 
-type TournamentData = {
-	id: number
-	name: string
-	format: string | null
-	isNet: number
-	ggId: string
-	eventId: number
-	roundId: number
-	eventGgId: string | null
-	roundGgId: string
-}
-
-interface PreparedTournamentResult {
-	tournamentId: number
-	playerId: number
-	flight: string | null
-	position: number
-	score: number | null
-	amount: string
-	summary: string | null
-	details: string | null
-	createDate: string
-	payoutDate: string | null
-	payoutStatus: string | null
-	payoutTo: string | null
-	payoutType: string | null
-	teamId: string | null
-}
-
-interface PlayerRecord {
-	id: number
-	firstName: string
-	lastName: string
-	email: string
-	phone?: string
-}
-
-type PlayerMap = Map<string, PlayerRecord>
-
 @Injectable()
 export class ResultsImportService {
 	private readonly logger = new Logger(ResultsImportService.name)
 
 	constructor(
 		private readonly apiClient: ApiClient,
-		private readonly drizzle: DrizzleService,
 		private readonly progressTracker: ProgressTracker,
+		private readonly eventsService: EventsService,
+		private readonly registrationService: RegistrationService,
 	) {}
 
 	// ============= PUBLIC METHODS =============
@@ -149,22 +118,7 @@ export class ResultsImportService {
 		) => Promise<void>,
 	): Promise<Observable<ProgressTournamentDto>> {
 		// Query tournaments for the specified format
-		const tournaments = await this.drizzle.db
-			.select({
-				id: tournament.id,
-				name: tournament.name,
-				format: tournament.format,
-				isNet: tournament.isNet,
-				ggId: tournament.ggId,
-				eventId: tournament.eventId,
-				roundId: tournament.roundId,
-				eventGgId: event.ggId,
-				roundGgId: round.ggId,
-			})
-			.from(tournament)
-			.innerJoin(event, eq(tournament.eventId, event.id))
-			.innerJoin(round, eq(tournament.roundId, round.id))
-			.where(and(eq(tournament.eventId, eventId), eq(tournament.format, format)))
+		const tournaments = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
 
 		if (tournaments.length === 0) {
 			throw new Error(`No ${format} tournaments found for event ${eventId}`)
@@ -249,36 +203,6 @@ export class ResultsImportService {
 		return progressObservable
 	}
 
-	private getScopesForFormat(ggResults: GolfGeniusTournamentResults, format: string): any[] {
-		switch (format) {
-			case "points":
-				return PointsResultParser.extractScopes(ggResults)
-			case "skins":
-				return SkinsResultParser.extractScopes(ggResults)
-			case "user_scored":
-				return ProxyResultParser.extractScopes(ggResults)
-			case "stroke":
-				return StrokePlayResultParser.extractScopes(ggResults)
-			default:
-				throw new Error(`Unknown format: ${format}`)
-		}
-	}
-
-	private getAggregatesForFormat(scope: any, format: string): GGAggregate[] {
-		switch (format) {
-			case "points":
-				return PointsResultParser.extractAggregates(scope)
-			case "skins":
-				return SkinsResultParser.extractAggregates(scope)
-			case "user_scored":
-				return ProxyResultParser.extractAggregates(scope)
-			case "stroke":
-				return StrokePlayResultParser.extractAggregates(scope)
-			default:
-				throw new Error(`Unknown format: ${format}`)
-		}
-	}
-
 	// ============= PRIVATE HELPER METHODS =============
 
 	private async importResultsByFormat(
@@ -291,22 +215,7 @@ export class ResultsImportService {
 			playerMap: PlayerMap,
 		) => Promise<void>,
 	): Promise<ImportResultSummary[]> {
-		const tournaments = await this.drizzle.db
-			.select({
-				id: tournament.id,
-				name: tournament.name,
-				format: tournament.format,
-				isNet: tournament.isNet,
-				ggId: tournament.ggId,
-				eventId: tournament.eventId,
-				roundId: tournament.roundId,
-				eventGgId: event.ggId,
-				roundGgId: round.ggId,
-			})
-			.from(tournament)
-			.innerJoin(event, eq(tournament.eventId, event.id))
-			.innerJoin(round, eq(tournament.roundId, round.id))
-			.where(and(eq(tournament.eventId, eventId), eq(tournament.format, format)))
+		const tournaments = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
 
 		if (tournaments.length === 0) {
 			this.logger.log("No " + format + " tournaments found for event", { eventId })
@@ -324,33 +233,7 @@ export class ResultsImportService {
 	}
 
 	private async fetchPlayerMapForEvent(eventId: number): Promise<PlayerMap> {
-		const { player, registrationSlot } = await import("../../database/schema/registration.schema")
-
-		const playerRecords = await this.drizzle.db
-			.select({
-				ggId: registrationSlot.ggId,
-				id: player.id,
-				firstName: player.firstName,
-				lastName: player.lastName,
-				email: player.email,
-			})
-			.from(registrationSlot)
-			.innerJoin(player, eq(registrationSlot.playerId, player.id))
-			.where(eq(registrationSlot.eventId, eventId))
-
-		const playerMap = new Map<string, PlayerRecord>()
-		for (const record of playerRecords) {
-			if (record.ggId) {
-				// Only include records with valid ggId
-				playerMap.set(record.ggId, {
-					id: record.id,
-					firstName: record.firstName,
-					lastName: record.lastName,
-					email: record.email,
-				})
-			}
-		}
-		return playerMap
+		return this.registrationService.getPlayerMapForEvent(eventId)
 	}
 
 	private resolvePlayerFromMap(
@@ -434,14 +317,7 @@ export class ResultsImportService {
 	}
 
 	private async deleteExistingResults(tournamentData: TournamentData): Promise<void> {
-		await this.drizzle.db
-			.delete(tournamentResult)
-			.where(eq(tournamentResult.tournamentId, tournamentData.id))
-		await this.drizzle.db
-			.delete(tournamentPoints)
-			.where(eq(tournamentPoints.tournamentId, tournamentData.id))
-
-		this.logger.log("Deleted existing results", { tournamentId: tournamentData.id })
+		await this.eventsService.deleteTournamentResults(tournamentData.id)
 	}
 
 	private async fetchGGResults(
@@ -550,13 +426,8 @@ export class ResultsImportService {
 
 		// Batch insert all prepared records
 		if (preparedRecords.length > 0) {
-			await this.drizzle.db.insert(tournamentResult).values(preparedRecords)
+			await this.eventsService.insertTournamentResults(preparedRecords)
 			result.resultsImported += preparedRecords.length
-
-			this.logger.log("Batch inserted results", {
-				tournamentId: tournamentData.id,
-				recordsInserted: preparedRecords.length,
-			})
 		}
 	}
 

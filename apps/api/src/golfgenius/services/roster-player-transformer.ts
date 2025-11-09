@@ -1,18 +1,16 @@
 import { Injectable, Logger } from "@nestjs/common"
 
-import { HoleDto } from "../../courses/dto/hole.dto"
+import { HoleDto } from "../../courses"
+import { EventDto, EventFeeDto, FeeTypeDto } from "../../events"
 import { getStart } from "../../events/domain/event.domain"
 import { getGroup } from "../../events/domain/group.domain"
 import { toHoleDomain, toSlotDomain } from "../../events/domain/mappers"
-import { EventDto } from "../../events/dto/event.dto"
-import { PlayerDto } from "../../registration/dto/player.dto"
 import {
-	EventFeeDto,
-	FeeTypeDto,
+	PlayerDto,
 	RegisteredPlayerDto,
-} from "../../registration/dto/registered-player.dto"
-import { RegistrationSlotDto } from "../../registration/dto/registration-slot.dto"
-import { RegistrationDto } from "../../registration/dto/registration.dto"
+	RegistrationDto,
+	RegistrationSlotDto,
+} from "../../registration"
 import { RosterMemberSyncDto } from "../dto/internal.dto"
 import { FeeDefinition, TransformationContext } from "../dto/roster.dto"
 
