@@ -302,7 +302,7 @@ export class ScoresImportService {
 	}
 
 	getProgressObservable(eventId: number): Subject<ProgressEventDto> | null {
-		return this.progressTracker.getProgressObservable(eventId)
+		return this.progressTracker.getProgressObservable(eventId) as Subject<ProgressEventDto> | null
 	}
 
 	async importScoresForEventStream(eventId: number): Promise<Observable<ProgressEventDto>> {
@@ -400,6 +400,6 @@ export class ScoresImportService {
 			}
 		})()
 
-		return progressObservable
+		return progressObservable as Observable<ProgressEventDto>
 	}
 }

@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react"
 
 import { getActionApiPath, supportsStreaming } from "@/lib/integration-actions"
-import { IntegrationActionName, IntegrationLogDto, ProgressEventDto } from "@repo/dto"
+import {
+	IntegrationActionName,
+	IntegrationLogDto,
+	ProgressEventDto,
+	ProgressTournamentDto,
+} from "@repo/dto"
 
 import IntegrationProgress from "./integration-progress"
 
@@ -31,7 +36,7 @@ export default function IntegrationActionCard({
 }: Props) {
 	const [lastRun, setLastRun] = useState<IntegrationLogDto | null>(null)
 	const [isRunning, setIsRunning] = useState(false)
-	const [progress, setProgress] = useState<ProgressEventDto | null>(null)
+	const [progress, setProgress] = useState<ProgressEventDto | ProgressTournamentDto | null>(null)
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
@@ -93,7 +98,9 @@ export default function IntegrationActionCard({
 
 			eventSource.onmessage = (event) => {
 				try {
-					const progressData = JSON.parse(event.data as string) as ProgressEventDto
+					const progressData = JSON.parse(event.data as string) as
+						| ProgressEventDto
+						| ProgressTournamentDto
 					setProgress(progressData)
 
 					if (progressData.status === "complete") {

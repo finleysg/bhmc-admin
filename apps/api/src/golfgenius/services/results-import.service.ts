@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm"
 import { Observable, Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
-import { IntegrationActionName, ProgressEventDto } from "@repo/dto"
+import { IntegrationActionName, ProgressEventDto, ProgressTournamentDto } from "@repo/dto"
 
 import { DrizzleService } from "../../database/drizzle.service"
 import { event, round, tournament, tournamentPoints, tournamentResult } from "../../database/schema"
@@ -94,7 +94,7 @@ export class ResultsImportService {
 
 	// ============= STREAMING METHODS =============
 
-	async importPointsResultsStream(eventId: number): Promise<Observable<ProgressEventDto>> {
+	async importPointsResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
 		return this.importResultsByFormatStream(
 			eventId,
 			"points",
@@ -103,7 +103,7 @@ export class ResultsImportService {
 		)
 	}
 
-	async importSkinsResultsStream(eventId: number): Promise<Observable<ProgressEventDto>> {
+	async importSkinsResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
 		return this.importResultsByFormatStream(
 			eventId,
 			"skins",
@@ -112,7 +112,7 @@ export class ResultsImportService {
 		)
 	}
 
-	async importProxyResultsStream(eventId: number): Promise<Observable<ProgressEventDto>> {
+	async importProxyResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
 		return this.importResultsByFormatStream(
 			eventId,
 			"user_scored",
@@ -121,7 +121,7 @@ export class ResultsImportService {
 		)
 	}
 
-	async importStrokePlayResultsStream(eventId: number): Promise<Observable<ProgressEventDto>> {
+	async importStrokePlayResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
 		return this.importResultsByFormatStream(
 			eventId,
 			"stroke",
@@ -130,7 +130,7 @@ export class ResultsImportService {
 		)
 	}
 
-	getProgressObservable(eventId: number): Subject<ProgressEventDto> | null {
+	getProgressObservable(eventId: number): Subject<ProgressEventDto | ProgressTournamentDto> | null {
 		return this.progressTracker.getProgressObservable(eventId)
 	}
 
@@ -147,7 +147,7 @@ export class ResultsImportService {
 			playerMap: PlayerMap,
 			onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 		) => Promise<void>,
-	): Promise<Observable<ProgressEventDto>> {
+	): Promise<Observable<ProgressTournamentDto>> {
 		// Query tournaments for the specified format
 		const tournaments = await this.drizzle.db
 			.select({
@@ -170,35 +170,12 @@ export class ResultsImportService {
 			throw new Error(`No ${format} tournaments found for event ${eventId}`)
 		}
 
-		// Calculate total players across all tournaments for progress tracking
-		let totalPlayers = 0
-		for (const t of tournaments) {
-			try {
-				// Validate tournament has GG IDs
-				if (!t.ggId || !t.eventGgId) {
-					continue // Skip invalid tournaments, we'll handle errors during processing
-				}
-
-				// Fetch GG results to count players
-				const ggResults = await this.apiClient.getTournamentResults(
-					t.eventGgId,
-					t.roundGgId,
-					t.ggId,
-				)
-
-				// Count players based on format
-				const scopes = this.getScopesForFormat(ggResults, format)
-				for (const scope of scopes) {
-					const aggregates = this.getAggregatesForFormat(scope, format)
-					totalPlayers += aggregates.length
-				}
-			} catch {
-				// Continue counting, we'll handle errors during actual processing
-			}
-		}
-
-		// Start tracking progress
-		const progressObservable = this.progressTracker.startTracking(eventId, totalPlayers)
+		// Start tracking progress with tournament count
+		const totalTournaments = tournaments.length
+		const progressObservable = this.progressTracker.startTracking(
+			eventId,
+			totalTournaments,
+		) as Observable<ProgressTournamentDto>
 
 		void (async () => {
 			const result: ImportResult = {
@@ -211,18 +188,18 @@ export class ResultsImportService {
 				errors: [],
 			}
 
-			let processedPlayers = 0
+			let processedTournaments = 0
 
-			// Create callback for per-player progress updates
-			const onPlayerProcessed = (success: boolean, playerName?: string) => {
-				processedPlayers++
-				this.progressTracker.emitProgress(eventId, {
-					totalPlayers,
-					processedPlayers,
-					status: processedPlayers >= totalPlayers ? "complete" : "processing",
+			// Create callback for per-tournament progress updates
+			const onTournamentProcessed = (success: boolean, tournamentName?: string) => {
+				processedTournaments++
+				this.progressTracker.emitTournamentProgress(eventId, {
+					totalTournaments,
+					processedTournaments,
+					status: processedTournaments >= totalTournaments ? "complete" : "processing",
 					message: success
-						? `Processed ${playerName || "player"} (${processedPlayers}/${totalPlayers})`
-						: `Skipped ${playerName || "player"} (${processedPlayers}/${totalPlayers})`,
+						? `Processed ${tournamentName || "tournament"} (${processedTournaments}/${totalTournaments})`
+						: `Skipped ${tournamentName || "tournament"} (${processedTournaments}/${totalTournaments})`,
 				})
 			}
 
@@ -230,17 +207,18 @@ export class ResultsImportService {
 				for (let i = 0; i < tournaments.length; i++) {
 					const t = tournaments[i]
 
-					this.progressTracker.emitProgress(eventId, {
-						totalPlayers,
-						processedPlayers,
+					this.progressTracker.emitTournamentProgress(eventId, {
+						totalTournaments,
+						processedTournaments,
 						status: "processing",
-						message: `Processing tournament ${i + 1} of ${tournaments.length}: ${t.name}...`,
+						message: `Processing tournament ${i + 1} of ${totalTournaments}: ${t.name}...`,
 					})
 
 					const tournamentResult = await this.importTournamentResults(
 						t,
 						processor,
-						onPlayerProcessed,
+						undefined, // No per-player progress for streaming
+						onTournamentProcessed, // Tournament completion callback
 					)
 
 					// Aggregate results
@@ -398,6 +376,7 @@ export class ResultsImportService {
 			onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 		) => Promise<void>,
 		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
+		onTournamentComplete?: (success: boolean, tournamentName: string) => void,
 	): Promise<ImportResultSummary> {
 		const result: ImportResultSummary = {
 			tournamentId: tournamentData.id,
@@ -427,6 +406,9 @@ export class ResultsImportService {
 
 			// Process results using the provided processor
 			await processor(tournamentData, result, ggResults, playerMap, onPlayerProcessed)
+
+			// Call tournament completion callback on success
+			onTournamentComplete?.(true, tournamentData.name)
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
 			result.errors.push(`Unexpected error: ${errorMessage}`)
@@ -434,6 +416,9 @@ export class ResultsImportService {
 				tournamentId: tournamentData.id,
 				error: errorMessage,
 			})
+
+			// Call tournament completion callback on failure
+			onTournamentComplete?.(false, tournamentData.name)
 		}
 
 		return result

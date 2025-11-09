@@ -39,7 +39,7 @@ export class RosterExportService {
 	) {}
 
 	getProgressObservable(eventId: number): Subject<ProgressEventDto> | null {
-		return this.progressTracker.getProgressObservable(eventId)
+		return this.progressTracker.getProgressObservable(eventId) as Subject<ProgressEventDto> | null
 	}
 
 	getExportResult(eventId: number): ExportResult | null {
@@ -238,7 +238,7 @@ export class RosterExportService {
 			this.progressTracker.errorExport(eventId, errorMessage, result).catch(() => {})
 		})
 
-		return subject
+		return subject as Subject<ProgressEventDto>
 	}
 
 	/**

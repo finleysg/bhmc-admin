@@ -1,7 +1,7 @@
 import { Subject } from "rxjs"
 
 import { Injectable, Logger, Optional } from "@nestjs/common"
-import { IntegrationActionName, ProgressEventDto } from "@repo/dto"
+import { IntegrationActionName, ProgressEventDto, ProgressTournamentDto } from "@repo/dto"
 
 import { IntegrationLogService } from "./integration-log.service"
 import {
@@ -16,7 +16,10 @@ import {
 export class ProgressTracker {
 	private readonly logger = new Logger(ProgressTracker.name)
 
-	private readonly activeOperations = new Map<number, Subject<ProgressEventDto>>()
+	private readonly activeOperations = new Map<
+		number,
+		Subject<ProgressEventDto | ProgressTournamentDto>
+	>()
 	private readonly operationResults = new Map<number, OperationResult>()
 	private readonly config: TrackerConfig
 
@@ -30,13 +33,16 @@ export class ProgressTracker {
 	/**
 	 * Start tracking a new export and return the progress observable
 	 */
-	startTracking(eventId: number, totalPlayers: number): Subject<ProgressEventDto> {
+	startTracking(
+		eventId: number,
+		totalPlayers: number,
+	): Subject<ProgressEventDto | ProgressTournamentDto> {
 		// Check if operation is already running
 		if (this.activeOperations.has(eventId)) {
 			throw new Error(`Operation already in progress for event ${eventId}`)
 		}
 
-		const subject = new Subject<ProgressEventDto>()
+		const subject = new Subject<ProgressEventDto | ProgressTournamentDto>()
 		this.activeOperations.set(eventId, subject)
 
 		// Auto-cleanup after configured timeout
@@ -57,18 +63,25 @@ export class ProgressTracker {
 	/**
 	 * Get the progress observable for an active operation
 	 */
-	getProgressObservable(eventId: number): Subject<ProgressEventDto> | null {
+	getProgressObservable(eventId: number): Subject<ProgressEventDto | ProgressTournamentDto> | null {
 		return this.activeOperations.get(eventId) ?? null
 	}
 
 	/**
 	 * Emit a progress update for an active operation
 	 */
-	emitProgress(eventId: number, progress: ProgressEventDto): void {
+	emitProgress(eventId: number, progress: ProgressEventDto | ProgressTournamentDto): void {
 		const subject = this.activeOperations.get(eventId)
 		if (subject) {
 			subject.next(progress)
 		}
+	}
+
+	/**
+	 * Emit a tournament progress update for an active operation
+	 */
+	emitTournamentProgress(eventId: number, progress: ProgressTournamentDto): void {
+		this.emitProgress(eventId, progress)
 	}
 
 	/**
