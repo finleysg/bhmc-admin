@@ -7,76 +7,42 @@ import { IntegrationActionName, IntegrationLogDto, ProgressEventDto } from "@rep
 
 import IntegrationProgress from "./integration-progress"
 
+interface ParsedResult {
+	errors?: unknown[]
+	roundResults?: Array<{
+		errors?: unknown[]
+	}>
+}
+
 interface Props {
 	eventId: number
 	actionName: IntegrationActionName
+	logs: IntegrationLogDto[]
 	enabled: boolean
 	onComplete?: () => void
 }
 
-export default function IntegrationActionCard({ eventId, actionName, enabled, onComplete }: Props) {
+export default function IntegrationActionCard({
+	eventId,
+	actionName,
+	logs,
+	enabled,
+	onComplete,
+}: Props) {
 	const [lastRun, setLastRun] = useState<IntegrationLogDto | null>(null)
 	const [isRunning, setIsRunning] = useState(false)
 	const [progress, setProgress] = useState<ProgressEventDto | null>(null)
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
-		if (!enabled) return
+		const mostRecentLog = logs.sort(
+			(a, b) => new Date(b.actionDate).getTime() - new Date(a.actionDate).getTime(),
+		)[0]
 
-		const fetchLogs = async () => {
-			try {
-				const response = await fetch(
-					`/api/golfgenius/events/${eventId}/logs?actionName=${encodeURIComponent(actionName)}`,
-				)
+		setLastRun(mostRecentLog || null)
+	}, [logs])
 
-				if (!response.ok) {
-					throw new Error(`Failed to fetch logs: ${response.status}`)
-				}
-
-				const logs = (await response.json()) as IntegrationLogDto[]
-
-				// Find the most recent log entry (regardless of outcome)
-				const mostRecentLog = logs.sort(
-					(a, b) => new Date(b.actionDate).getTime() - new Date(a.actionDate).getTime(),
-				)[0]
-
-				setLastRun(mostRecentLog || null)
-			} catch (_error) {
-				console.error("Failed to fetch integration logs:", _error)
-				setLastRun(null)
-			}
-		}
-
-		void fetchLogs()
-	}, [enabled, eventId, actionName])
-
-	const getStatusBadge = () => {
-		if (!lastRun) {
-			return <span className="badge badge-neutral text-neutral-content">Not Run</span>
-		}
-
-		// Check if the result contains errors, even if marked as successful
-		const errorCount = getErrorCount(lastRun.details)
-
-		if (errorCount > 0) {
-			return <span className="badge badge-error text-error-content">Error ({errorCount})</span>
-		}
-
-		return lastRun.isSuccessful ? (
-			<span className="badge badge-success text-success-content">Success</span>
-		) : (
-			<span className="badge badge-error text-error-content">Failed</span>
-		)
-	}
-
-	interface ParsedResult {
-		errors?: unknown[]
-		roundResults?: Array<{
-			errors?: unknown[]
-		}>
-	}
-
-	const getErrorCount = (detailsJson: string | null): number => {
+	const getErrorCount = (detailsJson?: string | null): number => {
 		if (!detailsJson) return 0
 
 		try {
@@ -183,64 +149,96 @@ export default function IntegrationActionCard({ eventId, actionName, enabled, on
 		}
 	}
 
+	const errorCount = getErrorCount(lastRun?.details)
+
 	return (
-		<div className="card bg-base-100 shadow-xl">
-			<div className="card-body">
-				{/* Header: Action Name + Status Badge */}
-				<div className="flex items-center justify-between">
-					<h2 className="card-title">{actionName}</h2>
-					{getStatusBadge()}
-				</div>
-
-				{/* Last Run Info or Progress */}
-				{isRunning && progress ? (
-					<div className="my-4">
-						<IntegrationProgress progress={progress} />
+		<>
+			<div className="card bg-base-200 shadow-sm">
+				<div className="card-body">
+					{/* Header: Action Name + Status Badge */}
+					<div className="flex items-center justify-between">
+						<h2 className="card-title">{actionName}</h2>
 					</div>
-				) : (
-					<p className="text-sm text-base-content/70">
-						Last run: {lastRun ? formatTimestamp(lastRun.actionDate) : "Never"}
-					</p>
-				)}
 
-				{/* Collapsible Details Section */}
-				{lastRun && (
-					<div className="collapse collapse-arrow bg-base-200 mt-4">
-						<input type="checkbox" />
-						<div className="collapse-title text-sm font-medium">View Details</div>
-						<div className="collapse-content">
-							<pre className="text-xs bg-base-300 p-4 rounded-lg overflow-x-auto whitespace-pre-wrap">
-								{lastRun.details || "No details available"}
-							</pre>
-						</div>
-					</div>
-				)}
-
-				{/* Action Button */}
-				<div className="card-actions justify-end mt-4">
-					<button
-						className="btn btn-primary text-primary-content"
-						disabled={!enabled || isRunning}
-						onClick={() => void handleStart()}
-					>
-						{isRunning ? (
-							<>
-								<span className="loading loading-spinner loading-sm"></span>
-								Running...
-							</>
+					{/* Last Run Info, Error, or Progress */}
+					<div className="h-24">
+						{isRunning && progress ? (
+							<div className="my-4">
+								<IntegrationProgress progress={progress} />
+							</div>
+						) : error ? (
+							<div className="alert alert-error mt-4">
+								<span className="text-xs">{error}</span>
+							</div>
 						) : (
-							"Start"
+							<div>
+								<p className="text-sm text-base-content/70">
+									Last run: {lastRun ? formatTimestamp(lastRun.actionDate) : "Never"}
+								</p>
+								<p className="text-sm text-base-content/70">
+									Last result: {lastRun ? errorCount + " errors" : "N/A"}
+									{lastRun && (
+										<span className={errorCount === 0 ? "text-success ml-2" : "text-error ml-2"}>
+											{errorCount === 0 ? "✓" : "✗"}
+										</span>
+									)}
+								</p>
+								<button
+									className="link link-secondary text-sm"
+									disabled={!lastRun?.details}
+									onClick={() =>
+										(
+											document.getElementById(
+												`details-modal-${eventId}-${actionName}`,
+											) as HTMLDialogElement
+										)?.showModal()
+									}
+								>
+									View details
+								</button>
+							</div>
 						)}
-					</button>
-				</div>
-
-				{/* Error Message */}
-				{error && (
-					<div className="alert alert-error mt-4">
-						<span className="text-xs">{error}</span>
 					</div>
-				)}
+
+					{/* Action Button */}
+					<div className="card-actions justify-end mt-4">
+						<button
+							className="btn btn-primary text-primary-content"
+							disabled={!enabled || isRunning}
+							onClick={() => void handleStart()}
+						>
+							{isRunning ? (
+								<>
+									<span className="loading loading-spinner loading-sm"></span>
+									Running...
+								</>
+							) : (
+								"Start"
+							)}
+						</button>
+					</div>
+				</div>
 			</div>
-		</div>
+
+			{/* Details Modal */}
+			<dialog id={`details-modal-${eventId}-${actionName}`} className="modal">
+				<div className="modal-box max-w-4xl">
+					<h3 className="font-bold text-lg mb-4">Integration Details</h3>
+					<pre className="bg-base-200 p-4 rounded overflow-x-auto text-xs">
+						{lastRun?.details
+							? JSON.stringify(JSON.parse(lastRun.details), null, 2)
+							: "No details available"}
+					</pre>
+					<div className="modal-action">
+						<form method="dialog">
+							<button className="btn">Close</button>
+						</form>
+					</div>
+				</div>
+				<form method="dialog" className="modal-backdrop">
+					<button>close</button>
+				</form>
+			</dialog>
+		</>
 	)
 }

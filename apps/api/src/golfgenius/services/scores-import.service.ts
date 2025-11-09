@@ -1,7 +1,4 @@
-import {
-	Observable,
-	Subject,
-} from "rxjs"
+import { Observable, Subject } from "rxjs"
 
 import { Injectable } from "@nestjs/common"
 import { ProgressEventDto } from "@repo/dto"
@@ -61,65 +58,65 @@ export class ScoresImportService {
 		private readonly progressTracker: ProgressTracker,
 	) {}
 
-async importScoresForRound(
-eventId: number,
-eventGgId: string,
-roundGgId: string,
-onPlayerProcessed?: (playerCount: number) => void,
-): Promise<ImportScoresResult> {
+	async importScoresForRound(
+		eventId: number,
+		eventGgId: string,
+		roundGgId: string,
+		onPlayerProcessed?: (playerCount: number) => void,
+	): Promise<ImportScoresResult> {
 		const teeSheet = await this.apiClient.getRoundTeeSheet(eventGgId.toString(), roundGgId)
 		const results: ImportScoresResult = {
 			scorecards: { created: 0, updated: 0, skipped: 0 },
 			errors: [],
 		}
 
-for (const pairing of teeSheet) {
-for (const player of pairing.pairing_group.players) {
-try {
-const playerId = await this.identifyPlayer(player, eventId)
-if (!playerId) {
-results.errors.push({
-playerName: player.name,
-reason: "Player could not be identified",
-})
-results.scorecards.skipped++
+		for (const pairing of teeSheet) {
+			for (const player of pairing.pairing_group.players) {
+				try {
+					const playerId = await this.identifyPlayer(player, eventId)
+					if (!playerId) {
+						results.errors.push({
+							playerName: player.name,
+							reason: "Player could not be identified",
+						})
+						results.scorecards.skipped++
 
-// Emit progress for skipped player
-if (onPlayerProcessed) {
-onPlayerProcessed(1)
-}
-continue
-}
+						// Emit progress for skipped player
+						if (onPlayerProcessed) {
+							onPlayerProcessed(1)
+						}
+						continue
+					}
 
-const { courseId, teeId } = await this.lookupCourseAndTee(player)
-const scorecard = await this.createOrUpdateScorecard(
-eventId,
-playerId,
-player,
-courseId,
-teeId,
-results,
-)
-await this.createOrUpdateScores(scorecard!.id!, player, courseId)
+					const { courseId, teeId } = await this.lookupCourseAndTee(player)
+					const scorecard = await this.createOrUpdateScorecard(
+						eventId,
+						playerId,
+						player,
+						courseId,
+						teeId,
+						results,
+					)
+					await this.createOrUpdateScores(scorecard!.id!, player, courseId)
 
-// Emit progress for successfully processed player
-if (onPlayerProcessed) {
-onPlayerProcessed(1)
-}
-} catch (error) {
-results.errors.push({
-playerName: player.name,
-reason: (error as any).message,
-details: error,
-})
+					// Emit progress for successfully processed player
+					if (onPlayerProcessed) {
+						onPlayerProcessed(1)
+					}
+				} catch (error) {
+					results.errors.push({
+						playerName: player.name,
+						reason: (error as any).message,
+						details: error,
+					})
 
-// Emit progress for failed player
-if (onPlayerProcessed) {
-onPlayerProcessed(1)
-}
-}
-}
-}
+					// Emit progress for failed player
+					if (onPlayerProcessed) {
+						onPlayerProcessed(1)
+					}
+				}
+			}
+		}
 
 		return results
 	}
@@ -349,48 +346,48 @@ onPlayerProcessed(1)
 
 			let processedPlayers = 0
 
-try {
-for (const round of rounds) {
-this.progressTracker.emitProgress(eventId, {
-totalPlayers,
-processedPlayers,
-status: "processing",
-message: `Processing round ${round.roundNumber}...`,
-})
+			try {
+				for (const round of rounds) {
+					this.progressTracker.emitProgress(eventId, {
+						totalPlayers,
+						processedPlayers,
+						status: "processing",
+						message: `Processing round ${round.roundNumber}...`,
+					})
 
-const roundResult = await this.importScoresForRound(
-eventId,
-event.ggId!,
-round.ggId!,
-(count) => {
-processedPlayers += count
-this.progressTracker.emitProgress(eventId, {
-totalPlayers,
-processedPlayers,
-status: processedPlayers >= totalPlayers ? "complete" : "processing",
-message: `Processed ${processedPlayers} of ${totalPlayers} players`,
-})
-}
-)
+					const roundResult = await this.importScoresForRound(
+						eventId,
+						event.ggId!,
+						round.ggId!,
+						(count) => {
+							processedPlayers += count
+							this.progressTracker.emitProgress(eventId, {
+								totalPlayers,
+								processedPlayers,
+								status: processedPlayers >= totalPlayers ? "complete" : "processing",
+								message: `Processed ${processedPlayers} of ${totalPlayers} players`,
+							})
+						},
+					)
 
-// Aggregate results
-result.created += roundResult.scorecards.created
-result.updated += roundResult.scorecards.updated
-result.skipped += roundResult.scorecards.skipped
-result.totalProcessed +=
-roundResult.scorecards.created +
-roundResult.scorecards.updated +
-roundResult.scorecards.skipped
+					// Aggregate results
+					result.created += roundResult.scorecards.created
+					result.updated += roundResult.scorecards.updated
+					result.skipped += roundResult.scorecards.skipped
+					result.totalProcessed +=
+						roundResult.scorecards.created +
+						roundResult.scorecards.updated +
+						roundResult.scorecards.skipped
 
-// Convert errors to ImportError format
-result.errors.push(
-...roundResult.errors.map((err) => ({
-itemId: err.playerName,
-itemName: err.playerName,
-error: err.reason,
-})),
-)
-}
+					// Convert errors to ImportError format
+					result.errors.push(
+						...roundResult.errors.map((err) => ({
+							itemId: err.playerName,
+							itemName: err.playerName,
+							error: err.reason,
+						})),
+					)
+				}
 
 				// Complete the operation
 				await this.progressTracker.completeOperation(eventId, result)

@@ -1,8 +1,16 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import {
+	useEffect,
+	useMemo,
+	useState,
+} from "react"
 
-import { EventDto, IntegrationActionName, IntegrationLogDto } from "@repo/dto"
+import {
+	EventDto,
+	IntegrationActionName,
+	IntegrationLogDto,
+} from "@repo/dto"
 
 import IntegrationActionCard from "./integration-action-card"
 
@@ -22,7 +30,7 @@ interface Phase {
 const PHASES: Phase[] = [
 	{
 		number: 1,
-		title: "Setup",
+		title: "Setup Tasks",
 		actions: ["Sync Event", "Export Roster"],
 	},
 	{
@@ -32,7 +40,7 @@ const PHASES: Phase[] = [
 	},
 	{
 		number: 3,
-		title: "Finalize",
+		title: "Finalize Results",
 		actions: ["Close Event"],
 	},
 ]
@@ -112,7 +120,6 @@ interface Props {
 export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 	const [logs, setLogs] = useState<IntegrationLogDto[]>([])
 	const [isLoadingLogs, setIsLoadingLogs] = useState(true)
-	const [isRefreshing, setIsRefreshing] = useState(false)
 	const [phaseOverride, setPhaseOverride] = useState<1 | 2 | 3 | null>(null)
 
 	// Fetch all logs when event changes
@@ -138,12 +145,7 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 	}
 
 	const refreshLogs = async () => {
-		setIsRefreshing(true)
-		try {
-			await fetchLogsForEvent(selectedEvent.id)
-		} finally {
-			setIsRefreshing(false)
-		}
+        await fetchLogsForEvent(selectedEvent.id)
 	}
 
 	// Derive phase state from logs
@@ -224,18 +226,9 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 
 	return (
 		<div className="space-y-6">
-			{/* Event Header */}
-			<EventHeader event={selectedEvent} />
-
-			{/* Phase Progress Indicator */}
-			<PhaseProgress
-				currentPhase={phaseInfo.currentPhase}
-				totalPhases={3}
-				isRefreshing={isRefreshing}
-			/>
-
 			{/* Current Phase Content */}
 			<PhasePanel
+				event={selectedEvent}
 				phase={currentPhaseConfig}
 				logs={logs}
 				isComplete={phaseInfo.isPhaseComplete}
@@ -245,8 +238,9 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 
 			{/* Navigation */}
 			<PhaseNavigation
-				canAdvance={phaseInfo.canAdvanceToNext && phaseInfo.isPhaseComplete}
-				canGoBack={phaseInfo.currentPhase > 1}
+				canAdvance={phaseInfo.canAdvanceToNext}
+				currentPhase={phaseInfo.currentPhase}
+				totalPhases={3}
 				onNext={handleNextPhase}
 				onBack={handlePreviousPhase}
 			/>
@@ -254,94 +248,63 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 	)
 }
 
-function EventHeader({ event }: { event: EventDto }) {
-	const formattedDate = new Date(event.startDate).toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "2-digit",
-		day: "2-digit",
-	})
-
-	return (
-		<div className="p-4 bg-info rounded-lg">
-			<h2 className="font-bold text-info-content">
-				{formattedDate}: {event.name}
-			</h2>
-		</div>
-	)
-}
-
-function PhaseProgress({
-	currentPhase,
-	totalPhases,
-	isRefreshing,
-}: {
-	currentPhase: number
-	totalPhases: number
-	isRefreshing: boolean
-}) {
-	return (
-		<div className="flex items-center justify-between">
-			<div className="text-lg font-semibold">
-				Phase {currentPhase} of {totalPhases}
-			</div>
-			{isRefreshing && (
-				<div className="flex items-center text-sm text-base-content/60">
-					<span className="loading loading-spinner loading-sm mr-2"></span>
-					Refreshing...
-				</div>
-			)}
-		</div>
-	)
-}
-
 function PhasePanel({
+	event,
 	phase,
 	logs,
 	isComplete,
 	onActionComplete,
 	eventId,
 }: {
+	event: EventDto
 	phase: Phase
 	logs: IntegrationLogDto[]
 	isComplete: boolean
 	onActionComplete: () => void
 	eventId: number
 }) {
+	// Parse YYYY-MM-DD as local date, not UTC
+	const [year, month, day] = event.startDate.split("-").map(Number)
+	const localDate = new Date(year, month - 1, day) // month is 0-indexed
+
+	const formattedDate = localDate.toLocaleDateString("en-US", {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+	})
+
 	const hasSuccessfulRun = (action: IntegrationActionName) =>
 		logs.some((log) => log.actionName === action && log.isSuccessful)
 
 	return (
-		<div className="card bg-base-100 shadow-xl">
+		<div className="card bg-base-100 shadow-sm">
 			<div className="card-body">
-				<div className="flex items-center justify-between mb-4">
-					<h3 className="card-title text-info">{phase.title}</h3>
-					{isComplete && <span className="badge badge-success text-success-content">Complete</span>}
-				</div>
-
+				<h2 className="card-title font-bold">
+					{formattedDate}: {event.name}
+				</h2>
+				<h3 className="card-title">
+					{phase.title}
+					{isComplete && <span className="badge badge-success text-success-content">Done</span>}
+				</h3>
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{phase.actions.map((actionName) => {
 						const isEnabled =
 							phase.number === 1
 								? actionName === "Sync Event" || hasSuccessfulRun("Sync Event")
 								: true // Phase 2 and 3 actions are all enabled
-
+						const phaseLogs = logs.filter((l) => l.actionName === actionName)
 						return (
 							<IntegrationActionCard
 								key={actionName}
 								eventId={eventId}
 								actionName={actionName}
+								logs={phaseLogs}
 								enabled={isEnabled}
 								onComplete={onActionComplete}
 							/>
 						)
 					})}
 				</div>
-
-				{isComplete && (
-					<div className="alert alert-success mt-6">
-						<span>✅ All tasks in this phase are complete!</span>
-					</div>
-				)}
 			</div>
 		</div>
 	)
@@ -349,28 +312,40 @@ function PhasePanel({
 
 function PhaseNavigation({
 	canAdvance,
-	canGoBack,
+	currentPhase,
+	totalPhases,
 	onNext,
 	onBack,
 }: {
 	canAdvance: boolean
-	canGoBack: boolean
+	currentPhase: number
+	totalPhases: number
 	onNext: () => void
 	onBack: () => void
 }) {
 	return (
-		<div className="flex justify-between">
-			<button className="btn btn-outline" disabled={!canGoBack} onClick={onBack}>
-				Previous Phase
-			</button>
-
-			<button
-				className="btn btn-primary text-primary-content"
-				disabled={!canAdvance}
-				onClick={onNext}
-			>
-				Next Phase
-			</button>
+		<div className="grid grid-cols-3 items-center">
+			<div>
+				{currentPhase > 1 && (
+					<button className="btn btn-outline" onClick={onBack}>
+						Previous
+					</button>
+				)}
+			</div>
+			<div className="text-center">
+				{currentPhase} of {totalPhases}
+			</div>
+			<div className="flex justify-end">
+				{currentPhase < totalPhases && (
+					<button
+						className="btn btn-primary text-primary-content"
+						disabled={!canAdvance}
+						onClick={onNext}
+					>
+						Next
+					</button>
+				)}
+			</div>
 		</div>
 	)
 }
