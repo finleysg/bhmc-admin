@@ -43,41 +43,6 @@ export class GolfgeniusController {
 		return this.eventSync.syncEvent(eid)
 	}
 
-	@Post("/events/:id/import-scores")
-	@UseInterceptors(LogIntegrationInterceptor)
-	async importEventScores(@Param("id") id: string) {
-		const eid = parseInt(id, 10)
-		return this.scoresImport.importScoresForEvent(eid)
-	}
-
-	@Post("/events/:id/import-points")
-	@UseInterceptors(LogIntegrationInterceptor)
-	async importPointsResults(@Param("id") id: string) {
-		const eid = parseInt(id, 10)
-		return this.resultsImport.importPointsResults(eid)
-	}
-
-	@Post("/events/:id/import-skins")
-	@UseInterceptors(LogIntegrationInterceptor)
-	async importSkinsResults(@Param("id") id: string) {
-		const eid = parseInt(id, 10)
-		return this.resultsImport.importSkinsResults(eid)
-	}
-
-	@Post("/events/:id/import-proxies")
-	@UseInterceptors(LogIntegrationInterceptor)
-	async importProxyResults(@Param("id") id: string) {
-		const eid = parseInt(id, 10)
-		return this.resultsImport.importProxyResults(eid)
-	}
-
-	@Post("/events/:id/import-results")
-	@UseInterceptors(LogIntegrationInterceptor)
-	async importStrokePlayResults(@Param("id") id: string) {
-		const eid = parseInt(id, 10)
-		return this.resultsImport.importStrokePlayResults(eid)
-	}
-
 	@Get("/events/:id/logs")
 	async getEventLogs(@Param("id") id: string, @Query("actionName") actionName?: string) {
 		const eid = parseInt(id, 10)
@@ -85,7 +50,6 @@ export class GolfgeniusController {
 	}
 
 	@Sse("/events/:id/export-roster")
-	// @UseInterceptors(LogIntegrationInterceptor)
 	exportRoster(@Param("id") id: string): Observable<{ data: string }> {
 		const eid = parseInt(id, 10)
 
@@ -115,8 +79,7 @@ export class GolfgeniusController {
 		}
 	}
 
-	@Sse("/events/:id/import-scores-stream")
-	// @UseInterceptors(LogIntegrationInterceptor)
+	@Sse("/events/:id/import-scores")
 	async importScoresStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
 		const eid = parseInt(id, 10)
 
@@ -146,8 +109,7 @@ export class GolfgeniusController {
 		}
 	}
 
-	@Sse("/events/:id/import-points-stream")
-	// @UseInterceptors(LogIntegrationInterceptor)
+	@Sse("/events/:id/import-points")
 	async importPointsStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
 		const eid = parseInt(id, 10)
 
@@ -177,8 +139,7 @@ export class GolfgeniusController {
 		}
 	}
 
-	@Sse("/events/:id/import-skins-stream")
-	// @UseInterceptors(LogIntegrationInterceptor)
+	@Sse("/events/:id/import-skins")
 	async importSkinsStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
 		const eid = parseInt(id, 10)
 
@@ -208,8 +169,7 @@ export class GolfgeniusController {
 		}
 	}
 
-	@Sse("/events/:id/import-proxies-stream")
-	// @UseInterceptors(LogIntegrationInterceptor)
+	@Sse("/events/:id/import-proxies")
 	async importProxiesStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
 		const eid = parseInt(id, 10)
 
@@ -239,8 +199,7 @@ export class GolfgeniusController {
 		}
 	}
 
-	@Sse("/events/:id/import-results-stream")
-	// @UseInterceptors(LogIntegrationInterceptor)
+	@Sse("/events/:id/import-results")
 	async importResultsStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
 		const eid = parseInt(id, 10)
 

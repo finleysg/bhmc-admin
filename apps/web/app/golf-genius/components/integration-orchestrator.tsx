@@ -1,16 +1,8 @@
 "use client"
 
-import {
-	useEffect,
-	useMemo,
-	useState,
-} from "react"
+import { useEffect, useMemo, useState } from "react"
 
-import {
-	EventDto,
-	IntegrationActionName,
-	IntegrationLogDto,
-} from "@repo/dto"
+import { EventDto, IntegrationActionName, IntegrationLogDto } from "@repo/dto"
 
 import IntegrationActionCard from "./integration-action-card"
 
@@ -145,7 +137,7 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 	}
 
 	const refreshLogs = async () => {
-        await fetchLogsForEvent(selectedEvent.id)
+		await fetchLogsForEvent(selectedEvent.id)
 	}
 
 	// Derive phase state from logs

@@ -1,11 +1,29 @@
-import { and, eq } from "drizzle-orm"
-import { Observable, Subject } from "rxjs"
+import {
+	and,
+	eq,
+} from "drizzle-orm"
+import {
+	Observable,
+	Subject,
+} from "rxjs"
 
-import { Injectable, Logger } from "@nestjs/common"
-import { IntegrationActionName, ProgressEventDto } from "@repo/dto"
+import {
+	Injectable,
+	Logger,
+} from "@nestjs/common"
+import {
+	IntegrationActionName,
+	ProgressEventDto,
+} from "@repo/dto"
 
 import { DrizzleService } from "../../database/drizzle.service"
-import { event, round, tournament, tournamentPoints, tournamentResult } from "../../database/schema"
+import {
+	event,
+	round,
+	tournament,
+	tournamentPoints,
+	tournamentResult,
+} from "../../database/schema"
 import { ApiClient } from "../api-client"
 import {
 	GGAggregate,
@@ -98,7 +116,7 @@ export class ResultsImportService {
 		return this.importResultsByFormatStream(
 			eventId,
 			"points",
-			"Import Points Results",
+			"Import Points",
 			this.processPointsResults.bind(this),
 		)
 	}
@@ -107,7 +125,7 @@ export class ResultsImportService {
 		return this.importResultsByFormatStream(
 			eventId,
 			"skins",
-			"Import Skins Results",
+			"Import Skins",
 			this.processSkinsResults.bind(this),
 		)
 	}
@@ -116,7 +134,7 @@ export class ResultsImportService {
 		return this.importResultsByFormatStream(
 			eventId,
 			"user_scored",
-			"Import Proxy Results",
+			"Import Proxies",
 			this.processProxyResults.bind(this),
 		)
 	}
@@ -125,7 +143,7 @@ export class ResultsImportService {
 		return this.importResultsByFormatStream(
 			eventId,
 			"stroke",
-			"Import Stroke Play Results",
+			"Import Results",
 			this.processStrokeResults.bind(this),
 		)
 	}
