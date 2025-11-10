@@ -1,7 +1,18 @@
-import { and, eq, inArray } from "drizzle-orm"
+import {
+	and,
+	eq,
+	inArray,
+} from "drizzle-orm"
 
-import { Injectable, Logger } from "@nestjs/common"
-import { PreparedTournamentResult, TournamentData } from "@repo/dto"
+import {
+	Injectable,
+	Logger,
+} from "@nestjs/common"
+import {
+	PreparedTournamentPoints,
+	PreparedTournamentResult,
+	TournamentData,
+} from "@repo/dto"
 
 import {
 	DrizzleService,
@@ -208,6 +219,31 @@ export class EventsService {
 			.where(eq(tournamentPoints.tournamentId, tournamentId))
 
 		this.logger.log("Deleted existing results", { tournamentId })
+	}
+
+	/**
+	 * Delete existing tournament points for a tournament.
+	 * Used during Golf Genius points imports to ensure idempotent operations.
+	 */
+	async deleteTournamentPoints(tournamentId: number): Promise<void> {
+		await this.drizzle.db
+			.delete(tournamentPoints)
+			.where(eq(tournamentPoints.tournamentId, tournamentId))
+
+		this.logger.log("Deleted existing points", { tournamentId })
+	}
+
+    /**
+	 * Batch insert tournament points.
+	 * Used during Golf Genius result imports to efficiently insert multiple records.
+	 */
+	async insertTournamentPoints(results: PreparedTournamentPoints[]): Promise<void> {
+		if (results.length > 0) {
+			await this.drizzle.db.insert(tournamentPoints).values(results)
+			this.logger.log("Batch inserted results", {
+				recordsInserted: results.length,
+			})
+		}
 	}
 
 	/**
