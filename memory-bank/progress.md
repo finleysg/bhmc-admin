@@ -27,6 +27,7 @@ Completed
 - **Per-Player Progress Emissions**: Completed implementation of per-player progress callbacks for all 4 Golf Genius results import methods (points, skins, proxy, stroke); updated `processResults` method to accept optional `onPlayerProcessed` callback, modified player processing loop to emit progress after each player, and updated all format-specific processor methods to pass through the callback parameter
 - **SSE Roster Export Fix**: Resolved "Connection lost" issue by implementing streaming-first architecture; eliminated race condition between export initialization and SSE connection by returning RxJS Subject synchronously while processing export asynchronously in background; simplified frontend to use single SSE endpoint that auto-starts export
 - **API Module Barrel Exports**: Implemented consistent barrel export pattern across all major API modules (scores, registration, events, courses); created `index.ts` files in each module root exporting public DTOs and services; updated cross-module imports to use cleaner module-level imports instead of deep relative paths; benefits include clearer public APIs, easier refactoring, and consistent NestJS patterns
+- **Stroke Play Overall Tournament Skip Logic**: Added special handling to skip stroke play tournaments named "Overall" during results import as they have no associated results; implemented filtering in both streaming and non-streaming import methods with logging and progress emission for skipped tournaments
 
 In progress / Next steps
 

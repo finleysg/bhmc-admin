@@ -123,7 +123,18 @@ export class ResultsImportService {
 		) => Promise<void>,
 	): Promise<Observable<ProgressTournamentDto>> {
 		// Query tournaments for the specified format
-		const tournaments = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
+		let tournaments = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
+
+		// Special handling: Skip "Overall" stroke play tournaments as they have no associated results
+		let skippedCount = 0
+		if (format === "stroke") {
+			const originalCount = tournaments.length
+			tournaments = tournaments.filter(t => t.name !== "Overall")
+			skippedCount = originalCount - tournaments.length
+			if (skippedCount > 0) {
+				this.logger.log(`Skipped ${skippedCount} "Overall" stroke tournament(s) for event ${eventId}`)
+			}
+		}
 
 		if (tournaments.length === 0) {
 			throw new Error(`No ${format} tournaments found for event ${eventId}`)
@@ -148,6 +159,16 @@ export class ResultsImportService {
 			}
 
 			let processedTournaments = 0
+
+			// Emit progress message if any tournaments were skipped
+			if (skippedCount > 0) {
+				this.progressTracker.emitTournamentProgress(eventId, {
+					totalTournaments,
+					processedTournaments: 0,
+					status: "processing",
+					message: `Skipped ${skippedCount} "Overall" tournament(s). Processing ${totalTournaments} remaining...`,
+				})
+			}
 
 			// Create callback for per-tournament progress updates
 			const onTournamentProcessed = (success: boolean, tournamentName?: string) => {
@@ -220,7 +241,17 @@ export class ResultsImportService {
 			playerMap: PlayerMap,
 		) => Promise<void>,
 	): Promise<ImportResultSummary[]> {
-		const tournaments = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
+		let tournaments = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
+
+		// Special handling: Skip "Overall" stroke play tournaments as they have no associated results
+		if (format === "stroke") {
+			const originalCount = tournaments.length
+			tournaments = tournaments.filter(t => t.name !== "Overall")
+			const skippedCount = originalCount - tournaments.length
+			if (skippedCount > 0) {
+				this.logger.log(`Skipped ${skippedCount} "Overall" stroke tournament(s) for event ${eventId}`)
+			}
+		}
 
 		if (tournaments.length === 0) {
 			this.logger.log("No " + format + " tournaments found for event", { eventId })
