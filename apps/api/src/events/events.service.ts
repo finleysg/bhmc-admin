@@ -233,16 +233,14 @@ export class EventsService {
 		this.logger.log("Deleted existing points", { tournamentId })
 	}
 
-    /**
+	/**
 	 * Batch insert tournament points.
 	 * Used during Golf Genius result imports to efficiently insert multiple records.
 	 */
 	async insertTournamentPoints(results: PreparedTournamentPoints[]): Promise<void> {
 		if (results.length > 0) {
 			await this.drizzle.db.insert(tournamentPoints).values(results)
-			this.logger.log("Batch inserted results", {
-				recordsInserted: results.length,
-			})
+			this.logger.debug(`Batch inserted results: ${results.length} records`)
 		}
 	}
 
@@ -252,10 +250,18 @@ export class EventsService {
 	 */
 	async insertTournamentResults(results: PreparedTournamentResult[]): Promise<void> {
 		if (results.length > 0) {
-			await this.drizzle.db.insert(tournamentResult).values(results)
-			this.logger.log("Batch inserted results", {
-				recordsInserted: results.length,
-			})
+			try {
+				await this.drizzle.db.insert(tournamentResult).values(results)
+				this.logger.debug(`Batch inserted results: ${results.length} records`)
+			} catch (error) {
+				console.error("Full database error:", error)
+				if (error instanceof Error) {
+					console.error("Error message:", error.message)
+					console.error("Error code:", (error as any).code)
+					console.error("Error sqlMessage:", (error as any).sqlMessage)
+				}
+				throw error
+			}
 		}
 	}
 }

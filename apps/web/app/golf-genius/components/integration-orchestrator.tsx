@@ -1,8 +1,16 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import {
+	useEffect,
+	useMemo,
+	useState,
+} from "react"
 
-import { EventDto, IntegrationActionName, IntegrationLogDto } from "@repo/dto"
+import {
+	EventDto,
+	IntegrationActionName,
+	IntegrationLogDto,
+} from "@repo/dto"
 
 import IntegrationActionCard from "./integration-action-card"
 
@@ -37,7 +45,7 @@ const PHASES: Phase[] = [
 	},
 ]
 
-function determinePhase(logs: IntegrationLogDto[]): PhaseInfo {
+function determinePhase(logs: IntegrationLogDto[], event: EventDto): PhaseInfo {
 	// Helper: check if action completed successfully
 	const hasSuccessfulRun = (action: IntegrationActionName) =>
 		logs.some((log) => log.actionName === action && log.isSuccessful)
@@ -71,7 +79,7 @@ function determinePhase(logs: IntegrationLogDto[]): PhaseInfo {
 			currentPhase: 2,
 			isPhaseComplete: false,
 			canAdvanceToNext: phase1Complete,
-			nextActionToRun: getNextImportAction(logs),
+			nextActionToRun: getNextImportAction(logs, event),
 		}
 	}
 
@@ -83,7 +91,7 @@ function determinePhase(logs: IntegrationLogDto[]): PhaseInfo {
 	}
 }
 
-function getNextImportAction(logs: IntegrationLogDto[]): IntegrationActionName | undefined {
+function getNextImportAction(logs: IntegrationLogDto[], event?: EventDto): IntegrationActionName | undefined {
 	const importOrder: IntegrationActionName[] = [
 		"Import Scores",
 		"Import Points",
@@ -97,8 +105,11 @@ function getNextImportAction(logs: IntegrationLogDto[]): IntegrationActionName |
 
 	// Return first import action that hasn't been run successfully
 	for (const action of importOrder) {
-		if (!hasSuccessfulRun(action)) {
-			return action
+		const actualAction = action === "Import Results" && event?.teamSize > 1
+			? "Import Team Results"
+			: action
+		if (!hasSuccessfulRun(actualAction)) {
+			return actualAction
 		}
 	}
 
@@ -142,7 +153,7 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 
 	// Derive phase state from logs
 	const phaseInfo = useMemo(() => {
-		const derivedPhase = determinePhase(logs)
+		const derivedPhase = determinePhase(logs, selectedEvent)
 
 		if (!phaseOverride) {
 			return derivedPhase
@@ -186,7 +197,7 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 			canAdvanceToNext: false, // No phase after 3
 			nextActionToRun: derivedPhase.nextActionToRun,
 		}
-	}, [logs, phaseOverride])
+	}, [logs, phaseOverride, selectedEvent])
 
 	const currentPhaseConfig = PHASES[phaseInfo.currentPhase - 1]
 
@@ -280,16 +291,21 @@ function PhasePanel({
 				</h3>
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{phase.actions.map((actionName) => {
+						// For team events, replace "Import Results" with "Import Team Results"
+						const actualActionName = actionName === "Import Results" && event.teamSize > 1
+							? "Import Team Results"
+							: actionName
+
 						const isEnabled =
 							phase.number === 1
-								? actionName === "Sync Event" || hasSuccessfulRun("Sync Event")
+								? actualActionName === "Sync Event" || hasSuccessfulRun("Sync Event")
 								: true // Phase 2 and 3 actions are all enabled
-						const phaseLogs = logs.filter((l) => l.actionName === actionName)
+						const phaseLogs = logs.filter((l) => l.actionName === actualActionName)
 						return (
 							<IntegrationActionCard
-								key={actionName}
+								key={actualActionName}
 								eventId={eventId}
-								actionName={actionName}
+								actionName={actualActionName}
 								logs={phaseLogs}
 								enabled={isEnabled}
 								onComplete={onActionComplete}

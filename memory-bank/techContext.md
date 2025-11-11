@@ -41,7 +41,7 @@ Golf Genius Integration
 - **Database**: Integration audit trail stored in `core_golfgeniusintegrationlog` table
 - **Error Handling**: Custom error classes (ApiError, AuthError, RateLimitError) with detailed logging
 - **REST Endpoints**: 10 endpoints for roster sync, event sync, roster export, scores import, tournament results import (points/skins/proxy/stroke), and logs
-- **Tournament Results**: Format-specific parsers (points, skins, proxy, stroke play) with flexible DTOs; idempotent operations; ordinal position formatting; comprehensive unit tests
+- **Tournament Results**: Format-specific parsers (points, skins, proxy, stroke play, team) with flexible DTOs; idempotent operations; ordinal position formatting; blind draw exclusion for team tournaments; comprehensive unit tests
 
 Databases & Docker
 

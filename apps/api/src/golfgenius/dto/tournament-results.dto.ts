@@ -101,7 +101,34 @@ export interface GGIndividualResult {
 	member_id: string
 	member_id_str: string
 	name: string
-	// ... other fields as needed
+	gross_scores?: number[]
+	net_scores?: number[]
+	gross_extra_holes?: unknown[]
+	net_extra_holes?: unknown[]
+	to_par_gross?: number[]
+	to_par_net?: number[]
+	totals?: {
+		gross_scores?: {
+			out: number | null
+			in: number | null
+			total: number | null
+		}
+		net_scores?: {
+			out: number | null
+			in: number | null
+			total: number | null
+		}
+		to_par_gross?: {
+			out: number | null
+			in: number | null
+			total: number | null
+		}
+		to_par_net?: {
+			out: number | null
+			in: number | null
+			total: number | null
+		}
+	}
 }
 
 // Service response DTOs
@@ -110,6 +137,7 @@ export interface ImportResultSummary {
 	tournamentName: string
 	eventName: string
 	resultsImported: number
+	skippedBlinds?: number
 	errors: string[]
 }
 

@@ -35,6 +35,7 @@ import {
 	SkinsResultParser,
 	StrokePlayResultParser,
 } from "./result-parsers"
+import { TeamResultParser } from "./team-result-parser"
 
 @Injectable()
 export class ResultsImportService {
@@ -59,6 +60,10 @@ export class ResultsImportService {
 
 	async importStrokePlayResults(eventId: number): Promise<ImportResultSummary[]> {
 		return this.importResultsByFormat(eventId, "stroke", this.processStrokeResults.bind(this))
+	}
+
+	async importTeamResults(eventId: number): Promise<ImportResultSummary[]> {
+		return this.importResultsByFormat(eventId, "team", this.processTeamResults.bind(this))
 	}
 
 	// ============= STREAMING METHODS =============
@@ -87,6 +92,15 @@ export class ResultsImportService {
 			"stroke",
 			"Import Results",
 			this.processStrokeResults.bind(this),
+		)
+	}
+
+	async importTeamResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
+		return this.importResultsByFormatStream(
+			eventId,
+			"stroke",
+			"Import Team Results",
+			this.processTeamResults.bind(this),
 		)
 	}
 
@@ -364,7 +378,7 @@ export class ResultsImportService {
 			flightName: string,
 			result: ImportResultSummary,
 			playerMap: PlayerMap,
-		) => PreparedTournamentResult | null,
+		) => PreparedTournamentResult | PreparedTournamentResult[] | null,
 		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 	): Promise<void> {
 		// Validate response structure
@@ -398,8 +412,13 @@ export class ResultsImportService {
 						playerMap,
 					)
 					if (preparedRecord) {
-						preparedRecords.push(preparedRecord)
-						success = true
+						if (Array.isArray(preparedRecord)) {
+							preparedRecords.push(...preparedRecord)
+							success = preparedRecord.length > 0
+						} else {
+							preparedRecords.push(preparedRecord)
+							success = true
+						}
 					}
 				} catch (error) {
 					const errorMessage = error instanceof Error ? error.message : String(error)
@@ -474,6 +493,24 @@ export class ResultsImportService {
 			playerMap,
 			StrokePlayResultParser,
 			this.prepareStrokePlayerResult.bind(this),
+			onPlayerProcessed,
+		)
+	}
+
+	private async processTeamResults(
+		tournamentData: TournamentData,
+		result: ImportResultSummary,
+		ggResults: GolfGeniusTournamentResults,
+		playerMap: PlayerMap,
+		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
+	): Promise<void> {
+		return this.processResults<GGAggregate>(
+			tournamentData,
+			result,
+			ggResults,
+			playerMap,
+			TeamResultParser,
+			this.prepareTeamPlayerResult.bind(this),
 			onPlayerProcessed,
 		)
 	}
@@ -675,5 +712,94 @@ export class ResultsImportService {
 			payoutType: "Credit",
 			teamId: null,
 		}
+	}
+
+	private prepareTeamPlayerResult(
+		tournamentData: TournamentData,
+		aggregate: GGAggregate,
+		flightName: string,
+		result: ImportResultSummary,
+		playerMap: PlayerMap,
+	): PreparedTournamentResult[] | null {
+		// Skip if no purse (no payout)
+		if (!aggregate.purse || aggregate.purse.trim() === "") {
+			return null
+		}
+
+		// Parse team name to extract blind player names
+		const blindNames = new Set<string>()
+		const teamName = aggregate.name || "Unknown Team"
+		const entries = teamName.split('+').map(e => e.trim())
+
+		for (const entry of entries) {
+			if (entry.startsWith('Bl[')) {
+				const match = entry.match(/Bl\[(.*?)\]/)
+				if (match) {
+					// Extract blind name and normalize to lowercase for comparison
+					blindNames.add(match[1].toLowerCase())
+				}
+			}
+		}
+
+		// Loop over individual_results (or member_cards if no indiv array)
+		const individualResults = aggregate.individual_results || []
+		const preparedRecords: PreparedTournamentResult[] = [] // Collect multiple
+
+		for (const indiv of individualResults) {
+			const memberId = indiv.member_id_str
+
+			// Resolve player
+			const player = this.resolvePlayerFromMap(memberId, playerMap, result)
+			if (!player) {
+				continue // Skip this player, but continue for others
+			}
+
+			// Check if this player is a blind draw
+			const playerFullName = `${player.firstName} ${player.lastName}`.toLowerCase()
+			if (blindNames.has(playerFullName)) {
+				result.skippedBlinds = (result.skippedBlinds || 0) + 1
+				this.logger.log(`Skipping blind player: ${player.firstName} ${player.lastName} (team: ${teamName})`)
+				continue // Skip blind players - they don't get tournamentResult records
+			}
+
+			// Parse team-level fields
+			const position = parseInt(aggregate.position || "0", 10) || 0
+			const amount = this.parsePurseAmount(aggregate.purse) // Full purse per player (no split)
+			if (amount === null) {
+				result.errors.push(`Invalid purse for team ${teamName}: ${aggregate.purse}`)
+				continue
+			}
+
+			// Parse player-specific score (net total)
+			const score = indiv.totals?.net_scores?.total ? parseInt(indiv.totals.net_scores.total.toString(), 10) : null
+
+			// Prepare record
+			const record: PreparedTournamentResult = {
+				tournamentId: tournamentData.id,
+				playerId: player.id,
+				flight: flightName || null,
+				position,
+				score,
+				amount: amount.toFixed(2),
+				details: teamName, // Team name in details
+				summary: "Team win",
+				createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+				payoutDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+				payoutStatus: "Pending",
+				payoutTo: "Team", // Or "Individual" if per-player payout
+				payoutType: "Credit",
+				teamId: aggregate.id_str, // Link to team aggregate ID
+			}
+
+			preparedRecords.push(record)
+		}
+
+		// If no valid players, return null (skip team)
+		if (preparedRecords.length === 0) {
+			return null
+		}
+
+		// Return all prepared records for this team
+		return preparedRecords
 	}
 }

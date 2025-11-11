@@ -239,4 +239,34 @@ export class GolfgeniusController {
 			})
 		}
 	}
+
+	@Sse("/events/:id/import-team-results")
+	async importTeamResultsStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
+		const eid = parseInt(id, 10)
+
+		// Check if import is already running
+		const existingSubject = this.resultsImport.getProgressObservable(eid)
+		if (existingSubject) {
+			return existingSubject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		}
+
+		// Start new import and return progress stream
+		try {
+			const subject = await this.resultsImport.importTeamResultsStream(eid)
+
+			return subject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		} catch (error) {
+			return new Observable<{ data: string }>((subscriber) => {
+				subscriber.error(error)
+			})
+		}
+	}
 }

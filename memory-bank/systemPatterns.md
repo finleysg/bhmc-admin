@@ -91,7 +91,7 @@ Auth & Integration patterns
 - **better-auth integration**: Implemented in Next.js app with SQLite persistence using better-sqlite3 and Kysely ORM; JWT plugin enabled for token generation
 - **JWT validation**: NestJS API validates tokens from better-auth for protected admin endpoints using shared secret approach
 - **Golf Genius integration**: Complete bidirectional API integration with dedicated service modules, comprehensive error handling, retry logic, and audit logging
-- **Tournament Results Import**: Format-specific parsers (points, skins, proxy, stroke play) with flexible DTOs accommodating API inconsistencies; idempotent operations with result deletion before import; ordinal position formatting (1st, 2nd, T3rd); comprehensive unit test coverage
+- **Tournament Results Import**: Format-specific parsers (points, skins, proxy, stroke play, team) with flexible DTOs accommodating API inconsistencies; idempotent operations with result deletion before import; ordinal position formatting (1st, 2nd, T3rd); blind draw exclusion for team tournaments; comprehensive unit test coverage
 
 Error handling patterns
 
