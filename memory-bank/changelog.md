@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0-alpha.1] - 2025-11-11
+
+### Added
+
+- **Golf Genius Integration Module Completion**: Finalized comprehensive Golf Genius integration with all core endpoints implemented including roster sync, event sync, roster export, scores import, tournament results import (points/skins/proxy/stroke/team), and close event functionality
+- **Close Event Endpoint**: Moved closeEvent endpoint from events module to golfgenius module at `/golfgenius/events/:eventId/close` with proper integration logging and interceptor support
+- **Integration Logging Interceptor**: Enhanced LogIntegrationInterceptor to handle both `id` and `eventId` parameter names, added explicit "Close Event" action detection, and fixed event ID extraction for proper audit logging
+
+### Changed
+
+- **Endpoint Relocation**: Close event functionality moved from `/events/:eventId/close` to `/golfgenius/events/:eventId/close` to align with Golf Genius integration patterns
+- **Integration Action Names**: Added "Close Event" to IntegrationActionName type and interceptor detection logic
+
+### Fixed
+
+- **Foreign Key Constraint in Integration Logs**: Resolved database insertion errors in `core_golfgeniusintegrationlog` table by fixing event ID extraction in LogIntegrationInterceptor (was defaulting to 0, now correctly extracts from request parameters)
+
+### Technical
+
+- **Module Architecture**: Golf Genius integration now fully self-contained with dedicated controller, services, interceptors, and DTOs
+- **Type Safety**: Maintained strict TypeScript compliance with proper error handling and integration logging
+- **API Consistency**: All Golf Genius endpoints follow consistent patterns with interceptor-based logging and error handling
+
 ## [Unreleased]
 
 ### Added

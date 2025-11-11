@@ -1,4 +1,10 @@
-import { Controller, Get, Param, ParseIntPipe, Post, Query } from "@nestjs/common"
+import {
+	Controller,
+	Get,
+	Param,
+	ParseIntPipe,
+	Query,
+} from "@nestjs/common"
 import {
 	EventDto,
 	EventPlayerFeeDto,
@@ -10,11 +16,18 @@ import { HoleDto } from "../courses"
 import { CoursesService } from "../courses/courses.service"
 import { RegisteredPlayerDto } from "../registration"
 import { toPlayerDomain } from "../registration/domain/mappers"
-import { getAge, getFullName } from "../registration/domain/player.domain"
+import {
+	getAge,
+	getFullName,
+} from "../registration/domain/player.domain"
 import { RegistrationService } from "../registration/registration.service"
 import { getStart } from "./domain/event.domain"
 import { getGroup } from "./domain/group.domain"
-import { toEventDomain, toHoleDomain, toSlotDomain } from "./domain/mappers"
+import {
+	toEventDomain,
+	toHoleDomain,
+	toSlotDomain,
+} from "./domain/mappers"
 import { EventFeeWithTypeDto } from "./dto/event-fee.dto"
 import { EventsService } from "./events.service"
 
@@ -158,10 +171,5 @@ export class EventsController {
 			throw new Error("Date query parameter is required")
 		}
 		return this.events.findEventsByDate(date)
-	}
-
-	@Post(":eventId/close")
-	async closeEvent(@Param("eventId", ParseIntPipe) eventId: number) {
-		return this.events.closeEvent(eventId)
 	}
 }

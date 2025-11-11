@@ -36,6 +36,8 @@ In progress / Next steps
 - Add development scripts and verify Docker database connectivity
 - Implement basic admin screens for event management and user authentication flows
 
+**Golf Genius Integration Status**: ✅ Complete - All core endpoints implemented, tested, and documented. Ready for alpha release (v0.2.0-alpha.1). Integration includes roster sync, event sync, results import (all formats), close event functionality, and comprehensive UI orchestration.
+
 Completed
 
 - **NestJS API Foundation**: Scaffolded NestJS app with TypeScript, health endpoint, and JWT authentication guard

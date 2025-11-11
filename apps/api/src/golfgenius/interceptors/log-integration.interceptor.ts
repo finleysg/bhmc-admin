@@ -88,6 +88,8 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 			return "Import Skins"
 		} else if (url.includes("/events/") && url.includes("/import-proxies")) {
 			return "Import Proxies"
+		} else if (url.includes("/events/") && url.includes("/close")) {
+			return "Close Event"
 		} else {
 			this.logger.warn(`Unknown integration action for URL: ${url}`)
 			return "Close Event" // fallback
@@ -96,8 +98,10 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 
 	private extractEventId(request: RequestWithParams): number {
 		const params = request.params
-		if (params && params.id) {
-			const eventId = parseInt(params.id, 10)
+		// Check for both 'id' and 'eventId' parameter names
+		const paramValue = params?.id || params?.eventId
+		if (paramValue) {
+			const eventId = parseInt(paramValue, 10)
 			if (!isNaN(eventId)) {
 				return eventId
 			}

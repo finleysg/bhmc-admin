@@ -6,6 +6,7 @@ import {
 	Get,
 	Logger,
 	Param,
+	ParseIntPipe,
 	Post,
 	Query,
 	Sse,
@@ -13,6 +14,7 @@ import {
 } from "@nestjs/common"
 import { IntegrationActionName } from "@repo/dto"
 
+import { EventsService } from "../events/events.service"
 import { LogIntegrationInterceptor } from "./interceptors/log-integration.interceptor"
 import { EventSyncService } from "./services/event-sync.service"
 import { IntegrationLogService } from "./services/integration-log.service"
@@ -34,6 +36,7 @@ export class GolfgeniusController {
 		private readonly resultsImport: ResultsImportService,
 		private readonly pointsImport: PointsImportService,
 		private readonly integrationLog: IntegrationLogService,
+		private readonly events: EventsService,
 	) {}
 
 	@Post("/roster/sync")
@@ -52,6 +55,12 @@ export class GolfgeniusController {
 	async syncEvent(@Param("id") id: string) {
 		const eid = parseInt(id, 10)
 		return this.eventSync.syncEvent(eid)
+	}
+
+	@Post("events/:eventId/close-event")
+	@UseInterceptors(LogIntegrationInterceptor)
+	async closeEvent(@Param("eventId", ParseIntPipe) eventId: number) {
+		return this.events.closeEvent(eventId)
 	}
 
 	@Get("/events/:id/logs")

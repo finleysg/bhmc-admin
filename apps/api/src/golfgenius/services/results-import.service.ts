@@ -1,12 +1,6 @@
-import {
-	Observable,
-	Subject,
-} from "rxjs"
+import { Observable, Subject } from "rxjs"
 
-import {
-	Injectable,
-	Logger,
-} from "@nestjs/common"
+import { Injectable, Logger } from "@nestjs/common"
 import {
 	IntegrationActionName,
 	PlayerMap,
@@ -30,11 +24,7 @@ import {
 	StrokeTournamentAggregate,
 } from "../dto/tournament-results.dto"
 import { ProgressTracker } from "./progress-tracker"
-import {
-	ProxyResultParser,
-	SkinsResultParser,
-	StrokePlayResultParser,
-} from "./result-parsers"
+import { ProxyResultParser, SkinsResultParser, StrokePlayResultParser } from "./result-parsers"
 import { TeamResultParser } from "./team-result-parser"
 
 @Injectable()
@@ -129,10 +119,12 @@ export class ResultsImportService {
 		let skippedCount = 0
 		if (format === "stroke") {
 			const originalCount = tournaments.length
-			tournaments = tournaments.filter(t => t.name !== "Overall")
+			tournaments = tournaments.filter((t) => t.name !== "Overall")
 			skippedCount = originalCount - tournaments.length
 			if (skippedCount > 0) {
-				this.logger.log(`Skipped ${skippedCount} "Overall" stroke tournament(s) for event ${eventId}`)
+				this.logger.log(
+					`Skipped ${skippedCount} "Overall" stroke tournament(s) for event ${eventId}`,
+				)
 			}
 		}
 
@@ -246,10 +238,12 @@ export class ResultsImportService {
 		// Special handling: Skip "Overall" stroke play tournaments as they have no associated results
 		if (format === "stroke") {
 			const originalCount = tournaments.length
-			tournaments = tournaments.filter(t => t.name !== "Overall")
+			tournaments = tournaments.filter((t) => t.name !== "Overall")
 			const skippedCount = originalCount - tournaments.length
 			if (skippedCount > 0) {
-				this.logger.log(`Skipped ${skippedCount} "Overall" stroke tournament(s) for event ${eventId}`)
+				this.logger.log(
+					`Skipped ${skippedCount} "Overall" stroke tournament(s) for event ${eventId}`,
+				)
 			}
 		}
 
@@ -760,10 +754,10 @@ export class ResultsImportService {
 		// Parse team name to extract blind player names
 		const blindNames = new Set<string>()
 		const teamName = aggregate.name || "Unknown Team"
-		const entries = teamName.split('+').map(e => e.trim())
+		const entries = teamName.split("+").map((e) => e.trim())
 
 		for (const entry of entries) {
-			if (entry.startsWith('Bl[')) {
+			if (entry.startsWith("Bl[")) {
 				const match = entry.match(/Bl\[(.*?)\]/)
 				if (match) {
 					// Extract blind name and normalize to lowercase for comparison
@@ -789,7 +783,9 @@ export class ResultsImportService {
 			const playerFullName = `${player.firstName} ${player.lastName}`.toLowerCase()
 			if (blindNames.has(playerFullName)) {
 				result.skippedBlinds = (result.skippedBlinds || 0) + 1
-				this.logger.log(`Skipping blind player: ${player.firstName} ${player.lastName} (team: ${teamName})`)
+				this.logger.log(
+					`Skipping blind player: ${player.firstName} ${player.lastName} (team: ${teamName})`,
+				)
 				continue // Skip blind players - they don't get tournamentResult records
 			}
 
@@ -802,7 +798,9 @@ export class ResultsImportService {
 			}
 
 			// Parse player-specific score (net total)
-			const score = indiv.totals?.net_scores?.total ? parseInt(indiv.totals.net_scores.total.toString(), 10) : null
+			const score = indiv.totals?.net_scores?.total
+				? parseInt(indiv.totals.net_scores.total.toString(), 10)
+				: null
 
 			// Prepare record
 			const record: PreparedTournamentResult = {

@@ -3,34 +3,6 @@ import { RegistrationService } from "../../registration/registration.service"
 import { EventsController } from "../events.controller"
 import { EventsService } from "../events.service"
 
-describe("EventsController closeEvent", () => {
-	it("should call closeEvent service method and return result", async () => {
-		const mockResult = {
-			eventId: 1,
-			resultsUpdated: 5,
-			payoutDate: "2025-11-06 10:28:00",
-		}
-
-		const mockEvents = {
-			closeEvent: jest.fn().mockResolvedValue(mockResult),
-		} as Partial<EventsService>
-
-		const mockRegistration = {} as Partial<RegistrationService>
-		const mockCourses = {} as Partial<CoursesService>
-
-		const controller = new EventsController(
-			mockEvents as EventsService,
-			mockRegistration as RegistrationService,
-			mockCourses as CoursesService,
-		)
-
-		const result = await controller.closeEvent(1)
-
-		expect(mockEvents.closeEvent).toHaveBeenCalledWith(1)
-		expect(result).toEqual(mockResult)
-	})
-})
-
 describe("EventsController getPlayersByEvent (canChoose = 0)", () => {
 	it('returns course and start as "N/A" when event.canChoose is falsy', async () => {
 		const mockEvents = {

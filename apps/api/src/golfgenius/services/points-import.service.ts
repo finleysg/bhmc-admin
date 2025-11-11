@@ -1,12 +1,6 @@
-import {
-	Observable,
-	Subject,
-} from "rxjs"
+import { Observable, Subject } from "rxjs"
 
-import {
-	Injectable,
-	Logger,
-} from "@nestjs/common"
+import { Injectable, Logger } from "@nestjs/common"
 import {
 	IntegrationActionName,
 	PlayerMap,

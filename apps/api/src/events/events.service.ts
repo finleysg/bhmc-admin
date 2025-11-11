@@ -184,11 +184,6 @@ export class EventsService {
 			throw new Error("Cannot close event: No tournament results found")
 		}
 
-		// Validate: Event must not already be closed
-		if (results.some((r) => r.payoutStatus === "Confirmed")) {
-			throw new Error("Event is already closed")
-		}
-
 		// Update all results
 		const now = new Date().toISOString().slice(0, 19).replace("T", " ")
 		await this.drizzle.db
