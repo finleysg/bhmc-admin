@@ -50,6 +50,10 @@ function determinePhase(logs: IntegrationLogDto[], event: EventDto): PhaseInfo {
 	const hasSuccessfulRun = (action: IntegrationActionName) =>
 		logs.some((log) => log.actionName === action && log.isSuccessful)
 
+	// Helper: get the correct import results action name based on event type
+	const getImportResultsActionName = (): IntegrationActionName =>
+		event.teamSize > 1 ? "Import Team Results" : "Import Results"
+
 	// Phase 1: Setup (Sync Event, Export Roster)
 	const phase1Complete = hasSuccessfulRun("Sync Event") && hasSuccessfulRun("Export Roster")
 
@@ -57,7 +61,7 @@ function determinePhase(logs: IntegrationLogDto[], event: EventDto): PhaseInfo {
 	const phase2Complete =
 		hasSuccessfulRun("Import Scores") &&
 		hasSuccessfulRun("Import Points") &&
-		hasSuccessfulRun("Import Results") &&
+		hasSuccessfulRun(getImportResultsActionName()) &&
 		hasSuccessfulRun("Import Skins") &&
 		hasSuccessfulRun("Import Proxies")
 
@@ -163,6 +167,10 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 		const hasSuccessfulRun = (action: IntegrationActionName) =>
 			logs.some((log) => log.actionName === action && log.isSuccessful)
 
+		// Helper: get the correct import results action name based on event type
+		const getImportResultsActionName = (): IntegrationActionName =>
+			selectedEvent.teamSize > 1 ? "Import Team Results" : "Import Results"
+
 		// When overriding phase for navigation, recalculate completion status
 		// for the overridden phase
 		if (phaseOverride === 1) {
@@ -179,7 +187,7 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 			const phase2Complete =
 				hasSuccessfulRun("Import Scores") &&
 				hasSuccessfulRun("Import Points") &&
-				hasSuccessfulRun("Import Results") &&
+				hasSuccessfulRun(getImportResultsActionName()) &&
 				hasSuccessfulRun("Import Skins") &&
 				hasSuccessfulRun("Import Proxies")
 			return {
