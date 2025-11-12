@@ -13,7 +13,7 @@ function getTitle(pathname: string): string {
 		if (segments.length >= 3) {
 			const subpage = segments[2]
 			if (subpage === "golf-genius") return "Golf Genius Integration"
-			if (subpage === "reporting") return "Event Reports"
+			if (subpage === "reports") return "Event Reports"
 			if (subpage === "management") return "Event Management"
 		}
 		return "Event Administration"

@@ -8,7 +8,7 @@ import { useSession } from "../../../lib/auth-client"
 import ActionCard from "../../components/action-card"
 
 export default function EventHubPage() {
-	const { data: session } = useSession()
+	const { data: session, isPending } = useSession()
 	const signedIn = !!session?.user
 	const router = useRouter()
 	const params = useParams()
@@ -16,12 +16,20 @@ export default function EventHubPage() {
 
 	// Redirect if not authenticated
 	useEffect(() => {
-		if (!signedIn) {
+		if (!signedIn && !isPending) {
 			router.push("/sign-in")
 		}
-	}, [signedIn, router])
+	}, [signedIn, isPending, router])
 
-	if (!signedIn) {
+	if (isPending) {
+		return (
+			<div className="flex items-center justify-center p-8">
+				<span className="loading loading-spinner loading-lg"></span>
+			</div>
+		)
+	}
+
+	if (!signedIn && !isPending) {
 		return null // Redirecting
 	}
 
@@ -48,7 +56,7 @@ export default function EventHubPage() {
 					<ActionCard
 						title="Event Reporting"
 						description="Generate reports for this event."
-						href={`/events/${eventId}/reporting`}
+						href={`/events/${eventId}/reports`}
 						disabled={false}
 						icon={"📊"}
 					/>

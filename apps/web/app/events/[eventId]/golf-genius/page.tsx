@@ -10,7 +10,7 @@ import { useSession } from "../../../../lib/auth-client"
 import IntegrationOrchestrator from "./components/integration-orchestrator"
 
 export default function GolfGeniusIntegrationPage() {
-	const { data: session } = useSession()
+	const { data: session, isPending } = useSession()
 	const signedIn = !!session?.user
 	const router = useRouter()
 	const params = useParams()
@@ -22,10 +22,10 @@ export default function GolfGeniusIntegrationPage() {
 
 	// Redirect if not authenticated
 	useEffect(() => {
-		if (!signedIn) {
+		if (!signedIn && !isPending) {
 			router.push("/sign-in")
 		}
-	}, [signedIn, router])
+	}, [signedIn, isPending, router])
 
 	// Fetch event data
 	useEffect(() => {
@@ -50,16 +50,16 @@ export default function GolfGeniusIntegrationPage() {
 		void fetchEvent()
 	}, [eventId, signedIn])
 
-	if (!signedIn) {
-		return null // Redirecting
-	}
-
-	if (loading) {
+	if (isPending || loading) {
 		return (
 			<main className="min-h-screen flex items-center justify-center p-8">
 				<span className="loading loading-spinner loading-lg"></span>
 			</main>
 		)
+	}
+
+	if (!signedIn && !isPending) {
+		return null // Redirecting
 	}
 
 	if (error || !event) {

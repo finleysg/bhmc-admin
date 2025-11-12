@@ -5,9 +5,9 @@ import { useEffect } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 
-import { useSession } from "../../../../lib/auth-client"
+import { useSession } from "../../../../../lib/auth-client"
 
-export default function EventManagementPage() {
+export default function FinanceReportPage() {
 	const { data: session, isPending } = useSession()
 	const signedIn = !!session?.user
 	const router = useRouter()
@@ -36,10 +36,10 @@ export default function EventManagementPage() {
 	return (
 		<main className="min-h-screen flex items-center justify-center p-8">
 			<div className="w-full max-w-3xl text-center">
-				<h2 className="text-3xl font-bold mb-4">Event Management</h2>
+				<h2 className="text-3xl font-bold mb-4">Finance Report</h2>
 				<p className="text-muted-foreground mb-8">Coming soon</p>
-				<Link href={`/events/${eventId}`} className="btn btn-primary">
-					Back to Event
+				<Link href={`/events/${eventId}/reports`} className="btn btn-primary">
+					Back to Reports
 				</Link>
 			</div>
 		</main>

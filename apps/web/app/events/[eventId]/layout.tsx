@@ -9,7 +9,7 @@ import { EventDto } from "@repo/dto"
 import { useSession } from "../../../lib/auth-client"
 
 export default function EventLayout({ children }: { children: React.ReactNode }) {
-	const { data: session } = useSession()
+	const { data: session, isPending } = useSession()
 	const signedIn = !!session?.user
 	const router = useRouter()
 	const params = useParams()
@@ -20,11 +20,11 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
-		if (!signedIn) {
+		if (!signedIn && !isPending) {
 			router.push("/sign-in")
 			return
 		}
-	}, [signedIn, router])
+	}, [signedIn, isPending, router])
 
 	useEffect(() => {
 		if (!signedIn || !eventId) return
@@ -48,7 +48,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 		void fetchEvent()
 	}, [eventId, signedIn])
 
-	if (!signedIn) {
+	if (!signedIn && !isPending) {
 		return null
 	}
 
@@ -81,12 +81,12 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 		})
 	}
 
-	const eventHeader = `${formatDate(event.startDate)}: ${event.name}`
+	const headerText = `${formatDate(event.startDate)}: ${event.name}`
 
 	return (
 		<div>
 			<div className="text-center mb-6 p-4 bg-base-200 rounded">
-				<h2 className="text-xl font-bold text-primary">{eventHeader}</h2>
+				<h2 className="text-xl font-bold text-primary">{headerText}</h2>
 			</div>
 			{children}
 		</div>

@@ -20,13 +20,6 @@ interface MembershipReport {
 	members: Array<{ id: number; name: string; status: "active" | "inactive" }>
 }
 
-interface EventReport {
-	eventId: number
-	eventName: string
-	registrations: number
-	totalFees: number
-}
-
 interface PointsReport {
 	eventId: number
 	points: Array<{ playerId: number; points: number }>
@@ -56,13 +49,13 @@ export class ReportsService {
 
 	async getMembershipReport(season: number): Promise<MembershipReport> {
 		// Stub: Return mock data
-		return {
+		return await Promise.resolve({
 			season,
 			members: [
 				{ id: 1, name: "John Doe", status: "active" },
 				{ id: 2, name: "Jane Smith", status: "active" },
 			],
-		}
+		})
 	}
 
 	async getPlayersByEvent(eventId: number): Promise<EventRegistrationSummaryDto> {
@@ -263,33 +256,33 @@ export class ReportsService {
 
 	async getPointsReport(eventId: number): Promise<PointsReport> {
 		// Stub: Mock points
-		return {
+		return await Promise.resolve({
 			eventId,
 			points: [
 				{ playerId: 1, points: 100 },
 				{ playerId: 2, points: 95 },
 			],
-		}
+		})
 	}
 
 	async getFinanceReport(eventId: number): Promise<FinanceReport> {
 		// Stub: Mock finances
-		return {
+		return await Promise.resolve({
 			eventId,
 			collected: 400,
 			outstanding: 100,
 			payouts: 300,
-		}
+		})
 	}
 
 	async getResultsReport(eventId: number): Promise<ResultsReport> {
 		// Stub: Mock results
-		return {
+		return await Promise.resolve({
 			eventId,
 			results: [
 				{ playerId: 1, position: 1, score: 72 },
 				{ playerId: 2, position: 2, score: 75 },
 			],
-		}
+		})
 	}
 }

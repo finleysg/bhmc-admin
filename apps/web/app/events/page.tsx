@@ -11,7 +11,7 @@ import CalendarCard from "../components/calendar-card"
 import ResultsCard from "../components/results-card"
 
 export default function EventsPage() {
-	const { data: session } = useSession()
+	const { data: session, isPending } = useSession()
 	const signedIn = !!session?.user
 	const router = useRouter()
 
@@ -22,10 +22,10 @@ export default function EventsPage() {
 
 	// Redirect if not authenticated
 	useEffect(() => {
-		if (!signedIn) {
+		if (!signedIn && !isPending) {
 			router.push("/sign-in")
 		}
-	}, [signedIn, router])
+	}, [signedIn, isPending, router])
 
 	// Auto-search when date changes
 	useEffect(() => {
@@ -74,7 +74,15 @@ export default function EventsPage() {
 		router.push(`/events/${event.id}`)
 	}
 
-	if (!signedIn) {
+	if (isPending) {
+		return (
+			<div className="flex items-center justify-center p-8">
+				<span className="loading loading-spinner loading-lg"></span>
+			</div>
+		)
+	}
+
+	if (!signedIn && !isPending) {
 		return null // Redirecting
 	}
 
