@@ -6,3 +6,4 @@ export { EventFeeDto, EventFeeWithTypeDto, FeeTypeDto } from "./dto/event-fee.dt
 
 // Public services
 export { EventsService } from "./events.service"
+export { EventsDomainService } from "./events-domain.service"

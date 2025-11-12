@@ -6,9 +6,10 @@ import { DatabaseModule } from "./database/database.module"
 import { EventsModule } from "./events/events.module"
 import { GolfgeniusModule } from "./golfgenius/golfgenius.module"
 import { HealthModule } from "./health/health.module"
+import { ReportsModule } from "./reports/reports.module"
 
 @Module({
-	imports: [DatabaseModule, EventsModule, GolfgeniusModule, HealthModule],
+	imports: [DatabaseModule, EventsModule, GolfgeniusModule, HealthModule, ReportsModule],
 	providers: [
 		{
 			provide: APP_GUARD,

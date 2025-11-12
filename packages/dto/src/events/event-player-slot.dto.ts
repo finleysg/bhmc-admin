@@ -12,5 +12,6 @@ export class EventPlayerSlotDto {
 	fullName!: string
 	email?: string | null
 	signedUpBy?: string | null
+	signupDate?: string | null
 	fees!: EventPlayerFeeDto[]
 }

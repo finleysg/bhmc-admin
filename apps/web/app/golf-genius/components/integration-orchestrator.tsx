@@ -1,16 +1,8 @@
 "use client"
 
-import {
-	useEffect,
-	useMemo,
-	useState,
-} from "react"
+import { useEffect, useMemo, useState } from "react"
 
-import {
-	EventDto,
-	IntegrationActionName,
-	IntegrationLogDto,
-} from "@repo/dto"
+import { EventDto, IntegrationActionName, IntegrationLogDto } from "@repo/dto"
 
 import IntegrationActionCard from "./integration-action-card"
 
@@ -95,7 +87,10 @@ function determinePhase(logs: IntegrationLogDto[], event: EventDto): PhaseInfo {
 	}
 }
 
-function getNextImportAction(logs: IntegrationLogDto[], event?: EventDto): IntegrationActionName | undefined {
+function getNextImportAction(
+	logs: IntegrationLogDto[],
+	event?: EventDto,
+): IntegrationActionName | undefined {
 	const importOrder: IntegrationActionName[] = [
 		"Import Scores",
 		"Import Points",
@@ -109,9 +104,8 @@ function getNextImportAction(logs: IntegrationLogDto[], event?: EventDto): Integ
 
 	// Return first import action that hasn't been run successfully
 	for (const action of importOrder) {
-		const actualAction = action === "Import Results" && event?.teamSize > 1
-			? "Import Team Results"
-			: action
+		const actualAction =
+			action === "Import Results" && event?.teamSize > 1 ? "Import Team Results" : action
 		if (!hasSuccessfulRun(actualAction)) {
 			return actualAction
 		}
@@ -300,9 +294,10 @@ function PhasePanel({
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{phase.actions.map((actionName) => {
 						// For team events, replace "Import Results" with "Import Team Results"
-						const actualActionName = actionName === "Import Results" && event.teamSize > 1
-							? "Import Team Results"
-							: actionName
+						const actualActionName =
+							actionName === "Import Results" && event.teamSize > 1
+								? "Import Team Results"
+								: actionName
 
 						const isEnabled =
 							phase.number === 1

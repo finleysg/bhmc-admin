@@ -40,6 +40,8 @@ In progress / Next steps
 
 Completed
 
+- **Reports Module**: Stubbed reports module with controller endpoints for membership report (/:season/membership), event report (/events/:eventId/event-report), points report (/events/:eventId/points), finance report (/events/:eventId/financials), and event results report (/events/:eventId/results); service methods return mock data with local TypeScript interfaces for type safety
+
 - **NestJS API Foundation**: Scaffolded NestJS app with TypeScript, health endpoint, and JWT authentication guard
 - **Database Layer**: Created DrizzleService with connection pooling and complete schema definitions
 - **Domain Architecture**: Implemented domain-driven design in events module with pure business logic separated from infrastructure

@@ -1,18 +1,7 @@
-import {
-	and,
-	eq,
-	inArray,
-} from "drizzle-orm"
+import { and, eq, inArray } from "drizzle-orm"
 
-import {
-	Injectable,
-	Logger,
-} from "@nestjs/common"
-import {
-	PreparedTournamentPoints,
-	PreparedTournamentResult,
-	TournamentData,
-} from "@repo/dto"
+import { Injectable, Logger } from "@nestjs/common"
+import { PreparedTournamentPoints, PreparedTournamentResult, TournamentData } from "@repo/dto"
 
 import {
 	DrizzleService,

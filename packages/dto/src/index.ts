@@ -18,3 +18,7 @@ export { TournamentData } from "./golf-genius/tournament-data.dto"
 export { PlayerMap, PlayerRecord } from "./golf-genius/player-map.dto"
 export { PreparedTournamentPoints } from "./golf-genius/tournament-points.dto"
 export { PreparedTournamentResult } from "./golf-genius/tournament-result.dto"
+
+// Reports DTO exports
+export { EventReportRowDto } from "./reports/event-report-row.dto"
+export { EventReportQueryDto } from "./reports/event-report-query.dto"
