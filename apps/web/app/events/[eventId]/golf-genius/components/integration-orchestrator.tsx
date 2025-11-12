@@ -268,25 +268,12 @@ function PhasePanel({
 	onActionComplete: () => void
 	eventId: number
 }) {
-	// Parse YYYY-MM-DD as local date, not UTC
-	const [year, month, day] = event.startDate.split("-").map(Number)
-	const localDate = new Date(year, month - 1, day) // month is 0-indexed
-
-	const formattedDate = localDate.toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "short",
-		day: "numeric",
-	})
-
 	const hasSuccessfulRun = (action: IntegrationActionName) =>
 		logs.some((log) => log.actionName === action && log.isSuccessful)
 
 	return (
 		<div className="card bg-base-100 shadow-sm">
 			<div className="card-body">
-				<h2 className="card-title font-bold">
-					{formattedDate}: {event.name}
-				</h2>
 				<h3 className="card-title">
 					{phase.title}
 					{isComplete && <span className="badge badge-success text-success-content">Done</span>}

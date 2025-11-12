@@ -1,14 +1,97 @@
-import Link from "next/link"
+"use client"
+
+import { useEffect, useState } from "react"
+
+import { useRouter } from "next/navigation"
+
+import { EventDto } from "@repo/dto"
+
+import { useSession } from "../../lib/auth-client"
+import CalendarCard from "../components/calendar-card"
+import ResultsCard from "../components/results-card"
 
 export default function EventsPage() {
+	const { data: session } = useSession()
+	const signedIn = !!session?.user
+	const router = useRouter()
+
+	const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+	const [isSearching, setIsSearching] = useState(false)
+	const [searchResults, setSearchResults] = useState<EventDto[]>([])
+	const [selectedEvent, setSelectedEvent] = useState<EventDto | null>(null)
+
+	// Redirect if not authenticated
+	useEffect(() => {
+		if (!signedIn) {
+			router.push("/sign-in")
+		}
+	}, [signedIn, router])
+
+	// Auto-search when date changes
+	useEffect(() => {
+		if (signedIn) {
+			void handleSearch()
+		}
+	}, [selectedDate, signedIn])
+
+	const handleDateSelect = (date: Date | undefined) => {
+		if (date) {
+			setSelectedDate(date)
+			setSelectedEvent(null)
+		}
+	}
+
+	const handleSearch = async () => {
+		setIsSearching(true)
+		setSearchResults([])
+		setSelectedEvent(null)
+
+		try {
+			const dateString = selectedDate.toISOString().split("T")[0]
+			const response = await fetch(`/api/events/search?date=${dateString}`)
+
+			if (!response.ok) {
+				throw new Error(`API request failed: ${response.status}`)
+			}
+
+			const events = (await response.json()) as EventDto[]
+			setSearchResults(events)
+
+			// Auto-select if only one event found
+			if (events.length === 1) {
+				handleEventSelect(events[0])
+			}
+		} catch (error) {
+			console.error("Search failed:", error)
+			setSearchResults([])
+		} finally {
+			setIsSearching(false)
+		}
+	}
+
+	const handleEventSelect = (event: EventDto) => {
+		setSelectedEvent(event)
+		router.push(`/events/${event.id}`)
+	}
+
+	if (!signedIn) {
+		return null // Redirecting
+	}
+
 	return (
-		<main className="min-h-screen flex items-center justify-center p-8">
-			<div className="w-full max-w-3xl text-center">
-				<h1 className="text-3xl font-bold mb-4">Event Management</h1>
-				<p className="text-muted-foreground mb-8">Coming soon</p>
-				<Link href="/" className="btn btn-primary">
-					Back to Home
-				</Link>
+		<main className="min-h-screen p-0 md:p-8 bg-base-200">
+			<div className="max-w-6xl mx-auto">
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+					<CalendarCard selectedDate={selectedDate} onDateSelect={handleDateSelect} />
+
+					<ResultsCard
+						isSearching={isSearching}
+						searchResults={searchResults}
+						selectedEvent={selectedEvent}
+						onEventSelect={handleEventSelect}
+						selectedDate={selectedDate}
+					/>
+				</div>
 			</div>
 		</main>
 	)
