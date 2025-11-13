@@ -195,6 +195,66 @@ export class ReportsService {
 		return rows.sort((a, b) => a.teamId.localeCompare(b.teamId))
 	}
 
+	async generateEventReportExcel(eventId: number): Promise<Buffer> {
+		const rows = await this.getEventReport(eventId)
+
+		const workbook = new (await import("exceljs")).Workbook()
+		const worksheet = workbook.addWorksheet("Event Report")
+
+		// Define fixed columns
+		const fixedColumns = [
+			{ header: "Team", key: "teamId", width: 15 },
+			{ header: "Course", key: "course", width: 20 },
+			{ header: "Start", key: "start", width: 15 },
+			{ header: "GHIN", key: "ghin", width: 10 },
+			{ header: "Age", key: "age", width: 8 },
+			{ header: "Tee", key: "tee", width: 10 },
+			{ header: "Last Name", key: "lastName", width: 15 },
+			{ header: "First Name", key: "firstName", width: 15 },
+			{ header: "Full Name", key: "fullName", width: 20 },
+			{ header: "Email", key: "email", width: 25 },
+			{ header: "Signed Up By", key: "signedUpBy", width: 15 },
+			{ header: "Signup Date", key: "signupDate", width: 12 },
+		]
+
+		// Add dynamic fee columns
+		if (rows.length > 0) {
+			const feeKeys = Object.keys(rows[0]).filter(
+				(key) => !fixedColumns.some((col) => col.key === key),
+			)
+			for (const feeKey of feeKeys) {
+				fixedColumns.push({
+					header: feeKey.replace(/([A-Z])/g, " $1").trim(),
+					key: feeKey,
+					width: 12,
+				})
+			}
+		}
+
+		// Set column headers and widths
+		worksheet.columns = fixedColumns
+
+		// Add data rows
+		for (const row of rows) {
+			const rowData: any[] = []
+			for (const col of fixedColumns) {
+				rowData.push(row[col.key as keyof EventReportRowDto] || "")
+			}
+			worksheet.addRow(rowData)
+		}
+
+		// Style the header row
+		const headerRow = worksheet.getRow(1)
+		headerRow.font = { bold: true }
+		headerRow.fill = {
+			type: "pattern",
+			pattern: "solid",
+			fgColor: { argb: "FFE6E6FA" },
+		}
+
+		return Buffer.from((await workbook.xlsx.writeBuffer()) as ArrayBuffer)
+	}
+
 	async getPointsReport(eventId: number): Promise<PointsReport> {
 		// Stub: Mock points
 		return await Promise.resolve({

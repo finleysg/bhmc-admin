@@ -18,6 +18,7 @@
 		"@repo/dto": "workspace:*",
 		"axios": "^1.13.1",
 		"drizzle-orm": "^0.44.7",
+		"exceljs": "^4.4.0",
 		"joi": "^18.0.1",
 		"jsonwebtoken": "^9.0.2",
 		"mysql2": "^3.15.3",

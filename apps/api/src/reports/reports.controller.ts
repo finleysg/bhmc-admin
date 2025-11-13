@@ -1,5 +1,6 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from "@nestjs/common"
-import { EventReportQueryDto } from "@repo/dto"
+import { Response } from "express"
+
+import { Controller, Get, Param, ParseIntPipe, Res } from "@nestjs/common"
 
 import { ReportsService } from "./reports.service"
 
@@ -13,11 +14,20 @@ export class ReportsController {
 	}
 
 	@Get("events/:eventId/event-report")
-	async getEventReport(
-		@Param("eventId", ParseIntPipe) eventId: number,
-		@Query() query: EventReportQueryDto,
-	) {
-		return this.reports.getEventReport(eventId, query)
+	async getEventReport(@Param("eventId", ParseIntPipe) eventId: number) {
+		return this.reports.getEventReport(eventId)
+	}
+
+	@Get("events/:eventId/event-report/excel")
+	async getEventReportExcel(@Param("eventId", ParseIntPipe) eventId: number, @Res() res: Response) {
+		const buffer = await this.reports.generateEventReportExcel(eventId)
+
+		res.setHeader(
+			"Content-Type",
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		)
+		res.setHeader("Content-Disposition", `attachment; filename="event-report-${eventId}.xlsx"`)
+		res.send(buffer)
 	}
 
 	@Get("events/:eventId/points")

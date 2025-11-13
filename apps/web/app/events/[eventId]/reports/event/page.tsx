@@ -1,22 +1,12 @@
 "use client"
 
-import {
-	useEffect,
-	useState,
-} from "react"
+import { useEffect, useState } from "react"
 
 import Link from "next/link"
-import {
-	useParams,
-	useRouter,
-} from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 import { useSession } from "@/lib/auth-client"
-import {
-	ArrowDownIcon,
-	ArrowsUpDownIcon,
-	ArrowUpIcon,
-} from "@heroicons/react/24/outline"
+import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
 import { EventReportRowDto } from "@repo/dto"
 import {
 	ColumnDef,
@@ -204,9 +194,37 @@ export default function EventReportPage() {
 					<h1 className="text-xl text-info font-bold">
 						Event Report ({reportData.length} {reportData.length === 1 ? "record" : "records"})
 					</h1>
-					<Link href={`/events/${eventId}/reports`} className="btn btn-outline">
-						Back to Reports
-					</Link>
+					<div className="flex gap-2">
+						<button
+							onClick={async () => {
+								try {
+									const response = await fetch(`/api/events/${eventId}/reports/event/excel`)
+									if (!response.ok) {
+										throw new Error(`Failed to download Excel: ${response.statusText}`)
+									}
+									const blob = await response.blob()
+									const url = URL.createObjectURL(blob)
+									const a = document.createElement("a")
+									a.href = url
+									a.download = `event-report-${eventId}.xlsx`
+									document.body.appendChild(a)
+									a.click()
+									document.body.removeChild(a)
+									URL.revokeObjectURL(url)
+								} catch (error) {
+									console.error("Export failed:", error)
+									alert("Failed to export Excel file. Please try again.")
+								}
+							}}
+							className="btn btn-primary"
+							disabled={reportData.length === 0}
+						>
+							Export to Excel
+						</button>
+						<Link href={`/events/${eventId}/reports`} className="btn btn-outline">
+							Back to Reports
+						</Link>
+					</div>
 				</div>
 
 				{reportData.length === 0 ? (
