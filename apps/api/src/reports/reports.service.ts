@@ -1,12 +1,16 @@
+import { eq } from "drizzle-orm"
+
 import { Injectable } from "@nestjs/common"
 import {
 	EventPlayerFeeDto,
 	EventPlayerSlotDto,
 	EventRegistrationSummaryDto,
 	EventReportRowDto,
+	PointsReportRowDto,
 } from "@repo/dto"
 
 import { CoursesService, HoleDto } from "../courses"
+import { DrizzleService, player, tournament, tournamentPoints } from "../database"
 import { EventFeeWithTypeDto, EventsDomainService, EventsService } from "../events"
 import {
 	RegisteredPlayerDto,
@@ -44,6 +48,7 @@ export class ReportsService {
 		private readonly courses: CoursesService,
 		private readonly eventsDomain: EventsDomainService,
 		private readonly registrationDomain: RegistrationDomainService,
+		private readonly drizzle: DrizzleService,
 	) {}
 
 	async getMembershipReport(season: number): Promise<MembershipReport> {
@@ -255,15 +260,87 @@ export class ReportsService {
 		return Buffer.from((await workbook.xlsx.writeBuffer()) as ArrayBuffer)
 	}
 
-	async getPointsReport(eventId: number): Promise<PointsReport> {
-		// Stub: Mock points
-		return await Promise.resolve({
-			eventId,
-			points: [
-				{ playerId: 1, points: 100 },
-				{ playerId: 2, points: 95 },
-			],
-		})
+	async getPointsReport(eventId: number): Promise<PointsReportRowDto[]> {
+		// Validate event exists
+		const event = await this.events.findEventById(eventId)
+		if (!event) {
+			throw new Error(`Event ${eventId} not found`)
+		}
+
+		// Get tournament points with tournament and player data
+		const results = await this.drizzle.db
+			.select({
+				tournamentName: tournament.name,
+				position: tournamentPoints.position,
+				score: tournamentPoints.score,
+				points: tournamentPoints.points,
+				details: tournamentPoints.details,
+				isNet: tournament.isNet,
+				firstName: player.firstName,
+				lastName: player.lastName,
+				ghin: player.ghin,
+			})
+			.from(tournamentPoints)
+			.innerJoin(tournament, eq(tournamentPoints.tournamentId, tournament.id))
+			.innerJoin(player, eq(tournamentPoints.playerId, player.id))
+			.where(eq(tournament.eventId, eventId))
+			.orderBy(tournament.name, tournamentPoints.position)
+
+		// Map to DTO
+		const rows: PointsReportRowDto[] = results.map((result) => ({
+			tournamentName: result.tournamentName,
+			position: result.position,
+			fullName: `${result.firstName} ${result.lastName}`,
+			ghin: result.ghin || "",
+			score: result.score,
+			points: result.points,
+			type: result.isNet ? "Net" : "Gross",
+			details: result.details,
+		}))
+
+		return rows
+	}
+
+	async generatePointsReportExcel(eventId: number): Promise<Buffer> {
+		const rows = await this.getPointsReport(eventId)
+
+		const workbook = new (await import("exceljs")).Workbook()
+		const worksheet = workbook.addWorksheet("Points Report")
+
+		// Define fixed columns
+		const fixedColumns = [
+			{ header: "Tournament Name", key: "tournamentName", width: 20 },
+			{ header: "Position", key: "position", width: 10 },
+			{ header: "Full Name", key: "fullName", width: 20 },
+			{ header: "GHIN", key: "ghin", width: 10 },
+			{ header: "Score", key: "score", width: 8 },
+			{ header: "Points", key: "points", width: 8 },
+			{ header: "Type", key: "type", width: 8 },
+			{ header: "Details", key: "details", width: 20 },
+		]
+
+		// Set column headers and widths
+		worksheet.columns = fixedColumns
+
+		// Add data rows
+		for (const row of rows) {
+			const rowData: any[] = []
+			for (const col of fixedColumns) {
+				rowData.push(row[col.key as keyof PointsReportRowDto] || "")
+			}
+			worksheet.addRow(rowData)
+		}
+
+		// Style the header row
+		const headerRow = worksheet.getRow(1)
+		headerRow.font = { bold: true }
+		headerRow.fill = {
+			type: "pattern",
+			pattern: "solid",
+			fgColor: { argb: "FFE6E6FA" },
+		}
+
+		return Buffer.from((await workbook.xlsx.writeBuffer()) as ArrayBuffer)
 	}
 
 	async getFinanceReport(eventId: number): Promise<FinanceReport> {

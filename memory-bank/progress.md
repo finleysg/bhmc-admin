@@ -28,19 +28,17 @@ Completed
 - **SSE Roster Export Fix**: Resolved "Connection lost" issue by implementing streaming-first architecture; eliminated race condition between export initialization and SSE connection by returning RxJS Subject synchronously while processing export asynchronously in background; simplified frontend to use single SSE endpoint that auto-starts export
 - **API Module Barrel Exports**: Implemented consistent barrel export pattern across all major API modules (scores, registration, events, courses); created `index.ts` files in each module root exporting public DTOs and services; updated cross-module imports to use cleaner module-level imports instead of deep relative paths; benefits include clearer public APIs, easier refactoring, and consistent NestJS patterns
 - **Stroke Play Overall Tournament Skip Logic**: Added special handling to skip stroke play tournaments named "Overall" during results import as they have no associated results; implemented filtering in both streaming and non-streaming import methods with logging and progress emission for skipped tournaments
-
-In progress / Next steps
-
-- Implement remaining API modules (courses, registration, scores) following the events module pattern
-- Create shared UI components using daisyUI 5 and Tailwind CSS v4
-- Add development scripts and verify Docker database connectivity
-- Implement basic admin screens for event management and user authentication flows
+- **Points Report Implementation**: Complete end-to-end points report with backend database joins (tournamentPoints + tournament + player tables), frontend TanStack Table with sorting/filtering/pagination, Excel export, and API proxy routes; displays tournament name, position, full name, GHIN, score, points, type (Gross/Net), and details with default tournament name + position sorting; follows event report patterns for consistency
+- **TanStack Table Integration for Event Reports**: Pivoted event report page from server-side sorting/filtering to client-side using @tanstack/react-table; removed backend filter/sort logic, fetch full dataset once, enable client-side sorting (team/GHIN/age/fullName), global fuzzy search, and pagination (10/25/50/100 rows); maintains default team ascending sort on load; improves responsiveness for <1000 rows
+- **Excel Export for Event Reports**: Implemented server-side Excel export functionality using ExcelJS library; added generateEventReportExcel method to reports service, new /reports/events/:eventId/event-report/excel endpoint, proxy route in web app, and "Export to Excel" button in event report page; exports full dataset with all columns (fixed fields + dynamic fees) to .xlsx file with styled headers and auto-width columns
+- **Golf Genius Integration Completion**: Finalized comprehensive Golf Genius integration module with all core endpoints implemented; moved closeEvent endpoint to golfgenius module with proper integration logging; fixed LogIntegrationInterceptor to handle both `id` and `eventId` parameters and correctly extract event IDs for audit logging
 
 **Golf Genius Integration Status**: ✅ Complete - All core endpoints implemented, tested, and documented. Ready for alpha release (v0.2.0-alpha.1). Integration includes roster sync, event sync, results import (all formats), close event functionality, and comprehensive UI orchestration.
 
 Completed
 
-- **Reports Module**: Stubbed reports module with controller endpoints for membership report (/:season/membership), event report (/events/:eventId/event-report), points report (/events/:eventId/points), finance report (/events/:eventId/financials), and event results report (/events/:eventId/results); service methods return mock data with local TypeScript interfaces for type safety
+- **Reports Module**: Implemented event report with Excel export; stubbed reports module with controller endpoints for membership report (/:season/membership), event report (/events/:eventId/event-report), points report (/events/:eventId/points), finance report (/events/:eventId/financials), and event results report (/events/:eventId/results); service methods return mock data with local TypeScript interfaces for type safety
+- **Points Report**: Complete implementation with backend database joins (tournamentPoints + tournament + player), frontend TanStack Table with sorting/filtering/pagination, Excel export, and API proxy routes; displays tournament name, position, full name, GHIN, score, points, type (Gross/Net), and details with default tournament name + position sorting
 
 - **NestJS API Foundation**: Scaffolded NestJS app with TypeScript, health endpoint, and JWT authentication guard
 - **Database Layer**: Created DrizzleService with connection pooling and complete schema definitions

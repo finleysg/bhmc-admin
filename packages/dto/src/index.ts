@@ -22,3 +22,4 @@ export { PreparedTournamentResult } from "./golf-genius/tournament-result.dto"
 // Reports DTO exports
 export { EventReportRowDto } from "./reports/event-report-row.dto"
 export { EventReportQueryDto } from "./reports/event-report-query.dto"
+export { PointsReportRowDto } from "./reports/points-report-row.dto"

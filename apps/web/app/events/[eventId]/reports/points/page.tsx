@@ -1,11 +1,42 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 
+import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
+import { PointsReportRowDto } from "@repo/dto"
+import {
+	ColumnDef,
+	flexRender,
+	getCoreRowModel,
+	getFilteredRowModel,
+	getPaginationRowModel,
+	getSortedRowModel,
+	SortingState,
+	useReactTable,
+} from "@tanstack/react-table"
+
 import { useSession } from "../../../../../lib/auth-client"
+
+// Custom hook for mobile detection
+function useIsMobile() {
+	const [isMobile, setIsMobile] = useState(false)
+
+	useEffect(() => {
+		const checkIsMobile = () => {
+			setIsMobile(window.innerWidth <= 768)
+		}
+
+		checkIsMobile()
+		window.addEventListener("resize", checkIsMobile)
+
+		return () => window.removeEventListener("resize", checkIsMobile)
+	}, [])
+
+	return isMobile
+}
 
 export default function PointsReportPage() {
 	const { data: session, isPending } = useSession()
@@ -13,6 +44,18 @@ export default function PointsReportPage() {
 	const router = useRouter()
 	const params = useParams()
 	const eventId = params.eventId as string
+	const isMobile = useIsMobile()
+
+	const [reportData, setReportData] = useState<PointsReportRowDto[]>([])
+	const [loading, setLoading] = useState(true)
+	const [error, setError] = useState<string | null>(null)
+	const [sorting, setSorting] = useState<SortingState>([
+		{ id: "tournamentName", desc: false },
+		{ id: "position", desc: false },
+	])
+	const [globalFilter, setGlobalFilter] = useState("")
+	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 })
+	const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({})
 
 	// Redirect if not authenticated
 	useEffect(() => {
@@ -21,9 +64,151 @@ export default function PointsReportPage() {
 		}
 	}, [signedIn, isPending, router])
 
-	if (isPending) {
+	// Fetch report data
+	useEffect(() => {
+		if (!signedIn || isPending) return
+
+		const fetchReport = async () => {
+			try {
+				setLoading(true)
+				const url = `/api/events/${eventId}/reports/points`
+				const response = await fetch(url)
+				if (!response.ok) {
+					throw new Error(`Failed to fetch report: ${response.statusText}`)
+				}
+				const data = (await response.json()) as PointsReportRowDto[]
+				setReportData(data)
+			} catch (err) {
+				setError(err instanceof Error ? err.message : "Unknown error")
+			} finally {
+				setLoading(false)
+			}
+		}
+
+		void fetchReport()
+	}, [signedIn, isPending, eventId])
+
+	// Define columns for TanStack Table
+	const columns: ColumnDef<PointsReportRowDto>[] = [
+		{
+			accessorKey: "tournamentName",
+			header: "Tournament Name",
+			enableSorting: true,
+		},
+		{
+			accessorKey: "position",
+			header: "Position",
+			enableSorting: true,
+		},
+		{
+			accessorKey: "fullName",
+			header: "Full Name",
+			enableSorting: true,
+		},
+		{
+			accessorKey: "ghin",
+			header: "GHIN",
+			enableSorting: true,
+		},
+		{
+			accessorKey: "score",
+			header: "Score",
+			cell: ({ getValue }) => {
+				const value = getValue()
+				return value === null ? "N/A" : value
+			},
+		},
+		{
+			accessorKey: "points",
+			header: "Points",
+		},
+		{
+			accessorKey: "type",
+			header: "Type",
+		},
+		{
+			accessorKey: "details",
+			header: "Details",
+			cell: ({ getValue }) => {
+				const value = getValue()
+				return value === null ? "N/A" : value
+			},
+		},
+	]
+
+	// Update column visibility based on mobile state
+	useEffect(() => {
+		if (reportData.length === 0) return
+
+		const visibility: Record<string, boolean> = {}
+
+		// Define mobile-visible columns
+		const mobileVisibleColumns = ["tournamentName", "position", "fullName", "points"]
+
+		// Get all column keys
+		const allColumnKeys = [
+			"tournamentName",
+			"position",
+			"fullName",
+			"ghin",
+			"score",
+			"points",
+			"type",
+			"details",
+		]
+
+		// Set visibility based on mobile state
+		allColumnKeys.forEach((key) => {
+			visibility[key] = !isMobile || mobileVisibleColumns.includes(key)
+		})
+
+		setColumnVisibility(visibility)
+	}, [isMobile, reportData])
+
+	const handleExportToExcel = async () => {
+		try {
+			const response = await fetch(`/api/events/${eventId}/reports/points/excel`)
+			if (!response.ok) {
+				throw new Error(`Failed to download Excel: ${response.statusText}`)
+			}
+			const blob = await response.blob()
+			const url = URL.createObjectURL(blob)
+			const a = document.createElement("a")
+			a.href = url
+			a.download = `points-report-${eventId}.xlsx`
+			document.body.appendChild(a)
+			a.click()
+			document.body.removeChild(a)
+			URL.revokeObjectURL(url)
+		} catch (error) {
+			console.error("Export failed:", error)
+			alert("Failed to export Excel file. Please try again.")
+		}
+	}
+
+	// Create table instance
+	const table = useReactTable({
+		data: reportData,
+		columns,
+		state: {
+			sorting,
+			globalFilter,
+			pagination,
+			columnVisibility,
+		},
+		onSortingChange: setSorting,
+		onGlobalFilterChange: setGlobalFilter,
+		onPaginationChange: setPagination,
+		onColumnVisibilityChange: setColumnVisibility,
+		getCoreRowModel: getCoreRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
+		getPaginationRowModel: getPaginationRowModel(),
+	})
+
+	if (isPending || loading) {
 		return (
-			<div className="flex items-center justify-center p-8">
+			<div className="flex items-center justify-center p-2">
 				<span className="loading loading-spinner loading-lg"></span>
 			</div>
 		)
@@ -33,14 +218,149 @@ export default function PointsReportPage() {
 		return null // Redirecting
 	}
 
+	if (error) {
+		return (
+			<main className="min-h-screen flex items-center justify-center p-2">
+				<div className="w-full max-w-3xl text-center">
+					<h2 className="text-3xl font-bold mb-4">Points Report</h2>
+					<p className="text-error mb-8">Error loading report: {error}</p>
+					<Link href={`/events/${eventId}/reports`} className="btn btn-primary">
+						Back to Reports
+					</Link>
+				</div>
+			</main>
+		)
+	}
+
 	return (
-		<main className="min-h-screen flex items-center justify-center p-8">
-			<div className="w-full max-w-3xl text-center">
-				<h2 className="text-3xl font-bold mb-4">Points Report</h2>
-				<p className="text-muted-foreground mb-8">Coming soon</p>
-				<Link href={`/events/${eventId}/reports`} className="btn btn-primary">
-					Back to Reports
-				</Link>
+		<main className="min-h-screen p-2">
+			<div className="w-full">
+				<div className="flex items-center justify-between mb-4">
+					<h1 className="text-xl text-info font-bold">
+						Points Report ({reportData.length} {reportData.length === 1 ? "record" : "records"})
+					</h1>
+				</div>
+
+				{reportData.length === 0 ? (
+					<div className="text-center py-12">
+						<p className="text-muted-foreground">No points data available for this event.</p>
+					</div>
+				) : (
+					<>
+						{/* Global Filter */}
+						<div className="mb-4 flex gap-2 justify-between">
+							<input
+								value={globalFilter ?? ""}
+								onChange={(e) => setGlobalFilter(e.target.value)}
+								placeholder="Search all fields..."
+								className="input input-bordered w-full max-w-xs"
+							/>
+							<button
+								onClick={handleExportToExcel}
+								className="btn btn-neutral btn-sm"
+								disabled={reportData.length === 0}
+							>
+								Export to Excel
+							</button>
+						</div>
+
+						{/* Table */}
+						<div className="overflow-x-auto bg-base-100">
+							<table className="table table-zebra table-xs">
+								<thead>
+									{table.getHeaderGroups().map((headerGroup) => (
+										<tr key={headerGroup.id}>
+											{headerGroup.headers.map((header) => (
+												<th key={header.id} className="text-left text-xs">
+													{header.isPlaceholder ? null : (
+														<div
+															className={
+																header.column.getCanSort()
+																	? "cursor-pointer select-none flex items-center"
+																	: ""
+															}
+															onClick={header.column.getToggleSortingHandler()}
+														>
+															{flexRender(header.column.columnDef.header, header.getContext())}
+															{{
+																asc: <ArrowUpIcon className="w-4 h-4 ml-1 text-primary" />,
+																desc: <ArrowDownIcon className="w-4 h-4 ml-1 text-primary" />,
+															}[header.column.getIsSorted() as string] ??
+																(header.column.getCanSort() ? (
+																	<ArrowsUpDownIcon className="w-4 h-4 ml-1 opacity-50" />
+																) : null)}
+														</div>
+													)}
+												</th>
+											))}
+										</tr>
+									))}
+								</thead>
+								<tbody>
+									{table.getRowModel().rows.map((row) => (
+										<tr key={row.id}>
+											{row.getVisibleCells().map((cell) => (
+												<td key={cell.id}>
+													{flexRender(cell.column.columnDef.cell, cell.getContext())}
+												</td>
+											))}
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+
+						{/* Pagination */}
+						<div className="flex items-center justify-between mt-4">
+							<div className="flex items-center gap-2">
+								<span className="text-xs text-nowrap">
+									Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+								</span>
+								<select
+									value={table.getState().pagination.pageSize}
+									onChange={(e) => table.setPageSize(Number(e.target.value))}
+									className="select select-bordered select-sm"
+								>
+									{[25, 50, 100, 500].map((size) => (
+										<option key={size} value={size}>
+											{size} rows
+										</option>
+									))}
+								</select>
+							</div>
+							<div className="flex items-center gap-2">
+								<button
+									className="btn btn-sm"
+									onClick={() => table.setPageIndex(0)}
+									disabled={!table.getCanPreviousPage()}
+								>
+									{"<<"}
+								</button>
+								<button
+									className="btn btn-sm"
+									onClick={() => table.previousPage()}
+									disabled={!table.getCanPreviousPage()}
+								>
+									{"<"}
+								</button>
+								<button
+									className="btn btn-sm"
+									onClick={() => table.nextPage()}
+									disabled={!table.getCanNextPage()}
+								>
+									{">"}
+								</button>
+								<button
+									className="btn btn-sm"
+									onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+									disabled={!table.getCanNextPage()}
+								>
+									{">>"}
+								</button>
+							</div>
+						</div>
+					</>
+				)}
 			</div>
 		</main>
 	)
