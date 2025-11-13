@@ -1,22 +1,12 @@
 "use client"
 
-import {
-	useEffect,
-	useState,
-} from "react"
+import { useEffect, useState } from "react"
 
 import Link from "next/link"
-import {
-	useParams,
-	useRouter,
-} from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 import { useSession } from "@/lib/auth-client"
-import {
-	ArrowDownIcon,
-	ArrowsUpDownIcon,
-	ArrowUpIcon,
-} from "@heroicons/react/24/outline"
+import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
 import { EventReportRowDto } from "@repo/dto"
 import {
 	ColumnDef,
@@ -29,12 +19,31 @@ import {
 	useReactTable,
 } from "@tanstack/react-table"
 
+// Custom hook for mobile detection
+function useIsMobile() {
+	const [isMobile, setIsMobile] = useState(false)
+
+	useEffect(() => {
+		const checkIsMobile = () => {
+			setIsMobile(window.innerWidth <= 768)
+		}
+
+		checkIsMobile()
+		window.addEventListener("resize", checkIsMobile)
+
+		return () => window.removeEventListener("resize", checkIsMobile)
+	}, [])
+
+	return isMobile
+}
+
 export default function EventReportPage() {
 	const { data: session, isPending } = useSession()
 	const signedIn = !!session?.user
 	const router = useRouter()
 	const params = useParams()
 	const eventId = params.eventId as string
+	const isMobile = useIsMobile()
 
 	const [reportData, setReportData] = useState<EventReportRowDto[]>([])
 	const [loading, setLoading] = useState(true)
@@ -42,6 +51,7 @@ export default function EventReportPage() {
 	const [sorting, setSorting] = useState<SortingState>([{ id: "teamId", desc: false }])
 	const [globalFilter, setGlobalFilter] = useState("")
 	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 })
+	const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({})
 
 	// Redirect if not authenticated
 	useEffect(() => {
@@ -73,27 +83,6 @@ export default function EventReportPage() {
 
 		void fetchReport()
 	}, [signedIn, isPending, eventId])
-
-	const handleExportToExcel = async () => {
-		try {
-			const response = await fetch(`/api/events/${eventId}/reports/event/excel`)
-			if (!response.ok) {
-				throw new Error(`Failed to download Excel: ${response.statusText}`)
-			}
-			const blob = await response.blob()
-			const url = URL.createObjectURL(blob)
-			const a = document.createElement("a")
-			a.href = url
-			a.download = `event-report-${eventId}.xlsx`
-			document.body.appendChild(a)
-			a.click()
-			document.body.removeChild(a)
-			URL.revokeObjectURL(url)
-		} catch (error) {
-			console.error("Export failed:", error)
-			alert("Failed to export Excel file. Please try again.")
-		}
-	}
 
 	// Define columns for TanStack Table
 	const columns: ColumnDef<EventReportRowDto>[] = []
@@ -174,6 +163,51 @@ export default function EventReportPage() {
 		})
 	}
 
+	// Update column visibility based on mobile state
+	useEffect(() => {
+		if (reportData.length === 0) return
+
+		const visibility: Record<string, boolean> = {}
+
+		// Define mobile-visible columns
+		const mobileVisibleColumns = ["teamId", "ghin", "tee", "fullName"]
+
+		// Get all column keys (fixed + dynamic)
+		const allColumnKeys = Object.keys(fixedColumnDefs)
+		const feeKeys = Object.keys(reportData[0]).filter(
+			(key) => !Object.keys(fixedColumnDefs).includes(key) && key !== "signupDate",
+		)
+		const allKeys = [...allColumnKeys, ...feeKeys]
+
+		// Set visibility based on mobile state
+		allKeys.forEach((key) => {
+			visibility[key] = !isMobile || mobileVisibleColumns.includes(key)
+		})
+
+		setColumnVisibility(visibility)
+	}, [isMobile, reportData, fixedColumnDefs])
+
+	const handleExportToExcel = async () => {
+		try {
+			const response = await fetch(`/api/events/${eventId}/reports/event/excel`)
+			if (!response.ok) {
+				throw new Error(`Failed to download Excel: ${response.statusText}`)
+			}
+			const blob = await response.blob()
+			const url = URL.createObjectURL(blob)
+			const a = document.createElement("a")
+			a.href = url
+			a.download = `event-report-${eventId}.xlsx`
+			document.body.appendChild(a)
+			a.click()
+			document.body.removeChild(a)
+			URL.revokeObjectURL(url)
+		} catch (error) {
+			console.error("Export failed:", error)
+			alert("Failed to export Excel file. Please try again.")
+		}
+	}
+
 	// Create table instance
 	const table = useReactTable({
 		data: reportData,
@@ -182,10 +216,12 @@ export default function EventReportPage() {
 			sorting,
 			globalFilter,
 			pagination,
+			columnVisibility,
 		},
 		onSortingChange: setSorting,
 		onGlobalFilterChange: setGlobalFilter,
 		onPaginationChange: setPagination,
+		onColumnVisibilityChange: setColumnVisibility,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
@@ -241,13 +277,13 @@ export default function EventReportPage() {
 								placeholder="Search all fields..."
 								className="input input-bordered w-full max-w-xs"
 							/>
-                            <button
-                                onClick={handleExportToExcel}
-                                className="btn btn-neutral btn-sm"
-                                disabled={reportData.length === 0}
-                            >
-                                Export to Excel
-                            </button>
+							<button
+								onClick={handleExportToExcel}
+								className="btn btn-neutral btn-sm"
+								disabled={reportData.length === 0}
+							>
+								Export to Excel
+							</button>
 						</div>
 
 						{/* Table */}
