@@ -6,11 +6,14 @@ import {
 	EventPlayerSlotDto,
 	EventRegistrationSummaryDto,
 	EventReportRowDto,
+	EventResultsReportDto,
+	EventResultsReportRowDto,
+	EventResultsSectionDto,
 	PointsReportRowDto,
 } from "@repo/dto"
 
 import { CoursesService, HoleDto } from "../courses"
-import { DrizzleService, player, tournament, tournamentPoints } from "../database"
+import { DrizzleService, player, tournament, tournamentPoints, tournamentResult } from "../database"
 import { EventFeeWithTypeDto, EventsDomainService, EventsService } from "../events"
 import {
 	RegisteredPlayerDto,
@@ -362,5 +365,261 @@ export class ReportsService {
 				{ playerId: 2, position: 2, score: 75 },
 			],
 		})
+	}
+
+	async getEventResultsReport(eventId: number): Promise<EventResultsReportDto> {
+		// Validate event exists
+		const event = await this.events.findEventById(eventId)
+		if (!event) {
+			throw new Error(`Event ${eventId} not found`)
+		}
+
+		// Get all tournaments for the event
+		const tournaments = await this.drizzle.db
+			.select()
+			.from(tournament)
+			.where(eq(tournament.eventId, eventId))
+			.orderBy(tournament.name)
+
+		const sections: EventResultsSectionDto[] = []
+
+		// Section 1: Stroke play results
+		const strokeTournaments = tournaments.filter(
+			(t) => t.format === "stroke" && t.name !== "Overall",
+		)
+		if (strokeTournaments.length > 0) {
+			const subSections = await Promise.all(
+				strokeTournaments.map(async (tournament) => {
+					const results = await this.drizzle.db
+						.select({
+							flight: tournamentResult.flight,
+							position: tournamentResult.position,
+							score: tournamentResult.score,
+							amount: tournamentResult.amount,
+							details: tournamentResult.details,
+							firstName: player.firstName,
+							lastName: player.lastName,
+						})
+						.from(tournamentResult)
+						.innerJoin(player, eq(tournamentResult.playerId, player.id))
+						.where(eq(tournamentResult.tournamentId, tournament.id))
+						.orderBy(tournamentResult.flight, tournamentResult.position)
+
+					const rows: EventResultsReportRowDto[] = results.map((result) => ({
+						flight: result.flight || undefined,
+						position: result.position,
+						fullName: `${result.firstName} ${result.lastName}`,
+						score: result.score || undefined,
+						amount: parseFloat(result.amount),
+						team: result.details || undefined,
+					}))
+
+					return {
+						header: tournament.name,
+						rows,
+					}
+				}),
+			)
+
+			sections.push({
+				type: "stroke",
+				header: `${event.name} Results`,
+				subSections,
+			})
+		}
+
+		// Section 2: Skins results
+		const skinsTournaments = tournaments.filter((t) => t.format === "skins")
+		if (skinsTournaments.length > 0) {
+			const subSections = await Promise.all(
+				skinsTournaments.map(async (tournament) => {
+					const results = await this.drizzle.db
+						.select({
+							position: tournamentResult.position,
+							amount: tournamentResult.amount,
+							summary: tournamentResult.summary,
+							firstName: player.firstName,
+							lastName: player.lastName,
+						})
+						.from(tournamentResult)
+						.innerJoin(player, eq(tournamentResult.playerId, player.id))
+						.where(eq(tournamentResult.tournamentId, tournament.id))
+						.orderBy(tournamentResult.summary)
+
+					const rows: EventResultsReportRowDto[] = results.map((result) => ({
+						details: result.summary || undefined,
+						skinsWon: result.position,
+						fullName: `${result.firstName} ${result.lastName}`,
+						amount: parseFloat(result.amount),
+					}))
+
+					return {
+						header: tournament.name,
+						rows,
+					}
+				}),
+			)
+
+			sections.push({
+				type: "skins",
+				header: `${event.name} Skins`,
+				subSections,
+			})
+		}
+
+		// Section 3: User scored results
+		const proxyTournaments = tournaments.filter((t) => t.format === "user_scored")
+		if (proxyTournaments.length > 0) {
+			const rows: EventResultsReportRowDto[] = await Promise.all(
+				proxyTournaments.map(async (tournament) => {
+					const result = await this.drizzle.db
+						.select({
+							amount: tournamentResult.amount,
+							firstName: player.firstName,
+							lastName: player.lastName,
+						})
+						.from(tournamentResult)
+						.innerJoin(player, eq(tournamentResult.playerId, player.id))
+						.where(eq(tournamentResult.tournamentId, tournament.id))
+						.orderBy(tournamentResult.position)
+						.limit(1)
+						.then((results) => results[0])
+
+					return {
+						tournamentName: tournament.name,
+						fullName: result ? `${result.firstName} ${result.lastName}` : "",
+						amount: result ? parseFloat(result.amount) : 0,
+					}
+				}),
+			)
+
+			sections.push({
+				type: "proxies",
+				header: `${event.name} Proxies`,
+				rows,
+			})
+		}
+
+		return {
+			eventName: event.name,
+			sections,
+			emptyRow: {},
+		}
+	}
+
+	async generateEventResultsReportExcel(eventId: number): Promise<Buffer> {
+		const report = await this.getEventResultsReport(eventId)
+
+		const workbook = new (await import("exceljs")).Workbook()
+		const worksheet = workbook.addWorksheet("Event Results")
+
+		let currentRow = 1
+
+		for (const section of report.sections) {
+			// Add section header
+			const headerRow = worksheet.getRow(currentRow)
+			headerRow.getCell(1).value = section.header
+			headerRow.font = { bold: true, size: 14 }
+			currentRow++
+
+			if (section.type === "stroke" || section.type === "skins") {
+				// Handle sections with sub-sections
+				for (const subSection of section.subSections) {
+					// Add sub-section header
+					const subHeaderRow = worksheet.getRow(currentRow)
+					subHeaderRow.getCell(1).value = subSection.header
+					subHeaderRow.font = { bold: true, size: 12 }
+					currentRow++
+
+					// Add column headers based on section type
+					let columns: Array<{ header: string; key: keyof EventResultsReportRowDto; width: number }>
+					if (section.type === "stroke") {
+						columns = [
+							{ header: "Flight", key: "flight", width: 10 },
+							{ header: "Position", key: "position", width: 10 },
+							{ header: "Player Full Name", key: "fullName", width: 20 },
+							{ header: "Score", key: "score", width: 8 },
+							{ header: "Amount", key: "amount", width: 10 },
+							{ header: "Team", key: "team", width: 15 },
+						]
+					} else {
+						// skins
+						columns = [
+							{ header: "Details", key: "details", width: 15 },
+							{ header: "Skins Won", key: "skinsWon", width: 10 },
+							{ header: "Player Full Name", key: "fullName", width: 20 },
+							{ header: "", key: "flight", width: 5 }, // empty
+							{ header: "Amount", key: "amount", width: 10 },
+							{ header: "", key: "position", width: 5 }, // empty
+						]
+					}
+
+					// Set column headers
+					for (let i = 0; i < columns.length; i++) {
+						worksheet.getRow(currentRow).getCell(i + 1).value = columns[i].header
+					}
+					worksheet.getRow(currentRow).font = { bold: true }
+					currentRow++
+
+					// Add data rows
+					for (const row of subSection.rows) {
+						for (let i = 0; i < columns.length; i++) {
+							const value = row[columns[i].key]
+							worksheet.getRow(currentRow).getCell(i + 1).value = value || ""
+						}
+						currentRow++
+					}
+
+					// Add empty row after sub-section
+					currentRow++
+				}
+			} else if (section.type === "proxies") {
+				// Handle proxies section
+				const columns = [
+					{ header: "Tournament Name", key: "tournamentName", width: 20 },
+					{ header: "", key: "flight", width: 5 }, // empty
+					{ header: "Player Full Name", key: "fullName", width: 20 },
+					{ header: "", key: "position", width: 5 }, // empty
+					{ header: "Amount", key: "amount", width: 10 },
+					{ header: "", key: "score", width: 5 }, // empty
+				]
+
+				// Set column headers
+				for (let i = 0; i < columns.length; i++) {
+					worksheet.getRow(currentRow).getCell(i + 1).value = columns[i].header
+				}
+				worksheet.getRow(currentRow).font = { bold: true }
+				currentRow++
+
+				// Add data rows
+				for (const row of section.rows) {
+					worksheet.getRow(currentRow).getCell(1).value = row.tournamentName || "" // Tournament name
+					worksheet.getRow(currentRow).getCell(2).value = "" // empty
+					worksheet.getRow(currentRow).getCell(3).value = row.fullName || ""
+					worksheet.getRow(currentRow).getCell(4).value = "" // empty
+					worksheet.getRow(currentRow).getCell(5).value = row.amount || ""
+					worksheet.getRow(currentRow).getCell(6).value = "" // empty
+					currentRow++
+				}
+
+				// Add empty row after section
+				currentRow++
+			}
+
+			// Add empty row between sections
+			currentRow++
+		}
+
+		// Set column widths
+		worksheet.columns = [
+			{ width: 20 }, // Column 1
+			{ width: 5 }, // Column 2
+			{ width: 20 }, // Column 3
+			{ width: 5 }, // Column 4
+			{ width: 10 }, // Column 5
+			{ width: 15 }, // Column 6
+		]
+
+		return Buffer.from((await workbook.xlsx.writeBuffer()) as ArrayBuffer)
 	}
 }
