@@ -71,6 +71,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Phase-Based Workflow**: Three-phase orchestration with smart gating, sequential requirements, numbered action indicators, and phase navigation controls
 - **Event Context Display**: Shows working event as "{start date}: {event name}" throughout the integration workflow
 
+### Refactored
+
+- **API Proxy Routes**: Extended `fetchWithAuth` utility to support binary responses (Excel downloads); eliminated ~160 lines of duplicated authentication logic across Excel proxy routes; unified auth handling for all report proxies (JSON + binary)
+- **Report Pages**: Created shared hooks (`useAuthenticatedFetch`, `useExcelExport`) and `ReportPage` wrapper component; reduced page duplication by ~50%; improved consistency in loading/error states, authentication, and Excel export functionality; maintained TanStack Table features in Points report while unifying UI patterns
+
 ### Changed
 
 - **Event Report Sorting**: Restored default sort in getEventReport to sort by teamId ascending
@@ -81,6 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Event Report Infinite Re-render**: Fixed "Maximum update depth exceeded" error in event report page by moving `fixedColumnDefs` object outside component to prevent re-creation on every render; eliminated useEffect dependency changes that caused infinite loops
 - **SSE Roster Export**: Resolved "Connection lost" issue by implementing streaming-first architecture; eliminated race condition between export initialization and SSE connection by returning RxJS Subject synchronously while processing export asynchronously in background; simplified frontend to use single SSE endpoint that auto-starts export
 - **Roster Export Service**: Implemented parallel processing for roster export operations, fixed TypeScript type issues in roster-export.service.ts, added proper types for processSinglePlayer parameters, improved result aggregation method typing, and fixed getEventRoster to unwrap Golf Genius API member objects before mapping
 - **Golf Genius API Integration**: Fixed database insertion errors during event synchronization by correcting API response unwrapping patterns and datetime handling

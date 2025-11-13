@@ -20,15 +20,18 @@ import {
 	RegistrationDomainService,
 	RegistrationService,
 } from "../registration"
+import {
+	addDataRows,
+	addFixedColumns,
+	createWorkbook,
+	deriveDynamicColumns,
+	generateBuffer,
+	styleHeaderRow,
+} from "./excel.utils"
 
 interface MembershipReport {
 	season: number
 	members: Array<{ id: number; name: string; status: "active" | "inactive" }>
-}
-
-interface PointsReport {
-	eventId: number
-	points: Array<{ playerId: number; points: number }>
 }
 
 interface FinanceReport {
@@ -53,6 +56,13 @@ export class ReportsService {
 		private readonly registrationDomain: RegistrationDomainService,
 		private readonly drizzle: DrizzleService,
 	) {}
+
+	private async validateEvent(eventId: number): Promise<void> {
+		const event = await this.events.findEventById(eventId)
+		if (!event) {
+			throw new Error(`Event ${eventId} not found`)
+		}
+	}
 
 	async getMembershipReport(season: number): Promise<MembershipReport> {
 		// Stub: Return mock data
@@ -178,6 +188,7 @@ export class ReportsService {
 	}
 
 	async getEventReport(eventId: number): Promise<EventReportRowDto[]> {
+		await this.validateEvent(eventId)
 		const summary = await this.getPlayersByEvent(eventId)
 		const rows = summary.slots.map((slot) => {
 			const row: EventReportRowDto = {
@@ -206,10 +217,24 @@ export class ReportsService {
 	async generateEventReportExcel(eventId: number): Promise<Buffer> {
 		const rows = await this.getEventReport(eventId)
 
-		const workbook = new (await import("exceljs")).Workbook()
+		const workbook = await createWorkbook()
 		const worksheet = workbook.addWorksheet("Event Report")
 
 		// Define fixed columns
+		const fixedKeys = [
+			"teamId",
+			"course",
+			"start",
+			"ghin",
+			"age",
+			"tee",
+			"lastName",
+			"firstName",
+			"fullName",
+			"email",
+			"signedUpBy",
+			"signupDate",
+		]
 		const fixedColumns = [
 			{ header: "Team", key: "teamId", width: 15 },
 			{ header: "Course", key: "course", width: 20 },
@@ -226,49 +251,18 @@ export class ReportsService {
 		]
 
 		// Add dynamic fee columns
-		if (rows.length > 0) {
-			const feeKeys = Object.keys(rows[0]).filter(
-				(key) => !fixedColumns.some((col) => col.key === key),
-			)
-			for (const feeKey of feeKeys) {
-				fixedColumns.push({
-					header: feeKey.replace(/([A-Z])/g, " $1").trim(),
-					key: feeKey,
-					width: 12,
-				})
-			}
-		}
+		const dynamicColumns = deriveDynamicColumns(rows, fixedKeys)
+		const allColumns = [...fixedColumns, ...dynamicColumns]
 
-		// Set column headers and widths
-		worksheet.columns = fixedColumns
+		addFixedColumns(worksheet, allColumns)
+		styleHeaderRow(worksheet, 1)
+		addDataRows(worksheet, 2, rows, allColumns)
 
-		// Add data rows
-		for (const row of rows) {
-			const rowData: any[] = []
-			for (const col of fixedColumns) {
-				rowData.push(row[col.key as keyof EventReportRowDto] || "")
-			}
-			worksheet.addRow(rowData)
-		}
-
-		// Style the header row
-		const headerRow = worksheet.getRow(1)
-		headerRow.font = { bold: true }
-		headerRow.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: { argb: "FFE6E6FA" },
-		}
-
-		return Buffer.from((await workbook.xlsx.writeBuffer()) as ArrayBuffer)
+		return generateBuffer(workbook)
 	}
 
 	async getPointsReport(eventId: number): Promise<PointsReportRowDto[]> {
-		// Validate event exists
-		const event = await this.events.findEventById(eventId)
-		if (!event) {
-			throw new Error(`Event ${eventId} not found`)
-		}
+		await this.validateEvent(eventId)
 
 		// Get tournament points with tournament and player data
 		const results = await this.drizzle.db
@@ -307,10 +301,9 @@ export class ReportsService {
 	async generatePointsReportExcel(eventId: number): Promise<Buffer> {
 		const rows = await this.getPointsReport(eventId)
 
-		const workbook = new (await import("exceljs")).Workbook()
+		const workbook = await createWorkbook()
 		const worksheet = workbook.addWorksheet("Points Report")
 
-		// Define fixed columns
 		const fixedColumns = [
 			{ header: "Tournament Name", key: "tournamentName", width: 20 },
 			{ header: "Position", key: "position", width: 10 },
@@ -322,28 +315,11 @@ export class ReportsService {
 			{ header: "Details", key: "details", width: 20 },
 		]
 
-		// Set column headers and widths
-		worksheet.columns = fixedColumns
+		addFixedColumns(worksheet, fixedColumns)
+		styleHeaderRow(worksheet, 1)
+		addDataRows(worksheet, 2, rows as unknown as Record<string, unknown>[], fixedColumns)
 
-		// Add data rows
-		for (const row of rows) {
-			const rowData: any[] = []
-			for (const col of fixedColumns) {
-				rowData.push(row[col.key as keyof PointsReportRowDto] || "")
-			}
-			worksheet.addRow(rowData)
-		}
-
-		// Style the header row
-		const headerRow = worksheet.getRow(1)
-		headerRow.font = { bold: true }
-		headerRow.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: { argb: "FFE6E6FA" },
-		}
-
-		return Buffer.from((await workbook.xlsx.writeBuffer()) as ArrayBuffer)
+		return generateBuffer(workbook)
 	}
 
 	async getFinanceReport(eventId: number): Promise<FinanceReport> {
@@ -368,11 +344,9 @@ export class ReportsService {
 	}
 
 	async getEventResultsReport(eventId: number): Promise<EventResultsReportDto> {
-		// Validate event exists
+		await this.validateEvent(eventId)
 		const event = await this.events.findEventById(eventId)
-		if (!event) {
-			throw new Error(`Event ${eventId} not found`)
-		}
+		if (!event) throw new Error(`Event ${eventId} not found`) // Should not happen after validateEvent
 
 		// Get all tournaments for the event
 		const tournaments = await this.drizzle.db
@@ -510,7 +484,7 @@ export class ReportsService {
 	async generateEventResultsReportExcel(eventId: number): Promise<Buffer> {
 		const report = await this.getEventResultsReport(eventId)
 
-		const workbook = new (await import("exceljs")).Workbook()
+		const workbook = await createWorkbook()
 		const worksheet = workbook.addWorksheet("Event Results")
 
 		let currentRow = 1
@@ -620,6 +594,6 @@ export class ReportsService {
 			{ width: 15 }, // Column 6
 		]
 
-		return Buffer.from((await workbook.xlsx.writeBuffer()) as ArrayBuffer)
+		return generateBuffer(workbook)
 	}
 }

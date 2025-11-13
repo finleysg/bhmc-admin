@@ -37,6 +37,65 @@ function useIsMobile() {
 	return isMobile
 }
 
+// Fixed columns definition (moved outside component to prevent re-creation)
+const fixedColumnDefs: Record<string, ColumnDef<EventReportRowDto>> = {
+	teamId: {
+		accessorKey: "teamId",
+		header: "Team",
+		enableSorting: true,
+	},
+	course: {
+		accessorKey: "course",
+		header: "Course",
+	},
+	start: {
+		accessorKey: "start",
+		header: "Start",
+	},
+	ghin: {
+		accessorKey: "ghin",
+		header: "GHIN",
+		enableSorting: true,
+	},
+	age: {
+		accessorKey: "age",
+		header: "Age",
+		enableSorting: true,
+		sortingFn: (rowA, rowB) => {
+			const a = rowA.getValue("age")
+			const b = rowB.getValue("age")
+			const aNum = a === "n/a" ? 999 : parseInt(a as string)
+			const bNum = b === "n/a" ? 999 : parseInt(b as string)
+			return aNum - bNum
+		},
+	},
+	tee: {
+		accessorKey: "tee",
+		header: "Tee",
+	},
+	lastName: {
+		accessorKey: "lastName",
+		header: "Last Name",
+	},
+	firstName: {
+		accessorKey: "firstName",
+		header: "First Name",
+	},
+	fullName: {
+		accessorKey: "fullName",
+		header: "Full Name",
+		enableSorting: true,
+	},
+	email: {
+		accessorKey: "email",
+		header: "Email",
+	},
+	signedUpBy: {
+		accessorKey: "signedUpBy",
+		header: "Signed Up By",
+	},
+}
+
 export default function EventReportPage() {
 	const { data: session, isPending } = useSession()
 	const signedIn = !!session?.user
@@ -88,64 +147,6 @@ export default function EventReportPage() {
 	const columns: ColumnDef<EventReportRowDto>[] = []
 
 	// Fixed columns
-	const fixedColumnDefs: Record<string, ColumnDef<EventReportRowDto>> = {
-		teamId: {
-			accessorKey: "teamId",
-			header: "Team",
-			enableSorting: true,
-		},
-		course: {
-			accessorKey: "course",
-			header: "Course",
-		},
-		start: {
-			accessorKey: "start",
-			header: "Start",
-		},
-		ghin: {
-			accessorKey: "ghin",
-			header: "GHIN",
-			enableSorting: true,
-		},
-		age: {
-			accessorKey: "age",
-			header: "Age",
-			enableSorting: true,
-			sortingFn: (rowA, rowB) => {
-				const a = rowA.getValue("age")
-				const b = rowB.getValue("age")
-				const aNum = a === "n/a" ? 999 : parseInt(a as string)
-				const bNum = b === "n/a" ? 999 : parseInt(b as string)
-				return aNum - bNum
-			},
-		},
-		tee: {
-			accessorKey: "tee",
-			header: "Tee",
-		},
-		lastName: {
-			accessorKey: "lastName",
-			header: "Last Name",
-		},
-		firstName: {
-			accessorKey: "firstName",
-			header: "First Name",
-		},
-		fullName: {
-			accessorKey: "fullName",
-			header: "Full Name",
-			enableSorting: true,
-		},
-		email: {
-			accessorKey: "email",
-			header: "Email",
-		},
-		signedUpBy: {
-			accessorKey: "signedUpBy",
-			header: "Signed Up By",
-		},
-	}
-
 	Object.keys(fixedColumnDefs).forEach((key) => {
 		columns.push(fixedColumnDefs[key])
 	})
@@ -278,7 +279,7 @@ export default function EventReportPage() {
 								className="input input-bordered w-full max-w-xs"
 							/>
 							<button
-								onClick={handleExportToExcel}
+								onClick={() => void handleExportToExcel()}
 								className="btn btn-neutral btn-sm"
 								disabled={reportData.length === 0}
 							>

@@ -16,6 +16,8 @@ interface FetchWithAuthOptions {
 	backendPath: string // e.g., "/events/search?date=2024-01-01"
 	method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
 	body?: unknown
+	responseType?: "json" | "binary" // Default: "json"
+	filename?: string // For Content-Disposition in binary mode
 }
 
 interface FetchSSEWithAuthOptions {
@@ -32,6 +34,8 @@ export async function fetchWithAuth({
 	backendPath,
 	method = "GET",
 	body,
+	responseType = "json",
+	filename,
 }: FetchWithAuthOptions): Promise<NextResponse> {
 	try {
 		// Verify session first
@@ -95,6 +99,22 @@ export async function fetchWithAuth({
 				{ error: `Backend API error: ${errorText}` },
 				{ status: response.status },
 			)
+		}
+
+		if (responseType === "binary") {
+			const buffer = await response.arrayBuffer()
+			const contentType =
+				response.headers.get("Content-Type") ||
+				"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+			const contentDisposition =
+				response.headers.get("Content-Disposition") ||
+				`attachment; filename="${filename || "report"}.xlsx"`
+			return new NextResponse(buffer, {
+				headers: {
+					"Content-Type": contentType,
+					"Content-Disposition": contentDisposition,
+				},
+			})
 		}
 
 		const data: unknown = await response.json()

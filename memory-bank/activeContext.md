@@ -6,9 +6,13 @@ Current focus:
 - Implement Next.js frontend with better-auth integration and daisyUI components
 - Establish end-to-end connectivity between API and web app
 - API module barrel exports completed - all major modules now have clean public APIs
+- Refactored report pages and API proxy routes for reduced duplication and improved maintainability
 
 Recent changes:
 
+- **Event Report Infinite Re-render Fix**: Fixed "Maximum update depth exceeded" error in event report page by moving `fixedColumnDefs` object outside component to prevent re-creation on every render; eliminated useEffect dependency changes that caused infinite loops
+- **Report Pages Refactoring**: Created shared hooks (`useAuthenticatedFetch`, `useExcelExport`) and `ReportPage` wrapper component; reduced page duplication by ~50%; unified loading/error states, authentication, and Excel export functionality; maintained TanStack Table features in Points report while unifying UI patterns
+- **API Proxy Routes Refactoring**: Extended `fetchWithAuth` utility to support binary responses (Excel downloads); eliminated ~160 lines of duplicated authentication logic across Excel proxy routes; unified auth handling for all report proxies (JSON + binary)
 - **Event Results Report Implementation**: Complete end-to-end Event Results report with three sections (stroke play, skins, proxies) and empty row separators; backend queries tournamentResult + tournament + player tables with format-specific filtering and sorting; frontend hierarchical table rendering with section headers and sub-sections; Excel export with proper section formatting; API proxy routes for JSON and Excel endpoints; stroke tournaments exclude "Overall", skins use position for "skins won", proxies show single winner per tournament
 - **Points Report Implementation**: Complete end-to-end points report with backend database joins (tournamentPoints + tournament + player tables), frontend TanStack Table with sorting/filtering/pagination, Excel export, and API proxy routes; displays tournament name, position, full name, GHIN, score, points, type (Gross/Net), and details with default tournament name + position sorting; follows event report patterns for consistency
 - **TanStack Table Integration for Event Reports**: Pivoted event report page from server-side sorting/filtering to client-side using @tanstack/react-table; removed backend filter/sort logic, fetch full dataset once, enable client-side sorting (team/GHIN/age/fullName), global fuzzy search, and pagination (10/25/50/100 rows); maintains default team ascending sort on load; improves responsiveness for <1000 rows
