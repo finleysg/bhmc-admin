@@ -22,6 +22,7 @@ Apps
   - Framework: Next.js 16.0.1 (App Router, TypeScript)
   - Auth: better-auth v1.3.34 with better-sqlite3 and Kysely ORM
   - UI: Tailwind CSS v4 + daisyUI 5 (emerald/sunset themes)
+  - Table Library: @tanstack/react-table v8.21.3 for client-side sorting, filtering, and pagination
   - SQLite storage: file path `./apps/web/data/auth.db`
   - Health endpoint: `GET /health`
 

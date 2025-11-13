@@ -49,6 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Event Report Sorting**: Restored default sort in getEventReport to sort by teamId ascending
+- **Event Report UI**: Removed row number column from event report table and added record count display in report title
+- **Event Report Table**: Migrated to TanStack Table (React Table v8) with advanced features including sortable columns, global search/filtering, pagination, and responsive design
 - **Golf Genius Page**: Replaced static action cards with dynamic IntegrationOrchestrator component
 - **IntegrationActionCard**: Added onComplete callback prop and real API execution instead of placeholder alerts
 

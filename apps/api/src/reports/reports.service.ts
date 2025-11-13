@@ -3,7 +3,6 @@ import {
 	EventPlayerFeeDto,
 	EventPlayerSlotDto,
 	EventRegistrationSummaryDto,
-	EventReportQueryDto,
 	EventReportRowDto,
 } from "@repo/dto"
 
@@ -170,19 +169,7 @@ export class ReportsService {
 		return { eventId, total: transformed.length, slots: transformed }
 	}
 
-	async getEventReport(eventId: number, query: EventReportQueryDto): Promise<EventReportRowDto[]> {
-		// Set default sort values if not provided
-		const effectiveSort = query.sort || "team"
-		const effectiveDir = query.dir || "asc"
-
-		// Validate effective sort values
-		if (!["team", "ghin", "age", "fullName"].includes(effectiveSort)) {
-			throw new Error(`Invalid sort field: ${effectiveSort}`)
-		}
-		if (!["asc", "desc"].includes(effectiveDir)) {
-			throw new Error(`Invalid sort direction: ${effectiveDir}`)
-		}
-
+	async getEventReport(eventId: number): Promise<EventReportRowDto[]> {
 		const summary = await this.getPlayersByEvent(eventId)
 		const rows = summary.slots.map((slot) => {
 			const row: EventReportRowDto = {
@@ -205,57 +192,7 @@ export class ReportsService {
 			return row
 		})
 
-		// Filter
-		let filteredRows = rows
-		if (query.filterGhin)
-			filteredRows = filteredRows.filter((r) =>
-				r.ghin.toLowerCase().includes(query.filterGhin!.toLowerCase()),
-			)
-		if (query.filterTee)
-			filteredRows = filteredRows.filter((r) =>
-				r.tee.toLowerCase().includes(query.filterTee!.toLowerCase()),
-			)
-		if (query.filterFirstName)
-			filteredRows = filteredRows.filter((r) =>
-				r.firstName.toLowerCase().includes(query.filterFirstName!.toLowerCase()),
-			)
-		if (query.filterLastName)
-			filteredRows = filteredRows.filter((r) =>
-				r.lastName.toLowerCase().includes(query.filterLastName!.toLowerCase()),
-			)
-		if (query.filterEmail)
-			filteredRows = filteredRows.filter((r) =>
-				r.email.toLowerCase().includes(query.filterEmail!.toLowerCase()),
-			)
-		if (query.filterSignedUpBy)
-			filteredRows = filteredRows.filter((r) =>
-				r.signedUpBy.toLowerCase().includes(query.filterSignedUpBy!.toLowerCase()),
-			)
-
-		// Sort with default team ascending
-		filteredRows.sort((a, b) => {
-			let valA: string, valB: string
-			if (effectiveSort === "age") {
-				valA = a.age === "n/a" ? (effectiveDir === "asc" ? "999" : "000") : a.age
-				valB = b.age === "n/a" ? (effectiveDir === "asc" ? "999" : "000") : b.age
-				return effectiveDir === "desc"
-					? parseInt(valB) - parseInt(valA)
-					: parseInt(valA) - parseInt(valB)
-			} else {
-				const sortKey: keyof EventReportRowDto =
-					effectiveSort === "team"
-						? "teamId"
-						: effectiveSort === "fullName"
-							? "fullName"
-							: (effectiveSort as "ghin")
-				valA = a[sortKey] || ""
-				valB = b[sortKey] || ""
-				if (effectiveDir === "desc") return valB.localeCompare(valA)
-				return valA.localeCompare(valB)
-			}
-		})
-
-		return filteredRows
+		return rows.sort((a, b) => a.teamId.localeCompare(b.teamId))
 	}
 
 	async getPointsReport(eventId: number): Promise<PointsReport> {

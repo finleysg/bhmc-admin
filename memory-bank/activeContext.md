@@ -9,6 +9,7 @@ Current focus:
 
 Recent changes:
 
+- **TanStack Table Integration for Event Reports**: Pivoted event report page from server-side sorting/filtering to client-side using @tanstack/react-table; removed backend filter/sort logic, fetch full dataset once, enable client-side sorting (team/GHIN/age/fullName), global fuzzy search, and pagination (10/25/50/100 rows); maintains default team ascending sort on load; improves responsiveness for <1000 rows
 - **Golf Genius Integration Completion**: Finalized comprehensive Golf Genius integration module with all core endpoints implemented; moved closeEvent endpoint to golfgenius module with proper integration logging; fixed LogIntegrationInterceptor to handle both `id` and `eventId` parameters and correctly extract event IDs for audit logging
 - **Team Tournament Results Import**: Implemented complete team results import functionality with blind draw exclusion; added "Import Team Results" action to integration workflow, created team-specific parser and service logic, implemented team name parsing to identify blind players using "Bl[firstname lastname]" pattern, and added tracking for skipped blind players in import summaries
 - **Blind Draw Exclusion Logic**: Added business rule to skip blind draws from tournament payouts; parses team names to extract blind player names, matches against registered players using full name comparison, skips blind players from tournamentResult record creation while logging exclusions, and tracks skipped count in import results
