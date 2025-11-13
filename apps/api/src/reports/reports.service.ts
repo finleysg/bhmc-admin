@@ -171,12 +171,16 @@ export class ReportsService {
 	}
 
 	async getEventReport(eventId: number, query: EventReportQueryDto): Promise<EventReportRowDto[]> {
-		// Validate query
-		if (query.sort && !["team", "ghin", "age", "fullName"].includes(query.sort)) {
-			throw new Error(`Invalid sort field: ${query.sort}`)
+		// Set default sort values if not provided
+		const effectiveSort = query.sort || "team"
+		const effectiveDir = query.dir || "asc"
+
+		// Validate effective sort values
+		if (!["team", "ghin", "age", "fullName"].includes(effectiveSort)) {
+			throw new Error(`Invalid sort field: ${effectiveSort}`)
 		}
-		if (query.dir && !["asc", "desc"].includes(query.dir)) {
-			throw new Error(`Invalid sort direction: ${query.dir}`)
+		if (!["asc", "desc"].includes(effectiveDir)) {
+			throw new Error(`Invalid sort direction: ${effectiveDir}`)
 		}
 
 		const summary = await this.getPlayersByEvent(eventId)
@@ -228,25 +232,25 @@ export class ReportsService {
 				r.signedUpBy.toLowerCase().includes(query.filterSignedUpBy!.toLowerCase()),
 			)
 
-		// Sort
+		// Sort with default team ascending
 		filteredRows.sort((a, b) => {
 			let valA: string, valB: string
-			if (query.sort === "age") {
-				valA = a.age === "n/a" ? (query.dir === "asc" ? "999" : "000") : a.age
-				valB = b.age === "n/a" ? (query.dir === "asc" ? "999" : "000") : b.age
-				return query.dir === "desc"
+			if (effectiveSort === "age") {
+				valA = a.age === "n/a" ? (effectiveDir === "asc" ? "999" : "000") : a.age
+				valB = b.age === "n/a" ? (effectiveDir === "asc" ? "999" : "000") : b.age
+				return effectiveDir === "desc"
 					? parseInt(valB) - parseInt(valA)
 					: parseInt(valA) - parseInt(valB)
 			} else {
 				const sortKey: keyof EventReportRowDto =
-					query.sort === "team"
+					effectiveSort === "team"
 						? "teamId"
-						: query.sort === "fullName"
+						: effectiveSort === "fullName"
 							? "fullName"
-							: (query.sort as "ghin")
-				valA = a[sortKey]
-				valB = b[sortKey]
-				if (query.dir === "desc") return valB.localeCompare(valA)
+							: (effectiveSort as "ghin")
+				valA = a[sortKey] || ""
+				valB = b[sortKey] || ""
+				if (effectiveDir === "desc") return valB.localeCompare(valA)
 				return valA.localeCompare(valB)
 			}
 		})

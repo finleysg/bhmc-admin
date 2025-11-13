@@ -73,7 +73,12 @@ export async function fetchWithAuth({
 			return NextResponse.json({ error: "API URL not configured" }, { status: 500 })
 		}
 
-		const backendUrl = `${apiUrl}${backendPath}`
+		// Forward query parameters from the incoming request
+		const url = new URL(request.url)
+		const searchParams = url.searchParams.toString()
+		const backendUrl = searchParams
+			? `${apiUrl}${backendPath}?${searchParams}`
+			: `${apiUrl}${backendPath}`
 
 		const response = await fetch(backendUrl, {
 			method,
