@@ -1,14 +1,19 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import {
+	useEffect,
+	useState,
+} from "react"
 
-import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 
 import { Pagination } from "@/components/pagination"
-import { useSession } from "@/lib/auth-client"
 import { useIsMobile } from "@/lib/use-is-mobile"
-import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
+import {
+	ArrowDownIcon,
+	ArrowsUpDownIcon,
+	ArrowUpIcon,
+} from "@heroicons/react/24/outline"
 import { EventReportRowDto } from "@repo/dto"
 import {
 	ColumnDef,
@@ -20,6 +25,8 @@ import {
 	SortingState,
 	useReactTable,
 } from "@tanstack/react-table"
+
+import { ReportPage } from "../../../../components/report-page"
 
 // Fixed columns definition (moved outside component to prevent re-creation)
 const fixedColumnDefs: Record<string, ColumnDef<EventReportRowDto>> = {
@@ -80,52 +87,12 @@ const fixedColumnDefs: Record<string, ColumnDef<EventReportRowDto>> = {
 	},
 }
 
-export default function EventReportPage() {
-	const { data: session, isPending } = useSession()
-	const signedIn = !!session?.user
-	const router = useRouter()
-	const params = useParams()
-	const eventId = params.eventId as string
+const EventTable = ({ data }: { data: EventReportRowDto[] | null }) => {
 	const isMobile = useIsMobile()
-
-	const [reportData, setReportData] = useState<EventReportRowDto[]>([])
-	const [loading, setLoading] = useState(true)
-	const [error, setError] = useState<string | null>(null)
 	const [sorting, setSorting] = useState<SortingState>([{ id: "teamId", desc: false }])
 	const [globalFilter, setGlobalFilter] = useState("")
 	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 })
 	const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({})
-
-	// Redirect if not authenticated
-	useEffect(() => {
-		if (!signedIn && !isPending) {
-			router.push("/sign-in")
-		}
-	}, [signedIn, isPending, router])
-
-	// Fetch report data
-	useEffect(() => {
-		if (!signedIn || isPending) return
-
-		const fetchReport = async () => {
-			try {
-				setLoading(true)
-				const url = `/api/events/${eventId}/reports/event`
-				const response = await fetch(url)
-				if (!response.ok) {
-					throw new Error(`Failed to fetch report: ${response.statusText}`)
-				}
-				const data = (await response.json()) as EventReportRowDto[]
-				setReportData(data)
-			} catch (err) {
-				setError(err instanceof Error ? err.message : "Unknown error")
-			} finally {
-				setLoading(false)
-			}
-		}
-
-		void fetchReport()
-	}, [signedIn, isPending, eventId])
 
 	// Define columns for TanStack Table
 	const columns: ColumnDef<EventReportRowDto>[] = []
@@ -136,8 +103,8 @@ export default function EventReportPage() {
 	})
 
 	// Dynamic fee columns
-	if (reportData.length > 0) {
-		const feeKeys = Object.keys(reportData[0]).filter(
+	if (data && data.length > 0) {
+		const feeKeys = Object.keys(data[0]).filter(
 			(key) => !Object.keys(fixedColumnDefs).includes(key) && key !== "signupDate",
 		)
 		feeKeys.forEach((key) => {
@@ -150,7 +117,7 @@ export default function EventReportPage() {
 
 	// Update column visibility based on mobile state
 	useEffect(() => {
-		if (reportData.length === 0) return
+		if (!data || data.length === 0) return
 
 		const visibility: Record<string, boolean> = {}
 
@@ -159,7 +126,7 @@ export default function EventReportPage() {
 
 		// Get all column keys (fixed + dynamic)
 		const allColumnKeys = Object.keys(fixedColumnDefs)
-		const feeKeys = Object.keys(reportData[0]).filter(
+		const feeKeys = Object.keys(data[0]).filter(
 			(key) => !Object.keys(fixedColumnDefs).includes(key) && key !== "signupDate",
 		)
 		const allKeys = [...allColumnKeys, ...feeKeys]
@@ -170,32 +137,11 @@ export default function EventReportPage() {
 		})
 
 		setColumnVisibility(visibility)
-	}, [isMobile, reportData, fixedColumnDefs])
-
-	const handleExportToExcel = async () => {
-		try {
-			const response = await fetch(`/api/events/${eventId}/reports/event/excel`)
-			if (!response.ok) {
-				throw new Error(`Failed to download Excel: ${response.statusText}`)
-			}
-			const blob = await response.blob()
-			const url = URL.createObjectURL(blob)
-			const a = document.createElement("a")
-			a.href = url
-			a.download = `event-report-${eventId}.xlsx`
-			document.body.appendChild(a)
-			a.click()
-			document.body.removeChild(a)
-			URL.revokeObjectURL(url)
-		} catch (error) {
-			console.error("Export failed:", error)
-			alert("Failed to export Excel file. Please try again.")
-		}
-	}
+	}, [isMobile, data])
 
 	// Create table instance
 	const table = useReactTable({
-		data: reportData,
+		data: data || [],
 		columns,
 		state: {
 			sorting,
@@ -213,115 +159,83 @@ export default function EventReportPage() {
 		getPaginationRowModel: getPaginationRowModel(),
 	})
 
-	if (isPending || loading) {
-		return (
-			<div className="flex items-center justify-center p-2">
-				<span className="loading loading-spinner loading-lg"></span>
+	return (
+		<>
+			{/* Global Filter */}
+			<div className="mb-4 flex gap-2 justify-between">
+				<input
+					value={globalFilter ?? ""}
+					onChange={(e) => setGlobalFilter(e.target.value)}
+					placeholder="Search all fields..."
+					className="input input-bordered w-full max-w-xs"
+				/>
 			</div>
-		)
-	}
 
-	if (!signedIn && !isPending) {
-		return null // Redirecting
-	}
+			{/* Table */}
+			<div className="overflow-x-auto bg-base-100">
+				<table className="table table-zebra table-xs">
+					<thead>
+						{table.getHeaderGroups().map((headerGroup) => (
+							<tr key={headerGroup.id}>
+								{headerGroup.headers.map((header) => (
+									<th key={header.id} className="text-left text-xs">
+										{header.isPlaceholder ? null : (
+											<div
+												className={
+													header.column.getCanSort()
+														? "cursor-pointer select-none flex items-center"
+														: ""
+												}
+												onClick={header.column.getToggleSortingHandler()}
+											>
+												{flexRender(header.column.columnDef.header, header.getContext())}
+												{{
+													asc: <ArrowUpIcon className="w-4 h-4 ml-1 text-primary" />,
+													desc: <ArrowDownIcon className="w-4 h-4 ml-1 text-primary" />,
+												}[header.column.getIsSorted() as string] ??
+													(header.column.getCanSort() ? (
+														<ArrowsUpDownIcon className="w-4 h-4 ml-1 opacity-50" />
+													) : null)}
+											</div>
+										)}
+									</th>
+								))}
+							</tr>
+						))}
+					</thead>
+					<tbody>
+						{table.getRowModel().rows.map((row) => (
+							<tr key={row.id}>
+								{row.getVisibleCells().map((cell) => (
+									<td key={cell.id}>
+										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+									</td>
+								))}
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
 
-	if (error) {
-		return (
-			<main className="min-h-screen flex items-center justify-center p-2">
-				<div className="w-full max-w-3xl text-center">
-					<h2 className="text-3xl font-bold mb-4">Event Report</h2>
-					<p className="text-error mb-8">Error loading report: {error}</p>
-					<Link href={`/events/${eventId}/reports`} className="btn btn-primary">
-						Back to Reports
-					</Link>
-				</div>
-			</main>
-		)
-	}
+			{/* Pagination */}
+			<Pagination table={table} />
+		</>
+	)
+}
+
+export default function EventReportPage() {
+	const params = useParams()
+	const eventId = params.eventId as string
 
 	return (
-		<main className="min-h-screen p-2">
-			<div className="w-full">
-				<div className="flex items-center justify-between mb-4">
-					<h1 className="text-xl text-info font-bold">
-						Event Report ({reportData.length} {reportData.length === 1 ? "record" : "records"})
-					</h1>
-				</div>
-
-				{reportData.length === 0 ? (
-					<div className="text-center py-12">
-						<p className="text-muted-foreground">No report data available for this event.</p>
-					</div>
-				) : (
-					<>
-						{/* Global Filter */}
-						<div className="mb-4 flex gap-2 justify-between">
-							<input
-								value={globalFilter ?? ""}
-								onChange={(e) => setGlobalFilter(e.target.value)}
-								placeholder="Search all fields..."
-								className="input input-bordered w-full max-w-xs"
-							/>
-							<button
-								onClick={() => void handleExportToExcel()}
-								className="btn btn-neutral btn-sm"
-								disabled={reportData.length === 0}
-							>
-								Export to Excel
-							</button>
-						</div>
-
-						{/* Table */}
-						<div className="overflow-x-auto bg-base-100">
-							<table className="table table-zebra table-xs">
-								<thead>
-									{table.getHeaderGroups().map((headerGroup) => (
-										<tr key={headerGroup.id}>
-											{headerGroup.headers.map((header) => (
-												<th key={header.id} className="text-left text-xs">
-													{header.isPlaceholder ? null : (
-														<div
-															className={
-																header.column.getCanSort()
-																	? "cursor-pointer select-none flex items-center"
-																	: ""
-															}
-															onClick={header.column.getToggleSortingHandler()}
-														>
-															{flexRender(header.column.columnDef.header, header.getContext())}
-															{{
-																asc: <ArrowUpIcon className="w-4 h-4 ml-1 text-primary" />,
-																desc: <ArrowDownIcon className="w-4 h-4 ml-1 text-primary" />,
-															}[header.column.getIsSorted() as string] ??
-																(header.column.getCanSort() ? (
-																	<ArrowsUpDownIcon className="w-4 h-4 ml-1 opacity-50" />
-																) : null)}
-														</div>
-													)}
-												</th>
-											))}
-										</tr>
-									))}
-								</thead>
-								<tbody>
-									{table.getRowModel().rows.map((row) => (
-										<tr key={row.id}>
-											{row.getVisibleCells().map((cell) => (
-												<td key={cell.id}>
-													{flexRender(cell.column.columnDef.cell, cell.getContext())}
-												</td>
-											))}
-										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
-
-						{/* Pagination */}
-						<Pagination table={table} />
-					</>
-				)}
-			</div>
-		</main>
+		<ReportPage<EventReportRowDto[]>
+			title="Event Report"
+			eventId={eventId}
+			fetchPath={`/api/events/${eventId}/reports/event`}
+			excelPath={`/api/events/${eventId}/reports/event/excel`}
+			filenamePrefix="event-report"
+		>
+			{(data) => <EventTable data={data} />}
+		</ReportPage>
 	)
 }
