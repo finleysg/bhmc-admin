@@ -1,8 +1,4 @@
-import {
-	and,
-	eq,
-	sql,
-} from "drizzle-orm"
+import { and, eq, sql } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 import {
@@ -17,10 +13,7 @@ import {
 	PointsReportRowDto,
 } from "@repo/dto"
 
-import {
-	CoursesService,
-	HoleDto,
-} from "../courses"
+import { CoursesService, HoleDto } from "../courses"
 import {
 	DrizzleService,
 	eventFee,
@@ -33,11 +26,7 @@ import {
 	tournamentPoints,
 	tournamentResult,
 } from "../database"
-import {
-	EventFeeWithTypeDto,
-	EventsDomainService,
-	EventsService,
-} from "../events"
+import { EventFeeWithTypeDto, EventsDomainService, EventsService } from "../events"
 import {
 	RegisteredPlayerDto,
 	RegistrationDomainService,

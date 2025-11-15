@@ -2,19 +2,9 @@ import { EventReportRowDto } from "@repo/dto"
 
 import { CoursesService } from "../../courses"
 import { DrizzleService } from "../../database"
-import {
-	EventsDomainService,
-	EventsService,
-} from "../../events"
-import {
-	RegistrationDomainService,
-	RegistrationService,
-} from "../../registration"
-import {
-	createWorkbook,
-	deriveDynamicColumns,
-	generateBuffer,
-} from "../excel.utils"
+import { EventsDomainService, EventsService } from "../../events"
+import { RegistrationDomainService, RegistrationService } from "../../registration"
+import { createWorkbook, deriveDynamicColumns, generateBuffer } from "../excel.utils"
 import { ReportsService } from "../reports.service"
 
 describe("ReportsService", () => {

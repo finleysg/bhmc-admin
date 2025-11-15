@@ -2,10 +2,7 @@
 
 import { useParams } from "next/navigation"
 
-import {
-	EventResultsReportDto,
-	EventResultsSectionDto,
-} from "@repo/dto"
+import { EventResultsReportDto, EventResultsSectionDto } from "@repo/dto"
 
 import { formatCurrency } from "../../../../../lib/use-report"
 import { ReportPage } from "../../../../components/report-page"
