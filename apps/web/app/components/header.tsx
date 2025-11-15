@@ -33,6 +33,7 @@ export default function Header() {
 			<div className="flex-none">
 				<ThemeToggle />
 			</div>
+			{/* <Breadcrumb /> */}
 		</header>
 	)
 }
