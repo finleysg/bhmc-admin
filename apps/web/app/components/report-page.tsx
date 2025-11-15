@@ -49,16 +49,24 @@ export function ReportPage<T>({
 	const recordCount = data
 		? Array.isArray(data)
 			? data.length
-			: (data as { sections?: unknown[] })?.sections?.length || 0
+			: (data as { sections?: unknown[] })?.sections?.length || 1
 		: 0
 	const hasData = recordCount > 0
+	const isSingleObject =
+		data && !Array.isArray(data) && !(data as { sections?: unknown[] })?.sections
 
 	return (
 		<main className="min-h-screen p-2">
 			<div className="w-full">
 				<div className="flex items-center justify-between mb-4">
 					<h1 className="text-xl text-info font-bold">
-						{title} ({recordCount} {recordCount === 1 ? "record" : "records"})
+						{title}
+						{!isSingleObject && (
+							<span>
+								{" "}
+								({recordCount} {recordCount === 1 ? "record" : "records"})
+							</span>
+						)}
 					</h1>
 					{hasData && (
 						<button onClick={() => void download()} className="btn btn-neutral btn-sm">

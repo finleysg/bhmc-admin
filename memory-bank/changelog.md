@@ -49,6 +49,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Golf Genius Integration Finalization**: All core endpoints implemented and tested with comprehensive error handling and logging
 - **Type Safety Enhancements**: Advanced TypeScript patterns including discriminated unions, type guards, and proper API response handling
 
+## [0.4.0-alpha.1] - 2025-11-13
+
+### Added
+
+- **Finance Report Implementation**: Complete event-specific finance report with money flow tracking; aggregates payments, refunds, and tournament payouts by bucket (Credit, Cash, Passthru); includes net calculations, format-specific payout breakdowns, Excel export, and API endpoints; handles proportional refund allocation across fee types with comprehensive database joins and type-safe DTOs
+
 ## [Unreleased]
 
 ### Added

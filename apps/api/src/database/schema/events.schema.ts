@@ -115,6 +115,7 @@ export const feeType = mysqlTable(
 		id: int().autoincrement().notNull(),
 		name: varchar({ length: 30 }).notNull(),
 		code: varchar({ length: 3 }).notNull(),
+		payout: varchar({ length: 10 }).notNull(),
 		restriction: varchar({ length: 20 }).notNull(),
 	},
 	(table) => [

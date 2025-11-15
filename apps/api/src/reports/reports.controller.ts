@@ -50,9 +50,24 @@ export class ReportsController {
 		res.send(buffer)
 	}
 
-	@Get("events/:eventId/financials")
+	@Get("events/:eventId/finance")
 	async getFinanceReport(@Param("eventId", ParseIntPipe) eventId: number) {
 		return this.reports.getFinanceReport(eventId)
+	}
+
+	@Get("events/:eventId/finance/excel")
+	async getFinanceReportExcel(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Res() res: Response,
+	) {
+		const buffer = await this.reports.generateFinanceReportExcel(eventId)
+
+		res.setHeader(
+			"Content-Type",
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		)
+		res.setHeader("Content-Disposition", `attachment; filename="finance-report-${eventId}.xlsx"`)
+		res.send(buffer)
 	}
 
 	@Get("events/:eventId/results")

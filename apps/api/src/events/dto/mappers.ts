@@ -106,6 +106,7 @@ export function mapToFeeTypeDto(entity: Record<string, any>): FeeTypeDto {
 		id: entity.id,
 		name: entity.name,
 		code: entity.code,
+		payout: entity.payout,
 		restriction: entity.restriction,
 	}
 }

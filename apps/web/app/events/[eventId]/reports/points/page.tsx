@@ -1,10 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import {
+	useEffect,
+	useState,
+} from "react"
 
 import { useParams } from "next/navigation"
 
-import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
+import { useIsMobile } from "@/lib/use-is-mobile"
+import {
+	ArrowDownIcon,
+	ArrowsUpDownIcon,
+	ArrowUpIcon,
+} from "@heroicons/react/24/outline"
 import { PointsReportRowDto } from "@repo/dto"
 import {
 	ColumnDef,
@@ -17,25 +25,7 @@ import {
 	useReactTable,
 } from "@tanstack/react-table"
 
-import { ReportPage } from "../../../../../components/report-page"
-
-// Custom hook for mobile detection
-function useIsMobile() {
-	const [isMobile, setIsMobile] = useState(false)
-
-	useEffect(() => {
-		const checkIsMobile = () => {
-			setIsMobile(window.innerWidth <= 768)
-		}
-
-		checkIsMobile()
-		window.addEventListener("resize", checkIsMobile)
-
-		return () => window.removeEventListener("resize", checkIsMobile)
-	}, [])
-
-	return isMobile
-}
+import { ReportPage } from "../../../../components/report-page"
 
 const PointsTable = ({ data }: { data: PointsReportRowDto[] | null }) => {
 	const isMobile = useIsMobile()

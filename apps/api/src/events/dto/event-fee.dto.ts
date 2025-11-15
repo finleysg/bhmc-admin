@@ -13,6 +13,7 @@ export interface FeeTypeDto {
 	id?: number
 	name: string
 	code: string
+	payout: string
 	restriction: string
 }
 

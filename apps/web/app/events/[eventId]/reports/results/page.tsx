@@ -2,10 +2,13 @@
 
 import { useParams } from "next/navigation"
 
-import { EventResultsReportDto, EventResultsSectionDto } from "@repo/dto"
+import {
+	EventResultsReportDto,
+	EventResultsSectionDto,
+} from "@repo/dto"
 
-import { ReportPage } from "../../../../../components/report-page"
 import { formatCurrency } from "../../../../../lib/use-report"
+import { ReportPage } from "../../../../components/report-page"
 
 const renderSection = (section: EventResultsSectionDto) => {
 	if (section.type === "proxies") {

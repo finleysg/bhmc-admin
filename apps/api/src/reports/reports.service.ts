@@ -1,4 +1,8 @@
-import { eq } from "drizzle-orm"
+import {
+	and,
+	eq,
+	sql,
+} from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 import {
@@ -9,12 +13,31 @@ import {
 	EventResultsReportDto,
 	EventResultsReportRowDto,
 	EventResultsSectionDto,
+	FinanceReportDto,
 	PointsReportRowDto,
 } from "@repo/dto"
 
-import { CoursesService, HoleDto } from "../courses"
-import { DrizzleService, player, tournament, tournamentPoints, tournamentResult } from "../database"
-import { EventFeeWithTypeDto, EventsDomainService, EventsService } from "../events"
+import {
+	CoursesService,
+	HoleDto,
+} from "../courses"
+import {
+	DrizzleService,
+	eventFee,
+	feeType,
+	payment,
+	player,
+	refund,
+	registrationFee,
+	tournament,
+	tournamentPoints,
+	tournamentResult,
+} from "../database"
+import {
+	EventFeeWithTypeDto,
+	EventsDomainService,
+	EventsService,
+} from "../events"
 import {
 	RegisteredPlayerDto,
 	RegistrationDomainService,
@@ -32,13 +55,6 @@ import {
 interface MembershipReport {
 	season: number
 	members: Array<{ id: number; name: string; status: "active" | "inactive" }>
-}
-
-interface FinanceReport {
-	eventId: number
-	collected: number
-	outstanding: number
-	payouts: number
 }
 
 interface ResultsReport {
@@ -322,14 +338,185 @@ export class ReportsService {
 		return generateBuffer(workbook)
 	}
 
-	async getFinanceReport(eventId: number): Promise<FinanceReport> {
-		// Stub: Mock finances
-		return await Promise.resolve({
+	async getFinanceReport(eventId: number): Promise<FinanceReportDto> {
+		await this.validateEvent(eventId)
+
+		// Get gross inflows by bucket
+		const inflows = await this.drizzle.db
+			.select({
+				bucket: feeType.payout,
+				total: sql<number>`sum(${registrationFee.amount})`.as("total"),
+			})
+			.from(payment)
+			.innerJoin(registrationFee, eq(payment.id, registrationFee.paymentId))
+			.innerJoin(eventFee, eq(registrationFee.eventFeeId, eventFee.id))
+			.innerJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
+			.where(eq(payment.eventId, eventId))
+			.groupBy(feeType.payout)
+
+		let creditCollected = 0
+		let cashCollected = 0
+		let passthruCollected = 0
+
+		for (const inflow of inflows) {
+			const amount = parseFloat(inflow.total.toString())
+			if (inflow.bucket === "Credit") creditCollected += amount
+			else if (inflow.bucket === "Cash") cashCollected += amount
+			else if (inflow.bucket === "Passthru") passthruCollected += amount
+		}
+
+		const totalCollected = creditCollected + cashCollected + passthruCollected
+
+		// Get refunds and allocate by bucket
+		const refunds = await this.drizzle.db
+			.select({
+				paymentId: refund.paymentId,
+				refundAmount: refund.refundAmount,
+			})
+			.from(refund)
+			.innerJoin(payment, eq(refund.paymentId, payment.id))
+			.where(and(eq(payment.eventId, eventId), eq(refund.confirmed, 1)))
+
+		let creditRefunds = 0
+		let cashRefunds = 0
+		let passthruRefunds = 0
+
+		for (const r of refunds) {
+			const fees = await this.drizzle.db
+				.select({
+					bucket: feeType.payout,
+					amount: registrationFee.amount,
+				})
+				.from(registrationFee)
+				.innerJoin(eventFee, eq(registrationFee.eventFeeId, eventFee.id))
+				.innerJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
+				.innerJoin(payment, eq(registrationFee.paymentId, payment.id))
+				.where(eq(payment.id, r.paymentId))
+
+			let totalFees = 0
+			for (const f of fees) {
+				totalFees += parseFloat(f.amount.toString())
+			}
+
+			if (totalFees > 0) {
+				for (const f of fees) {
+					const proportion = parseFloat(f.amount.toString()) / totalFees
+					const allocated = parseFloat(r.refundAmount.toString()) * proportion
+					if (f.bucket === "Credit") creditRefunds += allocated
+					else if (f.bucket === "Cash") cashRefunds += allocated
+					else if (f.bucket === "Passthru") passthruRefunds += allocated
+				}
+			}
+		}
+
+		const totalRefunds = creditRefunds + cashRefunds + passthruRefunds
+
+		// Net inflows
+		const creditNet = creditCollected - creditRefunds
+		const cashNet = cashCollected - cashRefunds
+		const passthruNet = passthruCollected - passthruRefunds
+
+		// Get outflows by bucket and format
+		const outflows = await this.drizzle.db
+			.select({
+				bucket: tournamentResult.payoutType,
+				format: tournament.format,
+				total: sql<number>`sum(${tournamentResult.amount})`.as("total"),
+			})
+			.from(tournamentResult)
+			.innerJoin(tournament, eq(tournamentResult.tournamentId, tournament.id))
+			.where(and(eq(tournament.eventId, eventId), sql`${tournamentResult.amount} > 0`))
+			.groupBy(tournamentResult.payoutType, tournament.format)
+
+		const creditPayouts: Record<string, number> = {}
+		const cashPayouts: Record<string, number> = {}
+		let creditTotalPayouts = 0
+		let cashTotalPayouts = 0
+
+		for (const outflow of outflows) {
+			const amount = parseFloat(outflow.total.toString())
+			const bucket = outflow.bucket
+			const format = outflow.format
+			if (bucket === "Credit" && format) {
+				creditPayouts[format] = (creditPayouts[format] || 0) + amount
+				creditTotalPayouts += amount
+			} else if (bucket === "Cash" && format) {
+				cashPayouts[format] = (cashPayouts[format] || 0) + amount
+				cashTotalPayouts += amount
+			}
+		}
+
+		return {
 			eventId,
-			collected: 400,
-			outstanding: 100,
-			payouts: 300,
-		})
+			creditCollected,
+			cashCollected,
+			passthruCollected,
+			totalCollected,
+			creditRefunds,
+			cashRefunds,
+			passthruRefunds,
+			totalRefunds,
+			creditNet,
+			cashNet,
+			passthruNet,
+			creditPayouts,
+			creditTotalPayouts,
+			cashPayouts,
+			cashTotalPayouts,
+		}
+	}
+
+	async generateFinanceReportExcel(eventId: number): Promise<Buffer> {
+		const report = await this.getFinanceReport(eventId)
+
+		const workbook = await createWorkbook()
+		const worksheet = workbook.addWorksheet("Finance Report")
+
+		// Define fixed columns
+		const fixedColumns = [
+			{ header: "Bucket", key: "bucket", width: 15 },
+			{ header: "Gross Collected", key: "grossCollected", width: 15 },
+			{ header: "Refunds", key: "refunds", width: 15 },
+			{ header: "Net Inflow", key: "netInflow", width: 15 },
+			{ header: "Total Payouts", key: "totalPayouts", width: 15 },
+			{ header: "Net Profit", key: "netProfit", width: 15 },
+		]
+
+		const allColumns = fixedColumns
+
+		// Prepare data rows
+		const rows = [
+			{
+				bucket: "Credit",
+				grossCollected: report.creditCollected,
+				refunds: report.creditRefunds,
+				netInflow: report.creditNet,
+				totalPayouts: report.creditTotalPayouts,
+				netProfit: report.creditNet - report.creditTotalPayouts,
+			},
+			{
+				bucket: "Cash",
+				grossCollected: report.cashCollected,
+				refunds: report.cashRefunds,
+				netInflow: report.cashNet,
+				totalPayouts: report.cashTotalPayouts,
+				netProfit: report.cashNet - report.cashTotalPayouts,
+			},
+			{
+				bucket: "Passthru",
+				grossCollected: report.passthruCollected,
+				refunds: report.passthruRefunds,
+				netInflow: report.passthruNet,
+				totalPayouts: 0, // No payouts for passthru
+				netProfit: report.passthruNet - 0,
+			},
+		]
+
+		addFixedColumns(worksheet, allColumns)
+		styleHeaderRow(worksheet, 1)
+		addDataRows(worksheet, 2, rows as unknown as Record<string, unknown>[], allColumns)
+
+		return generateBuffer(workbook)
 	}
 
 	async getResultsReport(eventId: number): Promise<ResultsReport> {

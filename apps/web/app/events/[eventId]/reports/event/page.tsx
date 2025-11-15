@@ -1,12 +1,23 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import {
+	useEffect,
+	useState,
+} from "react"
 
 import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
+import {
+	useParams,
+	useRouter,
+} from "next/navigation"
 
 import { useSession } from "@/lib/auth-client"
-import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
+import { useIsMobile } from "@/lib/use-is-mobile"
+import {
+	ArrowDownIcon,
+	ArrowsUpDownIcon,
+	ArrowUpIcon,
+} from "@heroicons/react/24/outline"
 import { EventReportRowDto } from "@repo/dto"
 import {
 	ColumnDef,
@@ -18,24 +29,6 @@ import {
 	SortingState,
 	useReactTable,
 } from "@tanstack/react-table"
-
-// Custom hook for mobile detection
-function useIsMobile() {
-	const [isMobile, setIsMobile] = useState(false)
-
-	useEffect(() => {
-		const checkIsMobile = () => {
-			setIsMobile(window.innerWidth <= 768)
-		}
-
-		checkIsMobile()
-		window.addEventListener("resize", checkIsMobile)
-
-		return () => window.removeEventListener("resize", checkIsMobile)
-	}, [])
-
-	return isMobile
-}
 
 // Fixed columns definition (moved outside component to prevent re-creation)
 const fixedColumnDefs: Record<string, ColumnDef<EventReportRowDto>> = {
