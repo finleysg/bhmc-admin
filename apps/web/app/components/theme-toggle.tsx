@@ -1,6 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import {
+	useEffect,
+	useState,
+} from "react"
 
 export default function ThemeToggle() {
 	const [isDark, setIsDark] = useState(false)
@@ -8,11 +11,11 @@ export default function ThemeToggle() {
 	useEffect(() => {
 		// Check initial theme
 		const theme = document.documentElement.getAttribute("data-theme")
-		setIsDark(theme === "sunset")
+		setIsDark(theme === "forest")
 	}, [])
 
 	const toggleTheme = () => {
-		const newTheme = isDark ? "emerald" : "sunset"
+		const newTheme = isDark ? "forest" : "lemonade"
 		document.documentElement.setAttribute("data-theme", newTheme)
 		setIsDark(!isDark)
 		localStorage.setItem("theme", newTheme)

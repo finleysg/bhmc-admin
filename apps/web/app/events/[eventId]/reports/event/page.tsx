@@ -1,19 +1,13 @@
 "use client"
 
-import {
-	useEffect,
-	useState,
-} from "react"
+import { useEffect, useState } from "react"
 
 import { useParams } from "next/navigation"
 
 import { Pagination } from "@/components/pagination"
+import { ReportPage } from "@/components/report-page"
 import { useIsMobile } from "@/lib/use-is-mobile"
-import {
-	ArrowDownIcon,
-	ArrowsUpDownIcon,
-	ArrowUpIcon,
-} from "@heroicons/react/24/outline"
+import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
 import { EventReportRowDto } from "@repo/dto"
 import {
 	ColumnDef,
@@ -25,8 +19,6 @@ import {
 	SortingState,
 	useReactTable,
 } from "@tanstack/react-table"
-
-import { ReportPage } from "../../../../components/report-page"
 
 // Fixed columns definition (moved outside component to prevent re-creation)
 const fixedColumnDefs: Record<string, ColumnDef<EventReportRowDto>> = {
@@ -207,9 +199,7 @@ const EventTable = ({ data }: { data: EventReportRowDto[] | null }) => {
 						{table.getRowModel().rows.map((row) => (
 							<tr key={row.id}>
 								{row.getVisibleCells().map((cell) => (
-									<td key={cell.id}>
-										{flexRender(cell.column.columnDef.cell, cell.getContext())}
-									</td>
+									<td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
 								))}
 							</tr>
 						))}

@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { useParams } from "next/navigation"
 
+import { ReportPage } from "@/components/report-page"
 import { formatCurrency } from "@/lib/use-report"
 import { FinanceReportDto } from "@repo/dto"
 import {
@@ -14,8 +15,6 @@ import {
 	SortingState,
 	useReactTable,
 } from "@tanstack/react-table"
-
-import { ReportPage } from "../../../../components/report-page"
 
 const FinanceTable = ({ data }: { data: FinanceReportDto | null }) => {
 	const [sorting, setSorting] = useState<SortingState>([])
