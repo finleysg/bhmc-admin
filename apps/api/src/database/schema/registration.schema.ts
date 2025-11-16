@@ -74,6 +74,7 @@ export const player = mysqlTable(
 		isMember: tinyint("is_member").notNull(),
 		lastSeason: int("last_season"),
 		ggId: varchar("gg_id", { length: 22 }),
+		userId: int("user_id").references(() => authUser.id),
 	},
 	(table) => [
 		index("register_player_profile_picture_id_9c81c697_fk_documents").on(table.profilePictureId),

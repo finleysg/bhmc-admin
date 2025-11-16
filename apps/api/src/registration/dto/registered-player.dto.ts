@@ -1,4 +1,5 @@
-import { PlayerDto } from "./player.dto"
+import { PlayerDto } from "@repo/dto"
+
 import { RegistrationSlotDto } from "./registration-slot.dto"
 import { RegistrationDto } from "./registration.dto"
 

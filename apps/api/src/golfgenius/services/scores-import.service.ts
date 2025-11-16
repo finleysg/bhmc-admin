@@ -1,4 +1,7 @@
-import { Observable, Subject } from "rxjs"
+import {
+	Observable,
+	Subject,
+} from "rxjs"
 
 import { Injectable } from "@nestjs/common"
 import { ProgressEventDto } from "@repo/dto"
@@ -6,7 +9,10 @@ import { ProgressEventDto } from "@repo/dto"
 import { CoursesService } from "../../courses/courses.service"
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
-import { ScoreDto, ScoresService } from "../../scores"
+import {
+	ScoreDto,
+	ScoresService,
+} from "../../scores"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import { GgTeeSheetPlayerDto } from "../dto/golf-genius.dto"
@@ -105,7 +111,7 @@ export class ScoresImportService {
 				} catch (error) {
 					results.errors.push({
 						playerName: player.name,
-						reason: (error as any).message,
+						reason: error instanceof Error ? error.message : String(error),
 						details: error,
 					})
 
@@ -128,7 +134,7 @@ export class ScoresImportService {
 			const player = await this.registrationService.findPlayerById(
 				parseInt(playerData.handicap_network_id),
 			)
-			if (player) return player.id!
+			if (player) return player.id
 		}
 
 		if (playerData.external_id) {
@@ -291,7 +297,7 @@ export class ScoresImportService {
 			} catch (error) {
 				result.errors.push({
 					playerName: "System",
-					reason: `Failed to import round ${round.id}: ${(error as any).message}`,
+					reason: `Failed to import round ${round.id}: ${(error as Error).message}`,
 					details: error,
 				})
 			}

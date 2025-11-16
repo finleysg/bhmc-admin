@@ -1,4 +1,5 @@
-import { PlayerDto } from "./player.dto"
+import { PlayerDto } from "@repo/dto"
+
 import { CourseDto, RegisteredPlayerDto, RegistrationFeeDto } from "./registered-player.dto"
 import { RegistrationSlotDto } from "./registration-slot.dto"
 import { RegistrationDto } from "./registration.dto"
@@ -17,6 +18,7 @@ export function mapToPlayerDto(entity: Record<string, any>): PlayerDto {
 		tee: entity.tee,
 		birthDate: entity.birthDate,
 		isMember: !!entity.isMember,
+		userId: entity.userId,
 		ggId: entity.ggId,
 	}
 }

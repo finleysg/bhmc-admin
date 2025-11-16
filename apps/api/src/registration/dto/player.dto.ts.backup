@@ -9,4 +9,5 @@ export interface PlayerDto {
 	birthDate?: string | null
 	isMember: boolean
 	ggId?: string | null
+    userId?: number | null
 }

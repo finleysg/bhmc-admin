@@ -1,10 +1,17 @@
-import { Injectable, Logger } from "@nestjs/common"
+import {
+	Injectable,
+	Logger,
+} from "@nestjs/common"
 
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
 import { MemberSyncResult } from "../dto"
 import { MasterRosterItemDto } from "../dto/internal.dto"
-import { ApiError, AuthError, RateLimitError } from "../errors"
+import {
+	ApiError,
+	AuthError,
+	RateLimitError,
+} from "../errors"
 
 @Injectable()
 export class MemberSyncService {
@@ -33,12 +40,14 @@ export class MemberSyncService {
 			if (!res || !Array.isArray(res)) break
 			for (const item of res) {
 				// Support either mapped domain objects or raw API shapes
-				const memberObj: any = (item as any)?.member ?? item
+				const memberObj: any = item?.member ?? item
 				const hn = memberObj?.handicapNetworkId ?? memberObj?.handicap?.handicap_network_id ?? null
 				const mc = memberObj?.memberCardId ?? memberObj?.member_card_id ?? null
 				if (hn && mc) {
-					const key = this.normalizeGhin(hn) as string
-					map[key] = String(mc)
+					const key = this.normalizeGhin(hn)
+					if (key) {
+						map[key] = String(mc)
+					}
 				}
 			}
 			if (res.length < 100) break
@@ -113,7 +122,7 @@ export class MemberSyncService {
 				}
 
 				// Update gg_id
-				await this.registration.updatePlayerGgId(player.id!, memberCardId)
+				await this.registration.updatePlayerGgId(player.id, memberCardId)
 				result.updated_players += 1
 			} catch (err) {
 				const name = `${player.firstName ?? ""} ${player.lastName ?? ""}`.trim()
@@ -184,7 +193,7 @@ export class MemberSyncService {
 				return res
 			}
 
-			const updated = await this.registration.updatePlayerGgId(player.id!, String(ggIdToSet))
+			const updated = await this.registration.updatePlayerGgId(player.id, String(ggIdToSet))
 			res.updated = true
 			res.message = `Updated gg_id for ${player.email}`
 			res.player = updated

@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
-import { PlayerMap, PlayerRecord, RegisteredGroupDto, SearchPlayersDto } from "@repo/dto"
+import { PlayerDto, PlayerMap, PlayerRecord, RegisteredGroupDto, SearchPlayersDto } from "@repo/dto"
 
 import {
 	course,
@@ -19,7 +19,6 @@ import {
 	mapToRegistrationDto,
 	mapToRegistrationSlotDto,
 } from "./dto/mappers"
-import { PlayerDto } from "./dto/player.dto"
 import { RegisteredPlayerDto } from "./dto/registered-player.dto"
 import { RegistrationSlotDto } from "./dto/registration-slot.dto"
 

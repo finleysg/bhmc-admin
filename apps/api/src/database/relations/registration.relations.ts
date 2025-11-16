@@ -12,7 +12,7 @@ import {
 	registrationSlot,
 } from "../schema/registration.schema"
 
-export const playerRelations = relations(player, ({ many }) => ({
+export const playerRelations = relations(player, ({ one, many }) => ({
 	playerFavorites_fromPlayerId: many(playerFavorites, {
 		relationName: "playerFavorites_fromPlayerId_player_id",
 	}),
@@ -20,6 +20,10 @@ export const playerRelations = relations(player, ({ many }) => ({
 		relationName: "playerFavorites_toPlayerId_player_id",
 	}),
 	registrationslots: many(registrationSlot),
+	authUser: one(authUser, {
+		fields: [player.userId],
+		references: [authUser.id],
+	}),
 }))
 
 export const playerFavoritesRelations = relations(playerFavorites, ({ one }) => ({

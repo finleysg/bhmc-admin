@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common"
+import { PlayerDto } from "@repo/dto"
 
 import { toPlayerDomain } from "./domain/mappers"
 import { getAge, getFullName } from "./domain/player.domain"
-import { PlayerDto } from "./dto/player.dto"
 
 @Injectable()
 export class RegistrationDomainService {
