@@ -27,3 +27,10 @@ export { PointsReportRowDto } from "./reports/points-report-row.dto"
 export { EventResultsReportDto } from "./reports/event-results-report.dto"
 export { EventResultsSectionDto } from "./reports/event-results-section.dto"
 export { EventResultsReportRowDto } from "./reports/event-results-report-row.dto"
+
+// Registration DTO exports
+export { PlayerDto } from "./register/player.dto"
+export { RegistrationFeeDto } from "./register/registration-fee.dto"
+export { RegistrationSlotDto } from "./register/registration-slot.dto"
+export { RegisteredGroupDto } from "./register/registration.dto"
+export { SearchPlayersDto } from "./register/search-players.dto"

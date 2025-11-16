@@ -1,7 +1,7 @@
-import { and, eq, inArray, isNotNull } from "drizzle-orm"
+import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
-import { PlayerMap, PlayerRecord } from "@repo/dto"
+import { PlayerMap, PlayerRecord, RegisteredGroupDto, SearchPlayersDto } from "@repo/dto"
 
 import {
 	course,
@@ -88,7 +88,7 @@ export class RegistrationService {
 				paymentId: frow.fee.paymentId,
 				registrationSlotId: frow.fee.registrationSlotId,
 				amount: frow.fee.amount,
-				fee: frow.fee,
+				// fee: frow.fee,
 				eventFee: frow.eventFee!,
 				feeType: frow.feeType!,
 			})
@@ -106,6 +106,172 @@ export class RegistrationService {
 	async findMemberPlayers(): Promise<PlayerDto[]> {
 		const players = await this.drizzle.db.select().from(player).where(eq(player.isMember, 1))
 		return players.map(mapToPlayerDto)
+	}
+
+	async searchPlayers(dto: SearchPlayersDto): Promise<PlayerDto[]> {
+		const { searchText, isMember = true } = dto
+		let whereClause: any = undefined
+
+		if (searchText) {
+			const search = `%${searchText}%`
+			const searchCondition = or(
+				like(player.firstName, search),
+				like(player.lastName, search),
+				like(player.ghin, search),
+			)
+			whereClause = isMember ? and(searchCondition, eq(player.isMember, 1)) : searchCondition
+		} else if (isMember) {
+			whereClause = eq(player.isMember, 1)
+		}
+
+		const results = await this.drizzle.db.select().from(player).where(whereClause)
+		return results.map(mapToPlayerDto)
+	}
+
+	async searchEventPlayers(
+		eventId: number,
+		dto: SearchPlayersDto,
+	): Promise<Array<{ player: PlayerDto; group?: RegisteredGroupDto }>> {
+		const { searchText, includeGroup = true } = dto
+
+		// Build where conditions
+		let whereConditions = and(
+			eq(registrationSlot.eventId, eventId),
+			eq(registrationSlot.status, "R"),
+			isNotNull(registrationSlot.playerId),
+		)
+
+		if (searchText) {
+			const search = `%${searchText}%`
+			whereConditions = and(
+				whereConditions,
+				or(
+					like(player.firstName, search),
+					like(player.lastName, search),
+					like(player.ghin, search),
+				),
+			)
+		}
+
+		// First, get matching players with their slots
+		const rows = await this.drizzle.db
+			.select({
+				player: player,
+				slot: registrationSlot,
+			})
+			.from(player)
+			.innerJoin(registrationSlot, eq(player.id, registrationSlot.playerId))
+			.where(whereConditions)
+
+		const playersWithSlots = rows.map((row) => ({
+			player: mapToPlayerDto(row.player),
+			slot: row.slot,
+		}))
+
+		if (!includeGroup) {
+			return playersWithSlots.map(({ player }) => ({ player }))
+		}
+
+		// Get unique registration IDs
+		const regIds = [
+			...new Set(playersWithSlots.map((p) => p.slot.registrationId).filter(Boolean)),
+		] as number[]
+
+		if (regIds.length === 0) {
+			return playersWithSlots.map(({ player }) => ({ player }))
+		}
+
+		// Fetch registrations with course and all slots
+		const regRows = await this.drizzle.db
+			.select({
+				reg: registration,
+				course: course,
+				slot: registrationSlot,
+			})
+			.from(registration)
+			.leftJoin(course, eq(registration.courseId, course.id))
+			.innerJoin(registrationSlot, eq(registration.id, registrationSlot.registrationId))
+			.where(inArray(registration.id, regIds))
+
+		// Group by registration ID
+		const groupsMap = new Map<
+			number,
+			{
+				reg: typeof registration.$inferSelect
+				course?: typeof course.$inferSelect
+				slots: (typeof registrationSlot.$inferSelect)[]
+			}
+		>()
+		for (const row of regRows) {
+			const rid = row.reg.id
+			if (!groupsMap.has(rid)) {
+				groupsMap.set(rid, { reg: row.reg, course: row.course || undefined, slots: [] })
+			}
+			groupsMap.get(rid)!.slots.push(row.slot)
+		}
+
+		// Fetch fees for all slots in groups
+		const allSlotIds = Array.from(groupsMap.values()).flatMap((data) => data.slots.map((s) => s.id))
+		const feesMap = new Map<number, any[]>()
+		if (allSlotIds.length > 0) {
+			const feeRows = await this.drizzle.db
+				.select({
+					fee: registrationFee,
+					eventFee: eventFee,
+					feeType: feeType,
+				})
+				.from(registrationFee)
+				.leftJoin(eventFee, eq(registrationFee.eventFeeId, eventFee.id))
+				.leftJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
+				.where(inArray(registrationFee.registrationSlotId, allSlotIds))
+
+			for (const frow of feeRows) {
+				const sid = frow.fee.registrationSlotId
+				if (sid) {
+					if (!feesMap.has(sid)) feesMap.set(sid, [])
+					feesMap.get(sid)!.push({
+						id: frow.fee.id,
+						isPaid: frow.fee.isPaid,
+						eventFeeId: frow.fee.eventFeeId,
+						paymentId: frow.fee.paymentId,
+						registrationSlotId: frow.fee.registrationSlotId,
+						amount: frow.fee.amount,
+						eventFee: frow.eventFee!,
+						feeType: frow.feeType!,
+					})
+				}
+			}
+		}
+
+		// Build RegisteredGroupDto for each
+		const groups = new Map<number, RegisteredGroupDto>()
+		for (const [rid, data] of groupsMap) {
+			groups.set(rid, {
+				id: data.reg.id,
+				startingHole: data.reg.startingHole,
+				startingOrder: data.reg.startingOrder,
+				notes: data.reg.notes,
+				course: data.course ? (mapToCourseDto(data.course) as any) : undefined,
+				signedUpBy: data.reg.signedUpBy || "",
+				userId: data.reg.userId || 0,
+				createdDate: data.reg.createdDate,
+				slots: data.slots.map((s) => ({
+					id: s.id,
+					startingOrder: s.startingOrder,
+					slot: s.slot,
+					status: s.status,
+					holeId: s.holeId,
+					player: undefined,
+					fees: feesMap.get(s.id) || [],
+				})),
+			})
+		}
+
+		// Attach groups to players
+		return playersWithSlots.map(({ player, slot }) => ({
+			player,
+			group: slot.registrationId ? groups.get(slot.registrationId) : undefined,
+		}))
 	}
 
 	async updatePlayerGgId(playerId: number, ggId: string): Promise<PlayerDto | null> {

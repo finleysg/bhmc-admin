@@ -33,7 +33,7 @@ export interface RegistrationFeeDto {
 	paymentId: number
 	registrationSlotId?: number | null
 	amount: string
-	fee?: RegistrationFeeDto
+	// fee?: RegistrationFeeDto
 	eventFee?: EventFeeDto
 	feeType?: FeeTypeDto
 }

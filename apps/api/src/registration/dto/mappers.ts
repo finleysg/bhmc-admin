@@ -131,7 +131,7 @@ export function mapToRegistrationFeeDto(entity: Record<string, any>): Registrati
 		paymentId: entity.fee?.paymentId,
 		registrationSlotId: entity.fee?.registrationSlotId,
 		amount: entity.fee?.amount,
-		fee: entity.fee,
+		// fee: entity.fee,
 		eventFee: entity.eventFee,
 		feeType: entity.feeType,
 	}

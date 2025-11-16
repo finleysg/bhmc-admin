@@ -1,0 +1,5 @@
+export { PlayerDto } from "./player.dto"
+export { RegistrationFeeDto } from "./registration-fee.dto"
+export { RegistrationSlotDto } from "./registration-slot.dto"
+export { RegisteredGroupDto } from "./registration.dto"
+export { SearchPlayersDto } from "./search-players.dto"
