@@ -1,12 +1,6 @@
-import {
-	Observable,
-	Subject,
-} from "rxjs"
+import { Observable, Subject } from "rxjs"
 
-import {
-	Injectable,
-	Logger,
-} from "@nestjs/common"
+import { Injectable, Logger } from "@nestjs/common"
 import {
 	IntegrationActionName,
 	PlayerMap,
@@ -30,11 +24,7 @@ import {
 	StrokeTournamentAggregate,
 } from "../dto/tournament-results.dto"
 import { ProgressTracker } from "./progress-tracker"
-import {
-	ProxyResultParser,
-	SkinsResultParser,
-	StrokePlayResultParser,
-} from "./result-parsers"
+import { ProxyResultParser, SkinsResultParser, StrokePlayResultParser } from "./result-parsers"
 import { TeamResultParser } from "./team-result-parser"
 
 @Injectable()
@@ -810,9 +800,8 @@ export class ResultsImportService {
 			// Parse team score (aggregate total) - each player gets the team score
 			let score: number | null = null
 			try {
-				score = aggregate.total && aggregate.total.trim() !== ""
-					? parseInt(aggregate.total, 10)
-					: null
+				score =
+					aggregate.total && aggregate.total.trim() !== "" ? parseInt(aggregate.total, 10) : null
 			} catch {
 				this.logger.warn(`Failed to parse team total score for ${teamName}: ${aggregate.total}`)
 				score = null

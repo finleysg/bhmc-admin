@@ -2,7 +2,6 @@
 
 import { useEffect } from "react"
 
-import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 
 import { useSession } from "../../../../lib/auth-client"
@@ -60,12 +59,6 @@ export default function EventReportsPage() {
 	return (
 		<main className="min-h-screen p-8">
 			<div className="max-w-6xl mx-auto">
-				<div className="flex items-center justify-between mb-8">
-					<Link href={`/events/${eventId}`} className="btn btn-outline">
-						Back to Event
-					</Link>
-				</div>
-
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					{reports.map((report) => (
 						<ReportCard

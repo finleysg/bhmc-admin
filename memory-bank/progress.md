@@ -40,6 +40,7 @@ Completed
 - **Reports Module**: Implemented event report with Excel export; stubbed reports module with controller endpoints for membership report (/:season/membership), event report (/events/:eventId/event-report), points report (/events/:eventId/points), finance report (/events/:eventId/financials), and event results report (/events/:eventId/results); service methods return mock data with local TypeScript interfaces for type safety
 - **Points Report**: Complete implementation with backend database joins (tournamentPoints + tournament + player), frontend TanStack Table with sorting/filtering/pagination, Excel export, and API proxy routes; displays tournament name, position, full name, GHIN, score, points, type (Gross/Net), and details with default tournament name + position sorting
 - **Finance Report**: Complete implementation with event-specific money flow tracking; aggregates payments, refunds, and tournament payouts by bucket (Credit, Cash, Passthru); includes net calculations, format-specific payout breakdowns, Excel export, and API endpoints; handles proportional refund allocation across fee types
+- **Player Management Menu Rework**: Reworked menu to use ActionCard components in responsive grid layout, matching other top-level pages; each card includes provided descriptions and links to stub sub-pages
 
 - **NestJS API Foundation**: Scaffolded NestJS app with TypeScript, health endpoint, and JWT authentication guard
 - **Database Layer**: Created DrizzleService with connection pooling and complete schema definitions
