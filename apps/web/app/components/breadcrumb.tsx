@@ -42,8 +42,8 @@ function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
 					label = "Golf Genius Integration"
 				} else if (segment === "reports") {
 					label = "Reports"
-				} else if (segment === "management") {
-					label = "Management"
+				} else if (segment === "players") {
+					label = "Players"
 				} else {
 					label = segment.charAt(0).toUpperCase() + segment.slice(1)
 				}

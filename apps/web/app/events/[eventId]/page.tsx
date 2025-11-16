@@ -2,10 +2,13 @@
 
 import { useEffect } from "react"
 
-import { useParams, useRouter } from "next/navigation"
+import {
+	useParams,
+	useRouter,
+} from "next/navigation"
 
-import { useSession } from "../../../lib/auth-client"
-import ActionCard from "../../components/action-card"
+import ActionCard from "@/components/action-card"
+import { useSession } from "@/lib/auth-client"
 
 export default function EventHubPage() {
 	const { data: session, isPending } = useSession()
@@ -38,9 +41,9 @@ export default function EventHubPage() {
 			<div className="w-full max-w-5xl">
 				<div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
 					<ActionCard
-						title="Event Management"
-						description="Manage event details, players, and schedules."
-						href={`/events/${eventId}/management`}
+						title="Player Management"
+						description="Manage player change requests (add, move, drop, etc)."
+						href={`/events/${eventId}/players`}
 						disabled={false}
 						icon={"🏌️‍♂️"}
 					/>
