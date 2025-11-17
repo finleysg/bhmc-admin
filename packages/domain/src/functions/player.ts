@@ -1,9 +1,17 @@
-import { AgeResult, PlayerDomainData } from "./types"
+import { PlayerDto } from "../types"
+
+export type AgeValue = number | "n/a"
+
+export interface AgeResult {
+	age: AgeValue // age as of "today" (or provided 'today' for deterministic calls)
+	eventAge: AgeValue // age as of the event/reference date
+	calendarAge: AgeValue // age at end of the year of the event/reference date (or today)
+}
 
 /**
  * Return "First Last" combination. Handles missing parts gracefully.
  */
-export function getFullName(player: PlayerDomainData): string {
+export function getFullName(player: PlayerDto): string {
 	const first = (player.firstName || "").trim()
 	const last = (player.lastName || "").trim()
 	if (!first && !last) return ""
@@ -41,7 +49,7 @@ function calculateAge(birthDate: Date, asOfDate: Date): number {
  * - eventAge: age as of referenceDate (if provided) else today
  * - calendarAge: age at end of reference year (Dec 31 of reference year) or of today if no referenceDate
  */
-export function getAge(player: PlayerDomainData, today: Date, referenceDate?: Date): AgeResult {
+export function getAge(player: PlayerDto, today: Date, referenceDate?: Date): AgeResult {
 	const bd = parseDate(player.birthDate)
 	if (!bd) {
 		return { age: "n/a", eventAge: "n/a", calendarAge: "n/a" }

@@ -1,17 +1,16 @@
 import { Injectable, Logger } from "@nestjs/common"
+import { getGroup, getStart } from "@repo/domain/functions"
 import {
 	EventDto,
 	EventFeeDto,
 	FeeTypeDto,
 	HoleDto,
 	PlayerDto,
+	RegistrationDto,
 	RegistrationSlotDto,
-} from "@repo/domain"
+} from "@repo/domain/types"
 
-import { RegisteredPlayerDto, RegistrationDto } from "../../registration"
-import { getStart } from "../../registration/domain/event.domain"
-import { getGroup } from "../../registration/domain/group.domain"
-import { toHoleDomain, toSlotDomain } from "../../registration/domain/mappers"
+import { RegisteredPlayerDto } from "../../registration"
 import { RosterMemberSyncDto } from "../dto/internal.dto"
 import { FeeDefinition, TransformationContext } from "../dto/roster.dto"
 
@@ -61,15 +60,13 @@ export class RosterPlayerTransformer {
 		}
 
 		// Calculate team and start using domain logic
-		const slotDomain = toSlotDomain(slot)
-		const holesDomain = holes.map(toHoleDomain)
-		const startValue = getStart(event, slotDomain, holesDomain)
+		const startValue = getStart(event, slot, holes)
 		const team = getGroup(
 			event,
-			slotDomain,
+			slot,
 			startValue,
 			courseName,
-			allSlotsInRegistration.map((s) => toSlotDomain(s.slot)),
+			allSlotsInRegistration.map((s) => s.slot),
 		)
 
 		// Base custom fields
@@ -107,15 +104,13 @@ export class RosterPlayerTransformer {
 		holes: HoleDto[],
 		allSlotsInRegistration: RegisteredPlayerDto[],
 	): { team: string | null; start: string | null } {
-		const slotDomain = toSlotDomain(slot)
-		const holesDomain = holes.map(toHoleDomain)
-		const startValue = getStart(event, slotDomain, holesDomain)
+		const startValue = getStart(event, slot, holes)
 		const team = getGroup(
 			event,
-			slotDomain,
+			slot,
 			startValue,
 			courseName,
-			allSlotsInRegistration.map((s) => toSlotDomain(s.slot)),
+			allSlotsInRegistration.map((s) => s.slot),
 		)
 
 		return {

@@ -1,7 +1,7 @@
 import { catchError, from, Observable, tap } from "rxjs"
 
 import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } from "@nestjs/common"
-import { IntegrationActionName } from "@repo/domain"
+import { IntegrationActionName } from "@repo/domain/types"
 
 import { IntegrationLogService } from "../services/integration-log.service"
 import { RosterExportService } from "../services/roster-export.service"

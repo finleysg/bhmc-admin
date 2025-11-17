@@ -8,13 +8,14 @@ import {
 	HoleDto,
 	PlayerDto,
 	ProgressEventDto,
+	RegistrationDto,
 	RegistrationSlotDto,
-} from "@repo/domain"
+} from "@repo/domain/types"
 
 import { CoursesService } from "../../courses/courses.service"
 import { RoundDto } from "../../events"
 import { EventsService } from "../../events/events.service"
-import { RegisteredPlayerDto, RegistrationDto } from "../../registration"
+import { RegisteredPlayerDto } from "../../registration"
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
 import { ExportError, ExportResult, TransformationContext } from "../dto"

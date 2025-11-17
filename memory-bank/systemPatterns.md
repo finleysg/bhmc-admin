@@ -7,7 +7,7 @@ Overview
   - `apps/api` — NestJS backend (TypeScript) using Drizzle ORM + MySQL with domain-driven design
   - `apps/web` — Next.js frontend (TypeScript) using better-auth for auth persistence (SQLite), TailwindCSS v4, daisyUI 5
 - **Packages**:
-  - `packages/dto` — shared TypeScript DTOs and types with workspace imports
+  - `packages/domain` — shared TypeScript DTOs, domain logic, and mappers with workspace imports
 
 Architecture patterns
 

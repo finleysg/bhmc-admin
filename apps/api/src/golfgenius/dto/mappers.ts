@@ -1,4 +1,4 @@
-import { IntegrationLogDto } from "@repo/domain"
+import { IntegrationLogDto } from "@repo/domain/types"
 
 import {
 	GgCreateMemberDto,

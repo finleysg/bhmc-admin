@@ -8,6 +8,14 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"default": "./dist/index.js"
+		},
+		"./types": {
+			"types": "./dist/types/index.d.ts",
+			"default": "./dist/types/index.js"
+		},
+		"./functions": {
+			"types": "./dist/functions/index.d.ts",
+			"default": "./dist/functions/index.js"
 		}
 	},
 	"files": [

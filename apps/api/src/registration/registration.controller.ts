@@ -3,7 +3,7 @@ import {
 	AddAdminRegistrationDto,
 	EventRegistrationSummaryDto,
 	SearchPlayersDto,
-} from "@repo/domain"
+} from "@repo/domain/types"
 
 import { JwtAuthGuard } from "../auth/jwt.guard"
 import { RegistrationService } from "./registration.service"

@@ -9,7 +9,7 @@ import {
 	ProgressEventDto,
 	ProgressTournamentDto,
 	TournamentData,
-} from "@repo/domain"
+} from "@repo/domain/types"
 
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"

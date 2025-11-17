@@ -8,9 +8,8 @@ import {
 	EventResultsSectionDto,
 	FinanceReportDto,
 	PointsReportRowDto,
-} from "@repo/domain"
+} from "@repo/domain/types"
 
-import { CoursesService } from "../courses"
 import {
 	DrizzleService,
 	eventFee,
@@ -24,7 +23,7 @@ import {
 	tournamentResult,
 } from "../database"
 import { EventsService } from "../events"
-import { RegistrationDomainService, RegistrationService } from "../registration"
+import { RegistrationService } from "../registration"
 import {
 	addDataRows,
 	addFixedColumns,
@@ -49,8 +48,6 @@ export class ReportsService {
 	constructor(
 		private readonly events: EventsService,
 		private readonly registration: RegistrationService,
-		private readonly courses: CoursesService,
-		private readonly registrationDomain: RegistrationDomainService,
 		private readonly drizzle: DrizzleService,
 	) {}
 

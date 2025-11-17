@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
 
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common"
+import { getAge, getFullName, getGroup, getStart } from "@repo/domain/functions"
 import {
 	AddAdminRegistrationDto,
 	EventPlayerFeeDto,
@@ -12,7 +13,7 @@ import {
 	RegistrationDto,
 	RegistrationSlotDto,
 	SearchPlayersDto,
-} from "@repo/domain"
+} from "@repo/domain/types"
 
 import { CoursesService } from "../courses"
 import {
@@ -27,10 +28,6 @@ import {
 	registrationSlot,
 } from "../database"
 import { EventsService } from "../events"
-import { getStart } from "./domain/event.domain"
-import { getGroup } from "./domain/group.domain"
-import { toEventDomain, toHoleDomain, toPlayerDomain, toSlotDomain } from "./domain/mappers"
-import { getAge, getFullName } from "./domain/player.domain"
 import {
 	mapToCourseDto,
 	mapToPlayerDto,
@@ -55,9 +52,6 @@ export class RegistrationService {
 		const slots = await this.getRegisteredPlayers(eventId)
 
 		if (!slots || slots.length === 0) return []
-
-		// convert event to domain model
-		const eventDomain = toEventDomain(event)
 
 		// Build registration groups (registrationId => SlotWithRelations[])
 		const regGroups = new Map<number, RegisteredPlayerDto[]>()
@@ -101,27 +95,24 @@ export class RegistrationService {
 			// In that case we return "N/A" for course/start values. Otherwise require course.
 			let courseName = "N/A"
 			let holes: HoleDto[] = []
-			if (eventDomain.canChoose) {
+			if (event.canChoose) {
 				if (!course) throw new Error(`Missing course for slot id ${slot?.id}`)
 				courseName = course.name
 				holes = holesMap.get(course.id) ?? []
 			}
 			// convert holes to domain model array when used
 
-			const slotDomain = toSlotDomain(slot)
-			const holesDomain = holes.map(toHoleDomain)
-			const startValue = getStart(eventDomain, slotDomain, holesDomain)
+			const startValue = getStart(event, slot, holes)
 			const allSlotsInRegistration = (regGroups.get(registration.id) ?? []).map(
-				(x: RegisteredPlayerDto) => toSlotDomain(x.slot),
+				(x: RegisteredPlayerDto) => x.slot,
 			)
 
-			const team = getGroup(eventDomain, slotDomain, startValue, courseName, allSlotsInRegistration)
+			const team = getGroup(event, slot, startValue, courseName, allSlotsInRegistration)
 
-			const playerDomain = toPlayerDomain(player)
-			const ageRes = getAge(playerDomain, new Date())
+			const ageRes = getAge(player, new Date())
 			const age = typeof ageRes.age === "number" ? ageRes.age : 0
 
-			const fullName = getFullName(playerDomain)
+			const fullName = getFullName(player)
 
 			// Build fees array from the fee definitions
 			const fees: EventPlayerFeeDto[] = eventFees.map((fd) => {
@@ -544,7 +535,7 @@ export class RegistrationService {
 		}
 
 		// Calculate payment amount using preloaded eventFees
-		const allEventFeeIds = dto.slots.flatMap((s) => s.eventFeeIds)
+		const allEventFeeIds = dto.slots.flatMap((s: { eventFeeIds: number[] }) => s.eventFeeIds)
 		const uniqueEventFeeIds = [...new Set(allEventFeeIds)]
 		let totalAmount = "0.00"
 		for (const feeId of uniqueEventFeeIds) {

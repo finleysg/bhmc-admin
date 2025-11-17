@@ -4,7 +4,7 @@ import {
 	RegistrationDto,
 	RegistrationFeeDto,
 	RegistrationSlotDto,
-} from "@repo/domain"
+} from "@repo/domain/types"
 
 import { RegisteredPlayerDto } from "./registered-player.dto"
 

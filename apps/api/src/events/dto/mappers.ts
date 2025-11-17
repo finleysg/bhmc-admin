@@ -1,4 +1,4 @@
-import { EventDto, EventFeeDto, FeeTypeDto } from "@repo/domain"
+import { EventDto, EventFeeDto, FeeTypeDto } from "@repo/domain/types"
 
 import { RoundDto } from "./round.dto"
 import { TournamentDto } from "./tournament.dto"

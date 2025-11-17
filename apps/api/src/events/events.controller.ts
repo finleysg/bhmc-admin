@@ -1,5 +1,5 @@
 import { Controller, Get, Logger, Param, ParseIntPipe, Query } from "@nestjs/common"
-import { EventDto } from "@repo/domain"
+import { EventDto } from "@repo/domain/types"
 
 import { EventsService } from "./events.service"
 
