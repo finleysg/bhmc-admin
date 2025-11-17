@@ -1,17 +1,10 @@
-import {
-	Injectable,
-	Logger,
-} from "@nestjs/common"
+import { Injectable, Logger } from "@nestjs/common"
 
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
 import { MemberSyncResult } from "../dto"
 import { MasterRosterItemDto } from "../dto/internal.dto"
-import {
-	ApiError,
-	AuthError,
-	RateLimitError,
-} from "../errors"
+import { ApiError, AuthError, RateLimitError } from "../errors"
 
 @Injectable()
 export class MemberSyncService {

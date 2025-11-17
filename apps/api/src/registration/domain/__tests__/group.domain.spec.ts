@@ -1,4 +1,4 @@
-import { getGroup } from "../group.domain"
+import { getGroup } from "../../../registration/domain/group.domain"
 import { EventDomainData, RegistrationSlotDomainData } from "../types"
 
 describe("group.domain getGroup", () => {

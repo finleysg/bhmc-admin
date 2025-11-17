@@ -1,6 +1,6 @@
 export interface TeeDto {
-	id?: number
+	id: number
+	courseId: number
 	name: string
 	ggId?: string | null
-	courseId: number
 }

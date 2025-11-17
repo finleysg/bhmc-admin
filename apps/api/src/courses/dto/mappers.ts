@@ -1,6 +1,4 @@
-import { CourseDto } from "./course.dto"
-import { HoleDto } from "./hole.dto"
-import { TeeDto } from "./tee.dto"
+import { CourseDto, HoleDto, TeeDto } from "@repo/dto"
 
 /**
  * Maps database entity to CourseDto

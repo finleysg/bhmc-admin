@@ -1,9 +1,11 @@
 export interface EventFeeDto {
 	id: number
+	eventId: number
 	amount: string
 	isRequired: number
 	displayOrder: number
-	feeType: FeeTypeDto
+	feeType?: FeeTypeDto
+	feeTypeId: number
 	overrideAmount?: string | null
 	overrideRestriction?: string | null
 }

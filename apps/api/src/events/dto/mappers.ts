@@ -1,5 +1,5 @@
-import { EventFeeDto, EventFeeWithTypeDto, FeeTypeDto } from "./event-fee.dto"
-import { EventDto } from "./event.dto"
+import { EventDto, EventFeeDto, FeeTypeDto } from "@repo/dto"
+
 import { RoundDto } from "./round.dto"
 import { TournamentDto } from "./tournament.dto"
 
@@ -108,16 +108,6 @@ export function mapToFeeTypeDto(entity: Record<string, any>): FeeTypeDto {
 		code: entity.code,
 		payout: entity.payout,
 		restriction: entity.restriction,
-	}
-}
-
-/**
- * Maps database entity to EventFeeWithTypeDto
- */
-export function mapToEventFeeWithTypeDto(entity: Record<string, any>): EventFeeWithTypeDto {
-	return {
-		eventFee: mapToEventFeeDto(entity.eventFee),
-		feeType: mapToFeeTypeDto(entity.feeType),
 	}
 }
 

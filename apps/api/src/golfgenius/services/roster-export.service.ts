@@ -1,21 +1,23 @@
 import { Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
-import { ProgressEventDto } from "@repo/dto"
-
-import { CourseDto, HoleDto } from "../../courses"
-import { CoursesService } from "../../courses/courses.service"
-import { EventDto, RoundDto } from "../../events"
-import { EventsService } from "../../events/events.service"
 import {
+	CourseDto,
+	EventDto,
+	EventFeeDto,
+	HoleDto,
 	PlayerDto,
-	RegisteredPlayerDto,
-	RegistrationDto,
+	ProgressEventDto,
 	RegistrationSlotDto,
-} from "../../registration"
+} from "@repo/dto"
+
+import { CoursesService } from "../../courses/courses.service"
+import { RoundDto } from "../../events"
+import { EventsService } from "../../events/events.service"
+import { RegisteredPlayerDto, RegistrationDto } from "../../registration"
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
-import { ExportError, ExportResult, FeeDefinition, TransformationContext } from "../dto"
+import { ExportError, ExportResult, TransformationContext } from "../dto"
 import { RosterMemberDto } from "../dto/internal.dto"
 import { ProgressTracker } from "./progress-tracker"
 import { RosterPlayerTransformer } from "./roster-player-transformer"
@@ -67,7 +69,7 @@ export class RosterExportService {
 		event: EventDto,
 		rounds: RoundDto[],
 		holesMap: Map<number, HoleDto[]>,
-		feeDefinitions: FeeDefinition[],
+		eventFees: EventFeeDto[],
 		allSlots: RegisteredPlayerDto[],
 		rosterByGhin: Map<string, RosterMemberDto>,
 		rosterBySlotId: Map<number, RosterMemberDto>,
@@ -119,7 +121,7 @@ export class RosterExportService {
 				rounds,
 				course: event.canChoose ? course : undefined,
 				holes,
-				feeDefinitions,
+				eventFees,
 				allSlotsInRegistration: allSlots.filter((s) => s.registration?.id === registration.id),
 			}
 
@@ -148,7 +150,7 @@ export class RosterExportService {
 
 			// Idempotency: match by slot id first, fallback to ghin
 			let existing: RosterMemberDto | null | undefined
-			existing = rosterBySlotId.get(slot.id!)
+			existing = rosterBySlotId.get(slot.id)
 
 			if (!existing) {
 				const playerGhinRaw = player.ghin ?? null
@@ -164,7 +166,7 @@ export class RosterExportService {
 					const res = await this.apiClient.createMemberRegistration(String(event.ggId), member)
 					const memberId = this.extractMemberId(res)
 					if (memberId) {
-						await this.registration.updateRegistrationSlotGgId(slot.id!, String(memberId))
+						await this.registration.updateRegistrationSlotGgId(slot.id, String(memberId))
 					}
 					return { success: true, action: "created" }
 				} catch (err: unknown) {
@@ -247,7 +249,7 @@ export class RosterExportService {
 	private async processExportAsync(eventId: number, result: ExportResult) {
 		try {
 			// 1. Validate event
-			const event = await this.events.findEventById(eventId)
+			const event = await this.events.findEventById({ eventId })
 			if (!event) throw new Error(`Event ${eventId} not found`)
 			// registration must be closed (signupEnd in past)
 			// if (!event.signupEnd || new Date(event.signupEnd) > new Date()) {
@@ -331,15 +333,6 @@ export class RosterExportService {
 
 			// event fees (for skins dynamic columns)
 			const eventFees = await this.events.listEventFeesByEvent(eventId)
-			const feeDefinitions = (eventFees ?? [])
-				.filter((f) => f.feeType.name.endsWith("Skins"))
-				.map((ef) => {
-					return {
-						eventFee: ef.eventFee,
-						feeType: ef.feeType,
-						name: ef.feeType.name.toLowerCase().replace(" ", "_"),
-					}
-				})
 
 			// 4. Process players in parallel batches
 			const CONCURRENCY_LIMIT = 10 // Tune this based on API rate limits
@@ -362,7 +355,7 @@ export class RosterExportService {
 					event,
 					rounds,
 					holesMap,
-					feeDefinitions,
+					eventFees,
 					slots,
 					rosterByGhin,
 					rosterBySlotId,
@@ -420,9 +413,9 @@ export class RosterExportService {
 		return res.member_id_str ?? null
 	}
 
-	private extractMemberIdFromRoster(rosterMember: RosterMemberDto): string | null {
-		if (!rosterMember) return null
-		// RosterMemberDto.id is the member ID
-		return rosterMember.id ?? null
-	}
+	// private extractMemberIdFromRoster(rosterMember: RosterMemberDto): string | null {
+	// 	if (!rosterMember) return null
+	// 	// RosterMemberDto.id is the member ID
+	// 	return rosterMember.id ?? null
+	// }
 }

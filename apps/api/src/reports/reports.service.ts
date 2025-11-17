@@ -2,9 +2,6 @@ import { and, eq, sql } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 import {
-	EventPlayerFeeDto,
-	EventPlayerSlotDto,
-	EventRegistrationSummaryDto,
 	EventReportRowDto,
 	EventResultsReportDto,
 	EventResultsReportRowDto,
@@ -13,7 +10,7 @@ import {
 	PointsReportRowDto,
 } from "@repo/dto"
 
-import { CoursesService, HoleDto } from "../courses"
+import { CoursesService } from "../courses"
 import {
 	DrizzleService,
 	eventFee,
@@ -26,12 +23,8 @@ import {
 	tournamentPoints,
 	tournamentResult,
 } from "../database"
-import { EventFeeWithTypeDto, EventsDomainService, EventsService } from "../events"
-import {
-	RegisteredPlayerDto,
-	RegistrationDomainService,
-	RegistrationService,
-} from "../registration"
+import { EventsService } from "../events"
+import { RegistrationDomainService, RegistrationService } from "../registration"
 import {
 	addDataRows,
 	addFixedColumns,
@@ -57,13 +50,12 @@ export class ReportsService {
 		private readonly events: EventsService,
 		private readonly registration: RegistrationService,
 		private readonly courses: CoursesService,
-		private readonly eventsDomain: EventsDomainService,
 		private readonly registrationDomain: RegistrationDomainService,
 		private readonly drizzle: DrizzleService,
 	) {}
 
 	private async validateEvent(eventId: number): Promise<void> {
-		const event = await this.events.findEventById(eventId)
+		const event = await this.events.findEventById({ eventId })
 		if (!event) {
 			throw new Error(`Event ${eventId} not found`)
 		}
@@ -80,121 +72,10 @@ export class ReportsService {
 		})
 	}
 
-	async getPlayersByEvent(eventId: number): Promise<EventRegistrationSummaryDto> {
-		const event = await this.events.findEventById(eventId)
-		const eventFees = await this.events.listEventFeesByEvent(eventId)
-		const slots = await this.registration.getRegisteredPlayers(eventId)
-
-		if (!slots || slots.length === 0) return { eventId, total: 0, slots: [] }
-
-		// Validate event
-		if (!event) throw new Error(`Event ${eventId} not found`)
-
-		// Build registration groups (registrationId => SlotWithRelations[])
-		const regGroups = new Map<number, RegisteredPlayerDto[]>()
-		for (const s of slots) {
-			if (!s) continue
-			const regId = s.registration?.id ?? null
-			if (regId === null) continue
-			const arr = regGroups.get(regId) ?? []
-			arr.push(s)
-			regGroups.set(regId, arr)
-		}
-
-		// Collect unique courseIds to fetch holes
-		const courseIdSet = new Set<number>()
-		for (const s of slots) {
-			if (!s) continue
-			const cid = s.course?.id ?? s.registration?.courseId
-			if (cid !== null && cid !== undefined) courseIdSet.add(cid)
-		}
-
-		const courseIds = Array.from(courseIdSet)
-		const holesMap = new Map<number, HoleDto[]>()
-		await Promise.all(
-			courseIds.map(async (cid) => {
-				const holes = await this.courses.findHolesByCourseId(cid)
-				holesMap.set(cid, holes ?? [])
-			}),
-		)
-
-		// Prepare fee types list and names
-		const feeDefinitions = (eventFees ?? []).map((ef: EventFeeWithTypeDto) => {
-			return {
-				eventFee: ef.eventFee,
-				feeType: ef.feeType,
-				name: ef.feeType?.name ?? String(ef.feeType?.id ?? ef.eventFee?.id),
-			}
-		})
-
-		const transformed = slots.map((s): EventPlayerSlotDto => {
-			if (!s) throw new Error("Unexpected missing slot data")
-			const slot = s.slot
-			const player = s.player
-			const registration = s.registration
-			const course = s.course
-
-			if (!player) throw new Error(`Missing player for slot id ${slot?.id}`)
-			if (!registration) throw new Error(`Missing registration for slot id ${slot?.id}`)
-
-			// If the event does not allow choosing a course, there will be no course info.
-			// In that case we return "N/A" for course/start values. Otherwise require course.
-			let courseName = "N/A"
-			let holes: HoleDto[] = []
-			if (event.canChoose) {
-				if (!course) throw new Error(`Missing course for slot id ${slot?.id}`)
-				courseName = course.name
-				holes = holesMap.get(course.id!) ?? []
-			}
-
-			// Derived columns
-			const startValue = this.eventsDomain.deriveStart(event, slot, holes)
-			const team = this.eventsDomain.deriveTeam(
-				event,
-				slot,
-				holes,
-				courseName,
-				regGroups.get(registration.id!) ?? [],
-			)
-			const age = this.registrationDomain.derivePlayerAge(player)
-			const fullName = this.registrationDomain.derivePlayerName(player)
-
-			// Build fees array from the fee definitions
-			const fees: EventPlayerFeeDto[] = feeDefinitions.map((fd) => {
-				const fee = (s.fees ?? []).find((f) => f.eventFee?.id === fd.eventFee?.id)
-				const paid = fee?.isPaid === 1
-				const amount = paid ? fee?.amount : "0"
-				return {
-					name: fd.name,
-					amount,
-				}
-			})
-
-			return {
-				team,
-				course: courseName,
-				start: startValue,
-				ghin: player.ghin,
-				age,
-				tee: player.tee,
-				lastName: player.lastName,
-				firstName: player.firstName,
-				fullName,
-				email: player.email,
-				signedUpBy: registration.signedUpBy,
-				signupDate: registration.createdDate
-					? new Date(registration.createdDate).toISOString().split("T")[0]
-					: null,
-				fees,
-			}
-		})
-
-		return { eventId, total: transformed.length, slots: transformed }
-	}
-
 	async getEventReport(eventId: number): Promise<EventReportRowDto[]> {
 		await this.validateEvent(eventId)
-		const summary = await this.getPlayersByEvent(eventId)
+		const registeredPlayers = await this.registration.getPlayers(eventId)
+		const summary = { eventId, total: registeredPlayers.length, slots: registeredPlayers }
 		const rows = summary.slots.map((slot) => {
 			const row: EventReportRowDto = {
 				teamId: slot.team,
@@ -521,7 +402,7 @@ export class ReportsService {
 
 	async getEventResultsReport(eventId: number): Promise<EventResultsReportDto> {
 		await this.validateEvent(eventId)
-		const event = await this.events.findEventById(eventId)
+		const event = await this.events.findEventById({ eventId })
 		if (!event) throw new Error(`Event ${eventId} not found`) // Should not happen after validateEvent
 
 		// Get all tournaments for the event

@@ -1,4 +1,4 @@
-import { calculateStartingHole } from "../start-hole.domain"
+import { calculateStartingHole } from "../../../registration/domain/start-hole.domain"
 import { HoleDomainData, RegistrationSlotDomainData } from "../types"
 
 describe("start-hole.domain", () => {

@@ -1,8 +1,12 @@
-import { PlayerDto } from "@repo/dto"
+import {
+	CourseDto,
+	PlayerDto,
+	RegistrationDto,
+	RegistrationFeeDto,
+	RegistrationSlotDto,
+} from "@repo/dto"
 
-import { CourseDto, RegisteredPlayerDto, RegistrationFeeDto } from "./registered-player.dto"
-import { RegistrationSlotDto } from "./registration-slot.dto"
-import { RegistrationDto } from "./registration.dto"
+import { RegisteredPlayerDto } from "./registered-player.dto"
 
 /**
  * Maps database entity to PlayerDto
@@ -127,15 +131,12 @@ export function mapToCourseDto(entity: Record<string, any>): CourseDto {
  */
 export function mapToRegistrationFeeDto(entity: Record<string, any>): RegistrationFeeDto {
 	return {
-		id: entity.fee?.id,
-		isPaid: entity.fee?.isPaid,
-		eventFeeId: entity.fee?.eventFeeId,
-		paymentId: entity.fee?.paymentId,
-		registrationSlotId: entity.fee?.registrationSlotId,
-		amount: entity.fee?.amount,
-		// fee: entity.fee,
-		eventFee: entity.eventFee,
-		feeType: entity.feeType,
+		id: entity.id,
+		isPaid: entity.isPaid,
+		eventFeeId: entity.eventFeeId,
+		paymentId: entity.paymentId,
+		registrationSlotId: entity.registrationSlotId,
+		amount: entity.amount,
 	}
 }
 

@@ -1,7 +1,4 @@
-import {
-	Observable,
-	Subject,
-} from "rxjs"
+import { Observable, Subject } from "rxjs"
 
 import { Injectable } from "@nestjs/common"
 import { ProgressEventDto } from "@repo/dto"
@@ -9,10 +6,7 @@ import { ProgressEventDto } from "@repo/dto"
 import { CoursesService } from "../../courses/courses.service"
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
-import {
-	ScoreDto,
-	ScoresService,
-} from "../../scores"
+import { ScoreDto, ScoresService } from "../../scores"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import { GgTeeSheetPlayerDto } from "../dto/golf-genius.dto"
@@ -167,7 +161,7 @@ export class ScoresImportService {
 		const tee = await this.coursesService.findTeeByGgId(teeGgId)
 		if (!tee) throw new Error(`Tee not found: ${teeGgId}`)
 
-		return { courseId: course.id!, teeId: tee.id! }
+		return { courseId: course.id, teeId: tee.id }
 	}
 
 	private async createOrUpdateScorecard(
@@ -226,7 +220,7 @@ export class ScoresImportService {
 			// Prepare gross score
 			allScores.push({
 				scoreCardId,
-				holeId: hole.id!,
+				holeId: hole.id,
 				score: grossScore,
 				isNet: false,
 			})
@@ -237,7 +231,7 @@ export class ScoresImportService {
 
 			allScores.push({
 				scoreCardId,
-				holeId: hole.id!,
+				holeId: hole.id,
 				score: netScore,
 				isNet: true,
 			})
@@ -257,7 +251,7 @@ export class ScoresImportService {
 	}
 
 	async importScoresForEvent(eventId: number): Promise<ImportEventScoresResult> {
-		const event = await this.eventsService.findEventById(eventId)
+		const event = await this.eventsService.findEventById({ eventId })
 		const rounds = await this.eventsService.findRoundsByEventId(eventId)
 
 		// Validation: event is not null and rounds.length > 0
@@ -311,7 +305,7 @@ export class ScoresImportService {
 	}
 
 	async importScoresForEventStream(eventId: number): Promise<Observable<ProgressEventDto>> {
-		const event = await this.eventsService.findEventById(eventId)
+		const event = await this.eventsService.findEventById({ eventId })
 		const rounds = await this.eventsService.findRoundsByEventId(eventId)
 
 		// Validation: event is not null and rounds.length > 0

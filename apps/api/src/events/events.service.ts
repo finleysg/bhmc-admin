@@ -1,8 +1,15 @@
 import { and, eq, inArray } from "drizzle-orm"
 
 import { Injectable, Logger } from "@nestjs/common"
-import { PreparedTournamentPoints, PreparedTournamentResult, TournamentData } from "@repo/dto"
+import {
+	EventDto,
+	EventFeeDto,
+	PreparedTournamentPoints,
+	PreparedTournamentResult,
+	TournamentData,
+} from "@repo/dto"
 
+import { CoursesService } from "../courses"
 import {
 	DrizzleService,
 	event,
@@ -13,11 +20,10 @@ import {
 	tournamentPoints,
 	tournamentResult,
 } from "../database"
-import { EventFeeWithTypeDto } from "./dto/event-fee.dto"
-import { EventDto } from "./dto/event.dto"
 import {
 	mapToEventDto,
-	mapToEventFeeWithTypeDto,
+	mapToEventFeeDto,
+	mapToFeeTypeDto,
 	mapToRoundDto,
 	mapToTournamentDto,
 } from "./dto/mappers"
@@ -29,12 +35,41 @@ import { UpdateEventDto } from "./dto/update-event.dto"
 export class EventsService {
 	private readonly logger = new Logger(EventsService.name)
 
-	constructor(private drizzle: DrizzleService) {}
+	constructor(
+		private drizzle: DrizzleService,
+		private readonly courses: CoursesService,
+	) {}
 
 	// events_event
-	async findEventById(id: number): Promise<EventDto | null> {
-		const [evt] = await this.drizzle.db.select().from(event).where(eq(event.id, id)).limit(1)
-		return evt ? mapToEventDto(evt) : null
+	async findEventById({
+		eventId,
+		includeCourses = false,
+		includeFees = false,
+	}: {
+		eventId: number
+		includeCourses?: boolean
+		includeFees?: boolean
+	}): Promise<EventDto | null> {
+		const [evt] = await this.drizzle.db.select().from(event).where(eq(event.id, eventId)).limit(1)
+		if (!evt) {
+			this.logger.warn(`No event found for id ${eventId}.`)
+			return null
+		}
+
+		const clubEvent = mapToEventDto(evt)
+
+		if (includeCourses) {
+			clubEvent.courses = await this.courses.findCoursesByEventId({
+				eventId: eventId,
+				includeHoles: true,
+			})
+		}
+
+		if (includeFees) {
+			clubEvent.eventFees = await this.listEventFeesByEvent(eventId)
+		}
+
+		return clubEvent
 	}
 
 	async findEventsByDate(date: string): Promise<EventDto[]> {
@@ -47,18 +82,22 @@ export class EventsService {
 			.update(event)
 			.set(data as any)
 			.where(eq(event.id, id))
-		return this.findEventById(id)
+		return this.findEventById({ eventId: id })
 	}
 
 	// events_event_fees
-	async listEventFeesByEvent(id: number): Promise<EventFeeWithTypeDto[]> {
+	async listEventFeesByEvent(id: number): Promise<EventFeeDto[]> {
 		const results = await this.drizzle.db
 			.select({ eventFee: eventFee, feeType: feeType })
 			.from(eventFee)
 			.innerJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
 			.where(eq(eventFee.eventId, id))
 
-		return results.map(mapToEventFeeWithTypeDto)
+		return results.map((r) => {
+			const fee = mapToEventFeeDto(r.eventFee)
+			fee.feeType = mapToFeeTypeDto(r.feeType)
+			return fee
+		})
 	}
 
 	// events_round

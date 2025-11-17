@@ -1,4 +1,4 @@
-import { formatTime, parseTeeTimeSplits, parseTime } from "../time-utils"
+import { formatTime, parseTeeTimeSplits, parseTime } from "../../../registration/domain/time-utils"
 
 describe("time-utils", () => {
 	describe("parseTime", () => {

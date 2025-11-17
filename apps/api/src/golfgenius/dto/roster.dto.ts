@@ -2,8 +2,9 @@
  * Types for roster player transformation in Golf Genius integration
  */
 
-import { CourseDto, HoleDto } from "../../courses"
-import { EventDto, EventFeeDto, FeeTypeDto, RoundDto } from "../../events"
+import { CourseDto, EventDto, EventFeeDto, FeeTypeDto, HoleDto } from "@repo/dto"
+
+import { RoundDto } from "../../events"
 import { RegisteredPlayerDto } from "../../registration"
 
 export interface FeeDefinition {
@@ -17,6 +18,6 @@ export interface TransformationContext {
 	rounds: RoundDto[]
 	course?: CourseDto
 	holes: HoleDto[]
-	feeDefinitions: FeeDefinition[]
+	eventFees: EventFeeDto[]
 	allSlotsInRegistration: RegisteredPlayerDto[]
 }

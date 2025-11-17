@@ -31,7 +31,7 @@ export class EventSyncService {
 
 		// 1) Load our event
 		let localEventId: number
-		const localEvent = await this.eventsService.findEventById(eventId)
+		const localEvent = await this.eventsService.findEventById({ eventId })
 		if (!localEvent) throw new Error(`Local event not found: ${eventId}`)
 		localEventId = localEvent.id!
 

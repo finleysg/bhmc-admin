@@ -1,11 +1,17 @@
-// DTO exports
+// Score DTO exports
 export { CreateScorecardDto } from "./scores/create-scorecard.dto"
 export { UpdateScorecardDto } from "./scores/update-scorecard.dto"
 export { CreateScoreDto } from "./scores/create-score.dto"
 export { UpdateScoreDto } from "./scores/update-score.dto"
 
+// Course DTO exports
+export { CourseDto } from "./courses/course.dto"
+export { TeeDto } from "./courses/tee.dto"
+export { HoleDto } from "./courses/hole.dto"
+
 // Event DTO exports
 export { EventDto } from "./events/event.dto"
+export { EventFeeDto, FeeTypeDto } from "./events/event-fee.dto"
 export { EventPlayerFeeDto } from "./events/event-player-fee.dto"
 export { EventPlayerSlotDto } from "./events/event-player-slot.dto"
 export { EventRegistrationSummaryDto } from "./events/event-registration-summary.dto"
@@ -29,8 +35,12 @@ export { EventResultsSectionDto } from "./reports/event-results-section.dto"
 export { EventResultsReportRowDto } from "./reports/event-results-report-row.dto"
 
 // Registration DTO exports
+export {
+	AddAdminRegistrationDto,
+	AddAdminRegistrationSlotsDto,
+} from "./register/admin-registration.dto"
 export { PlayerDto } from "./register/player.dto"
+export { RegistrationDto } from "./register/registration.dto"
 export { RegistrationFeeDto } from "./register/registration-fee.dto"
 export { RegistrationSlotDto } from "./register/registration-slot.dto"
-export { RegisteredGroupDto } from "./register/registration.dto"
 export { SearchPlayersDto } from "./register/search-players.dto"

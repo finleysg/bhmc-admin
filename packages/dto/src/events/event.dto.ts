@@ -1,3 +1,6 @@
+import { CourseDto } from "../courses/course.dto"
+import { EventFeeDto } from "./event-fee.dto"
+
 export interface EventDto {
 	id?: number
 	eventType: string
@@ -31,4 +34,6 @@ export interface EventDto {
 	ageRestriction?: number | null
 	ageRestrictionType: string
 	ggId?: string | null
+	courses?: CourseDto[]
+	eventFees?: EventFeeDto[]
 }

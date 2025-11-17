@@ -2,8 +2,10 @@ import { EventFeeDto } from "../events/event-fee.dto"
 
 export interface RegistrationFeeDto {
 	id: number
-	isPaid: number
+	registrationSlotId: number
 	paymentId: number
 	amount: string
-	eventFee: EventFeeDto
+	isPaid: number
+	eventFeeId: number
+	eventFee?: EventFeeDto
 }

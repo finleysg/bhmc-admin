@@ -1,29 +1,23 @@
 import { Injectable, Logger } from "@nestjs/common"
-
-import { HoleDto } from "../../courses"
-import { EventDto, EventFeeDto, FeeTypeDto } from "../../events"
-import { getStart } from "../../events/domain/event.domain"
-import { getGroup } from "../../events/domain/group.domain"
-import { toHoleDomain, toSlotDomain } from "../../events/domain/mappers"
 import {
+	EventDto,
+	EventFeeDto,
+	FeeTypeDto,
+	HoleDto,
 	PlayerDto,
-	RegisteredPlayerDto,
-	RegistrationDto,
 	RegistrationSlotDto,
-} from "../../registration"
+} from "@repo/dto"
+
+import { RegisteredPlayerDto, RegistrationDto } from "../../registration"
+import { getStart } from "../../registration/domain/event.domain"
+import { getGroup } from "../../registration/domain/group.domain"
+import { toHoleDomain, toSlotDomain } from "../../registration/domain/mappers"
 import { RosterMemberSyncDto } from "../dto/internal.dto"
 import { FeeDefinition, TransformationContext } from "../dto/roster.dto"
 
 @Injectable()
 export class RosterPlayerTransformer {
 	private readonly logger = new Logger(RosterPlayerTransformer.name)
-
-	private normalizeGhin(ghin?: string | null): string | null {
-		if (!ghin) return null
-		const trimmed = String(ghin).trim()
-		// strip leading zeros for comparison and also keep a padded version
-		return trimmed.replace(/^0+/, "") || "0"
-	}
 
 	/**
 	 * Transform a player registration into a Golf Genius member sync DTO
@@ -38,7 +32,7 @@ export class RosterPlayerTransformer {
 		const roundsGgIds = context.rounds?.map((r) => r.ggId?.toString()).filter(Boolean)
 
 		return {
-			externalId: slot.id!,
+			externalId: slot.id,
 			lastName: player.lastName,
 			firstName: player.firstName,
 			email: player.email,
@@ -58,7 +52,7 @@ export class RosterPlayerTransformer {
 		registration: RegistrationDto,
 		context: TransformationContext,
 	): Record<string, string | null> {
-		const { event, course, holes, feeDefinitions, allSlotsInRegistration } = context
+		const { event, course, holes, eventFees, allSlotsInRegistration } = context
 
 		// Determine course name
 		let courseName = "N/A"
@@ -91,13 +85,13 @@ export class RosterPlayerTransformer {
 		}
 
 		// Add dynamic skins fee columns
-		for (const fd of feeDefinitions) {
+		for (const fd of eventFees) {
 			const fee = (allSlotsInRegistration.find((s) => s.slot?.id === slot.id)?.fees ?? []).find(
-				(f) => f.eventFee?.id === fd.eventFee?.id,
+				(f) => f.eventFee?.id === fd.id,
 			)
 			const paid = fee?.isPaid === 1
 			const amount = paid ? String(fee?.amount ?? 0) : "0"
-			customFields[fd.name] = amount
+			customFields[fd.feeType!.name] = amount
 		}
 
 		return customFields

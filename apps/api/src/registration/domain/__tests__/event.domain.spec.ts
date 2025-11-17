@@ -1,4 +1,4 @@
-import { getStart } from "../event.domain"
+import { getStart } from "../../../registration/domain/event.domain"
 import { EventDomainData, HoleDomainData, RegistrationSlotDomainData } from "../types"
 
 describe("event.domain getStart", () => {

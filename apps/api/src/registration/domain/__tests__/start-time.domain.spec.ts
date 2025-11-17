@@ -1,4 +1,4 @@
-import { calculateTeeTime } from "../start-time.domain"
+import { calculateTeeTime } from "../../../registration/domain/start-time.domain"
 import { EventDomainData, RegistrationSlotDomainData } from "../types"
 
 describe("start-time.domain", () => {
