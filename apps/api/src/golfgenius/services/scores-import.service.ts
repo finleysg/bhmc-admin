@@ -4,15 +4,13 @@ import {
 } from "rxjs"
 
 import { Injectable } from "@nestjs/common"
-import {
-	ProgressEventDto,
-	ScoreDto,
-} from "@repo/domain/types"
+import { ProgressEventDto } from "@repo/domain/types"
 
 import { CoursesService } from "../../courses/courses.service"
+import { CreateScoreModel } from "../../database/models"
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
-import { ScoresService } from "../../scores"
+import { ScoresRepository } from "../../scores"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import { GgTeeSheetPlayerDto } from "../dto/golf-genius.dto"
@@ -55,7 +53,7 @@ export interface ImportEventScoresResult {
 @Injectable()
 export class ScoresImportService {
 	constructor(
-		private readonly scoresService: ScoresService,
+		private readonly scoresService: ScoresRepository,
 		private readonly apiClient: ApiClient,
 		private readonly registrationService: RegistrationService,
 		private readonly coursesService: CoursesService,
@@ -187,21 +185,21 @@ export class ScoresImportService {
 			return await this.scoresService.updateScorecard(existing.id!, {
 				eventId,
 				playerId,
-				handicapIndex: handicapIndex?.toString() ?? null,
+				handicapIndex,
 				courseHandicap: courseHandicap ?? 0,
 				courseId,
 				teeId,
-			} as any)
+			})
 		} else {
 			results.scorecards.created++
 			return await this.scoresService.createScorecard({
 				eventId,
 				playerId,
-				handicapIndex: handicapIndex?.toString() ?? null,
+				handicapIndex,
 				courseHandicap: courseHandicap ?? 0,
 				courseId,
 				teeId,
-			} as any)
+			})
 		}
 	}
 
@@ -214,7 +212,7 @@ export class ScoresImportService {
 		await this.scoresService.deleteScoresByScorecard(scoreCardId)
 
 		const holes = await this.coursesService.findHolesByCourseId(courseId)
-		const allScores: ScoreDto[] = []
+		const allScores: CreateScoreModel[] = []
 
 		for (let i = 0; i < playerData.score_array.length; i++) {
 			const grossScore = playerData.score_array[i]
@@ -225,30 +223,30 @@ export class ScoresImportService {
 
 			// Prepare gross score
 			allScores.push({
-				scoreCardId,
+				scorecardId: scoreCardId,
 				holeId: hole.id,
 				score: grossScore,
-				isNet: false,
-			} as any)
+				isNet: 0,
+			})
 
 			// Calculate and prepare net score
 			const handicapDots = playerData.handicap_dots_by_hole[i] || 0
 			const netScore = grossScore - handicapDots
 
 			allScores.push({
-				scoreCardId,
+				scorecardId: scoreCardId,
 				holeId: hole.id,
 				score: netScore,
-				isNet: true,
-			} as any)
+				isNet: 1,
+			})
 		}
 
 		// Batch insert all scores (gross + net) in one query
 		await this.scoresService.batchCreateScores(allScores)
 	}
 
-	private parseHandicap(value: string): number | null {
-		if (!value) return null
+	private parseHandicap(value: string): number | undefined {
+		if (!value) return undefined
 		const trimmed = value.trim()
 		if (trimmed.startsWith("+")) {
 			return -parseFloat(trimmed.substring(1))

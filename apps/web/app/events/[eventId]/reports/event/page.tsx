@@ -1,20 +1,13 @@
 "use client"
 
-import {
-	useEffect,
-	useState,
-} from "react"
+import { useEffect, useState } from "react"
 
 import { useParams } from "next/navigation"
 
 import { Pagination } from "@/components/pagination"
 import { ReportPage } from "@/components/report-page"
 import { useIsMobile } from "@/lib/use-is-mobile"
-import {
-	ArrowDownIcon,
-	ArrowsUpDownIcon,
-	ArrowUpIcon,
-} from "@heroicons/react/24/outline"
+import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
 import { EventReportRowDto } from "@repo/domain/types"
 import {
 	ColumnDef,

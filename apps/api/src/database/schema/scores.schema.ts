@@ -8,7 +8,7 @@ export const eventScorecard = mysqlTable(
 	"scores_eventscorecard",
 	{
 		id: int().autoincrement().notNull(),
-		handicapIndex: decimal("handicap_index", { precision: 4, scale: 2 }),
+		handicapIndex: decimal("handicap_index", { precision: 3, scale: 1 }),
 		courseHandicap: int("course_handicap").notNull(),
 		courseId: int("course_id").references(() => course.id),
 		eventId: int("event_id")

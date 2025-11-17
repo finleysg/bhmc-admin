@@ -1,14 +1,9 @@
 import { EventReportRowDto } from "@repo/domain/types"
 
-import {
-	addDataRows,
-	addFixedColumns,
-	deriveDynamicColumns,
-	styleHeaderRow,
-} from "../excel.utils"
+import { addDataRows, addFixedColumns, deriveDynamicColumns, styleHeaderRow } from "../excel.utils"
 
-describe('styleHeaderRow', () => {
-	it('styles the specified row with bold font and lavender fill', () => {
+describe("styleHeaderRow", () => {
+	it("styles the specified row with bold font and lavender fill", () => {
 		const mockWorksheet = {
 			getRow: jest.fn().mockReturnValue({
 				font: {},
@@ -29,8 +24,8 @@ describe('styleHeaderRow', () => {
 	})
 })
 
-describe('addFixedColumns', () => {
-	it('sets worksheet columns to the provided array', () => {
+describe("addFixedColumns", () => {
+	it("sets worksheet columns to the provided array", () => {
 		const mockWorksheet = { columns: [] } as any
 		const columns = [
 			{ header: "Name", key: "name", width: 20 },
@@ -43,8 +38,8 @@ describe('addFixedColumns', () => {
 	})
 })
 
-describe('addDataRows', () => {
-	it('adds rows to worksheet and returns the next row number', () => {
+describe("addDataRows", () => {
+	it("adds rows to worksheet and returns the next row number", () => {
 		const mockWorksheet = {
 			addRow: jest.fn(),
 		} as any
@@ -65,7 +60,7 @@ describe('addDataRows', () => {
 		expect(nextRow).toBe(4)
 	})
 
-	it('handles missing keys with empty string', () => {
+	it("handles missing keys with empty string", () => {
 		const mockWorksheet = {
 			addRow: jest.fn(),
 		} as any
@@ -80,7 +75,7 @@ describe('addDataRows', () => {
 		expect(mockWorksheet.addRow).toHaveBeenCalledWith(["John", ""])
 	})
 
-	it('returns correct row number for empty rows', () => {
+	it("returns correct row number for empty rows", () => {
 		const mockWorksheet = {
 			addRow: jest.fn(),
 		} as any
@@ -92,8 +87,8 @@ describe('addDataRows', () => {
 	})
 })
 
-describe('deriveDynamicColumns', () => {
-	it('derives columns from dynamic keys excluding fixed keys', () => {
+describe("deriveDynamicColumns", () => {
+	it("derives columns from dynamic keys excluding fixed keys", () => {
 		const rows = [
 			{
 				playerName: "John",
@@ -112,16 +107,14 @@ describe('deriveDynamicColumns', () => {
 		])
 	})
 
-	it('returns empty array for empty rows', () => {
+	it("returns empty array for empty rows", () => {
 		const columns = deriveDynamicColumns([], ["fixed"])
 
 		expect(columns).toEqual([])
 	})
 
-	it('handles camelCase to space-separated headers', () => {
-		const rows = [
-			{ totalGrossScore: 100 } as unknown as EventReportRowDto,
-		]
+	it("handles camelCase to space-separated headers", () => {
+		const rows = [{ totalGrossScore: 100 } as unknown as EventReportRowDto]
 
 		const columns = deriveDynamicColumns(rows, [])
 

@@ -1,14 +1,8 @@
 "use client"
 
-import {
-	useEffect,
-	useState,
-} from "react"
+import { useEffect, useState } from "react"
 
-import {
-	useParams,
-	useRouter,
-} from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 import ActionCard from "@/components/action-card"
 import { useSession } from "@/lib/auth-client"

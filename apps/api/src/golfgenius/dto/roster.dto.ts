@@ -2,14 +2,7 @@
  * Types for roster player transformation in Golf Genius integration
  */
 
-import {
-	CourseDto,
-	EventDto,
-	EventFeeDto,
-	FeeTypeDto,
-	HoleDto,
-	RoundDto,
-} from "@repo/domain/types"
+import { CourseDto, EventDto, EventFeeDto, FeeTypeDto, HoleDto, RoundDto } from "@repo/domain/types"
 
 import { RegisteredPlayerDto } from "../../registration"
 

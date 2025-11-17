@@ -1,2 +1,2 @@
 // Public services
-export { ScoresService } from "./scores.service"
+export { ScoresRepository } from "./scores.repository"

@@ -1,10 +1,4 @@
-import type {
-	EventDto,
-	EventFeeDto,
-	FeeTypeDto,
-	RoundDto,
-	TournamentDto,
-} from "@repo/domain/types"
+import type { EventDto, EventFeeDto, FeeTypeDto, RoundDto, TournamentDto } from "@repo/domain/types"
 
 /**
  * Maps database entity to EventDto

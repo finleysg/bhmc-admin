@@ -1,17 +1,20 @@
-import type {
-	ScorecardDto,
-	ScoreDto,
-} from "@repo/domain/types"
+import {
+	CreateScorecardModel,
+	CreateScoreModel,
+	ScorecardModel,
+	ScoreModel,
+	UpdateScorecardModel,
+} from "../../database/models"
 
 /**
  * Maps database entity to ScoreDto
  */
-export function mapToScoreDto(entity: any): ScoreDto {
+export function mapToScoreModel(entity: any): ScoreModel {
 	return {
 		id: entity.id,
-		scoreCardId: entity.scorecardId,
+		scorecardId: entity.scorecardId,
 		score: entity.score,
-		isNet: !!entity.isNet,
+		isNet: entity.isNet,
 		holeId: entity.holeId,
 	}
 }
@@ -19,19 +22,19 @@ export function mapToScoreDto(entity: any): ScoreDto {
 /**
  * Maps ScoreDto to database entity for insert/update
  */
-export function mapScoreDtoToEntity(dto: ScoreDto): any {
+export function mapScoreModelToEntity(model: CreateScoreModel): any {
 	return {
-		score: dto.score,
-		isNet: dto.isNet ? 1 : 0,
-		holeId: dto.holeId,
-		scorecardId: dto.scoreCardId,
+		score: model.score,
+		isNet: model.isNet,
+		holeId: model.holeId,
+		scorecardId: model.scorecardId,
 	}
 }
 
 /**
- * Maps database entity to ScorecardDto
+ * Maps database entity to Scorecard model
  */
-export function mapToScorecardDto(entity: any): ScorecardDto {
+export function mapToScorecardModel(entity: any): ScorecardModel {
 	return {
 		id: entity.id,
 		handicapIndex: entity.handicapIindex,
@@ -44,16 +47,15 @@ export function mapToScorecardDto(entity: any): ScorecardDto {
 }
 
 /**
- * Maps ScorecardDto to database entity for insert/update
+ * Maps Scorecard model to database entity for insert
  */
-export function mapScorecardDtoToEntity(dto: ScorecardDto): any {
+export function mapScorecardModelToEntity(model: CreateScorecardModel | UpdateScorecardModel): any {
 	return {
-		id: dto.id,
-		handicapIndex: dto.handicapIndex,
-		courseHandicap: dto.courseHandicap,
-		courseId: dto.courseId,
-		eventId: dto.eventId,
-		playerId: dto.playerId,
-		teeId: dto.teeId,
+		handicapIndex: model.handicapIndex,
+		courseHandicap: model.courseHandicap,
+		courseId: model.courseId,
+		eventId: model.eventId,
+		playerId: model.playerId,
+		teeId: model.teeId,
 	}
 }

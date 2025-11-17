@@ -1,16 +1,8 @@
 "use client"
 
-import {
-	useEffect,
-	useMemo,
-	useState,
-} from "react"
+import { useEffect, useMemo, useState } from "react"
 
-import {
-	EventDto,
-	IntegrationActionName,
-	IntegrationLogDto,
-} from "@repo/domain/types"
+import { EventDto, IntegrationActionName, IntegrationLogDto } from "@repo/domain/types"
 
 import IntegrationActionCard from "./integration-action-card"
 

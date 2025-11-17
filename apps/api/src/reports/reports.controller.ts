@@ -1,12 +1,6 @@
 import type { Response } from "express"
 
-import {
-	Controller,
-	Get,
-	Param,
-	ParseIntPipe,
-	Res,
-} from "@nestjs/common"
+import { Controller, Get, Param, ParseIntPipe, Res } from "@nestjs/common"
 
 import { ReportsService } from "./reports.service"
 

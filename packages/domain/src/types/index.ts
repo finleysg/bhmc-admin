@@ -1,10 +1,6 @@
 // Score DTO exports
-export { CreateScorecardDto } from "./scores/create-scorecard.dto"
-export { UpdateScorecardDto } from "./scores/update-scorecard.dto"
-export { CreateScoreDto } from "./scores/create-score.dto"
-export { UpdateScoreDto } from "./scores/update-score.dto"
-export type { ScoreDto } from "./scores/score.dto"
-export type { ScorecardDto } from "./scores/scorecard.dto"
+export { Score } from "./scores/score"
+export { Scorecard } from "./scores/scorecard"
 
 // Course DTO exports
 export type { CourseDto } from "./courses/course.dto"
