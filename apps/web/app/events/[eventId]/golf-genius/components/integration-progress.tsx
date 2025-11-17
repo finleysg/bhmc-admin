@@ -1,6 +1,6 @@
 "use client"
 
-import { ProgressEventDto, ProgressTournamentDto } from "@repo/dto"
+import { ProgressEventDto, ProgressTournamentDto } from "@repo/domain"
 
 interface IntegrationProgressProps {
 	progress: ProgressEventDto | ProgressTournamentDto

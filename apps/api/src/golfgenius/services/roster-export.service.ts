@@ -9,7 +9,7 @@ import {
 	PlayerDto,
 	ProgressEventDto,
 	RegistrationSlotDto,
-} from "@repo/dto"
+} from "@repo/domain"
 
 import { CoursesService } from "../../courses/courses.service"
 import { RoundDto } from "../../events"

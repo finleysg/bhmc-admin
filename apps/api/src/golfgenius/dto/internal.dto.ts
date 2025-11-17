@@ -3,7 +3,7 @@
  * Keep these narrow: only the fields our application consumes.
  */
 
-import { IntegrationActionName } from "@repo/dto"
+import { IntegrationActionName } from "@repo/domain"
 
 import { CustomFields } from "./golf-genius.dto"
 

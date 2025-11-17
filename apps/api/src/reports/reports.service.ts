@@ -8,7 +8,7 @@ import {
 	EventResultsSectionDto,
 	FinanceReportDto,
 	PointsReportRowDto,
-} from "@repo/dto"
+} from "@repo/domain"
 
 import { CoursesService } from "../courses"
 import {

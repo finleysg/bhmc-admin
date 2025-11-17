@@ -61,12 +61,12 @@ export class PointsResultParser extends BaseResultParser {
 			const tiePosition = parseInt(positionText.substring(1), 10)
 			if (isNaN(tiePosition) || tiePosition <= 0) return "No points awarded"
 			const ordinal = this.getOrdinalSuffix(tiePosition)
-			return `Tied for ${tiePosition}${ordinal}`
+			return `Tied for ${tiePosition}${ordinal} place points`
 		} else {
 			const posNum = parseInt(positionText, 10)
 			if (isNaN(posNum) || posNum <= 0) return "No points awarded"
 			const ordinal = this.getOrdinalSuffix(posNum)
-			return `${posNum}${ordinal}`
+			return `${posNum}${ordinal} place points`
 		}
 	}
 

@@ -1,5 +1,5 @@
 {
-	"name": "@repo/dto",
+	"name": "@repo/domain",
 	"version": "0.1.0",
 	"private": true,
 	"main": "./dist/index.js",

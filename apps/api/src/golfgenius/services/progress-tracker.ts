@@ -1,7 +1,7 @@
 import { Subject } from "rxjs"
 
 import { Injectable, Logger, Optional } from "@nestjs/common"
-import { IntegrationActionName, ProgressEventDto, ProgressTournamentDto } from "@repo/dto"
+import { IntegrationActionName, ProgressEventDto, ProgressTournamentDto } from "@repo/domain"
 
 import { IntegrationLogService } from "./integration-log.service"
 import {

@@ -6,7 +6,7 @@ import {
 	HoleDto,
 	PlayerDto,
 	RegistrationSlotDto,
-} from "@repo/dto"
+} from "@repo/domain"
 
 import { RegisteredPlayerDto, RegistrationDto } from "../../registration"
 import { getStart } from "../../registration/domain/event.domain"

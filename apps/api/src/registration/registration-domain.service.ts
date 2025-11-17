@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common"
-import { PlayerDto } from "@repo/dto"
+import { PlayerDto } from "@repo/domain"
 
 import { toPlayerDomain } from "./domain/mappers"
 import { getAge, getFullName } from "./domain/player.domain"

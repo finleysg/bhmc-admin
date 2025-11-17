@@ -1,4 +1,4 @@
-import { IntegrationActionName } from "@repo/dto"
+import { IntegrationActionName } from "@repo/domain"
 
 /**
  * Maps IntegrationActionName to backend endpoint paths

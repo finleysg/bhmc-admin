@@ -1,6 +1,6 @@
 import { Workbook, Worksheet } from "exceljs"
 
-import { EventReportRowDto } from "@repo/dto"
+import { EventReportRowDto } from "@repo/domain"
 
 export async function createWorkbook(): Promise<Workbook> {
 	const ExcelJS = await import("exceljs")

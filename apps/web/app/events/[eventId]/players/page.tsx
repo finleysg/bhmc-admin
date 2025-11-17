@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 
 import ActionCard from "@/components/action-card"
 import { useSession } from "@/lib/auth-client"
-import { EventDto } from "@repo/dto"
+import { EventDto } from "@repo/domain"
 
 export default function EventManagementPage() {
 	const { data: session, isPending } = useSession()

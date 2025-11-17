@@ -8,7 +8,7 @@ import {
 	IntegrationLogDto,
 	ProgressEventDto,
 	ProgressTournamentDto,
-} from "@repo/dto"
+} from "@repo/domain"
 
 import IntegrationProgress from "./integration-progress"
 

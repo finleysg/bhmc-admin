@@ -1,4 +1,4 @@
-import { CourseDto, HoleDto, TeeDto } from "@repo/dto"
+import { CourseDto, HoleDto, TeeDto } from "@repo/domain"
 
 /**
  * Maps database entity to CourseDto

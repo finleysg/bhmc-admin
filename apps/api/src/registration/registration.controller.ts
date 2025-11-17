@@ -1,5 +1,9 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards } from "@nestjs/common"
-import { AddAdminRegistrationDto, EventRegistrationSummaryDto, SearchPlayersDto } from "@repo/dto"
+import {
+	AddAdminRegistrationDto,
+	EventRegistrationSummaryDto,
+	SearchPlayersDto,
+} from "@repo/domain"
 
 import { JwtAuthGuard } from "../auth/jwt.guard"
 import { RegistrationService } from "./registration.service"

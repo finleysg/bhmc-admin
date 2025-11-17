@@ -6,7 +6,7 @@ import { useParams } from "next/navigation"
 
 import { ReportPage } from "@/components/report-page"
 import { formatCurrency } from "@/lib/use-report"
-import { FinanceReportDto } from "@repo/dto"
+import { FinanceReportDto } from "@repo/domain"
 import {
 	ColumnDef,
 	flexRender,

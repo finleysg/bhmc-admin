@@ -12,7 +12,7 @@ import {
 	Sse,
 	UseInterceptors,
 } from "@nestjs/common"
-import { IntegrationActionName } from "@repo/dto"
+import { IntegrationActionName } from "@repo/domain"
 
 import { EventsService } from "../events/events.service"
 import { LogIntegrationInterceptor } from "./interceptors/log-integration.interceptor"

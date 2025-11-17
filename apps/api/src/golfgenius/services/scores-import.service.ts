@@ -1,7 +1,7 @@
 import { Observable, Subject } from "rxjs"
 
 import { Injectable } from "@nestjs/common"
-import { ProgressEventDto } from "@repo/dto"
+import { ProgressEventDto } from "@repo/domain"
 
 import { CoursesService } from "../../courses/courses.service"
 import { EventsService } from "../../events/events.service"

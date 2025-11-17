@@ -1,5 +1,5 @@
 // Public DTOs
-export { PlayerDto } from "@repo/dto"
+export { PlayerDto } from "@repo/domain"
 export { RegistrationSlotDto } from "./dto/registration-slot.dto"
 export { RegistrationDto } from "./dto/registration.dto"
 export { RegisteredPlayerDto } from "./dto/registered-player.dto"

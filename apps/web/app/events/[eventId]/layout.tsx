@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 
 import { useParams, useRouter } from "next/navigation"
 
-import { EventDto } from "@repo/dto"
+import { EventDto } from "@repo/domain"
 
 import { useSession } from "../../../lib/auth-client"
 

@@ -28,11 +28,11 @@ Apps
 
 Packages
 
-- **packages/dto**
+- **packages/domain**
   - Type-only package exporting interfaces/types used by both apps
   - Built with TypeScript and consumed via workspace import
   - Contains DTOs for events, scores, registration, and player data
-  - Example: `import { EventDto } from '@repo/dto'`
+  - Example: `import { EventDto } from '@repo/domain'`
 
 Golf Genius Integration
 
@@ -90,5 +90,5 @@ Notes & constraints
 - **Domain-Driven Design**: Events module demonstrates the pattern for other modules
 - **Type Safety First**: Strict TypeScript with comprehensive test coverage
 - **External Schema**: Drizzle configured without migrations (no schema ownership)
-- **Shared Types**: DTO package enforces consistency across API and web app
+- **Shared Types**: domain package enforces consistency across API and web app
 - **Module Organization**: Each API module (scores, registration, events, courses) has a barrel export (`index.ts`) defining its public API; public exports include DTOs used in API responses/integrations and service classes; private elements like mappers and domain logic remain internal; cross-module dependencies use barrel imports for cleaner code (e.g., `import { PlayerDto } from '../registration'`); this pattern reduces import path complexity and enforces module boundaries

@@ -1,6 +1,6 @@
 "use client"
 
-import { EventDto } from "@repo/dto"
+import { EventDto } from "@repo/domain"
 
 interface ResultsCardProps {
 	isSearching: boolean

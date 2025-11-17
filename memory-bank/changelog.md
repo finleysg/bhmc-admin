@@ -57,6 +57,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Package Rename**: Renamed `packages/dto` to `packages/domain` to better align with domain-driven design principles; updated all workspace dependencies, imports, and documentation accordingly; maintained full type safety and build compatibility
+
 ### Added
 
 - **Event Results Report Implementation**: Complete end-to-end Event Results report with three sections (stroke play, skins, proxies) and empty row separators between sections; backend database queries with format-specific filtering (stroke excludes "Overall" tournaments, skins uses position for "skins won", proxies shows single winner); frontend hierarchical table rendering with section headers and sub-sections; Excel export with proper section formatting and empty rows; API proxy routes for JSON and Excel endpoints; follows established patterns with type-safe DTOs and error handling

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 
-import { EventDto, IntegrationActionName, IntegrationLogDto } from "@repo/dto"
+import { EventDto, IntegrationActionName, IntegrationLogDto } from "@repo/domain"
 
 import IntegrationActionCard from "./integration-action-card"
 

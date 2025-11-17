@@ -4,7 +4,7 @@ import { useParams } from "next/navigation"
 
 import { ReportPage } from "@/components/report-page"
 import { formatCurrency } from "@/lib/use-report"
-import { EventResultsReportDto, EventResultsSectionDto } from "@repo/dto"
+import { EventResultsReportDto, EventResultsSectionDto } from "@repo/domain"
 
 const renderSection = (section: EventResultsSectionDto) => {
 	if (section.type === "proxies") {

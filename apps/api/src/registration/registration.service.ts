@@ -1,17 +1,6 @@
-import {
-	and,
-	eq,
-	inArray,
-	isNotNull,
-	like,
-	or,
-} from "drizzle-orm"
+import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
 
-import {
-	BadRequestException,
-	Injectable,
-	NotFoundException,
-} from "@nestjs/common"
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common"
 import {
 	AddAdminRegistrationDto,
 	EventPlayerFeeDto,
@@ -23,7 +12,7 @@ import {
 	RegistrationDto,
 	RegistrationSlotDto,
 	SearchPlayersDto,
-} from "@repo/dto"
+} from "@repo/domain"
 
 import { CoursesService } from "../courses"
 import {
@@ -40,16 +29,8 @@ import {
 import { EventsService } from "../events"
 import { getStart } from "./domain/event.domain"
 import { getGroup } from "./domain/group.domain"
-import {
-	toEventDomain,
-	toHoleDomain,
-	toPlayerDomain,
-	toSlotDomain,
-} from "./domain/mappers"
-import {
-	getAge,
-	getFullName,
-} from "./domain/player.domain"
+import { toEventDomain, toHoleDomain, toPlayerDomain, toSlotDomain } from "./domain/mappers"
+import { getAge, getFullName } from "./domain/player.domain"
 import {
 	mapToCourseDto,
 	mapToPlayerDto,

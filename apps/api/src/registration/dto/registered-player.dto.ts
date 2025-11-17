@@ -4,7 +4,7 @@ import {
 	RegistrationDto,
 	RegistrationFeeDto,
 	RegistrationSlotDto,
-} from "@repo/dto"
+} from "@repo/domain"
 
 export interface RegisteredPlayerDto {
 	slot: RegistrationSlotDto

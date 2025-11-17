@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
-import { IntegrationLogDto } from "@repo/dto"
+import { IntegrationLogDto } from "@repo/domain"
 
 import { DrizzleService } from "../../database/drizzle.service"
 import { integrationLog } from "../../database/schema/golf-genius.schema"

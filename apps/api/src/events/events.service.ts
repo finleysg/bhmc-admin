@@ -7,7 +7,7 @@ import {
 	PreparedTournamentPoints,
 	PreparedTournamentResult,
 	TournamentData,
-} from "@repo/dto"
+} from "@repo/domain"
 
 import { CoursesService } from "../courses"
 import {
