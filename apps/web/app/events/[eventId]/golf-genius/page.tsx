@@ -1,12 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import {
+	useEffect,
+	useState,
+} from "react"
 
-import { useParams, useRouter } from "next/navigation"
+import {
+	useParams,
+	useRouter,
+} from "next/navigation"
 
-import { EventDto } from "@repo/domain"
+import { useSession } from "@/lib/auth-client"
+import { EventDto } from "@repo/domain/types"
 
-import { useSession } from "../../../../lib/auth-client"
 import IntegrationOrchestrator from "./components/integration-orchestrator"
 
 export default function GolfGeniusIntegrationPage() {

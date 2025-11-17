@@ -1,14 +1,20 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import {
+	useEffect,
+	useState,
+} from "react"
 
-import { getActionApiPath, supportsStreaming } from "@/lib/integration-actions"
+import {
+	getActionApiPath,
+	supportsStreaming,
+} from "@/lib/integration-actions"
 import {
 	IntegrationActionName,
 	IntegrationLogDto,
 	ProgressEventDto,
 	ProgressTournamentDto,
-} from "@repo/domain"
+} from "@repo/domain/types"
 
 import IntegrationProgress from "./integration-progress"
 

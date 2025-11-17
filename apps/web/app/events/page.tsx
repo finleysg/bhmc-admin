@@ -1,10 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import {
+	useEffect,
+	useState,
+} from "react"
 
 import { useRouter } from "next/navigation"
 
-import { EventDto } from "@repo/domain"
+import { EventDto } from "@repo/domain/types"
 
 import { useSession } from "../../lib/auth-client"
 import CalendarCard from "../components/calendar-card"

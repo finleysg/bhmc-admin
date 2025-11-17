@@ -1,12 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import {
+	useEffect,
+	useState,
+} from "react"
 
-import { useParams, useRouter } from "next/navigation"
+import {
+	useParams,
+	useRouter,
+} from "next/navigation"
 
 import ActionCard from "@/components/action-card"
 import { useSession } from "@/lib/auth-client"
-import { EventDto } from "@repo/domain"
+import { EventDto } from "@repo/domain/types"
 
 export default function EventManagementPage() {
 	const { data: session, isPending } = useSession()

@@ -1,12 +1,17 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import {
+	useEffect,
+	useState,
+} from "react"
 
-import { useParams, useRouter } from "next/navigation"
+import {
+	useParams,
+	useRouter,
+} from "next/navigation"
 
-import { EventDto } from "@repo/domain"
-
-import { useSession } from "../../../lib/auth-client"
+import { useSession } from "@/lib/auth-client"
+import { EventDto } from "@repo/domain/types"
 
 export default function EventLayout({ children }: { children: React.ReactNode }) {
 	const { data: session, isPending } = useSession()
