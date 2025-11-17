@@ -15,7 +15,8 @@ Apps
   - Database: MySQL 8.0 (containerized via docker-compose)
   - Connection: DATABASE_URL env variable with connection pooling
   - Architecture: Domain-driven design with service/controller/DTO layers
-  - Testing: Jest with type-safe mocks using `Partial<T>` patterns
+  - Testing: Jest with type-safe mocks using `Partial<T>` patterns; comprehensive unit tests for domain functions (48 tests) and API utilities (42 tests)
+  - Reporting: ExcelJS for server-side Excel generation in reports module
   - Health endpoint: `GET /health`
 
 - **apps/web**

@@ -22,7 +22,7 @@ Core capabilities:
 - **Golf Genius Integration**: Bidirectional sync for events, rosters, scores, and tournament results with comprehensive error handling
 - **Scoring & Results**: Scorecard management, automated results import, and reporting across multiple tournament formats
 - **Administrative Dashboard**: Authenticated admin interface for all tournament operations with audit logging
-- **Reporting & Analytics**: Tournament summaries, player statistics, and integration monitoring
+- **Reporting & Analytics**: Complete tournament reports (event, points, finance, results) with Excel export using ExcelJS; tournament summaries, player statistics, and integration monitoring
 
 Success criteria:
 

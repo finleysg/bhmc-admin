@@ -2,14 +2,12 @@
 
 Current focus:
 
-- Complete the NestJS API implementation with full module coverage (events, courses, registration, scores)
-- Implement Next.js frontend with better-auth integration and daisyUI components
-- Establish end-to-end connectivity between API and web app
-- API module barrel exports completed - all major modules now have clean public APIs
-- Refactored report pages and API proxy routes for reduced duplication and improved maintainability
+- Maintain and enhance testing infrastructure; ensure comprehensive coverage for pure functions and utilities
+- Monitor and update memory bank documentation to reflect recent changes and testing efforts
 
 Recent changes:
 
+- **Unit Testing Expansion**: Added comprehensive Jest tests for domain package (48 tests covering player, registration, time utilities) and API Excel utilities (12 tests); configured root-level test orchestration with Turbo; eliminated ts-jest deprecation warnings and TypeScript compiler warnings
 - **Registration Domain Refactoring**: Moved all domain functions and tests from `apps/api/src/registration/domain/` to shared `packages/domain/src/register/domain/` package; deleted DomainData interfaces (PlayerDomainData, EventDomainData, etc.) and replaced all usages with existing DTOs (PlayerDto, EventDto, etc.); updated mappers to output DTOs instead of domain types; maintained pure business logic while eliminating type duplication; updated all API app imports to use shared package exports
 - **Event-Specific Player Search**: Implemented GET /registration/:eventId/players endpoint for searching registered players in a specific event; supports optional text search on firstName, lastName, ghin; optional includeGroup parameter to include full RegisteredGroupDto with course and slots; uses Drizzle ORM with inner joins and type-safe DTOs
 - **Finance Report Implementation**: Complete event-specific finance report with money flow tracking; aggregates payments, refunds, and tournament payouts by bucket (Credit, Cash, Passthru); includes net calculations, format-specific payout breakdowns, Excel export, and API endpoints; handles proportional refund allocation across fee types with comprehensive database joins

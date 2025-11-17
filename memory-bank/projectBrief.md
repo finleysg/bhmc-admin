@@ -15,6 +15,7 @@ Goals (Core Implementation Phase):
 - Develop Next.js admin interface with better-auth authentication and daisyUI components
 - Establish type-safe communication between API and frontend via shared DTO package
 - Ensure production-ready code quality with comprehensive testing and zero ESLint violations
+- Achieve comprehensive unit test coverage for domain logic and API utilities with Jest
 
 Out of scope for this phase:
 

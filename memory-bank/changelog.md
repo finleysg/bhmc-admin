@@ -55,6 +55,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Finance Report Implementation**: Complete event-specific finance report with money flow tracking; aggregates payments, refunds, and tournament payouts by bucket (Credit, Cash, Passthru); includes net calculations, format-specific payout breakdowns, Excel export, and API endpoints; handles proportional refund allocation across fee types with comprehensive database joins and type-safe DTOs
 
+## [0.6.0] - 2025-11-16
+
+### Added
+
+- **Unit Testing Expansion**: Added comprehensive Jest tests for domain package (48 tests covering player, registration, time utilities) and API Excel utilities (12 tests); configured root-level test orchestration with Turbo; eliminated ts-jest deprecation warnings and TypeScript compiler warnings
+
+### Technical
+
+- **Jest Configuration**: Updated Jest configs to use modern `transform` syntax instead of deprecated `globals`; added `isolatedModules: true` to TypeScript configs for ESM compatibility
+- **Test Coverage**: Achieved comprehensive unit test coverage for pure functions and utilities across domain and API packages
+
 ## [Unreleased]
 
 ### Changed

@@ -81,6 +81,7 @@ UI patterns
 - **Action Mapping Pattern**: Centralized mapping of action names to API endpoints with type-safe helper functions; single dynamic route handles all integration actions
 - **Component Callback Pattern**: Parent-child communication through completion callbacks for state refresh and real-time UI updates
 - **Integration Action Cards**: Reusable cards with loading states, error handling, and collapsible details sections for audit log viewing
+- **SSE Streaming**: Real-time progress updates for long-running operations using RxJS Subjects and async background processing; eliminates race conditions between operation initialization and progress streaming connections
 
 Auth & Integration patterns
 
