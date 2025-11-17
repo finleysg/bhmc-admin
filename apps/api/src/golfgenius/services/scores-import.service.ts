@@ -1,12 +1,18 @@
-import { Observable, Subject } from "rxjs"
+import {
+	Observable,
+	Subject,
+} from "rxjs"
 
 import { Injectable } from "@nestjs/common"
-import { ProgressEventDto } from "@repo/domain/types"
+import {
+	ProgressEventDto,
+	ScoreDto,
+} from "@repo/domain/types"
 
 import { CoursesService } from "../../courses/courses.service"
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
-import { ScoreDto, ScoresService } from "../../scores"
+import { ScoresService } from "../../scores"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import { GgTeeSheetPlayerDto } from "../dto/golf-genius.dto"
@@ -185,7 +191,7 @@ export class ScoresImportService {
 				courseHandicap: courseHandicap ?? 0,
 				courseId,
 				teeId,
-			})
+			} as any)
 		} else {
 			results.scorecards.created++
 			return await this.scoresService.createScorecard({
@@ -195,7 +201,7 @@ export class ScoresImportService {
 				courseHandicap: courseHandicap ?? 0,
 				courseId,
 				teeId,
-			})
+			} as any)
 		}
 	}
 
@@ -223,7 +229,7 @@ export class ScoresImportService {
 				holeId: hole.id,
 				score: grossScore,
 				isNet: false,
-			})
+			} as any)
 
 			// Calculate and prepare net score
 			const handicapDots = playerData.handicap_dots_by_hole[i] || 0
@@ -234,7 +240,7 @@ export class ScoresImportService {
 				holeId: hole.id,
 				score: netScore,
 				isNet: true,
-			})
+			} as any)
 		}
 
 		// Batch insert all scores (gross + net) in one query

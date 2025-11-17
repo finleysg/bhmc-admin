@@ -1,16 +1,25 @@
-import { and, eq } from "drizzle-orm"
+import {
+	and,
+	eq,
+} from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
+import type {
+	ScorecardDto,
+	ScoreDto,
+} from "@repo/domain/types"
 
-import { DrizzleService, eventScore, eventScorecard } from "../database"
+import {
+	DrizzleService,
+	eventScore,
+	eventScorecard,
+} from "../database"
 import {
 	mapScorecardDtoToEntity,
 	mapScoreDtoToEntity,
 	mapToScorecardDto,
 	mapToScoreDto,
 } from "./dto/mappers"
-import { ScoreDto } from "./dto/score.dto"
-import { ScorecardDto } from "./dto/scorecard.dto"
 
 @Injectable()
 export class ScoresService {

@@ -1,7 +1,7 @@
 import { ScoreDto } from "./score.dto"
 
 export interface ScorecardDto {
-	id?: number
+	id: number
 	handicapIndex: string | null
 	courseHandicap: number
 	courseId: number

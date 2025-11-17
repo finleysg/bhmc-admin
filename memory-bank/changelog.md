@@ -68,6 +68,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Type Error Fixes After Domain Package Migration**: Resolved 20 TypeScript compilation errors after moving types to domain package; updated import statements across 9 files in API package to use centralized `@repo/domain/types`; fixed NestJS decorator compatibility with type-only imports (`import type`) for `emitDecoratorMetadata` settings; resolved missing type issues in Golf Genius integration service by proper import consolidation
+
 ### Changed
 
 - **Package Rename**: Renamed `packages/dto` to `packages/domain` to better align with domain-driven design principles; updated all workspace dependencies, imports, and documentation accordingly; maintained full type safety and build compatibility

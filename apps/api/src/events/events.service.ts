@@ -1,12 +1,21 @@
-import { and, eq, inArray } from "drizzle-orm"
+import {
+	and,
+	eq,
+	inArray,
+} from "drizzle-orm"
 
-import { Injectable, Logger } from "@nestjs/common"
+import {
+	Injectable,
+	Logger,
+} from "@nestjs/common"
 import {
 	EventDto,
 	EventFeeDto,
 	PreparedTournamentPoints,
 	PreparedTournamentResult,
+	RoundDto,
 	TournamentData,
+	TournamentDto,
 } from "@repo/domain/types"
 
 import { CoursesService } from "../courses"
@@ -27,8 +36,6 @@ import {
 	mapToRoundDto,
 	mapToTournamentDto,
 } from "./dto/mappers"
-import { RoundDto } from "./dto/round.dto"
-import { TournamentDto } from "./dto/tournament.dto"
 import { UpdateEventDto } from "./dto/update-event.dto"
 
 @Injectable()

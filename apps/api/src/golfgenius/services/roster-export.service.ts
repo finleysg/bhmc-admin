@@ -1,6 +1,9 @@
 import { Subject } from "rxjs"
 
-import { Injectable, Logger } from "@nestjs/common"
+import {
+	Injectable,
+	Logger,
+} from "@nestjs/common"
 import {
 	CourseDto,
 	EventDto,
@@ -10,15 +13,19 @@ import {
 	ProgressEventDto,
 	RegistrationDto,
 	RegistrationSlotDto,
+	RoundDto,
 } from "@repo/domain/types"
 
 import { CoursesService } from "../../courses/courses.service"
-import { RoundDto } from "../../events"
 import { EventsService } from "../../events/events.service"
 import { RegisteredPlayerDto } from "../../registration"
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
-import { ExportError, ExportResult, TransformationContext } from "../dto"
+import {
+	ExportError,
+	ExportResult,
+	TransformationContext,
+} from "../dto"
 import { RosterMemberDto } from "../dto/internal.dto"
 import { ProgressTracker } from "./progress-tracker"
 import { RosterPlayerTransformer } from "./roster-player-transformer"

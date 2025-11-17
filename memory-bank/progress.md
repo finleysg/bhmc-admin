@@ -34,6 +34,8 @@ Completed
 - **Golf Genius Integration Completion**: Finalized comprehensive Golf Genius integration module with all core endpoints implemented; moved closeEvent endpoint to golfgenius module with proper integration logging; fixed LogIntegrationInterceptor to handle both `id` and `eventId` parameters and correctly extract event IDs for audit logging
 - **Event-Specific Player Search**: Complete implementation with backend database queries, event filtering, text search on player fields (firstName, lastName, ghin), and optional group details inclusion; added GET /registration/:eventId/players endpoint with type-safe DTOs and Drizzle ORM joins
 
+**Type Error Fixes After Domain Package Migration**: Resolved 20 TypeScript compilation errors after moving types to domain package; updated import statements across 9 files in API package to use centralized `@repo/domain/types`; fixed NestJS decorator compatibility with type-only imports (`import type`) for `emitDecoratorMetadata` settings; resolved missing type issues in Golf Genius integration service by proper import consolidation
+
 **Unit Testing Expansion**: Added comprehensive Jest tests for domain package (48 tests covering player, registration, time utilities) and API Excel utilities (12 tests); configured root-level test orchestration with Turbo; eliminated ts-jest deprecation warnings and TypeScript compiler warnings
 
 **Golf Genius Integration Status**: ✅ Complete - All core endpoints implemented, tested, and documented. Ready for alpha release (v0.2.0-alpha.1). Integration includes roster sync, event sync, results import (all formats), close event functionality, and comprehensive UI orchestration.

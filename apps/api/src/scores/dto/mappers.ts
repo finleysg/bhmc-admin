@@ -1,5 +1,7 @@
-import { ScoreDto } from "./score.dto"
-import { ScorecardDto } from "./scorecard.dto"
+import type {
+	ScorecardDto,
+	ScoreDto,
+} from "@repo/domain/types"
 
 /**
  * Maps database entity to ScoreDto
@@ -7,6 +9,7 @@ import { ScorecardDto } from "./scorecard.dto"
 export function mapToScoreDto(entity: any): ScoreDto {
 	return {
 		id: entity.id,
+		scoreCardId: entity.scorecardId,
 		score: entity.score,
 		isNet: !!entity.isNet,
 		holeId: entity.holeId,
