@@ -7,13 +7,13 @@ Overview
   - `apps/api` — NestJS backend (TypeScript) using Drizzle ORM + MySQL with domain-driven design
   - `apps/web` — Next.js frontend (TypeScript) using better-auth for auth persistence (SQLite), TailwindCSS v4, daisyUI 5
 - **Packages**:
-  - `packages/domain` — shared TypeScript DTOs, domain logic, and mappers with workspace imports
+  - `packages/domain` — shared TypeScript domain models and domain logic
 
 Architecture patterns
 
 - **Domain-Driven Design**: Events module demonstrates layered architecture with domain logic separated from infrastructure
 - **Service boundary**: API app is the authoritative source for admin actions; frontend interacts via HTTP/REST
-- **Shared types**: DTO package enforces consistent payloads across services with workspace imports
+- **Shared types**: Domain package enforces consistent payloads across services with workspace imports
 - **Database separation**: MySQL for domain data via Drizzle, SQLite for auth/session data (lightweight, file-backed)
 - **Containerization**: Databases run in Docker (docker-compose) for environment parity and reproducible local dev
 - **Dev workflow**: `pnpm` workspaces + Turbo for caching and task orchestration; `docker-compose up` brings up databases
@@ -40,21 +40,21 @@ Testing & quality patterns
 
 Code organization patterns
 
-- **Feature-based modules**: Each domain area (events, courses, registration) organized as self-contained modules
-- **Layer separation**: domain/dto/services/controllers structure within each module
-- **Barrel Export Pattern**: Each module defines public API through `index.ts` barrel exports; only exports DTOs and services intended for external use; enables cleaner imports and explicit public/private boundaries
+- **Feature-based modules**: Each domain area (events, courses, registration, scores, golfgenius) organized as self-contained modules in the API app; web app uses Next.js app router with feature folders under `app/` (e.g., `events/`, `club/`) and shared component/utils libraries
+- **Layer separation**: domain/repository/services/controllers structure within each API module; web app separates UI concerns with `app/` for pages/routes, `components/` for reusable elements, `lib/` for utilities, and `data/` for persistence
+- **Barrel Export Pattern**: Each module defines public API through `index.ts` barrel exports; only exports mappers, models, and services intended for external use; enables cleaner imports and explicit public/private boundaries, applied consistently across API modules, web components, and domain package
 
   **Implementation**:
-  - Create `index.ts` in each module root (e.g., `apps/api/src/scores/index.ts`)
-  - Export only public DTOs and services: `export { PublicDto } from './dto/public.dto'`
+  - Create `index.ts` in each module root (e.g., `apps/api/src/scores/index.ts`, `packages/domain/src/types/index.ts`)
+  - Export only public mappers, models, and services
   - Keep mappers, domain logic, and private types internal
-  - Update cross-module imports to use module root: `import { PublicDto } from '../scores'`
+  - Update cross-module imports to use module root: `import { PublicDto } from '../scores'` or `from '@domain/types'`
 
   **Benefits**:
   - Cleaner, shorter import statements
   - Explicit public API definition
   - Easier refactoring of internal structures
-  - Consistent across modules (scores, registration, events, courses)
+  - Consistent across modules (scores, registration, events, courses, web components, domain functions)
 
   **Example** (scores module):
 
@@ -67,12 +67,15 @@ Code organization patterns
   export { ScoresService } from "./scores.service"
   ```
 
-  **Usage**: Other modules import from module root instead of deep paths like `'../scores/dto/score.dto'`.
+  **Usage**: Other modules import from module root instead of deep paths like `'../scores/dto/score.dto'`; web app imports shared types via `from '@domain/types'`.
 
-- **Shared package boundaries**: Strict import rules preventing circular dependencies
+- **Domain Package Organization**: Shared domain logic separated into `types/` (domain-specific e.g., events, golf-genius), `functions/` (pure logic like player/registration utils), `mappers/` (transformations), and `__tests__/` (unit tests); enforces type safety and reusability without app coupling
+- **Integration Module Patterns**: Complex features like `golfgenius` feature dedicated subfolders for `services/` (specialized e.g., event-sync, points-import), `dto/` (external/internal DTOs), `config/` (validation schemas), `interceptors/` (middleware), and `json/` (example data); exemplifies deep feature isolation and testing
+- **Web App Structure**: Next.js app router with `app/` for declarative routes/pages, `components/` for reusable UI with theme/auth hooks, `lib/` for API proxies/auth utilities, and `data/` for local databases (e.g., auth.db); follows feature-based grouping with clean separation of concerns
+- **Shared package boundaries**: Strict import rules via pnpm workspaces and TurboRepo preventing circular dependencies across apps/packages
 - **File naming conventions**: Consistent kebab-case for files, PascalCase for classes/interfaces
-- **Test organization**: Test files mirror source structure with descriptive naming
-- **Configuration grouping**: Related configuration grouped by domain/feature
+- **Test organization**: Test files mirror source structure with descriptive naming; includes domain-level unit tests (e.g., `packages/domain/src/__tests__/player.test.ts`) and API integration tests (e.g., `apps/api/src/golfgenius/__tests__/golfgenius.service.spec.ts`)
+- **Configuration grouping**: Related configuration grouped by domain/feature across all apps/packages
 
 UI patterns
 
