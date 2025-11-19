@@ -18,16 +18,19 @@ export class RegistrationController {
 		return this.registrationService.searchPlayers(dto)
 	}
 
-	@Get(":eventId/groups")
+	@Get(":eventId/groups/:playerId")
 	@UseGuards(JwtAuthGuard)
-	async searchGroups(@Param("eventId") eventId: string, @Query() query: SearchPlayers) {
-		return this.registrationService.searchGroups(+eventId, query.searchText!)
+	async getGroup(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Param("playerId", ParseIntPipe) playerId: number,
+	) {
+		return this.registrationService.findGroup(eventId, playerId)
 	}
 
 	@Post(":eventId")
 	@UseGuards(JwtAuthGuard)
 	async createAdminRegistration(
-		@Param("eventId") eventId: string,
+		@Param("eventId", ParseIntPipe) eventId: number,
 		@Body() dto: AddAdminRegistration,
 	) {
 		return this.registrationService.createAdminRegistration(+eventId, dto)

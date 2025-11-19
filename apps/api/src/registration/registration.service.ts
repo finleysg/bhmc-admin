@@ -12,7 +12,7 @@ import {
 	SearchPlayers,
 } from "@repo/domain/types"
 
-import { mapToCourseModel, toCourse } from "../courses/mappers"
+import { mapToCourseModel, toCourse, toHole } from "../courses/mappers"
 import {
 	course,
 	DrizzleService,
@@ -143,38 +143,79 @@ export class RegistrationService {
 		return results.map(mapToPlayerModel).map(toPlayer)
 	}
 
-	async searchGroups(eventId: number, searchText: string): Promise<Registration[] | null> {
-		// Build where conditions
-		let whereConditions = and(
-			eq(registration.eventId, eventId),
-			eq(registrationSlot.status, "R"),
-			isNotNull(registrationSlot.playerId),
+	async findGroup(eventId: number, playerId: number): Promise<Registration> {
+		// Step 1: Find the registration ID via player's slot
+		const registrationId = await this.repository.findRegistrationIdByEventAndPlayer(
+			eventId,
+			playerId,
 		)
 
-		const search = `%${searchText}%`
-		whereConditions = and(
-			whereConditions,
-			or(like(player.firstName, search), like(player.lastName, search), like(player.ghin, search)),
-		)
+		if (!registrationId) {
+			throw new NotFoundException(`Player ${playerId} is not registered for event ${eventId}`)
+		}
 
-		// First, get matching players with their groups
-		const rows = await this.drizzle.db
-			.select({
-				registration: registration,
-				slot: registrationSlot,
-				player: player,
-				fees: registrationFee,
-			})
-			.from(registration)
-			.innerJoin(registrationSlot, eq(registration.id, registrationSlot.registrationId))
-			.innerJoin(player, eq(player.id, registrationSlot.playerId))
-			.innerJoin(registrationFee, eq(registrationSlot.id, registrationFee.registrationSlotId))
-			.where(whereConditions)
+		// Step 2: Get registration with course (already mapped to model)
+		const registrationModel = await this.repository.findRegistrationWithCourse(registrationId)
 
-		// TODO: map to domain objects
-		console.log(rows)
+		if (!registrationModel) {
+			throw new NotFoundException(`Registration ${registrationId} not found`)
+		}
 
-		return null
+		// Transform to domain and set course if present
+		const result = toRegistration(registrationModel)
+		if (registrationModel.course) {
+			result.course = toCourse(registrationModel.course)
+		}
+
+		// Step 3: Get all slots with player and hole data (already mapped to models)
+		const slotModels = await this.repository.findSlotsWithPlayerAndHole(registrationId)
+
+		// Transform models to domain objects
+		const slots = slotModels.map((slotModel) => {
+			const slot = toRegistrationSlot(slotModel)
+			if (slotModel.player) {
+				slot.player = toPlayer(slotModel.player)
+			}
+			if (slotModel.hole) {
+				slot.hole = toHole(slotModel.hole)
+			}
+			slot.fees = []
+			return slot
+		})
+
+		// Step 4: Get fees and attach to slots (already mapped to models)
+		const slotIds = slots
+			.filter((s): s is RegistrationSlot & { id: number } => s.id !== undefined)
+			.map((s) => s.id)
+		const feeModels = await this.repository.findFeesWithEventFeeAndFeeType(slotIds)
+
+		// Create slot map for efficient lookup
+		const slotMap = new Map<number, RegistrationSlot>()
+		for (const slot of slots) {
+			if (slot.id) {
+				slotMap.set(slot.id, slot)
+			}
+		}
+
+		// Attach fees to their slots
+		for (const feeModel of feeModels) {
+			const slotId = feeModel.registrationSlotId
+			if (!slotId) continue
+
+			const slot = slotMap.get(slotId)
+			if (!slot) continue
+
+			const fee = toRegistrationFee(feeModel)
+			if (feeModel.eventFee) {
+				fee.eventFee = toEventFee(feeModel.eventFee)
+			}
+
+			slot.fees!.push(fee)
+		}
+
+		// Step 5: Attach slots to registration and return
+		result.slots = slots
+		return result
 	}
 
 	async updatePlayerGgId(playerId: number, ggId: string): Promise<Player> {

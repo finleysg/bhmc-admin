@@ -111,6 +111,84 @@ parsePlayerData(aggregate: any, memberCard: MemberCard) {
 }
 ```
 
+## Raw Data Handling
+
+When working with untyped data from external sources (database queries, API responses, etc.), prefer `Record<string, unknown>` over `any`.
+
+**Good Pattern:**
+
+```typescript
+function mapToRegistration(data: {
+	registration: Record<string, unknown>
+	course: Record<string, unknown> | null
+}) {
+	return {
+		// Safe cast: DB schema guarantees id is number
+		id: data.registration.id as number,
+		name: data.registration.name as string,
+		// Cast with null check
+		courseId: data.course ? (data.course.id as number) : null,
+	}
+}
+```
+
+**Avoid:**
+
+```typescript
+// Using any loses type safety
+function mapToRegistration(data: { registration: any; course: any | null }) {
+	return {
+		id: data.registration.id, // No type checking
+		name: data.registration.name,
+		courseId: data.course?.id,
+	}
+}
+```
+
+**For Array Handling:**
+
+```typescript
+// Good: Typed array with Record<string, unknown> for untyped items
+function mapSlots(
+	rows: Array<{
+		slot: Record<string, unknown>
+		player: Record<string, unknown> | null
+	}>,
+) {
+	return rows.map((row) => ({
+		// Safe cast: Known DB schema
+		slotId: row.slot.id as number,
+		playerId: row.player ? (row.player.id as number) : null,
+	}))
+}
+```
+
+**Null Safety:**
+
+When casting properties that might not exist, check for null/undefined first:
+
+```typescript
+// Good: Check before accessing
+if (!data.eventFee || !data.feeType) continue
+const fee = {
+	eventFeeId: data.eventFee.id as number,
+	feeTypeId: data.feeType.id as number,
+}
+
+// Avoid: Non-null assertion without checking
+const fee = {
+	eventFeeId: data.eventFee!.id as number, // Could be null
+	feeTypeId: data.feeType!.id as number,
+}
+```
+
+**Rationale:**
+
+- `Record<string, unknown>` maintains type safety while acknowledging unknown structure
+- Forces explicit casts with comments explaining safety
+- ESLint catches `any | null` unions as redundant
+- Prevents accidental `any` propagation through codebase
+
 ## Type Assertion Guidelines
 
 Type assertions (`as Type`) are acceptable only when:

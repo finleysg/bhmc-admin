@@ -124,7 +124,25 @@ flowchart TD
     Context --> Update[Update Documentation]
     Update --> Execute[Execute Task]
     Execute --> Document[Document Changes]
+    Document --> Capture[Capture Learnings]
 ```
+
+**Capturing Learnings:**
+
+After completing implementation tasks, especially those involving:
+
+- Fixing linting errors
+- Refactoring for type safety
+- Resolving auto-formatter conflicts
+- Discovering new patterns or anti-patterns
+
+Add 1-2 concise bullets to `activeContext.md` documenting the key insight. Examples:
+
+- "Replaced `any | null` with `Record<string, unknown>` for DB query results to satisfy ESLint"
+- "Auto-formatter prefers explicit null checks over non-null assertions (`!`)"
+- "Drizzle ORM joined queries require type assertions with safety comments"
+
+This creates a lightweight learning trail without cluttering the Memory Bank with excessive detail.
 
 ---
 
