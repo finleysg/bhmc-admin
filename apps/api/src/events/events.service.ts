@@ -1,6 +1,6 @@
 import { inArray } from "drizzle-orm"
 
-import { Injectable } from "@nestjs/common"
+import { BadRequestException, Injectable } from "@nestjs/common"
 import { validateClubEvent } from "@repo/domain/functions"
 import {
 	PreparedTournamentPoints,
@@ -23,6 +23,7 @@ export class EventsService {
 
 	async getValidatedClubEventById(eventId: number): Promise<ValidatedClubEvent> {
 		const clubEvent = await this.repository.findEventById(eventId)
+		if (!clubEvent) throw new BadRequestException(`Event with id ${eventId} does not exist.`)
 
 		clubEvent.courses = await this.courses.findCoursesByEventId({
 			eventId: eventId,

@@ -282,7 +282,12 @@ export class RegistrationService {
 			const holeData = eventRecord
 				.courses!.flatMap((c) => c.holes)
 				.find((h) => h.id === firstSlot.holeId)
-			courseId = holeData!.courseId
+			if (!holeData) {
+				throw new BadRequestException(
+					`Hole ${firstSlot.holeId} is not part of event ${eventId} course configuration`,
+				)
+			}
+			courseId = holeData.courseId
 		}
 
 		// Calculate payment amount using preloaded eventFees
