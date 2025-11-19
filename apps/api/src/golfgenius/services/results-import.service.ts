@@ -114,8 +114,10 @@ export class ResultsImportService {
 		) => Promise<void>,
 	): Promise<Observable<ProgressTournamentDto>> {
 		// Query tournaments for the specified format
-		const clubEvent = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
-		const tournaments = clubEvent.tournaments?.filter((t) => t.name !== "Overall") ?? []
+		const clubEvent = await this.eventsService.getValidatedClubEventById(eventId)
+		const tournaments = clubEvent.tournaments.filter(
+			(t) => t.format === format && t.name !== "Overall",
+		)
 
 		if (tournaments.length === 0) {
 			throw new Error(`No ${format} tournaments found for event ${eventId}`)
@@ -224,23 +226,10 @@ export class ResultsImportService {
 			playerMap: PlayerMap,
 		) => Promise<void>,
 	): Promise<ImportResultSummary[]> {
-		const eventWithTournaments = await this.eventsService.getTournamentsByEventAndFormat(
-			eventId,
-			format,
+		const clubEvent = await this.eventsService.getValidatedClubEventById(eventId)
+		const tournaments = clubEvent.tournaments.filter(
+			(t) => t.format === format && t.name !== "Overall",
 		)
-		let tournaments = eventWithTournaments.tournaments?.filter((t) => t.format === format) ?? []
-
-		// Special handling: Skip "Overall" stroke play tournaments as they have no associated results
-		if (format === "stroke") {
-			const originalCount = tournaments.length
-			tournaments = tournaments.filter((t) => t.name !== "Overall")
-			const skippedCount = originalCount - tournaments.length
-			if (skippedCount > 0) {
-				this.logger.log(
-					`Skipped ${skippedCount} "Overall" stroke tournament(s) for event ${eventId}`,
-				)
-			}
-		}
 
 		if (tournaments.length === 0) {
 			this.logger.log("No " + format + " tournaments found for event", { eventId })
@@ -250,10 +239,7 @@ export class ResultsImportService {
 		const results: ImportResultSummary[] = []
 
 		for (const t of tournaments) {
-			const result = await this.importTournamentResults(
-				toTournamentData(t, eventWithTournaments),
-				processor,
-			)
+			const result = await this.importTournamentResults(toTournamentData(t, clubEvent), processor)
 			results.push(result)
 		}
 

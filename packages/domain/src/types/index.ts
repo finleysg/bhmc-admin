@@ -9,7 +9,7 @@ export { Hole } from "./courses/hole"
 
 // Event exports
 export { ClubEvent } from "./events/event"
-export type { CompleteClubEvent } from "./events/complete-event"
+export type { ValidatedClubEvent } from "./events/validated-types"
 export { EventFee, FeeType } from "./events/event-fee"
 export { Round } from "./events/round"
 export { Tournament } from "./events/tournament"

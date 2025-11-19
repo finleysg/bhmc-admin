@@ -23,6 +23,7 @@ describe("validateClubEvent", () => {
 		eventId: 1,
 		roundNumber: 1,
 		roundDate: "2025-01-01",
+		ggId: "round123",
 	}
 
 	const mockTournament = {
@@ -32,15 +33,32 @@ describe("validateClubEvent", () => {
 		name: "Championship",
 		format: "stroke",
 		isNet: false,
+		ggId: "tourn123",
+	}
+
+	const mockHole = {
+		id: 1,
+		courseId: 1,
+		holeNumber: 1,
+		par: 4,
+	}
+
+	const mockTee = {
+		id: 1,
+		courseId: 1,
+		name: "Champion",
 	}
 
 	const mockCourse = {
 		id: 1,
 		name: "Pine Valley",
 		numberOfHoles: 18,
+		holes: [mockHole],
+		tees: [mockTee],
 	}
 
 	const validBaseEvent: ClubEvent = {
+		id: 123,
 		eventType: "tournament",
 		name: "Test Event",
 		registrationType: "individual",
@@ -57,18 +75,19 @@ describe("validateClubEvent", () => {
 
 	const validCompleteEvent: ClubEvent = {
 		...validBaseEvent,
+		id: 456,
 		ggId: "12345",
 		eventRounds: [mockRound],
 		tournaments: [mockTournament],
 	}
 
-	describe("default validation (excludeGolfGenius = false)", () => {
-		it("returns CompleteClubEvent for fully valid event", () => {
+	describe("event validation", () => {
+		it("returns ValidatedClubEvent for fully valid event", () => {
 			const result = validateClubEvent(validCompleteEvent)
 			expect(result).toBeDefined()
 			expect(result).not.toBeNull()
 			if (!result) throw new Error("Result should not be null")
-			expect("ggId" in result && result.ggId).toBe("12345") // Type guard for CompleteClubEvent
+			expect("ggId" in result && result.ggId).toBe("12345") // Type guard for ValidatedClubEvent
 			expect(result.eventRounds).toHaveLength(1)
 			expect(result.tournaments).toHaveLength(1)
 		})
@@ -150,7 +169,7 @@ describe("validateClubEvent", () => {
 			expect(result).toBeNull()
 		})
 
-		it("returns CompleteClubEvent when canChoose=true and has courses", () => {
+		it("returns ValidatedClubEvent when canChoose=true and has courses", () => {
 			const event = {
 				...validCompleteEvent,
 				canChoose: true,
@@ -161,7 +180,7 @@ describe("validateClubEvent", () => {
 			expect(result).not.toBeNull()
 		})
 
-		it("returns CompleteClubEvent when canChoose=false regardless of courses", () => {
+		it("returns ValidatedClubEvent when canChoose=false regardless of courses", () => {
 			const event = {
 				...validCompleteEvent,
 				canChoose: false,
@@ -171,66 +190,135 @@ describe("validateClubEvent", () => {
 			expect(result).toBeDefined()
 			expect(result).not.toBeNull()
 		})
-	})
 
-	describe("excludeGolfGenius = true", () => {
-		it("returns original ClubEvent for valid event without GolfGenius fields", () => {
-			const result = validateClubEvent(validBaseEvent, true)
-			expect(result).toBe(validBaseEvent)
-			expect(result).toEqual(validBaseEvent)
-		})
-
-		it("returns null for missing eventFees", () => {
-			const event = { ...validBaseEvent, eventFees: undefined }
-			const result = validateClubEvent(event, true)
+		it("returns null when event has no id", () => {
+			const event = { ...validCompleteEvent, id: undefined }
+			const result = validateClubEvent(event)
 			expect(result).toBeNull()
 		})
 
-		it("returns null for empty eventFees", () => {
-			const event = { ...validBaseEvent, eventFees: [] }
-			const result = validateClubEvent(event, true)
-			expect(result).toBeNull()
-		})
-
-		it("returns null for eventFees without feeType", () => {
+		it("returns null when eventFee has no id", () => {
 			const event = {
-				...validBaseEvent,
-				eventFees: [{ ...mockEventFee, feeType: undefined }],
+				...validCompleteEvent,
+				eventFees: [{ ...mockEventFee, id: undefined }],
 			}
-			const result = validateClubEvent(event, true)
+			const result = validateClubEvent(event)
 			expect(result).toBeNull()
 		})
 
-		it("returns null when canChoose=true and no courses", () => {
+		it("returns null when feeType has no id", () => {
 			const event = {
-				...validBaseEvent,
+				...validCompleteEvent,
+				eventFees: [{ ...mockEventFee, feeType: { ...mockEventFee.feeType, id: undefined } }],
+			}
+			const result = validateClubEvent(event)
+			expect(result).toBeNull()
+		})
+
+		it("returns null when courses have course without id", () => {
+			const event = {
+				...validCompleteEvent,
 				canChoose: true,
-				courses: undefined,
+				courses: [{ ...mockCourse, id: undefined }],
 			}
-			const result = validateClubEvent(event, true)
+			const result = validateClubEvent(event)
 			expect(result).toBeNull()
 		})
 
-		it("returns original event when canChoose=false regardless of GolfGenius fields", () => {
+		it("returns null when courses have hole without id", () => {
 			const event = {
-				...validBaseEvent,
-				ggId: undefined,
-				eventRounds: undefined,
-				tournaments: undefined,
+				...validCompleteEvent,
+				canChoose: true,
+				courses: [{ ...mockCourse, holes: [{ ...mockHole, id: undefined }] }],
 			}
-			const result = validateClubEvent(event, true)
-			expect(result).toBe(event)
+			const result = validateClubEvent(event)
+			expect(result).toBeNull()
 		})
 
-		it("ignores missing GolfGenius fields when excludeGolfGenius=true", () => {
+		it("returns null when courses have tee without id", () => {
 			const event = {
-				...validBaseEvent,
-				ggId: undefined,
-				eventRounds: undefined,
-				tournaments: undefined,
+				...validCompleteEvent,
+				canChoose: true,
+				courses: [{ ...mockCourse, tees: [{ ...mockTee, id: undefined }] }],
 			}
-			const result = validateClubEvent(event, true)
-			expect(result).toBe(event)
+			const result = validateClubEvent(event)
+			expect(result).toBeNull()
+		})
+
+		it("returns null when courses have empty holes array", () => {
+			const event = {
+				...validCompleteEvent,
+				canChoose: true,
+				courses: [{ ...mockCourse, holes: [] }],
+			}
+			const result = validateClubEvent(event)
+			expect(result).toBeNull()
+		})
+
+		it("returns null when courses have empty tees array", () => {
+			const event = {
+				...validCompleteEvent,
+				canChoose: true,
+				courses: [{ ...mockCourse, tees: [] }],
+			}
+			const result = validateClubEvent(event)
+			expect(result).toBeNull()
+		})
+
+		it("returns null when courses have undefined holes", () => {
+			const event = {
+				...validCompleteEvent,
+				canChoose: true,
+				courses: [{ ...mockCourse, holes: undefined }],
+			}
+			const result = validateClubEvent(event)
+			expect(result).toBeNull()
+		})
+
+		it("returns null when courses have undefined tees", () => {
+			const event = {
+				...validCompleteEvent,
+				canChoose: true,
+				courses: [{ ...mockCourse, tees: undefined }],
+			}
+			const result = validateClubEvent(event)
+			expect(result).toBeNull()
+		})
+
+		it("returns null when round has no id", () => {
+			const event = {
+				...validCompleteEvent,
+				eventRounds: [{ ...mockRound, id: undefined }],
+			}
+			const result = validateClubEvent(event)
+			expect(result).toBeNull()
+		})
+
+		it("returns null when round has no ggId", () => {
+			const event = {
+				...validCompleteEvent,
+				eventRounds: [{ ...mockRound, ggId: undefined }],
+			}
+			const result = validateClubEvent(event)
+			expect(result).toBeNull()
+		})
+
+		it("returns null when tournament has no id", () => {
+			const event = {
+				...validCompleteEvent,
+				tournaments: [{ ...mockTournament, id: undefined }],
+			}
+			const result = validateClubEvent(event)
+			expect(result).toBeNull()
+		})
+
+		it("returns null when tournament has no ggId", () => {
+			const event = {
+				...validCompleteEvent,
+				tournaments: [{ ...mockTournament, ggId: undefined }],
+			}
+			const result = validateClubEvent(event)
+			expect(result).toBeNull()
 		})
 	})
 })

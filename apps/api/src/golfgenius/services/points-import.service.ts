@@ -79,8 +79,8 @@ export class PointsImportService {
 		) => Promise<void>,
 	): Promise<Observable<ProgressTournamentDto>> {
 		// Query tournaments for the specified format
-		const clubEvent = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
-		const tournaments = clubEvent.tournaments ?? []
+		const clubEvent = await this.eventsService.getValidatedClubEventById(eventId)
+		const tournaments = clubEvent.tournaments.filter((t) => t.format === format)
 
 		if (tournaments.length === 0) {
 			throw new Error(`No ${format} tournaments found for event ${eventId}`)
@@ -178,8 +178,8 @@ export class PointsImportService {
 			playerMap: PlayerMap,
 		) => Promise<void>,
 	): Promise<PointsImportSummary[]> {
-		const clubEvent = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
-		const tournaments = clubEvent.tournaments ?? []
+		const clubEvent = await this.eventsService.getValidatedClubEventById(eventId)
+		const tournaments = clubEvent.tournaments.filter((t) => t.format === format)
 
 		if (tournaments.length === 0) {
 			this.logger.log("No " + format + " tournaments found for event", { eventId })

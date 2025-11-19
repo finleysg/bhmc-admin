@@ -244,7 +244,7 @@ export class ScoresImportService {
 	}
 
 	async importScoresForEvent(eventId: number): Promise<ImportEventScoresResult> {
-		const event = await this.events.getCompleteClubEventById(eventId)
+		const event = await this.events.getValidatedClubEventById(eventId)
 		if (!event) {
 			throw new Error("No event found with an id of " + eventId.toString())
 		}
@@ -259,9 +259,9 @@ export class ScoresImportService {
 
 		for (const round of event.eventRounds) {
 			try {
-				const roundResult = await this.importScoresForRound(eventId, event.ggId, round.ggId!)
+				const roundResult = await this.importScoresForRound(eventId, event.ggId, round.ggId)
 				result.roundResults.push({
-					roundId: round.id!.toString(),
+					roundId: round.id.toString(),
 					roundNumber: round.roundNumber,
 					scorecards: roundResult.scorecards,
 					errors: roundResult.errors,
@@ -292,7 +292,7 @@ export class ScoresImportService {
 	}
 
 	async importScoresForEventStream(eventId: number): Promise<Observable<ProgressEventDto>> {
-		const event = await this.events.getCompleteClubEventById(eventId)
+		const event = await this.events.getValidatedClubEventById(eventId)
 		if (!event) {
 			throw new Error("No event found with an id of " + eventId.toString())
 		}
@@ -301,7 +301,7 @@ export class ScoresImportService {
 		let totalPlayers = 0
 		for (const round of event.eventRounds) {
 			try {
-				const teeSheet = await this.apiClient.getRoundTeeSheet(event.ggId, round.ggId!)
+				const teeSheet = await this.apiClient.getRoundTeeSheet(event.ggId, round.ggId)
 				for (const pairing of teeSheet) {
 					totalPlayers += pairing.pairing_group.players.length
 				}
@@ -338,7 +338,7 @@ export class ScoresImportService {
 					const roundResult = await this.importScoresForRound(
 						eventId,
 						event.ggId,
-						round.ggId!,
+						round.ggId,
 						(count) => {
 							processedPlayers += count
 							this.progressTracker.emitProgress(eventId, {
