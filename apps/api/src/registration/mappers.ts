@@ -1,6 +1,6 @@
 import { Player, Registration, RegistrationFee, RegistrationSlot } from "@repo/domain/types"
 
-import { mapToHoleModel } from "../courses/mappers"
+import { mapToCourseModel, mapToHoleModel } from "../courses/mappers"
 import {
 	PlayerModel,
 	RegistrationFeeModel,
@@ -152,12 +152,7 @@ export function mapToRegistrationWithCourse(row: {
 }): RegistrationModel {
 	const model = mapToRegistrationModel(row.registration)
 	if (row.course) {
-		model.course = {
-			id: row.course.id as number,
-			name: row.course.name as string,
-			numberOfHoles: row.course.numberOfHoles as number,
-			ggId: row.course.ggId as string | undefined,
-		}
+		model.course = mapToCourseModel(row.course)
 	}
 	return model
 }

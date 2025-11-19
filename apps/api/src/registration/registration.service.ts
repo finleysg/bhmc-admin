@@ -12,7 +12,7 @@ import {
 	SearchPlayers,
 } from "@repo/domain/types"
 
-import { mapToCourseModel, toCourse } from "../courses/mappers"
+import { mapToCourseModel, toCourse, toHole } from "../courses/mappers"
 import {
 	course,
 	DrizzleService,
@@ -177,19 +177,16 @@ export class RegistrationService {
 				slot.player = toPlayer(slotModel.player)
 			}
 			if (slotModel.hole) {
-				slot.hole = {
-					id: slotModel.hole.id,
-					holeNumber: slotModel.hole.holeNumber,
-					par: slotModel.hole.par,
-					courseId: slotModel.hole.courseId,
-				}
+				slot.hole = toHole(slotModel.hole)
 			}
 			slot.fees = []
 			return slot
 		})
 
 		// Step 4: Get fees and attach to slots (already mapped to models)
-		const slotIds = slots.map((s) => s.id!).filter((id) => id !== undefined)
+		const slotIds = slots
+			.filter((s): s is RegistrationSlot & { id: number } => s.id !== undefined)
+			.map((s) => s.id)
 		const feeModels = await this.repository.findFeesWithEventFeeAndFeeType(slotIds)
 
 		// Create slot map for efficient lookup
