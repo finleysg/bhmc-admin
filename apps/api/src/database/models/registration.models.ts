@@ -10,6 +10,8 @@ import {
 	registrationFee,
 	registrationSlot,
 } from "../schema"
+import { CourseModel, HoleModel } from "./courses.models"
+import { EventFeeModel } from "./events.models"
 
 export const paymentInsertSchema = createInsertSchema(payment)
 export const paymentUpdateSchema = createUpdateSchema(payment)
@@ -239,6 +241,9 @@ export class RegistrationModel {
 
 	@IsOptional()
 	fees?: RegistrationFeeModel[]
+
+	@IsOptional()
+	course?: CourseModel
 }
 
 // Registration Fee
@@ -264,6 +269,9 @@ export class RegistrationFeeModel {
 
 	@IsNumber()
 	amount!: number
+
+	@IsOptional()
+	eventFee?: EventFeeModel
 }
 
 // Registration Slot
@@ -300,4 +308,10 @@ export class RegistrationSlotModel {
 	@IsString()
 	@MaxLength(22)
 	ggId?: string
+
+	@IsOptional()
+	player?: PlayerModel
+
+	@IsOptional()
+	hole?: HoleModel
 }

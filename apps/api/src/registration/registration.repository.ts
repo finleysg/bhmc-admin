@@ -1,15 +1,33 @@
-import { eq } from "drizzle-orm"
+import { and, eq, inArray } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 
-import { DrizzleService, player, registrationSlot } from "../database"
+import {
+	course,
+	DrizzleService,
+	eventFee,
+	feeType,
+	hole,
+	player,
+	registration,
+	registrationFee,
+	registrationSlot,
+} from "../database"
 import {
 	PlayerModel,
 	playerUpdateSchema,
+	RegistrationFeeModel,
+	RegistrationModel,
 	RegistrationSlotModel,
 	registrationSlotUpdateSchema,
 } from "../database/models"
-import { mapToPlayerModel, mapToRegistrationSlotModel } from "./mappers"
+import {
+	mapToFeesWithEventFeeAndFeeType,
+	mapToPlayerModel,
+	mapToRegistrationSlotModel,
+	mapToRegistrationWithCourse,
+	mapToSlotsWithPlayerAndHole,
+} from "./mappers"
 
 @Injectable()
 export class RegistrationRepository {
@@ -70,5 +88,80 @@ export class RegistrationRepository {
 			.where(eq(registrationSlot.ggId, ggId))
 			.limit(1)
 		return slot ? mapToRegistrationSlotModel(slot) : null
+	}
+
+	/**
+	 * Find the registration ID for a given event and player.
+	 * Returns null if player is not registered for the event.
+	 */
+	async findRegistrationIdByEventAndPlayer(
+		eventId: number,
+		playerId: number,
+	): Promise<number | null> {
+		const [slot] = await this.drizzle.db
+			.select()
+			.from(registrationSlot)
+			.where(and(eq(registrationSlot.eventId, eventId), eq(registrationSlot.playerId, playerId)))
+			.limit(1)
+
+		return slot?.registrationId ?? null
+	}
+
+	/**
+	 * Find a registration with its associated course.
+	 * Returns null if registration not found.
+	 */
+	async findRegistrationWithCourse(registrationId: number): Promise<RegistrationModel | null> {
+		const [result] = await this.drizzle.db
+			.select({
+				registration: registration,
+				course: course,
+			})
+			.from(registration)
+			.leftJoin(course, eq(registration.courseId, course.id))
+			.where(eq(registration.id, registrationId))
+			.limit(1)
+
+		return result ? mapToRegistrationWithCourse(result) : null
+	}
+
+	/**
+	 * Find all slots for a registration with associated player and hole data.
+	 */
+	async findSlotsWithPlayerAndHole(registrationId: number): Promise<RegistrationSlotModel[]> {
+		const results = await this.drizzle.db
+			.select({
+				slot: registrationSlot,
+				player: player,
+				hole: hole,
+			})
+			.from(registrationSlot)
+			.leftJoin(player, eq(registrationSlot.playerId, player.id))
+			.leftJoin(hole, eq(registrationSlot.holeId, hole.id))
+			.where(eq(registrationSlot.registrationId, registrationId))
+
+		return mapToSlotsWithPlayerAndHole(results)
+	}
+
+	/**
+	 * Find all fees for given slot IDs with associated eventFee and feeType data.
+	 */
+	async findFeesWithEventFeeAndFeeType(slotIds: number[]): Promise<RegistrationFeeModel[]> {
+		if (slotIds.length === 0) {
+			return []
+		}
+
+		const results = await this.drizzle.db
+			.select({
+				fee: registrationFee,
+				eventFee: eventFee,
+				feeType: feeType,
+			})
+			.from(registrationFee)
+			.leftJoin(eventFee, eq(registrationFee.eventFeeId, eventFee.id))
+			.leftJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
+			.where(inArray(registrationFee.registrationSlotId, slotIds))
+
+		return mapToFeesWithEventFeeAndFeeType(results)
 	}
 }

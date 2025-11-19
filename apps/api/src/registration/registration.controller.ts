@@ -18,10 +18,10 @@ export class RegistrationController {
 		return this.registrationService.searchPlayers(dto)
 	}
 
-	@Get(":eventId/groups")
+	@Get(":eventId/groups/:playerId")
 	@UseGuards(JwtAuthGuard)
-	async searchGroups(@Param("eventId") eventId: string, @Query() query: SearchPlayers) {
-		return this.registrationService.searchGroups(+eventId, query.searchText!)
+	async getGroup(@Param("eventId") eventId: string, @Param("playerId") playerId: string) {
+		return this.registrationService.findGroup(+eventId, +playerId)
 	}
 
 	@Post(":eventId")
