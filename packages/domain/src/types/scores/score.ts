@@ -1,11 +1,9 @@
-import {
-	IsBoolean,
-	IsInt,
-} from "class-validator"
+import { IsBoolean, IsInt, IsNumber, IsOptional } from "class-validator"
 
 export class Score {
-	@IsInt()
-	id!: number
+	@IsOptional()
+	@IsNumber()
+	id?: number
 
 	@IsInt()
 	scoreCardId!: number

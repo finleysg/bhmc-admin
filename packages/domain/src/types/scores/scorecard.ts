@@ -1,16 +1,11 @@
-import {
-	IsArray,
-	IsInt,
-	IsOptional,
-	IsString,
-	ValidateNested,
-} from "class-validator"
+import { IsArray, IsInt, IsOptional, IsString, ValidateNested } from "class-validator"
 
 import { Score } from "./score"
 
 export class Scorecard {
+	@IsOptional()
 	@IsInt()
-	id!: number
+	id?: number
 
 	@IsString()
 	@IsOptional()

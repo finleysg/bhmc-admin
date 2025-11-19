@@ -1,4 +1,4 @@
-import { EventDto, HoleDto, RegistrationSlotDto } from "../types"
+import { ClubEvent, Hole, RegistrationSlot } from "../types"
 import { formatTime, parseTeeTimeSplits, parseTime } from "./time-utils"
 
 /**
@@ -17,7 +17,7 @@ import { formatTime, parseTeeTimeSplits, parseTime } from "./time-utils"
  * - Sum the first `teeIndex` split intervals to get minutes offset from event.startTime.
  *   (No offset for slot 0.)
  */
-export function calculateTeeTime(event: EventDto, slot: RegistrationSlotDto): string {
+export function calculateTeeTime(event: ClubEvent, slot: RegistrationSlot): string {
 	if (!event.startTime) throw new Error("Missing event.startTime for tee time calculation")
 	const splits = parseTeeTimeSplits(event.teeTimeSplits)
 	const baseMinutes = parseTime(event.startTime)
@@ -53,7 +53,7 @@ export function calculateTeeTime(event: EventDto, slot: RegistrationSlotDto): st
  * - `slot.holeId` must be provided and matched against the provided holes array.
  * - Returns `${holeNumber}${letter}`.
  */
-export function calculateStartingHole(slot: RegistrationSlotDto, holes: HoleDto[]): string {
+export function calculateStartingHole(slot: RegistrationSlot, holes: Hole[]): string {
 	if (slot.holeId === null || slot.holeId === undefined) {
 		throw new Error("Missing holeId on slot for shotgun start")
 	}
@@ -83,11 +83,11 @@ export function calculateStartingHole(slot: RegistrationSlotDto, holes: HoleDto[
  * the courseName (lookup from courseId).
  */
 export function getGroup(
-	event: EventDto,
-	slot: RegistrationSlotDto,
+	event: ClubEvent,
+	slot: RegistrationSlot,
 	startValue: string,
 	courseName: string,
-	allSlotsInRegistration: RegistrationSlotDto[] = [],
+	allSlotsInRegistration: RegistrationSlot[] = [],
 ): string {
 	if (event.eventType === "N") {
 		if (event.startType === "TT" || event.startType === "SG") {
@@ -127,7 +127,7 @@ export function getGroup(
  *
  * This function is pure and deterministic: all required data must be provided by the caller.
  */
-export function getStart(event: EventDto, slot: RegistrationSlotDto, holes: HoleDto[]): string {
+export function getStart(event: ClubEvent, slot: RegistrationSlot, holes: Hole[]): string {
 	// Use the canChoose flag to determine whether course-based starts apply.
 	// If canChoose is falsy (0/false/undefined) there is no course data and we return "N/A".
 	if (!event.canChoose) {

@@ -1,21 +1,18 @@
 import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
 
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common"
-import { getAge, getFullName, getGroup, getStart } from "@repo/domain/functions"
 import {
-	AddAdminRegistrationDto,
-	EventPlayerFeeDto,
-	EventPlayerSlotDto,
-	HoleDto,
-	PlayerDto,
+	AddAdminRegistration,
+	Player,
 	PlayerMap,
 	PlayerRecord,
-	RegistrationDto,
-	RegistrationSlotDto,
-	SearchPlayersDto,
+	RegisteredPlayer,
+	Registration,
+	RegistrationSlot,
+	SearchPlayers,
 } from "@repo/domain/types"
 
-import { CoursesService } from "../courses"
+import { mapToCourseModel, toCourse } from "../courses/mappers"
 import {
 	course,
 	DrizzleService,
@@ -28,123 +25,28 @@ import {
 	registrationSlot,
 } from "../database"
 import { EventsService } from "../events"
+import { mapToEventFeeModel, mapToFeeTypeModel, toEventFee } from "../events/mappers"
 import {
-	mapToCourseDto,
-	mapToPlayerDto,
-	mapToRegistrationDto,
-	mapToRegistrationSlotDto,
-} from "./dto/mappers"
-import { RegisteredPlayerDto } from "./dto/registered-player.dto"
+	mapToPlayerModel,
+	mapToRegistrationFeeModel,
+	mapToRegistrationModel,
+	mapToRegistrationSlotModel,
+	toPlayer,
+	toRegistration,
+	toRegistrationFee,
+	toRegistrationSlot,
+} from "./mappers"
+import { RegistrationRepository } from "./registration.repository"
 
 @Injectable()
 export class RegistrationService {
 	constructor(
-		private readonly courses: CoursesService,
 		private drizzle: DrizzleService,
+		private repository: RegistrationRepository,
 		private readonly events: EventsService,
 	) {}
 
-	async getPlayers(eventId: number): Promise<EventPlayerSlotDto[]> {
-		const event = await this.events.findEventById({ eventId })
-		if (!event) throw new Error(`Event ${eventId} not found`)
-
-		const eventFees = await this.events.listEventFeesByEvent(eventId)
-		const slots = await this.getRegisteredPlayers(eventId)
-
-		if (!slots || slots.length === 0) return []
-
-		// Build registration groups (registrationId => SlotWithRelations[])
-		const regGroups = new Map<number, RegisteredPlayerDto[]>()
-		for (const s of slots) {
-			if (!s) continue
-			const regId = s.registration?.id ?? null
-			if (regId === null) continue
-			const arr = regGroups.get(regId) ?? []
-			arr.push(s)
-			regGroups.set(regId, arr)
-		}
-
-		// Collect unique courseIds to fetch holes
-		const courseIdSet = new Set<number>()
-		for (const s of slots) {
-			if (!s) continue
-			const cid = s.course?.id ?? s.registration?.courseId
-			if (cid !== null && cid !== undefined) courseIdSet.add(cid)
-		}
-
-		const courseIds = Array.from(courseIdSet)
-		const holesMap = new Map<number, HoleDto[]>()
-		await Promise.all(
-			courseIds.map(async (cid) => {
-				const holes = await this.courses.findHolesByCourseId(cid)
-				holesMap.set(cid, holes ?? [])
-			}),
-		)
-
-		const transformed = slots.map((s): EventPlayerSlotDto => {
-			if (!s) throw new Error("Unexpected missing slot data")
-			const slot = s.slot
-			const player = s.player
-			const registration = s.registration
-			const course = s.course
-
-			if (!player) throw new Error(`Missing player for slot id ${slot?.id}`)
-			if (!registration) throw new Error(`Missing registration for slot id ${slot?.id}`)
-
-			// If the event does not allow choosing a course, there will be no course info.
-			// In that case we return "N/A" for course/start values. Otherwise require course.
-			let courseName = "N/A"
-			let holes: HoleDto[] = []
-			if (event.canChoose) {
-				if (!course) throw new Error(`Missing course for slot id ${slot?.id}`)
-				courseName = course.name
-				holes = holesMap.get(course.id) ?? []
-			}
-			// convert holes to domain model array when used
-
-			const startValue = getStart(event, slot, holes)
-			const allSlotsInRegistration = (regGroups.get(registration.id) ?? []).map(
-				(x: RegisteredPlayerDto) => x.slot,
-			)
-
-			const team = getGroup(event, slot, startValue, courseName, allSlotsInRegistration)
-
-			const ageRes = getAge(player, new Date())
-			const age = typeof ageRes.age === "number" ? ageRes.age : 0
-
-			const fullName = getFullName(player)
-
-			// Build fees array from the fee definitions
-			const fees: EventPlayerFeeDto[] = eventFees.map((fd) => {
-				const fee = (s.fees ?? []).find((f) => f.eventFee?.id === fd.id)
-				const paid = fee?.isPaid === 1
-				const amount = paid ? fee?.amount : "0"
-				return {
-					name: fd.feeType!.name,
-					amount,
-				}
-			})
-
-			return {
-				team,
-				course: courseName,
-				start: startValue,
-				ghin: player.ghin,
-				age,
-				tee: player.tee,
-				lastName: player.lastName,
-				firstName: player.firstName,
-				fullName,
-				email: player.email,
-				signedUpBy: registration.signedUpBy,
-				fees,
-			}
-		})
-
-		return transformed
-	}
-
-	async getRegisteredPlayers(eventId: number): Promise<RegisteredPlayerDto[]> {
+	async getRegisteredPlayers(eventId: number): Promise<RegisteredPlayer[]> {
 		const rows = await this.drizzle.db
 			.select({
 				slot: registrationSlot,
@@ -164,16 +66,18 @@ export class RegistrationService {
 				),
 			)
 
-		const slotsMap = new Map<number, RegisteredPlayerDto>()
+		const slotsMap = new Map<number, RegisteredPlayer>()
 		const slotIds: number[] = []
 		for (const row of rows) {
 			const sid = row.slot.id
 			slotIds.push(sid)
 			slotsMap.set(sid, {
-				slot: mapToRegistrationSlotDto(row.slot),
-				player: row.player ? mapToPlayerDto(row.player) : undefined,
-				registration: row.registration ? mapToRegistrationDto(row.registration) : undefined,
-				course: row.course ? mapToCourseDto(row.course) : undefined,
+				slot: toRegistrationSlot(mapToRegistrationSlotModel(row.slot)),
+				player: row.player ? toPlayer(mapToPlayerModel(row.player)) : undefined,
+				registration: row.registration
+					? toRegistration(mapToRegistrationModel(row.registration))
+					: undefined,
+				course: row.course ? toCourse(mapToCourseModel(row.course)) : undefined,
 				fees: [],
 			})
 		}
@@ -198,33 +102,29 @@ export class RegistrationService {
 			const parent = slotsMap.get(sid)
 			if (!parent || !parent.fees) continue
 
-			parent.fees.push({
+			const eventFee = mapToEventFeeModel(frow.eventFee!)
+			eventFee.feeType = mapToFeeTypeModel(frow.feeType!)
+
+			const registrationFee = mapToRegistrationFeeModel({
 				id: frow.fee.id,
 				isPaid: frow.fee.isPaid,
 				eventFeeId: frow.fee.eventFeeId,
 				paymentId: frow.fee.paymentId,
 				registrationSlotId: frow.fee.registrationSlotId!,
 				amount: frow.fee.amount,
-				eventFee: frow.eventFee!,
 			})
+
+			const fee = toRegistrationFee(registrationFee)
+			fee.eventFee = toEventFee(eventFee)
+
+			parent.fees.push(fee)
 		}
 
 		return slotIds.map((id) => slotsMap.get(id)!)
 	}
 
-	// register_player
-	async findPlayerById(id: number): Promise<PlayerDto | null> {
-		const [p] = await this.drizzle.db.select().from(player).where(eq(player.id, id)).limit(1)
-		return p ? mapToPlayerDto(p) : null
-	}
-
-	async findMemberPlayers(): Promise<PlayerDto[]> {
-		const players = await this.drizzle.db.select().from(player).where(eq(player.isMember, 1))
-		return players.map(mapToPlayerDto)
-	}
-
-	async searchPlayers(dto: SearchPlayersDto): Promise<PlayerDto[]> {
-		const { searchText, isMember = true } = dto
+	async searchPlayers(query: SearchPlayers): Promise<Player[]> {
+		const { searchText, isMember = true } = query
 		let whereClause: any = undefined
 
 		if (searchText) {
@@ -240,202 +140,59 @@ export class RegistrationService {
 		}
 
 		const results = await this.drizzle.db.select().from(player).where(whereClause)
-		return results.map(mapToPlayerDto)
+		return results.map(mapToPlayerModel).map(toPlayer)
 	}
 
-	async searchEventPlayers(
-		eventId: number,
-		dto: SearchPlayersDto,
-	): Promise<Array<{ player: PlayerDto; group?: RegistrationDto }>> {
-		const { searchText, includeGroup = true } = dto
-
+	async searchGroups(eventId: number, searchText: string): Promise<Registration[] | null> {
 		// Build where conditions
 		let whereConditions = and(
-			eq(registrationSlot.eventId, eventId),
+			eq(registration.eventId, eventId),
 			eq(registrationSlot.status, "R"),
 			isNotNull(registrationSlot.playerId),
 		)
 
-		if (searchText) {
-			const search = `%${searchText}%`
-			whereConditions = and(
-				whereConditions,
-				or(
-					like(player.firstName, search),
-					like(player.lastName, search),
-					like(player.ghin, search),
-				),
-			)
-		}
+		const search = `%${searchText}%`
+		whereConditions = and(
+			whereConditions,
+			or(like(player.firstName, search), like(player.lastName, search), like(player.ghin, search)),
+		)
 
-		// First, get matching players with their slots
+		// First, get matching players with their groups
 		const rows = await this.drizzle.db
 			.select({
+				registration: registration,
+				slot: registrationSlot,
 				player: player,
-				slot: registrationSlot,
-			})
-			.from(player)
-			.innerJoin(registrationSlot, eq(player.id, registrationSlot.playerId))
-			.where(whereConditions)
-
-		const playersWithSlots = rows.map((row) => ({
-			player: mapToPlayerDto(row.player),
-			slot: row.slot,
-		}))
-
-		if (!includeGroup) {
-			return playersWithSlots.map(({ player }) => ({ player }))
-		}
-
-		// Get unique registration IDs
-		const regIds = [
-			...new Set(playersWithSlots.map((p) => p.slot.registrationId).filter(Boolean)),
-		] as number[]
-
-		if (regIds.length === 0) {
-			return playersWithSlots.map(({ player }) => ({ player }))
-		}
-
-		// Fetch registrations with course and all slots
-		const regRows = await this.drizzle.db
-			.select({
-				reg: registration,
-				course: course,
-				slot: registrationSlot,
+				fees: registrationFee,
 			})
 			.from(registration)
-			.leftJoin(course, eq(registration.courseId, course.id))
 			.innerJoin(registrationSlot, eq(registration.id, registrationSlot.registrationId))
-			.where(inArray(registration.id, regIds))
+			.innerJoin(player, eq(player.id, registrationSlot.playerId))
+			.innerJoin(registrationFee, eq(registrationSlot.id, registrationFee.registrationSlotId))
+			.where(whereConditions)
 
-		// Group by registration ID
-		const groupsMap = new Map<
-			number,
-			{
-				reg: typeof registration.$inferSelect
-				course?: typeof course.$inferSelect
-				slots: (typeof registrationSlot.$inferSelect)[]
-			}
-		>()
-		for (const row of regRows) {
-			const rid = row.reg.id
-			if (!groupsMap.has(rid)) {
-				groupsMap.set(rid, { reg: row.reg, course: row.course || undefined, slots: [] })
-			}
-			groupsMap.get(rid)!.slots.push(row.slot)
-		}
+		// TODO: map to domain objects
+		console.log(rows)
 
-		// Fetch fees for all slots in groups
-		const allSlotIds = Array.from(groupsMap.values()).flatMap((data) => data.slots.map((s) => s.id))
-		const feesMap = new Map<number, any[]>()
-		if (allSlotIds.length > 0) {
-			const feeRows = await this.drizzle.db
-				.select({
-					fee: registrationFee,
-					eventFee: eventFee,
-					feeType: feeType,
-				})
-				.from(registrationFee)
-				.leftJoin(eventFee, eq(registrationFee.eventFeeId, eventFee.id))
-				.leftJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
-				.where(inArray(registrationFee.registrationSlotId, allSlotIds))
-
-			for (const frow of feeRows) {
-				const sid = frow.fee.registrationSlotId
-				if (sid) {
-					if (!feesMap.has(sid)) feesMap.set(sid, [])
-					feesMap.get(sid)!.push({
-						id: frow.fee.id,
-						isPaid: frow.fee.isPaid,
-						eventFeeId: frow.fee.eventFeeId,
-						paymentId: frow.fee.paymentId,
-						registrationSlotId: frow.fee.registrationSlotId,
-						amount: frow.fee.amount,
-						eventFee: frow.eventFee!,
-						feeType: frow.feeType!,
-					})
-				}
-			}
-		}
-
-		// Build RegisteredGroupDto for each
-		const groups = new Map<number, RegistrationDto>()
-		for (const [rid, data] of groupsMap) {
-			groups.set(rid, {
-				id: data.reg.id,
-				eventId: eventId,
-				startingHole: data.reg.startingHole,
-				startingOrder: data.reg.startingOrder,
-				notes: data.reg.notes,
-				course: data.course ? (mapToCourseDto(data.course) as any) : undefined,
-				signedUpBy: data.reg.signedUpBy || "",
-				userId: data.reg.userId || 0,
-				createdDate: data.reg.createdDate,
-				slots: data.slots.map((s) => mapToRegistrationSlotDto(s)),
-			})
-		}
-
-		// Attach groups to players
-		return playersWithSlots.map(({ player, slot }) => ({
-			player,
-			group: slot.registrationId ? groups.get(slot.registrationId) : undefined,
-		}))
+		return null
 	}
 
-	async updatePlayerGgId(playerId: number, ggId: string): Promise<PlayerDto | null> {
-		await this.drizzle.db.update(player).set({ ggId }).where(eq(player.id, playerId))
-		return this.findPlayerById(playerId)
+	async updatePlayerGgId(playerId: number, ggId: string): Promise<Player> {
+		const player = await this.repository.findPlayerById(playerId)
+		player.ggId = ggId
+		const updated = await this.repository.updatePlayer(playerId, player)
+		return toPlayer(updated)
 	}
 
 	/**
 	 * Update the ggId on a registration slot.
 	 * Returns the updated slot or null if not found.
 	 */
-	async updateRegistrationSlotGgId(
-		slotId: number,
-		ggId: string,
-	): Promise<RegistrationSlotDto | null> {
-		await this.drizzle.db
-			.update(registrationSlot)
-			.set({ ggId })
-			.where(eq(registrationSlot.id, slotId))
-
-		const [slot] = await this.drizzle.db
-			.select()
-			.from(registrationSlot)
-			.where(eq(registrationSlot.id, slotId))
-			.limit(1)
-		return slot ? mapToRegistrationSlotDto(slot) : null
-	}
-
-	async findRegistrationSlotById(slotId: number): Promise<RegistrationSlotDto | null> {
-		const [slot] = await this.drizzle.db
-			.select()
-			.from(registrationSlot)
-			.where(eq(registrationSlot.id, slotId))
-			.limit(1)
-		return slot ? mapToRegistrationSlotDto(slot) : null
-	}
-
-	async findRegistrationSlotByEventAndExternalId(
-		eventId: number,
-		externalId: string,
-	): Promise<RegistrationSlotDto | null> {
-		const [slot] = await this.drizzle.db
-			.select()
-			.from(registrationSlot)
-			.where(and(eq(registrationSlot.eventId, eventId), eq(registrationSlot.ggId, externalId)))
-			.limit(1)
-		return slot ? mapToRegistrationSlotDto(slot) : null
-	}
-
-	async findRegistrationSlotByGgId(ggId: string): Promise<RegistrationSlotDto | null> {
-		const [slot] = await this.drizzle.db
-			.select()
-			.from(registrationSlot)
-			.where(eq(registrationSlot.ggId, ggId))
-			.limit(1)
-		return slot ? mapToRegistrationSlotDto(slot) : null
+	async updateRegistrationSlotGgId(slotId: number, ggId: string): Promise<RegistrationSlot> {
+		const slot = await this.repository.findRegistrationSlotById(slotId)
+		slot.ggId = ggId
+		const updated = await this.repository.updateRegistrationSlot(slotId, slot)
+		return toRegistrationSlot(updated)
 	}
 
 	/**
@@ -470,15 +227,9 @@ export class RegistrationService {
 		return playerMap
 	}
 
-	async createAdminRegistration(eventId: number, dto: AddAdminRegistrationDto): Promise<number> {
-		// Fetch event
-		const eventRecord = await this.events.findEventById({
-			eventId,
-			includeCourses: true,
-			includeFees: true,
-		})
+	async createAdminRegistration(eventId: number, dto: AddAdminRegistration): Promise<number> {
+		const eventRecord = await this.events.getCompleteClubEventById(eventId)
 
-		// Validation
 		if (!eventRecord) {
 			throw new BadRequestException("event id not found")
 		}
@@ -525,7 +276,7 @@ export class RegistrationService {
 		let courseId: number | null = null
 		if (eventRecord.canChoose && dto.slots.length > 0) {
 			const firstSlotId = dto.slots[0].slotId!
-			const firstSlot = await this.findRegistrationSlotById(firstSlotId)
+			const firstSlot = await this.repository.findRegistrationSlotById(firstSlotId)
 
 			// Find courseId from the first slot
 			const holeData = eventRecord.courses
@@ -541,7 +292,7 @@ export class RegistrationService {
 		for (const feeId of uniqueEventFeeIds) {
 			const fee = eventRecord.eventFees?.find((f) => f.id === feeId)
 			if (fee) {
-				const amount = parseFloat(fee.amount)
+				const amount = fee.amount
 				totalAmount = (parseFloat(totalAmount) + amount).toFixed(2)
 			}
 		}

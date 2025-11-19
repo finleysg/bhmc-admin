@@ -1,10 +1,16 @@
-import { IsInt, IsOptional, Max, Min } from "class-validator"
+import { IsInt, IsNumber, IsOptional, Max, Min } from "class-validator"
+import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
-import { OmitType, PartialType } from "@nestjs/mapped-types"
+import { eventScore, eventScorecard } from "../schema"
+
+export const scorecardInsertSchema = createInsertSchema(eventScorecard)
+export const scorecardUpdateSchema = createUpdateSchema(eventScorecard)
+export const scoreInsertSchema = createInsertSchema(eventScore)
+export const scoreUpdateSchema = createUpdateSchema(eventScore)
 
 export class ScorecardModel {
 	@IsInt()
-	id!: number
+	id?: number
 
 	@IsOptional()
 	handicapIndex?: number
@@ -29,12 +35,12 @@ export class ScorecardModel {
 
 export class ScoreModel {
 	@IsInt()
-	id!: number
+	id?: number
 
 	@IsInt()
 	score!: number
 
-	@IsInt()
+	@IsNumber()
 	@Min(0)
 	@Max(1)
 	isNet!: number
@@ -61,15 +67,3 @@ export class ScoreModel {
 	@IsOptional()
 	teeId?: number
 }
-
-export class CreateScorecardModel extends OmitType(ScorecardModel, ["id"] as const) {}
-
-export class UpdateScorecardModel extends PartialType(CreateScorecardModel) {}
-
-export class CreateScoreModel extends OmitType(ScoreModel, [
-	"id",
-	"courseId",
-	"eventId",
-	"playerId",
-	"teeId",
-] as const) {}

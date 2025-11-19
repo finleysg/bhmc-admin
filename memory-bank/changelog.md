@@ -71,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Type Error Fixes After Domain Package Migration**: Resolved 20 TypeScript compilation errors after moving types to domain package; updated import statements across 9 files in API package to use centralized `@repo/domain/types`; fixed NestJS decorator compatibility with type-only imports (`import type`) for `emitDecoratorMetadata` settings; resolved missing type issues in Golf Genius integration service by proper import consolidation
+- **Events Service Domain Conversion**: Completed toEvent mapper to return full domain Event objects with all child models (courses with holes, eventFees, eventRounds, tournaments); updated toCourse mapper for holes population; fixed method name typo in service and dependent code; decoupled service from EventModel to use domain Event type
 
 ### Changed
 

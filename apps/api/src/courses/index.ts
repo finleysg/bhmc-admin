@@ -1,2 +1,3 @@
 // Public services
-export { CoursesService } from "./courses.service"
+export { CoursesRepository } from "./courses.repository"
+export * from "./mappers"

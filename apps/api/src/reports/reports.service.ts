@@ -1,15 +1,19 @@
 import { and, eq, sql } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
+import { getAge, getFullName, getGroup, getStart } from "@repo/domain/functions"
 import {
 	EventReportRowDto,
 	EventResultsReportDto,
 	EventResultsReportRowDto,
 	EventResultsSectionDto,
 	FinanceReportDto,
+	Hole,
 	PointsReportRowDto,
+	RegisteredPlayer,
 } from "@repo/domain/types"
 
+import { CoursesRepository } from "../courses"
 import {
 	DrizzleService,
 	eventFee,
@@ -43,18 +47,41 @@ interface ResultsReport {
 	results: Array<{ playerId: number; position: number; score: number }>
 }
 
+interface EventPlayerFee {
+	name: string
+	amount: string
+}
+
+interface EventPlayerSlot {
+	team: string
+	course: string
+	start: string
+	ghin?: string | null
+	age: number
+	tee?: string | null
+	lastName: string
+	firstName: string
+	fullName: string
+	email?: string | null
+	signedUpBy?: string | null
+	signupDate?: string | null
+	fees: EventPlayerFee[]
+}
+
 @Injectable()
 export class ReportsService {
 	constructor(
+		private readonly courses: CoursesRepository,
 		private readonly events: EventsService,
 		private readonly registration: RegistrationService,
 		private readonly drizzle: DrizzleService,
 	) {}
 
 	private async validateEvent(eventId: number): Promise<void> {
-		const event = await this.events.findEventById({ eventId })
+		// TODO: create a lightweight event validator in the event service
+		const event = await this.events.getCompleteClubEventById(eventId)
 		if (!event) {
-			throw new Error(`Event ${eventId} not found`)
+			throw new Error(`ClubEvent ${eventId} not found`)
 		}
 	}
 
@@ -69,9 +96,106 @@ export class ReportsService {
 		})
 	}
 
+	async getPlayers(eventId: number): Promise<EventPlayerSlot[]> {
+		const event = await this.events.getCompleteClubEventById(eventId)
+		const registeredPlayers = await this.registration.getRegisteredPlayers(eventId)
+
+		if (!registeredPlayers || registeredPlayers.length === 0) return []
+
+		// Build registration groups (registrationId => SlotWithRelations[])
+		const regGroups = new Map<number, RegisteredPlayer[]>()
+		for (const s of registeredPlayers) {
+			if (!s) continue
+			const regId = s.registration?.id ?? null
+			if (regId === null) continue
+			const arr = regGroups.get(regId) ?? []
+			arr.push(s)
+			regGroups.set(regId, arr)
+		}
+
+		// Collect unique courseIds to fetch holes
+		const courseIdSet = new Set<number>()
+		for (const s of registeredPlayers) {
+			if (!s) continue
+			const cid = s.course?.id ?? s.registration?.courseId
+			if (cid !== null && cid !== undefined) courseIdSet.add(cid)
+		}
+
+		const courseIds = Array.from(courseIdSet)
+		const holesMap = new Map<number, Hole[]>()
+		await Promise.all(
+			courseIds.map(async (cid) => {
+				const holes = await this.courses.findHolesByCourseId(cid)
+				holesMap.set(cid, holes ?? [])
+			}),
+		)
+
+		const transformed = registeredPlayers.map((s): EventPlayerSlot => {
+			if (!s) throw new Error("Unexpected missing slot data")
+			const slot = s.slot!
+			const player = s.player
+			const registration = s.registration
+			const course = s.course
+
+			if (!player) throw new Error(`Missing player for slot id ${slot?.id}`)
+			if (!registration) throw new Error(`Missing registration for slot id ${slot?.id}`)
+
+			// If the event does not allow choosing a course, there will be no course info.
+			// In that case we return "N/A" for course/start values. Otherwise require course.
+			let courseName = "N/A"
+			let holes: Hole[] = []
+			if (event.canChoose) {
+				if (!course) throw new Error(`Missing course for slot id ${slot?.id}`)
+				courseName = course.name
+				holes = holesMap.get(course.id!) ?? []
+			}
+			// convert holes to domain model array when used
+
+			const startValue = getStart(event, slot, holes)
+			const allSlotsInRegistration = (regGroups.get(registration.id!) ?? []).map(
+				(x: RegisteredPlayer) => x.slot!,
+			)
+
+			const team = getGroup(event, slot, startValue, courseName, allSlotsInRegistration)
+
+			const ageRes = getAge(player, new Date())
+			const age = typeof ageRes.age === "number" ? ageRes.age : 0
+
+			const fullName = getFullName(player)
+
+			// Build fees array from the fee definitions
+			const fees: EventPlayerFee[] = event.eventFees!.map((fd) => {
+				const fee = (s.fees ?? []).find((f) => f.eventFee?.id === fd.id)
+				const paid = fee?.isPaid
+				const amount = paid ? fee?.amount : "0"
+				return {
+					name: fd.feeType!.name,
+					amount: amount.toString(),
+				}
+			})
+
+			return {
+				team,
+				course: courseName,
+				start: startValue,
+				ghin: player.ghin,
+				age,
+				tee: player.tee,
+				lastName: player.lastName,
+				firstName: player.firstName,
+				fullName,
+				email: player.email,
+				signedUpBy: registration.signedUpBy,
+				fees,
+			}
+		})
+
+		return transformed
+	}
+
 	async getEventReport(eventId: number): Promise<EventReportRowDto[]> {
 		await this.validateEvent(eventId)
-		const registeredPlayers = await this.registration.getPlayers(eventId)
+		const registeredPlayers = await this.getPlayers(eventId)
 		const summary = { eventId, total: registeredPlayers.length, slots: registeredPlayers }
 		const rows = summary.slots.map((slot) => {
 			const row: EventReportRowDto = {
@@ -101,7 +225,7 @@ export class ReportsService {
 		const rows = await this.getEventReport(eventId)
 
 		const workbook = await createWorkbook()
-		const worksheet = workbook.addWorksheet("Event Report")
+		const worksheet = workbook.addWorksheet("ClubEvent Report")
 
 		// Define fixed columns
 		const fixedKeys = [
@@ -399,8 +523,8 @@ export class ReportsService {
 
 	async getEventResultsReport(eventId: number): Promise<EventResultsReportDto> {
 		await this.validateEvent(eventId)
-		const event = await this.events.findEventById({ eventId })
-		if (!event) throw new Error(`Event ${eventId} not found`) // Should not happen after validateEvent
+		const event = await this.events.getCompleteClubEventById(eventId)
+		if (!event) throw new Error(`ClubEvent ${eventId} not found`) // Should not happen after validateEvent
 
 		// Get all tournaments for the event
 		const tournaments = await this.drizzle.db
@@ -539,7 +663,7 @@ export class ReportsService {
 		const report = await this.getEventResultsReport(eventId)
 
 		const workbook = await createWorkbook()
-		const worksheet = workbook.addWorksheet("Event Results")
+		const worksheet = workbook.addWorksheet("ClubEvent Results")
 
 		let currentRow = 1
 

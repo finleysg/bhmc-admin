@@ -248,19 +248,19 @@ class ResultsImportService:
         """
         if not tournament.event.gg_id:
             result.add_error(
-                "Event must first be synced with Golf Genius. Run Event Sync process."
+                "ClubEvent must first be synced with Golf Genius. Run ClubEvent Sync process."
             )
             return False
 
         if not tournament.round or not tournament.round.gg_id:
             result.add_error(
-                "Round must first be synced with Golf Genius. Run Event Sync process."
+                "Round must first be synced with Golf Genius. Run ClubEvent Sync process."
             )
             return False
 
         if not tournament.gg_id:
             result.add_error(
-                "Tournament must first be synced with Golf Genius. Run Event Sync process."
+                "Tournament must first be synced with Golf Genius. Run ClubEvent Sync process."
             )
             return False
 

@@ -1,18 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { getGroup, getStart } from "@repo/domain/functions"
-import {
-	EventDto,
-	EventFeeDto,
-	FeeTypeDto,
-	HoleDto,
-	PlayerDto,
-	RegistrationDto,
-	RegistrationSlotDto,
-} from "@repo/domain/types"
+import { RegisteredPlayer } from "@repo/domain/types"
 
-import { RegisteredPlayerDto } from "../../registration"
 import { RosterMemberSyncDto } from "../dto/internal.dto"
-import { FeeDefinition, TransformationContext } from "../dto/roster.dto"
+import { TransformationContext } from "../dto/roster.dto"
 
 @Injectable()
 export class RosterPlayerTransformer {
@@ -22,22 +13,20 @@ export class RosterPlayerTransformer {
 	 * Transform a player registration into a Golf Genius member sync DTO
 	 */
 	transformToGgMember(
-		slot: RegistrationSlotDto,
-		player: PlayerDto,
-		registration: RegistrationDto,
+		registeredPlayer: RegisteredPlayer,
 		context: TransformationContext,
 	): RosterMemberSyncDto {
-		const customFields = this.buildCustomFields(slot, player, registration, context)
-		const roundsGgIds = context.rounds?.map((r) => r.ggId?.toString()).filter(Boolean)
+		const customFields = this.buildCustomFields(registeredPlayer, context)
+		const roundsGgIds = context.event.eventRounds!.map((r) => r.ggId!.toString())
 
 		return {
-			externalId: slot.id,
-			lastName: player.lastName,
-			firstName: player.firstName,
-			email: player.email,
+			externalId: registeredPlayer.slot!.id!,
+			lastName: registeredPlayer.player!.lastName,
+			firstName: registeredPlayer.player!.firstName,
+			email: registeredPlayer.player!.email,
 			gender: "M",
-			handicapNetworkId: player.ghin,
-			rounds: roundsGgIds ? (roundsGgIds as string[]) : [],
+			handicapNetworkId: registeredPlayer.player!.ghin,
+			rounds: roundsGgIds,
 			customFields: customFields,
 		}
 	}
@@ -46,47 +35,45 @@ export class RosterPlayerTransformer {
 	 * Build custom fields object for Golf Genius member
 	 */
 	private buildCustomFields(
-		slot: RegistrationSlotDto,
-		player: PlayerDto,
-		registration: RegistrationDto,
+		registeredPlayer: RegisteredPlayer,
 		context: TransformationContext,
 	): Record<string, string | null> {
-		const { event, course, holes, eventFees, allSlotsInRegistration } = context
+		const { event, course, holes, group } = context
 
 		// Determine course name
 		let courseName = "N/A"
 		if (event.canChoose) {
-			courseName = course?.name ?? "N/A"
+			courseName = course!.name
 		}
 
 		// Calculate team and start using domain logic
-		const startValue = getStart(event, slot, holes)
+		const startValue = getStart(event, registeredPlayer.slot!, holes)
 		const team = getGroup(
 			event,
-			slot,
+			registeredPlayer.slot!,
 			startValue,
 			courseName,
-			allSlotsInRegistration.map((s) => s.slot),
+			group.map((s) => s.slot!),
 		)
 
 		// Base custom fields
 		const customFields: Record<string, string | null> = {
-			team: team ?? null,
-			course: courseName ?? null,
-			start: startValue ?? null,
-			ghin: player.ghin ?? null,
-			tee: player.tee ?? null,
-			signed_up_by: registration.signedUpBy ?? null,
-			player_id: player.id?.toString?.() ?? String(player.id ?? ""),
-			registration_slot_id: slot.id?.toString?.() ?? String(slot.id ?? ""),
+			team,
+			course: courseName,
+			start: startValue,
+			ghin: registeredPlayer.player!.ghin ?? null,
+			tee: registeredPlayer.player!.tee ?? null,
+			signed_up_by: registeredPlayer.registration!.signedUpBy,
+			player_id: registeredPlayer.player!.id!.toString(),
+			registration_slot_id: registeredPlayer.slot!.id!.toString(),
 		}
 
 		// Add dynamic skins fee columns
-		for (const fd of eventFees) {
-			const fee = (allSlotsInRegistration.find((s) => s.slot?.id === slot.id)?.fees ?? []).find(
-				(f) => f.eventFee?.id === fd.id,
+		for (const fd of event.eventFees!) {
+			const fee = (group.find((s) => s.slot!.id === registeredPlayer.slot!.id)?.fees ?? []).find(
+				(f) => f.eventFee!.id === fd.id,
 			)
-			const paid = fee?.isPaid === 1
+			const paid = fee?.isPaid
 			const amount = paid ? String(fee?.amount ?? 0) : "0"
 			customFields[fd.feeType!.name] = amount
 		}
@@ -95,68 +82,25 @@ export class RosterPlayerTransformer {
 	}
 
 	/**
-	 * Calculate team and start values for a player slot
-	 */
-	calculateTeamAndStart(
-		slot: RegistrationSlotDto,
-		event: EventDto,
-		courseName: string,
-		holes: HoleDto[],
-		allSlotsInRegistration: RegisteredPlayerDto[],
-	): { team: string | null; start: string | null } {
-		const startValue = getStart(event, slot, holes)
-		const team = getGroup(
-			event,
-			slot,
-			startValue,
-			courseName,
-			allSlotsInRegistration.map((s) => s.slot),
-		)
-
-		return {
-			team: team ?? null,
-			start: startValue ?? null,
-		}
-	}
-
-	/**
-	 * Process fee definitions for skins columns
-	 */
-	processFeeDefinitions(
-		eventFees: Array<{
-			eventFee: EventFeeDto
-			feeType: FeeTypeDto
-		}>,
-	): FeeDefinition[] {
-		return eventFees
-			.filter((f) => f.feeType.name.endsWith("Skins"))
-			.map((ef) => ({
-				eventFee: ef.eventFee,
-				feeType: ef.feeType,
-				name: ef.feeType.name.toLowerCase().replace(" ", "_"),
-			})) as FeeDefinition[]
-	}
-
-	/**
 	 * Validate transformation inputs
+	 * TODO: once validated, we should work against a
+	 * ValidRegisterPlayer model.
 	 */
 	validateTransformationInputs(
-		slot: RegistrationSlotDto,
-		player: PlayerDto,
-		registration: RegistrationDto,
+		registeredPlayer: RegisteredPlayer,
 		context: TransformationContext,
 	): { isValid: boolean; errors: string[] } {
 		const errors: string[] = []
 
-		if (!player) {
+		if (!registeredPlayer.player) {
 			errors.push("Missing player data")
 		}
 
-		if (!registration) {
+		if (!registeredPlayer.registration) {
 			errors.push("Missing registration data")
 		}
 
-		if (!slot) {
+		if (!registeredPlayer.slot) {
 			errors.push("Missing registration slot data")
 		}
 

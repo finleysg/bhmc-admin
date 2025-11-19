@@ -1,0 +1,265 @@
+import {
+	ClubEvent,
+	EventFee,
+	FeeType,
+	PreparedTournamentPoints,
+	PreparedTournamentResult,
+	Round,
+	Tournament,
+} from "@repo/domain/types"
+
+import { toCourse } from "../courses/mappers"
+import type {
+	EventFeeModel,
+	EventModel,
+	FeeTypeModel,
+	RoundModel,
+	TournamentModel,
+	TournamentPointsModel,
+	TournamentResultModel,
+} from "../database/models"
+
+/**
+ * Maps database entity to EventModel
+ */
+export function mapToEventModel(entity: Record<string, any>): EventModel {
+	return {
+		id: entity.id,
+		eventType: entity.eventType,
+		name: entity.name,
+		rounds: entity.rounds,
+		registrationType: entity.registrationType,
+		skinsType: entity.skinsType,
+		minimumSignupGroupSize: entity.minimumSignupGroupSize,
+		maximumSignupGroupSize: entity.maximumSignupGroupSize,
+		groupSize: entity.groupSize,
+		totalGroups: entity.totalGroups,
+		startType: entity.startType,
+		canChoose: entity.canChoose ? 1 : 0,
+		ghinRequired: entity.ghinRequired ? 1 : 0,
+		seasonPoints: entity.seasonPoints,
+		notes: entity.notes,
+		startDate: entity.startDate,
+		startTime: entity.startTime,
+		signupStart: entity.signupStart,
+		signupEnd: entity.signupEnd,
+		paymentsEnd: entity.paymentsEnd,
+		registrationMaximum: entity.registrationMaximum,
+		portalUrl: entity.portalUrl,
+		externalUrl: entity.externalUrl,
+		status: entity.status,
+		season: entity.season,
+		teeTimeSplits: entity.teeTimeSplits,
+		starterTimeInterval: entity.starterTimeInterval,
+		teamSize: entity.teamSize,
+		prioritySignupStart: entity.prioritySignupStart,
+		ageRestriction: entity.ageRestriction,
+		ageRestrictionType: entity.ageRestrictionType,
+		ggId: entity.ggId,
+		// Optional, not included in simple mappers
+	}
+}
+
+/**
+ * Maps database entity to EventFeeModel
+ */
+export function mapToEventFeeModel(entity: Record<string, any>): EventFeeModel {
+	return {
+		id: entity.id,
+		amount: entity.amount,
+		isRequired: entity.isRequired,
+		displayOrder: entity.displayOrder,
+		eventId: entity.eventId,
+		feeTypeId: entity.feeTypeId,
+		overrideAmount: entity.overrideAmount,
+		overrideRestriction: entity.overrideRestriction,
+	}
+}
+
+/**
+ * Maps database entity to FeeTypeModel
+ */
+export function mapToFeeTypeModel(entity: Record<string, any>): FeeTypeModel {
+	return {
+		id: entity.id,
+		name: entity.name,
+		code: entity.code,
+		payout: entity.payout,
+		restriction: entity.restriction,
+	}
+}
+
+/**
+ * Maps database entity to RoundModel
+ */
+export function mapToRoundModel(entity: Record<string, any>): RoundModel {
+	return {
+		id: entity.id,
+		eventId: entity.eventId,
+		roundNumber: entity.roundNumber,
+		roundDate: entity.roundDate,
+		ggId: entity.ggId,
+		tournaments: undefined, // Optional
+	}
+}
+
+/**
+ * Maps database entity to TournamentModel
+ */
+export function mapToTournamentModel(entity: Record<string, any>): TournamentModel {
+	return {
+		id: entity.id,
+		eventId: entity.eventId,
+		roundId: entity.roundId,
+		name: entity.name,
+		format: entity.format,
+		isNet: entity.isNet,
+		ggId: entity.ggId,
+	}
+}
+
+// Domain mappers from Model to Domain
+
+/**
+ * Maps EventModel to ClubEvent domain class
+ */
+export function toEvent(model: EventModel): ClubEvent {
+	return {
+		id: model.id,
+		eventType: model.eventType,
+		name: model.name,
+		rounds: model.rounds,
+		registrationType: model.registrationType,
+		skinsType: model.skinsType,
+		minimumSignupGroupSize: model.minimumSignupGroupSize,
+		maximumSignupGroupSize: model.maximumSignupGroupSize,
+		groupSize: model.groupSize,
+		totalGroups: model.totalGroups,
+		startType: model.startType,
+		canChoose: Boolean(model.canChoose),
+		ghinRequired: Boolean(model.ghinRequired),
+		seasonPoints: model.seasonPoints,
+		notes: model.notes,
+		startDate: model.startDate,
+		startTime: model.startTime,
+		signupStart: model.signupStart,
+		signupEnd: model.signupEnd,
+		paymentsEnd: model.paymentsEnd,
+		registrationMaximum: model.registrationMaximum,
+		portalUrl: model.portalUrl,
+		externalUrl: model.externalUrl,
+		status: model.status,
+		season: model.season,
+		teeTimeSplits: model.teeTimeSplits,
+		starterTimeInterval: model.starterTimeInterval,
+		teamSize: model.teamSize,
+		prioritySignupStart: model.prioritySignupStart,
+		ageRestriction: model.ageRestriction,
+		ageRestrictionType: model.ageRestrictionType,
+		ggId: model.ggId,
+		courses: model.courses?.map(toCourse),
+		eventFees: model.eventFees?.map(toEventFee),
+		eventRounds: model.eventRounds?.map(toRound) || [],
+		tournaments: model.tournaments?.map(toTournament) || [],
+	}
+}
+
+/**
+ * Maps EventFeeModel to EventFee domain class
+ */
+export function toEventFee(model: EventFeeModel): EventFee {
+	return {
+		id: model.id,
+		eventId: model.eventId,
+		amount: model.amount,
+		isRequired: Boolean(model.isRequired),
+		displayOrder: model.displayOrder,
+		feeTypeId: model.feeTypeId,
+		overrideAmount: model.overrideAmount,
+		overrideRestriction: model.overrideRestriction,
+		feeType: model.feeType ? toFeeType(model.feeType) : undefined,
+	}
+}
+
+/**
+ * Maps FeeTypeModel to FeeType domain class
+ */
+export function toFeeType(model: FeeTypeModel): FeeType {
+	return {
+		id: model.id,
+		name: model.name,
+		code: model.code,
+		payout: model.payout,
+		restriction: model.restriction,
+	}
+}
+
+/**
+ * Maps RoundModel to Round domain class
+ */
+export function toRound(model: RoundModel): Round {
+	return {
+		id: model.id,
+		eventId: model.eventId,
+		roundNumber: model.roundNumber,
+		roundDate: model.roundDate,
+		ggId: model.ggId,
+	}
+}
+
+/**
+ * Maps TournamentModel to Tournament domain class
+ */
+export function toTournament(model: TournamentModel): Tournament {
+	return {
+		id: model.id,
+		eventId: model.eventId,
+		roundId: model.roundId,
+		name: model.name,
+		format: model.format,
+		isNet: Boolean(model.isNet),
+		ggId: model.ggId,
+	}
+}
+
+/**
+ * Maps PreparedTournamentResult to TournamentResultModel for database insertion.
+ * TODO: align these two models
+ */
+export function mapToTournamentResultModel(
+	record: PreparedTournamentResult,
+): TournamentResultModel {
+	return {
+		tournamentId: record.tournamentId,
+		playerId: record.playerId,
+		flight: record.flight ?? undefined,
+		position: record.position,
+		score: record.score ?? undefined,
+		amount: record.amount,
+		details: record.details ?? undefined,
+		summary: record.summary ?? undefined,
+		createDate: record.createDate,
+		payoutDate: record.payoutDate ?? undefined,
+		payoutStatus: record.payoutStatus ?? undefined,
+		payoutTo: record.payoutTo ?? undefined,
+		payoutType: record.payoutType ?? undefined,
+		teamId: record.teamId ?? undefined,
+	}
+}
+
+/**
+ * Maps PreparedTournamentPoints to TournamentPointsModel for database insertion.
+ */
+export function mapToTournamentPointsModel(
+	record: PreparedTournamentPoints,
+): TournamentPointsModel {
+	return {
+		tournamentId: record.tournamentId,
+		playerId: record.playerId,
+		position: record.position,
+		score: record.score ?? undefined,
+		points: record.points,
+		details: record.details ?? undefined,
+		createDate: record.createDate,
+	}
+}

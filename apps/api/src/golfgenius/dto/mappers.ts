@@ -1,4 +1,4 @@
-import { IntegrationLogDto } from "@repo/domain/types"
+import { ClubEvent, IntegrationLogDto, Tournament, TournamentData } from "@repo/domain/types"
 
 import {
 	GgCreateMemberDto,
@@ -121,5 +121,41 @@ export function mapToIntegrationLogDto(log: any): IntegrationLogDto {
 		details: log.details,
 		eventId: log.eventId,
 		isSuccessful: log.isSuccessful,
+	}
+}
+
+/**
+ * Maps Tournament and ClubEvent domain objects to TournamentData for Golf Genius integration.
+ * Asserts that the event has exactly one eventRound.
+ */
+export function toTournamentData(tournament: Tournament, event: ClubEvent): TournamentData {
+	if (!event.eventRounds || event.eventRounds.length !== 1) {
+		throw new Error(
+			`toTournamentData mapping requires exactly one event round, but event ${event.id} has ${event.eventRounds?.length ?? 0} rounds`,
+		)
+	}
+
+	const round = event.eventRounds[0]
+
+	if (tournament.id === undefined) {
+		throw new Error("Tournament id is required")
+	}
+	if (!tournament.ggId) {
+		throw new Error("Tournament ggId is required")
+	}
+	if (!round.ggId) {
+		throw new Error("Round ggId is required")
+	}
+
+	return {
+		id: tournament.id,
+		name: tournament.name ?? "",
+		format: tournament.format,
+		isNet: tournament.isNet ? 1 : 0,
+		ggId: tournament.ggId,
+		eventId: tournament.eventId,
+		roundId: tournament.roundId,
+		eventGgId: event.ggId ?? null,
+		roundGgId: round.ggId,
 	}
 }

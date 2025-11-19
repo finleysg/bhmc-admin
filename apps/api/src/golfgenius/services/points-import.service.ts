@@ -15,6 +15,7 @@ import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
+import { toTournamentData } from "../dto/mappers"
 import {
 	GGAggregate,
 	GolfGeniusTournamentResults,
@@ -78,7 +79,8 @@ export class PointsImportService {
 		) => Promise<void>,
 	): Promise<Observable<ProgressTournamentDto>> {
 		// Query tournaments for the specified format
-		const tournaments = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
+		const clubEvent = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
+		const tournaments = clubEvent.tournaments ?? []
 
 		if (tournaments.length === 0) {
 			throw new Error(`No ${format} tournaments found for event ${eventId}`)
@@ -128,8 +130,9 @@ export class PointsImportService {
 						message: `Processing tournament ${i + 1} of ${totalTournaments}: ${t.name}...`,
 					})
 
+					const tournamentData = toTournamentData(t, clubEvent)
 					const tournamentResult = await this.importTournamentPoints(
-						t,
+						tournamentData,
 						processor,
 						undefined, // No per-player progress for streaming
 						onTournamentProcessed, // Tournament completion callback
@@ -142,7 +145,7 @@ export class PointsImportService {
 					// Convert errors to ImportError format
 					result.errors.push(
 						...tournamentResult.errors.map((error) => ({
-							itemId: t.id.toString(),
+							itemId: t.id?.toString(),
 							itemName: t.name,
 							error,
 						})),
@@ -175,7 +178,8 @@ export class PointsImportService {
 			playerMap: PlayerMap,
 		) => Promise<void>,
 	): Promise<PointsImportSummary[]> {
-		const tournaments = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
+		const clubEvent = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
+		const tournaments = clubEvent.tournaments ?? []
 
 		if (tournaments.length === 0) {
 			this.logger.log("No " + format + " tournaments found for event", { eventId })
@@ -185,7 +189,8 @@ export class PointsImportService {
 		const results: PointsImportSummary[] = []
 
 		for (const t of tournaments) {
-			const result = await this.importTournamentPoints(t, processor)
+			const tournamentData = toTournamentData(t, clubEvent)
+			const result = await this.importTournamentPoints(tournamentData, processor)
 			results.push(result)
 		}
 
@@ -277,7 +282,7 @@ export class PointsImportService {
 	}
 
 	private async deleteExistingPoints(tournamentData: TournamentData): Promise<void> {
-		await this.eventsService.deleteTournamentPoints(tournamentData.id)
+		await this.eventsService.deleteTournamentResultsAndPoints(tournamentData.id)
 	}
 
 	private async fetchGGResults(

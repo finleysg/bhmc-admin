@@ -1,29 +1,31 @@
 import { Controller, Get, Logger, Param, ParseIntPipe, Query } from "@nestjs/common"
-import { EventDto } from "@repo/domain/types"
+import { ClubEvent } from "@repo/domain/types"
 
-import { EventsService } from "./events.service"
+import { EventsRepository } from "./events.repository"
+import { toEvent } from "./mappers"
 
 @Controller("events")
 export class EventsController {
 	private readonly logger = new Logger(EventsController.name)
 
-	constructor(private readonly events: EventsService) {}
+	constructor(private readonly events: EventsRepository) {}
 
 	@Get("search")
-	async searchEventsByDate(@Query("date") date: string): Promise<EventDto[]> {
+	async searchEventsByDate(@Query("date") date: string): Promise<ClubEvent[]> {
 		this.logger.log("Received date: " + date)
 		if (!date) {
 			throw new Error("Date query parameter is required")
 		}
-		return this.events.findEventsByDate(date)
+		const results = await this.events.findEventsByDate(date)
+		return results.map((r) => toEvent(r))
 	}
 
 	@Get(":eventId")
-	async getEventById(@Param("eventId", ParseIntPipe) eventId: number): Promise<EventDto> {
-		const event = await this.events.findEventById({ eventId })
+	async getEventById(@Param("eventId", ParseIntPipe) eventId: number): Promise<ClubEvent> {
+		const event = await this.events.findEventById(eventId)
 		if (!event) {
-			throw new Error(`Event ${eventId} not found`)
+			throw new Error(`ClubEvent ${eventId} not found`)
 		}
-		return event
+		return toEvent(event)
 	}
 }

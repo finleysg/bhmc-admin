@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 
-import { EventDto, IntegrationActionName, IntegrationLogDto } from "@repo/domain/types"
+import { ClubEvent, IntegrationActionName, IntegrationLogDto } from "@repo/domain/types"
 
 import IntegrationActionCard from "./integration-action-card"
 
@@ -37,7 +37,7 @@ const PHASES: Phase[] = [
 	},
 ]
 
-function determinePhase(logs: IntegrationLogDto[], event: EventDto): PhaseInfo {
+function determinePhase(logs: IntegrationLogDto[], event: ClubEvent): PhaseInfo {
 	// Helper: check if action completed successfully
 	const hasSuccessfulRun = (action: IntegrationActionName) =>
 		logs.some((log) => log.actionName === action && log.isSuccessful)
@@ -89,7 +89,7 @@ function determinePhase(logs: IntegrationLogDto[], event: EventDto): PhaseInfo {
 
 function getNextImportAction(
 	logs: IntegrationLogDto[],
-	event?: EventDto,
+	event?: ClubEvent,
 ): IntegrationActionName | undefined {
 	const importOrder: IntegrationActionName[] = [
 		"Import Scores",
@@ -115,7 +115,7 @@ function getNextImportAction(
 }
 
 interface Props {
-	selectedEvent: EventDto
+	selectedEvent: ClubEvent
 }
 
 export default function IntegrationOrchestrator({ selectedEvent }: Props) {
@@ -261,7 +261,7 @@ function PhasePanel({
 	onActionComplete,
 	eventId,
 }: {
-	event: EventDto
+	event: ClubEvent
 	phase: Phase
 	logs: IntegrationLogDto[]
 	isComplete: boolean

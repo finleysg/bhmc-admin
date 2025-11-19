@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
 import { useSession } from "@/lib/auth-client"
-import { EventDto } from "@repo/domain/types"
+import { ClubEvent } from "@repo/domain/types"
 
 export default function EventLayout({ children }: { children: React.ReactNode }) {
 	const { data: session, isPending } = useSession()
@@ -14,7 +14,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 	const params = useParams()
 	const eventId = params.eventId as string
 
-	const [event, setEvent] = useState<EventDto | null>(null)
+	const [event, setEvent] = useState<ClubEvent | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 
@@ -34,7 +34,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 				if (!response.ok) {
 					throw new Error(`Failed to fetch event: ${response.status}`)
 				}
-				const eventData = (await response.json()) as EventDto
+				const eventData = (await response.json()) as ClubEvent
 				setEvent(eventData)
 			} catch (err) {
 				console.error("Error fetching event:", err)

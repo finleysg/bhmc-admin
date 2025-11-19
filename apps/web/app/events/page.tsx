@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 
 import { useRouter } from "next/navigation"
 
-import { EventDto } from "@repo/domain/types"
+import { ClubEvent } from "@repo/domain/types"
 
 import { useSession } from "../../lib/auth-client"
 import CalendarCard from "../components/calendar-card"
@@ -17,8 +17,8 @@ export default function EventsPage() {
 
 	const [selectedDate, setSelectedDate] = useState<Date>(new Date())
 	const [isSearching, setIsSearching] = useState(false)
-	const [searchResults, setSearchResults] = useState<EventDto[]>([])
-	const [selectedEvent, setSelectedEvent] = useState<EventDto | null>(null)
+	const [searchResults, setSearchResults] = useState<ClubEvent[]>([])
+	const [selectedEvent, setSelectedEvent] = useState<ClubEvent | null>(null)
 
 	// Redirect if not authenticated
 	useEffect(() => {
@@ -54,7 +54,7 @@ export default function EventsPage() {
 				throw new Error(`API request failed: ${response.status}`)
 			}
 
-			const events = (await response.json()) as EventDto[]
+			const events = (await response.json()) as ClubEvent[]
 			setSearchResults(events)
 
 			// Auto-select if only one event found
@@ -69,7 +69,7 @@ export default function EventsPage() {
 		}
 	}
 
-	const handleEventSelect = (event: EventDto) => {
+	const handleEventSelect = (event: ClubEvent) => {
 		setSelectedEvent(event)
 		router.push(`/events/${event.id}`)
 	}

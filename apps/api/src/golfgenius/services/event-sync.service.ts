@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common"
 
-import { EventsService } from "../../events/events.service"
+import { TournamentModel } from "../../database/models"
+import { EventsRepository } from "../../events"
 import { ApiClient } from "../api-client"
 
 interface EventSyncSummary {
@@ -15,7 +16,7 @@ export class EventSyncService {
 
 	constructor(
 		private readonly apiClient: ApiClient,
-		private readonly eventsService: EventsService,
+		private readonly events: EventsRepository,
 	) {}
 
 	/**
@@ -31,7 +32,7 @@ export class EventSyncService {
 
 		// 1) Load our event
 		let localEventId: number
-		const localEvent = await this.eventsService.findEventById({ eventId })
+		const localEvent = await this.events.findEventById(eventId)
 		if (!localEvent) throw new Error(`Local event not found: ${eventId}`)
 		localEventId = localEvent.id!
 
@@ -45,8 +46,8 @@ export class EventSyncService {
 		const ggEventId = ggEvent.id.toString()
 
 		// 3) Delete existing tournaments and rounds by event id (bulk deletes to respect FK)
-		await this.eventsService.deleteTournamentsByEventId(localEventId)
-		await this.eventsService.deleteRoundsByEventId(localEventId)
+		await this.events.deleteTournamentsByEventId(localEventId)
+		await this.events.deleteRoundsByEventId(localEventId)
 
 		// 4) Update our event with gg_id and portal_url (prepend https:// if missing)
 		const portal = ggEvent.website ?? ggEvent.website ?? null
@@ -54,16 +55,17 @@ export class EventSyncService {
 			portal && !portal.toString().startsWith("http")
 				? `https://${portal.toString().replace(/^\/+/, "")}`
 				: portal
-		await this.eventsService.updateEvent(localEventId, {
-			ggId: ggEventId,
-			portalUrl: portalUrl,
-		})
+
+		localEvent.ggId = ggEventId
+		localEvent.portalUrl = portalUrl!
+		await this.events.updateEvent(localEventId, localEvent)
+
 		summary.eventUpdated = true
 
 		const ggRounds = await this.apiClient.getEventRounds(ggEventId)
 		const ggRoundIdToLocalId: Record<string, number> = {}
 		for (const gr of ggRounds) {
-			const created = await this.eventsService.createRound({
+			const created = await this.events.createRound({
 				roundNumber: gr.index,
 				roundDate: gr.date,
 				ggId: gr.id,
@@ -83,15 +85,15 @@ export class EventSyncService {
 			}
 			const ggTournaments = await this.apiClient.getRoundTournaments(ggEventId, String(gr.id))
 			for (const gt of ggTournaments) {
-				const isNet = (gt.handicapFormat ?? "").toString().toLowerCase().includes("net") ? 1 : 0
-				const created = await this.eventsService.createTournament({
+				const isNet = (gt.handicapFormat ?? "").toString().toLowerCase().includes("net")
+				const created = await this.events.createTournament({
 					name: gt.name ?? undefined,
 					format: gt.scoreFormat ?? undefined,
-					isNet,
+					isNet: isNet ? 1 : 0,
 					ggId: gt.id,
 					eventId: localEventId,
 					roundId: localRoundId,
-				})
+				} as TournamentModel)
 				if (created && created.id) summary.tournamentsCreated += 1
 			}
 		}

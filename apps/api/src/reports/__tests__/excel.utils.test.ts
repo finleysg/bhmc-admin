@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
+
 import { EventReportRowDto } from "@repo/domain/types"
 
 import { addDataRows, addFixedColumns, deriveDynamicColumns, styleHeaderRow } from "../excel.utils"

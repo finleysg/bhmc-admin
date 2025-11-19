@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common"
 
-import { RegistrationService } from "../../registration/registration.service"
+import { RegistrationRepository, RegistrationService } from "../../registration"
 import { ApiClient } from "../api-client"
 import { MemberSyncResult } from "../dto"
 import { MasterRosterItemDto } from "../dto/internal.dto"
@@ -12,6 +12,7 @@ export class MemberSyncService {
 
 	constructor(
 		private readonly registration: RegistrationService,
+		private readonly repository: RegistrationRepository,
 		private readonly apiClient: ApiClient,
 	) {}
 
@@ -59,7 +60,7 @@ export class MemberSyncService {
 		}
 
 		// Load players from local DB
-		const players = await this.registration.findMemberPlayers()
+		const players = await this.repository.findMemberPlayers()
 		result.total_players = players.length
 
 		// Build master roster map
@@ -115,7 +116,7 @@ export class MemberSyncService {
 				}
 
 				// Update gg_id
-				await this.registration.updatePlayerGgId(player.id, memberCardId)
+				await this.registration.updatePlayerGgId(player.id!, memberCardId)
 				result.updated_players += 1
 			} catch (err) {
 				const name = `${player.firstName ?? ""} ${player.lastName ?? ""}`.trim()
@@ -133,7 +134,7 @@ export class MemberSyncService {
 		const res: { updated?: boolean; message: string; player?: any } = { message: "" }
 
 		// Find local player by id
-		const player = await this.registration.findPlayerById(playerId)
+		const player = await this.repository.findPlayerById(playerId)
 		if (!player) {
 			res.message = `No local register_player found with id ${playerId}`
 			return res
@@ -186,7 +187,7 @@ export class MemberSyncService {
 				return res
 			}
 
-			const updated = await this.registration.updatePlayerGgId(player.id, String(ggIdToSet))
+			const updated = await this.registration.updatePlayerGgId(player.id!, String(ggIdToSet))
 			res.updated = true
 			res.message = `Updated gg_id for ${player.email}`
 			res.player = updated

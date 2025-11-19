@@ -15,6 +15,7 @@ import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
+import { toTournamentData } from "../dto/mappers"
 import {
 	GGAggregate,
 	GolfGeniusTournamentResults,
@@ -113,26 +114,15 @@ export class ResultsImportService {
 		) => Promise<void>,
 	): Promise<Observable<ProgressTournamentDto>> {
 		// Query tournaments for the specified format
-		let tournaments = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
-
-		// Special handling: Skip "Overall" stroke play tournaments as they have no associated results
-		let skippedCount = 0
-		if (format === "stroke") {
-			const originalCount = tournaments.length
-			tournaments = tournaments.filter((t) => t.name !== "Overall")
-			skippedCount = originalCount - tournaments.length
-			if (skippedCount > 0) {
-				this.logger.log(
-					`Skipped ${skippedCount} "Overall" stroke tournament(s) for event ${eventId}`,
-				)
-			}
-		}
+		const clubEvent = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
+		const tournaments = clubEvent.tournaments?.filter((t) => t.name !== "Overall") ?? []
 
 		if (tournaments.length === 0) {
 			throw new Error(`No ${format} tournaments found for event ${eventId}`)
 		}
 
 		// Start tracking progress with tournament count
+		let skippedCount = 0
 		const totalTournaments = tournaments.length
 		const progressObservable = this.progressTracker.startTracking(
 			eventId,
@@ -186,8 +176,9 @@ export class ResultsImportService {
 						message: `Processing tournament ${i + 1} of ${totalTournaments}: ${t.name}...`,
 					})
 
+					const tournamentData = toTournamentData(t, clubEvent)
 					const tournamentResult = await this.importTournamentResults(
-						t,
+						tournamentData,
 						processor,
 						undefined, // No per-player progress for streaming
 						onTournamentProcessed, // Tournament completion callback
@@ -200,7 +191,7 @@ export class ResultsImportService {
 					// Convert errors to ImportError format
 					result.errors.push(
 						...tournamentResult.errors.map((error) => ({
-							itemId: t.id.toString(),
+							itemId: t.id?.toString(),
 							itemName: t.name,
 							error,
 						})),
@@ -233,7 +224,11 @@ export class ResultsImportService {
 			playerMap: PlayerMap,
 		) => Promise<void>,
 	): Promise<ImportResultSummary[]> {
-		let tournaments = await this.eventsService.getTournamentsByEventAndFormat(eventId, format)
+		const eventWithTournaments = await this.eventsService.getTournamentsByEventAndFormat(
+			eventId,
+			format,
+		)
+		let tournaments = eventWithTournaments.tournaments?.filter((t) => t.format === format) ?? []
 
 		// Special handling: Skip "Overall" stroke play tournaments as they have no associated results
 		if (format === "stroke") {
@@ -255,7 +250,10 @@ export class ResultsImportService {
 		const results: ImportResultSummary[] = []
 
 		for (const t of tournaments) {
-			const result = await this.importTournamentResults(t, processor)
+			const result = await this.importTournamentResults(
+				toTournamentData(t, eventWithTournaments),
+				processor,
+			)
 			results.push(result)
 		}
 
@@ -347,7 +345,7 @@ export class ResultsImportService {
 	}
 
 	private async deleteExistingResults(tournamentData: TournamentData): Promise<void> {
-		await this.eventsService.deleteTournamentResults(tournamentData.id)
+		await this.eventsService.deleteTournamentResultsAndPoints(tournamentData.id)
 	}
 
 	private async fetchGGResults(

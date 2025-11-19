@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 
 import ActionCard from "@/components/action-card"
 import { useSession } from "@/lib/auth-client"
-import { EventDto } from "@repo/domain/types"
+import { ClubEvent } from "@repo/domain/types"
 
 export default function EventManagementPage() {
 	const { data: session, isPending } = useSession()
@@ -14,14 +14,14 @@ export default function EventManagementPage() {
 	const router = useRouter()
 	const params = useParams()
 	const eventId = params.eventId as string
-	const [event, setEvent] = useState<EventDto | null>(null)
+	const [event, setEvent] = useState<ClubEvent | null>(null)
 
 	// Fetch event data
 	useEffect(() => {
 		if (signedIn && eventId) {
 			fetch(`/api/events/${eventId}`)
 				.then((res) => res.json())
-				.then((data: EventDto) => {
+				.then((data: ClubEvent) => {
 					setEvent(data)
 				})
 				.catch(() => {})

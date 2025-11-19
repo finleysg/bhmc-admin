@@ -1,21 +1,10 @@
 import { Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
-import {
-	CourseDto,
-	EventDto,
-	EventFeeDto,
-	HoleDto,
-	PlayerDto,
-	ProgressEventDto,
-	RegistrationDto,
-	RegistrationSlotDto,
-	RoundDto,
-} from "@repo/domain/types"
+import { ClubEvent, Hole, ProgressEventDto, RegisteredPlayer } from "@repo/domain/types"
 
-import { CoursesService } from "../../courses/courses.service"
+import { CoursesRepository } from "../../courses/courses.repository"
 import { EventsService } from "../../events/events.service"
-import { RegisteredPlayerDto } from "../../registration"
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
 import { ExportError, ExportResult, TransformationContext } from "../dto"
@@ -35,7 +24,7 @@ export class RosterExportService {
 	constructor(
 		private readonly events: EventsService,
 		private readonly registration: RegistrationService,
-		private readonly courses: CoursesService,
+		private readonly courses: CoursesRepository,
 		private readonly apiClient: ApiClient,
 		private readonly progressTracker: ProgressTracker,
 		private readonly playerTransformer: RosterPlayerTransformer,
@@ -63,15 +52,10 @@ export class RosterExportService {
 	 * Process a single player registration slot and return the result
 	 */
 	private async processSinglePlayer(
-		slot: RegistrationSlotDto,
-		player: PlayerDto | undefined,
-		registration: RegistrationDto | undefined,
-		course: CourseDto | undefined,
-		event: EventDto,
-		rounds: RoundDto[],
-		holesMap: Map<number, HoleDto[]>,
-		eventFees: EventFeeDto[],
-		allSlots: RegisteredPlayerDto[],
+		current: RegisteredPlayer,
+		clubEvent: ClubEvent,
+		allRegisteredPlayers: RegisteredPlayer[],
+		holesMap: Map<number, Hole[]>,
 		rosterByGhin: Map<string, RosterMemberDto>,
 		rosterBySlotId: Map<number, RosterMemberDto>,
 	): Promise<{
@@ -80,81 +64,44 @@ export class RosterExportService {
 		error?: ExportError
 	}> {
 		try {
-			// Input validation
-			if (!player || !registration || !slot) {
-				return {
-					success: false,
-					action: "error",
-					error: {
-						slotId: slot?.id || 0,
-						playerId: player?.id,
-						email: player?.email,
-						error: !player
-							? "Missing player data"
-							: !registration
-								? "Missing registration data"
-								: "Missing registration slot data",
-					},
-				}
-			}
-
 			// Determine course and holes for transformation context
-			let holes: HoleDto[] = []
-			if (event.canChoose) {
-				if (!course) {
-					return {
-						success: false,
-						action: "error",
-						error: {
-							slotId: slot.id,
-							playerId: player.id,
-							email: player.email,
-							error: "Missing course for slot when course choice is enabled",
-						},
-					}
-				}
-				holes = course.id ? (holesMap.get(course.id) ?? []) : []
+			let holes: Hole[] = []
+			if (clubEvent.canChoose) {
+				holes = holesMap.get(current.course!.id!) ?? []
 			}
 
 			// Create transformation context
 			const context: TransformationContext = {
-				event,
-				rounds,
-				course: event.canChoose ? course : undefined,
+				event: clubEvent,
+				course: current.course,
 				holes,
-				eventFees,
-				allSlotsInRegistration: allSlots.filter((s) => s.registration?.id === registration.id),
+				group: allRegisteredPlayers.filter((s) => s.registration?.id === current.registration!.id),
 			}
 
 			// Validate transformation inputs
-			const validation = this.playerTransformer.validateTransformationInputs(
-				slot,
-				player,
-				registration,
-				context,
-			)
+			const validation = this.playerTransformer.validateTransformationInputs(current, context)
 			if (!validation.isValid) {
 				return {
 					success: false,
 					action: "error",
 					error: {
-						slotId: slot.id,
-						playerId: player.id,
-						email: player.email,
+						slotId: current.slot?.id,
+						playerId: current.player?.id,
+						email: current.player?.email,
 						error: validation.errors.join(", "),
 					},
 				}
 			}
 
 			// Transform player data using the dedicated transformer
-			const member = this.playerTransformer.transformToGgMember(slot, player, registration, context)
+			const member = this.playerTransformer.transformToGgMember(current, context)
 
 			// Idempotency: match by slot id first, fallback to ghin
 			let existing: RosterMemberDto | null | undefined
-			existing = rosterBySlotId.get(slot.id)
+			existing = rosterBySlotId.get(current.slot!.id!)
 
 			if (!existing) {
-				const playerGhinRaw = player.ghin ?? null
+				const playerGhinRaw = current.player?.ghin ?? null
 				const playerGhin = this.normalizeGhin(playerGhinRaw)
 				if (playerGhin) {
 					existing = rosterByGhin.get(playerGhin)
@@ -162,30 +109,33 @@ export class RosterExportService {
 			}
 
 			if (!existing) {
-				this.logger.debug(`CREATE: Did not find player: ${player.email}`)
+				this.logger.debug(`CREATE: Did not find player: ${current.player!.email}`)
 				try {
-					const res = await this.apiClient.createMemberRegistration(String(event.ggId), member)
+					const res = await this.apiClient.createMemberRegistration(String(clubEvent.ggId), member)
 					const memberId = this.extractMemberId(res)
 					if (memberId) {
-						await this.registration.updateRegistrationSlotGgId(slot.id, String(memberId))
+						await this.registration.updateRegistrationSlotGgId(current.slot!.id!, String(memberId))
 					}
 					return { success: true, action: "created" }
 				} catch (err: unknown) {
-					this.logger.warn("Failed to create member", { slotId: slot.id, err: String(err) })
+					this.logger.warn("Failed to create member", {
+						slotId: current.slot!.id,
+						err: String(err),
+					})
 					return {
 						success: false,
 						action: "error",
 						error: {
-							slotId: slot.id,
-							playerId: player.id,
-							email: player.email,
+							slotId: current.slot!.id,
+							playerId: current.player!.id,
+							email: current.player!.email,
 							error: String(err),
 						},
 					}
 				}
 			} else {
-				this.logger.debug(`UPDATE: Player ${player.email} has already been exported.`)
-				await this.apiClient.updateMemberRegistration(String(event.ggId), existing.id, member)
+				this.logger.debug(`UPDATE: Player ${current.player!.email} has already been exported.`)
+				await this.apiClient.updateMemberRegistration(String(clubEvent.ggId), existing.id, member)
 				return { success: true, action: "updated" }
 			}
 		} catch (err: any) {
@@ -249,31 +199,18 @@ export class RosterExportService {
 	 */
 	private async processExportAsync(eventId: number, result: ExportResult) {
 		try {
-			// 1. Validate event
-			const event = await this.events.findEventById({ eventId })
-			if (!event) throw new Error(`Event ${eventId} not found`)
-			// registration must be closed (signupEnd in past)
-			// if (!event.signupEnd || new Date(event.signupEnd) > new Date()) {
-			//     throw new Error(`Registration for event ${eventId} is not closed`)
-			// }
-			// must have GG id
+			// 1. Validation - TODO: add a domain function
+			const event = await this.events.getCompleteClubEventById(eventId)
+
+			if (!event) throw new Error(`ClubEvent ${eventId} not found`)
 			if (!event.ggId) {
-				throw new Error(`Event ${eventId} does not have a Golf Genius ID (ggId)`)
+				throw new Error(`ClubEvent ${eventId} does not have a Golf Genius ID (ggId)`)
 			}
-
-			// rounds & tournaments
-			const rounds = await this.events.findRoundsByEventId(eventId)
-			if (!rounds || rounds.length === 0) {
-				throw new Error(`Event ${eventId} has no rounds`)
+			if (!event.eventRounds || event.eventRounds.length === 0) {
+				throw new Error(`ClubEvent ${eventId} has no rounds`)
 			}
-			const roundGgIds = (rounds ?? []).map((r) => r.ggId).filter(Boolean)
-			if (roundGgIds.length !== rounds.length) {
-				throw new Error(`Not all rounds for event ${eventId} have Golf Genius IDs`)
-			}
-
-			const tournaments = await this.events.findTournamentsByEventId(eventId)
-			if (!tournaments || tournaments.length === 0) {
-				throw new Error(`Event ${eventId} has no tournaments`)
+			if (!event.tournaments || event.tournaments.length === 0) {
+				throw new Error(`ClubEvent ${eventId} has no tournaments`)
 			}
 
 			// 2. Get existing roster from GG for idempotency
@@ -282,23 +219,21 @@ export class RosterExportService {
 				existingRoster = await this.apiClient.getEventRoster(String(event.ggId))
 			} catch (err: unknown) {
 				this.logger.warn("Failed to fetch existing roster from Golf Genius", { err: String(err) })
-				// proceed; we'll treat as empty roster and create entries
 				existingRoster = []
 			}
 
 			const rosterByGhin = new Map<string, RosterMemberDto>()
 			const rosterBySlotId = new Map<number, RosterMemberDto>()
 			for (const mem of existingRoster) {
-				// Prefer matching by GHIN (handicap_network_id) - normalize to strip leading zeros
 				const rawGhin = mem?.ghin ?? null
 				const normalized = this.normalizeGhin(rawGhin)
 				if (normalized) rosterByGhin.set(normalized, mem)
 				if (mem?.externalId) rosterBySlotId.set(+mem.externalId, mem)
 			}
 
-			// 3. Get all registration slots with relations
-			const slots = await this.registration.getRegisteredPlayers(eventId)
-			if (!slots || slots.length === 0) {
+			// 3. Get all registered players
+			const registeredPlayers = await this.registration.getRegisteredPlayers(eventId)
+			if (!registeredPlayers || registeredPlayers.length === 0) {
 				this.progressTracker.setResult(eventId, { ...result, totalPlayers: 0 })
 				await this.progressTracker.completeExport(eventId, { ...result, totalPlayers: 0 })
 				return
@@ -306,34 +241,17 @@ export class RosterExportService {
 
 			// Update progress with actual player count
 			this.progressTracker.emitProgress(eventId, {
-				totalPlayers: slots.length,
+				totalPlayers: registeredPlayers.length,
 				processedPlayers: 0,
 				status: "processing",
 				message: "Starting export...",
 			})
 
-			// Collect course ids and fetch holes
-			const courseIdSet = new Set<number>()
-			for (const s of slots) {
-				if (!s) continue
-				const cid = s.course?.id ?? s.registration?.courseId
-				if (cid !== null && cid !== undefined) courseIdSet.add(cid)
-			}
-
-			const holesMap = new Map<number, HoleDto[]>()
-			await Promise.all(
-				Array.from(courseIdSet).map(async (cid) => {
-					try {
-						const holes = await this.courses.findHolesByCourseId(cid)
-						holesMap.set(cid, holes ?? [])
-					} catch {
-						holesMap.set(cid, [])
-					}
-				}),
-			)
-
-			// event fees (for skins dynamic columns)
-			const eventFees = await this.events.listEventFeesByEvent(eventId)
+			// Holes map for convenience
+			const holesMap = new Map<number, Hole[]>()
+			event.courses?.map((course) => {
+				holesMap.set(course.id!, course.holes ?? [])
+			})
 
 			// 4. Process players in parallel batches
 			const CONCURRENCY_LIMIT = 10 // Tune this based on API rate limits
@@ -345,19 +263,14 @@ export class RosterExportService {
 				}>
 			> = []
 
-			for (const s of slots) {
-				if (!s) continue
+			for (const reg of registeredPlayers) {
+				if (!reg) continue
 
 				const task = this.processSinglePlayer(
-					s.slot,
-					s.player,
-					s.registration,
-					s.course,
+					reg,
 					event,
-					rounds,
+					registeredPlayers,
 					holesMap,
-					eventFees,
-					slots,
 					rosterByGhin,
 					rosterBySlotId,
 				)
@@ -371,7 +284,7 @@ export class RosterExportService {
 
 					// Emit progress after each batch (throttled)
 					this.progressTracker.emitProgress(eventId, {
-						totalPlayers: slots.length,
+						totalPlayers: registeredPlayers.length,
 						processedPlayers: result.totalPlayers,
 						status: "processing",
 						message: `Processed ${result.totalPlayers} players...`,
@@ -388,7 +301,7 @@ export class RosterExportService {
 
 				// Final progress update
 				this.progressTracker.emitProgress(eventId, {
-					totalPlayers: slots.length,
+					totalPlayers: registeredPlayers.length,
 					processedPlayers: result.totalPlayers,
 					status: "processing",
 					message: `Processed ${result.totalPlayers} players...`,

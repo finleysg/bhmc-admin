@@ -1,12 +1,12 @@
 "use client"
 
-import { EventDto } from "@repo/domain/types"
+import { ClubEvent } from "@repo/domain/types"
 
 interface ResultsCardProps {
 	isSearching: boolean
-	searchResults: EventDto[]
-	selectedEvent: EventDto | null
-	onEventSelect: (event: EventDto) => void
+	searchResults: ClubEvent[]
+	selectedEvent: ClubEvent | null
+	onEventSelect: (event: ClubEvent) => void
 	selectedDate: Date
 	showOnlyWhenNotOneResult?: boolean // Optional prop to control visibility
 }
