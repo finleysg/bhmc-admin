@@ -96,7 +96,7 @@ export class ReportsService {
 	}
 
 	async getPlayers(eventId: number): Promise<EventPlayerSlot[]> {
-		const event = await this.events.getCompleteClubEventById(eventId)
+		const event = await this.events.getValidatedClubEventById(eventId)
 		if (!event) {
 			throw new Error("Event not found")
 		}
@@ -171,7 +171,7 @@ export class ReportsService {
 				const paid = fee?.isPaid
 				const amount = paid ? fee?.amount : "0"
 				return {
-					name: fd.feeType!.name,
+					name: fd.feeType.name,
 					amount: amount.toString(),
 				}
 			})
@@ -524,7 +524,7 @@ export class ReportsService {
 	}
 
 	async getEventResultsReport(eventId: number): Promise<EventResultsReportDto> {
-		const event = await this.events.getCompleteClubEventById(eventId)
+		const event = await this.events.getValidatedClubEventById(eventId)
 		if (!event) throw new Error(`ClubEvent ${eventId} not found`) // Should not happen after validateEvent
 
 		// Get all tournaments for the event
@@ -551,7 +551,7 @@ export class ReportsService {
 						})
 						.from(tournamentResult)
 						.innerJoin(player, eq(tournamentResult.playerId, player.id))
-						.where(eq(tournamentResult.tournamentId, tournament.id!))
+						.where(eq(tournamentResult.tournamentId, tournament.id))
 						.orderBy(tournamentResult.flight, tournamentResult.position)
 
 					const rows: EventResultsReportRowDto[] = results.map((result) => ({
@@ -592,7 +592,7 @@ export class ReportsService {
 						})
 						.from(tournamentResult)
 						.innerJoin(player, eq(tournamentResult.playerId, player.id))
-						.where(eq(tournamentResult.tournamentId, tournament.id!))
+						.where(eq(tournamentResult.tournamentId, tournament.id))
 						.orderBy(tournamentResult.summary)
 
 					const rows: EventResultsReportRowDto[] = results.map((result) => ({
@@ -629,7 +629,7 @@ export class ReportsService {
 						})
 						.from(tournamentResult)
 						.innerJoin(player, eq(tournamentResult.playerId, player.id))
-						.where(eq(tournamentResult.tournamentId, tournament.id!))
+						.where(eq(tournamentResult.tournamentId, tournament.id))
 						.orderBy(tournamentResult.position)
 						.limit(1)
 						.then((results) => results[0])

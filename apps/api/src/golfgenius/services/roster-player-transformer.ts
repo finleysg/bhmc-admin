@@ -18,7 +18,7 @@ export class RosterPlayerTransformer {
 		context: TransformationContext,
 	): RosterMemberSyncDto {
 		const customFields = this.buildCustomFields(registeredPlayer, context)
-		const roundsGgIds = context.event.eventRounds.map((r) => r.ggId!.toString())
+		const roundsGgIds = context.event.eventRounds.map((r) => r.ggId.toString())
 
 		return {
 			externalId: registeredPlayer.slot.id,
@@ -76,7 +76,7 @@ export class RosterPlayerTransformer {
 			)
 			const paid = fee?.isPaid
 			const amount = paid ? String(fee?.amount ?? 0) : "0"
-			customFields[fd.feeType!.name] = amount
+			customFields[fd.feeType.name] = amount
 		}
 
 		return customFields

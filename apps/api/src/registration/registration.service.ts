@@ -228,7 +228,7 @@ export class RegistrationService {
 	}
 
 	async createAdminRegistration(eventId: number, dto: AddAdminRegistration): Promise<number> {
-		const eventRecord = await this.events.getCompleteClubEventById(eventId)
+		const eventRecord = await this.events.getValidatedClubEventById(eventId)
 
 		if (!eventRecord) {
 			throw new BadRequestException("event id not found")
@@ -279,10 +279,15 @@ export class RegistrationService {
 			const firstSlot = await this.repository.findRegistrationSlotById(firstSlotId)
 
 			// Find courseId from the first slot
-			const holeData = eventRecord.courses
-				?.flatMap((c) => c.holes)
-				.find((h) => h?.id === firstSlot?.holeId)
-			courseId = holeData?.courseId || null
+			const holeData = eventRecord
+				.courses!.flatMap((c) => c.holes)
+				.find((h) => h.id === firstSlot.holeId)
+			if (!holeData) {
+				throw new BadRequestException(
+					`Hole ${firstSlot.holeId} is not part of event ${eventId} course configuration`,
+				)
+			}
+			courseId = holeData.courseId
 		}
 
 		// Calculate payment amount using preloaded eventFees
@@ -290,7 +295,7 @@ export class RegistrationService {
 		const uniqueEventFeeIds = [...new Set(allEventFeeIds)]
 		let totalAmount = "0.00"
 		for (const feeId of uniqueEventFeeIds) {
-			const fee = eventRecord.eventFees?.find((f) => f.id === feeId)
+			const fee = eventRecord.eventFees.find((f) => f.id === feeId)
 			if (fee) {
 				const amount = fee.amount
 				totalAmount = (parseFloat(totalAmount) + amount).toFixed(2)

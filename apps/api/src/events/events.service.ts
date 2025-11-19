@@ -1,12 +1,11 @@
 import { inArray } from "drizzle-orm"
 
-import { Injectable } from "@nestjs/common"
+import { BadRequestException, Injectable } from "@nestjs/common"
 import { validateClubEvent } from "@repo/domain/functions"
 import {
-	ClubEvent,
-	CompleteClubEvent,
 	PreparedTournamentPoints,
 	PreparedTournamentResult,
+	ValidatedClubEvent,
 } from "@repo/domain/types"
 
 import { CoursesRepository } from "../courses"
@@ -22,8 +21,9 @@ export class EventsService {
 		private readonly courses: CoursesRepository,
 	) {}
 
-	async getCompleteClubEventById(eventId: number): Promise<CompleteClubEvent | null> {
+	async getValidatedClubEventById(eventId: number): Promise<ValidatedClubEvent> {
 		const clubEvent = await this.repository.findEventById(eventId)
+		if (!clubEvent) throw new BadRequestException(`Event with id ${eventId} does not exist.`)
 
 		clubEvent.courses = await this.courses.findCoursesByEventId({
 			eventId: eventId,
@@ -35,8 +35,10 @@ export class EventsService {
 		clubEvent.tournaments = await this.repository.findTournamentsByEventId(eventId)
 
 		const result = validateClubEvent(toEvent(clubEvent))
-
-		return result ? (result as CompleteClubEvent) : null
+		if (!result) {
+			throw new Error("Event is not valid")
+		}
+		return result
 	}
 
 	async exists(eventId: number): Promise<boolean> {
@@ -49,24 +51,6 @@ export class EventsService {
 		event.portalUrl = portalUrl
 
 		await this.repository.updateEvent(id, event)
-	}
-
-	/**
-	 * TODO: replace with the complete version above
-	 */
-	async getTournamentsByEventAndFormat(eventId: number, format: string): Promise<ClubEvent> {
-		const clubEvent = await this.repository.findEventById(eventId)
-		const rounds = await this.repository.findRoundsByEventId(eventId)
-		if (rounds.length !== 1) {
-			throw new Error("getTournamentsByEventAndFormat only works for single round events.")
-		}
-		const tournaments = await this.repository.findTournamentsByEventId(eventId)
-
-		// Convert to domain ClubEvent
-		clubEvent.eventRounds = rounds
-		clubEvent.tournaments = tournaments.filter((t) => t.format === format)
-
-		return toEvent(clubEvent)
 	}
 
 	/**

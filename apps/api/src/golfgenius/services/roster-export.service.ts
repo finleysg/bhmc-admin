@@ -1,7 +1,7 @@
 import { Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
-import { CompleteClubEvent, Hole, ProgressEventDto, RegisteredPlayer } from "@repo/domain/types"
+import { Hole, ProgressEventDto, RegisteredPlayer, ValidatedClubEvent } from "@repo/domain/types"
 
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
@@ -51,7 +51,7 @@ export class RosterExportService {
 	 */
 	private async processSinglePlayer(
 		registeredPlayer: RegisteredPlayer,
-		clubEvent: CompleteClubEvent,
+		clubEvent: ValidatedClubEvent,
 		registeredPlayersGroup: RegisteredPlayer[],
 		holesMap: Map<number, Hole[]>,
 		rosterByGhin: Map<string, RosterMemberDto>,
@@ -207,8 +207,8 @@ export class RosterExportService {
 	 */
 	private async processExportAsync(eventId: number, result: ExportResult) {
 		try {
-			// 1. Validation - TODO: add a domain function
-			const event = await this.events.getCompleteClubEventById(eventId)
+			// 1. Validation
+			const event = await this.events.getValidatedClubEventById(eventId)
 			if (!event) throw new Error(`ClubEvent ${eventId} not found or is invalid.`)
 
 			// 2. Get existing roster from GG for idempotency
@@ -248,7 +248,7 @@ export class RosterExportService {
 			// Holes map for convenience
 			const holesMap = new Map<number, Hole[]>()
 			event.courses?.map((course) => {
-				holesMap.set(course.id!, course.holes ?? [])
+				holesMap.set(course.id, course.holes ?? [])
 			})
 
 			// 4. Process players in parallel batches
