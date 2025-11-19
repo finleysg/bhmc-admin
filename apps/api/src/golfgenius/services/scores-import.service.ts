@@ -245,13 +245,8 @@ export class ScoresImportService {
 
 	async importScoresForEvent(eventId: number): Promise<ImportEventScoresResult> {
 		const event = await this.events.getCompleteClubEventById(eventId)
-
-		// Validation: event is not null and rounds.length > 0
-		if (!event || !event.id) {
+		if (!event) {
 			throw new Error("No event found with an id of " + eventId.toString())
-		}
-		if (!event.eventRounds || event.eventRounds.length === 0) {
-			throw new Error("No rounds found for an event with an id of " + eventId.toString())
 		}
 
 		const result: ImportEventScoresResult = {
@@ -264,7 +259,7 @@ export class ScoresImportService {
 
 		for (const round of event.eventRounds) {
 			try {
-				const roundResult = await this.importScoresForRound(eventId, event.ggId!, round.ggId!)
+				const roundResult = await this.importScoresForRound(eventId, event.ggId, round.ggId!)
 				result.roundResults.push({
 					roundId: round.id!.toString(),
 					roundNumber: round.roundNumber,
@@ -298,20 +293,15 @@ export class ScoresImportService {
 
 	async importScoresForEventStream(eventId: number): Promise<Observable<ProgressEventDto>> {
 		const event = await this.events.getCompleteClubEventById(eventId)
-
-		// Validation: event is not null and rounds.length > 0
-		if (!event || !event.id) {
+		if (!event) {
 			throw new Error("No event found with an id of " + eventId.toString())
-		}
-		if (!event.eventRounds || event.eventRounds.length === 0) {
-			throw new Error("No rounds found for an event with an id of " + eventId.toString())
 		}
 
 		// Calculate total players across all rounds for progress tracking
 		let totalPlayers = 0
 		for (const round of event.eventRounds) {
 			try {
-				const teeSheet = await this.apiClient.getRoundTeeSheet(event.ggId!, round.ggId!)
+				const teeSheet = await this.apiClient.getRoundTeeSheet(event.ggId, round.ggId!)
 				for (const pairing of teeSheet) {
 					totalPlayers += pairing.pairing_group.players.length
 				}
@@ -337,7 +327,7 @@ export class ScoresImportService {
 			let processedPlayers = 0
 
 			try {
-				for (const round of event.eventRounds!) {
+				for (const round of event.eventRounds) {
 					this.progressTracker.emitProgress(eventId, {
 						totalPlayers,
 						processedPlayers,
@@ -347,7 +337,7 @@ export class ScoresImportService {
 
 					const roundResult = await this.importScoresForRound(
 						eventId,
-						event.ggId!,
+						event.ggId,
 						round.ggId!,
 						(count) => {
 							processedPlayers += count

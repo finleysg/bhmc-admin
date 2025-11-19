@@ -18,7 +18,7 @@ export class RosterPlayerTransformer {
 		context: TransformationContext,
 	): RosterMemberSyncDto {
 		const customFields = this.buildCustomFields(registeredPlayer, context)
-		const roundsGgIds = context.event.eventRounds?.map((r) => r.ggId!.toString())
+		const roundsGgIds = context.event.eventRounds.map((r) => r.ggId!.toString())
 
 		return {
 			externalId: registeredPlayer.slot.id,
@@ -70,7 +70,7 @@ export class RosterPlayerTransformer {
 		}
 
 		// Add dynamic skins fee columns
-		for (const fd of event.eventFees!) {
+		for (const fd of event.eventFees) {
 			const fee = (group.find((s) => s.slot!.id === registeredPlayer.slot.id)?.fees ?? []).find(
 				(f) => f.eventFee?.id === fd.id,
 			)

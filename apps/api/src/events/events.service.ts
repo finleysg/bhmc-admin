@@ -1,7 +1,13 @@
 import { inArray } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
-import { ClubEvent, PreparedTournamentPoints, PreparedTournamentResult } from "@repo/domain/types"
+import { validateClubEvent } from "@repo/domain/functions"
+import {
+	ClubEvent,
+	CompleteClubEvent,
+	PreparedTournamentPoints,
+	PreparedTournamentResult,
+} from "@repo/domain/types"
 
 import { CoursesRepository } from "../courses"
 import { DrizzleService, tournamentResult } from "../database"
@@ -16,18 +22,21 @@ export class EventsService {
 		private readonly courses: CoursesRepository,
 	) {}
 
-	async getCompleteClubEventById(eventId: number): Promise<ClubEvent> {
+	async getCompleteClubEventById(eventId: number): Promise<CompleteClubEvent | null> {
 		const clubEvent = await this.repository.findEventById(eventId)
 
 		clubEvent.courses = await this.courses.findCoursesByEventId({
 			eventId: eventId,
 			includeHoles: true,
+			includeTees: true,
 		})
 		clubEvent.eventFees = await this.repository.listEventFeesByEvent(eventId)
 		clubEvent.eventRounds = await this.repository.findRoundsByEventId(eventId)
 		clubEvent.tournaments = await this.repository.findTournamentsByEventId(eventId)
 
-		return toEvent(clubEvent)
+		const result = validateClubEvent(toEvent(clubEvent))
+
+		return result ? (result as CompleteClubEvent) : null
 	}
 
 	async exists(eventId: number): Promise<boolean> {

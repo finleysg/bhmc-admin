@@ -1,7 +1,7 @@
 import { Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
-import { ClubEvent, Hole, ProgressEventDto, RegisteredPlayer } from "@repo/domain/types"
+import { CompleteClubEvent, Hole, ProgressEventDto, RegisteredPlayer } from "@repo/domain/types"
 
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
@@ -51,7 +51,7 @@ export class RosterExportService {
 	 */
 	private async processSinglePlayer(
 		registeredPlayer: RegisteredPlayer,
-		clubEvent: ClubEvent,
+		clubEvent: CompleteClubEvent,
 		registeredPlayersGroup: RegisteredPlayer[],
 		holesMap: Map<number, Hole[]>,
 		rosterByGhin: Map<string, RosterMemberDto>,
@@ -114,7 +114,7 @@ export class RosterExportService {
 			if (!existing) {
 				this.logger.debug(`CREATE: Did not find player: ${validRegisteredPlayer.player.email}`)
 				try {
-					const res = await this.apiClient.createMemberRegistration(String(clubEvent.ggId), member)
+					const res = await this.apiClient.createMemberRegistration(clubEvent.ggId, member)
 					const memberId = this.extractMemberId(res)
 					if (memberId) {
 						await this.registration.updateRegistrationSlotGgId(
@@ -143,7 +143,7 @@ export class RosterExportService {
 				this.logger.debug(
 					`UPDATE: Player ${validRegisteredPlayer.player.email} has already been exported.`,
 				)
-				await this.apiClient.updateMemberRegistration(String(clubEvent.ggId), existing.id, member)
+				await this.apiClient.updateMemberRegistration(clubEvent.ggId, existing.id, member)
 				return { success: true, action: "updated" }
 			}
 		} catch (err: any) {
@@ -209,22 +209,12 @@ export class RosterExportService {
 		try {
 			// 1. Validation - TODO: add a domain function
 			const event = await this.events.getCompleteClubEventById(eventId)
-
-			if (!event) throw new Error(`ClubEvent ${eventId} not found`)
-			if (!event.ggId) {
-				throw new Error(`ClubEvent ${eventId} does not have a Golf Genius ID (ggId)`)
-			}
-			if (!event.eventRounds || event.eventRounds.length === 0) {
-				throw new Error(`ClubEvent ${eventId} has no rounds`)
-			}
-			if (!event.tournaments || event.tournaments.length === 0) {
-				throw new Error(`ClubEvent ${eventId} has no tournaments`)
-			}
+			if (!event) throw new Error(`ClubEvent ${eventId} not found or is invalid.`)
 
 			// 2. Get existing roster from GG for idempotency
 			let existingRoster: RosterMemberDto[] = []
 			try {
-				existingRoster = await this.apiClient.getEventRoster(String(event.ggId))
+				existingRoster = await this.apiClient.getEventRoster(event.ggId)
 			} catch (err: unknown) {
 				this.logger.warn("Failed to fetch existing roster from Golf Genius", { err: String(err) })
 				existingRoster = []

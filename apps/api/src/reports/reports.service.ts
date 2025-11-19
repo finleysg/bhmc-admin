@@ -97,6 +97,9 @@ export class ReportsService {
 
 	async getPlayers(eventId: number): Promise<EventPlayerSlot[]> {
 		const event = await this.events.getCompleteClubEventById(eventId)
+		if (!event) {
+			throw new Error("Event not found")
+		}
 		const registeredPlayers = await this.registration.getRegisteredPlayers(eventId)
 
 		if (!registeredPlayers || registeredPlayers.length === 0) return []
@@ -136,15 +139,15 @@ export class ReportsService {
 			const registration = s.registration
 			const course = s.course
 
-			if (!player) throw new Error(`Missing player for slot id ${slot?.id}`)
-			if (!registration) throw new Error(`Missing registration for slot id ${slot?.id}`)
+			if (!player) throw new Error(`Missing player for slot id ${slot.id}`)
+			if (!registration) throw new Error(`Missing registration for slot id ${slot.id}`)
 
 			// If the event does not allow choosing a course, there will be no course info.
 			// In that case we return "N/A" for course/start values. Otherwise require course.
 			let courseName = "N/A"
 			let holes: Hole[] = []
 			if (event.canChoose) {
-				if (!course) throw new Error(`Missing course for slot id ${slot?.id}`)
+				if (!course) throw new Error(`Missing course for slot id ${slot.id}`)
 				courseName = course.name
 				holes = holesMap.get(course.id!) ?? []
 			}
@@ -163,7 +166,7 @@ export class ReportsService {
 			const fullName = getFullName(player)
 
 			// Build fees array from the fee definitions
-			const fees: EventPlayerFee[] = event.eventFees!.map((fd) => {
+			const fees: EventPlayerFee[] = event.eventFees.map((fd) => {
 				const fee = (s.fees ?? []).find((f) => f.eventFee?.id === fd.id)
 				const paid = fee?.isPaid
 				const amount = paid ? fee?.amount : "0"
@@ -521,16 +524,11 @@ export class ReportsService {
 	}
 
 	async getEventResultsReport(eventId: number): Promise<EventResultsReportDto> {
-		await this.validateEvent(eventId)
 		const event = await this.events.getCompleteClubEventById(eventId)
 		if (!event) throw new Error(`ClubEvent ${eventId} not found`) // Should not happen after validateEvent
 
 		// Get all tournaments for the event
-		const tournaments = await this.drizzle.db
-			.select()
-			.from(tournament)
-			.where(eq(tournament.eventId, eventId))
-			.orderBy(tournament.name)
+		const tournaments = event.tournaments
 
 		const sections: EventResultsSectionDto[] = []
 
@@ -553,7 +551,7 @@ export class ReportsService {
 						})
 						.from(tournamentResult)
 						.innerJoin(player, eq(tournamentResult.playerId, player.id))
-						.where(eq(tournamentResult.tournamentId, tournament.id))
+						.where(eq(tournamentResult.tournamentId, tournament.id!))
 						.orderBy(tournamentResult.flight, tournamentResult.position)
 
 					const rows: EventResultsReportRowDto[] = results.map((result) => ({
@@ -594,7 +592,7 @@ export class ReportsService {
 						})
 						.from(tournamentResult)
 						.innerJoin(player, eq(tournamentResult.playerId, player.id))
-						.where(eq(tournamentResult.tournamentId, tournament.id))
+						.where(eq(tournamentResult.tournamentId, tournament.id!))
 						.orderBy(tournamentResult.summary)
 
 					const rows: EventResultsReportRowDto[] = results.map((result) => ({
@@ -631,7 +629,7 @@ export class ReportsService {
 						})
 						.from(tournamentResult)
 						.innerJoin(player, eq(tournamentResult.playerId, player.id))
-						.where(eq(tournamentResult.tournamentId, tournament.id))
+						.where(eq(tournamentResult.tournamentId, tournament.id!))
 						.orderBy(tournamentResult.position)
 						.limit(1)
 						.then((results) => results[0])

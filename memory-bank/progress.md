@@ -50,6 +50,7 @@ Completed
 - **NestJS API Foundation**: Scaffolded NestJS app with TypeScript, health endpoint, and JWT authentication guard
 - **Database Layer**: Created DrizzleService with connection pooling and complete schema definitions
 - **Domain Architecture**: Implemented domain-driven design in events module with pure business logic separated from infrastructure
+- **Domain Event Validation**: Created complete validateClubEvent function with CompleteClubEvent type narrowing; supports conditional Golf Genius field validation exclusion; includes comprehensive Jest test coverage for all validation scenarios and edge cases
 - **Testing Infrastructure**: Set up Jest with proper TypeScript support and type-safe test patterns
 
 Blockers / Risks
