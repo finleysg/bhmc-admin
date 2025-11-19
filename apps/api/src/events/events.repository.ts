@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 
@@ -45,6 +45,14 @@ export class EventsRepository {
 		}
 
 		return mapToEventModel(evt)
+	}
+
+	async existsById(eventId: number): Promise<boolean> {
+		const result = await this.drizzle.db
+			.select({ count: count() })
+			.from(event)
+			.where(eq(event.id, eventId))
+		return result[0].count > 0
 	}
 
 	async findEventsByDate(date: string): Promise<EventModel[]> {

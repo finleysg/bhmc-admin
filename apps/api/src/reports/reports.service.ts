@@ -78,10 +78,9 @@ export class ReportsService {
 	) {}
 
 	private async validateEvent(eventId: number): Promise<void> {
-		// TODO: create a lightweight event validator in the event service
-		const event = await this.events.getCompleteClubEventById(eventId)
-		if (!event) {
-			throw new Error(`ClubEvent ${eventId} not found`)
+		const exists = await this.events.exists(eventId)
+		if (!exists) {
+			throw new Error(`Event with id ${eventId} does not exist.`)
 		}
 	}
 

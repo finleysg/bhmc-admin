@@ -66,6 +66,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Jest Configuration**: Updated Jest configs to use modern `transform` syntax instead of deprecated `globals`; added `isolatedModules: true` to TypeScript configs for ESM compatibility
 - **Test Coverage**: Achieved comprehensive unit test coverage for pure functions and utilities across domain and API packages
 
+## [0.7.0] - 2025-11-18
+
+### Added
+
+- **Event Existence Check**: Added lightweight `existsById` method to EventsRepository using count query to avoid entity hydration; implemented service `exists` method through EventsService
+
 ## [Unreleased]
 
 ### Added

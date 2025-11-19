@@ -7,6 +7,7 @@ Current focus:
 
 Recent changes:
 
+- **11/18/2025: Added lightweight event existence check** with `existsById` repository method using count query and service `exists` method.
 - **11/18/2025: Updated systemPatterns.md "Code organization patterns" section** to better reflect current solution state, adding details on web app structure (Next.js app router), domain package organization, integration module patterns (e.g., golfgenius subfolders), and refined barrel exports across apps/packages.
 - **Points Report Implementation**: Complete end-to-end points report with backend database joins (tournamentPoints + tournament + player), frontend TanStack Table with sorting/filtering/pagination, Excel export, and API proxy routes; displays tournament name, position, full name, GHIN, score, points, type (Gross/Net), and details with default tournament name + position sorting; follows event report patterns for consistency
 - **TanStack Table Integration for Event Reports**: Pivoted event report page from server-side sorting/filtering to client-side using @tanstack/react-table; removed backend filter/sort logic, fetch full dataset once, enable client-side sorting (team/GHIN/age/fullName), global fuzzy search, and pagination (10/25/50/100 rows); maintains default team ascending sort on load; improves responsiveness for <1000 rows

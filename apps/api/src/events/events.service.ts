@@ -30,6 +30,10 @@ export class EventsService {
 		return toEvent(clubEvent)
 	}
 
+	async exists(eventId: number): Promise<boolean> {
+		return this.repository.existsById(eventId)
+	}
+
 	async syncEventToGolfGenius(id: number, ggId: string, portalUrl: string) {
 		const event = await this.repository.findEventById(id)
 		event.ggId = ggId
