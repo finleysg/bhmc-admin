@@ -10,7 +10,7 @@ import {
 	FinanceReportDto,
 	Hole,
 	PointsReportRowDto,
-	RegisteredPlayer,
+	ValidatedRegisteredPlayer,
 } from "@repo/domain/types"
 
 import { CoursesRepository } from "../courses"
@@ -105,9 +105,8 @@ export class ReportsService {
 		if (!registeredPlayers || registeredPlayers.length === 0) return []
 
 		// Build registration groups (registrationId => SlotWithRelations[])
-		const regGroups = new Map<number, RegisteredPlayer[]>()
+		const regGroups = new Map<number, ValidatedRegisteredPlayer[]>()
 		for (const s of registeredPlayers) {
-			if (!s) continue
 			const regId = s.registration?.id ?? null
 			if (regId === null) continue
 			const arr = regGroups.get(regId) ?? []
@@ -134,7 +133,7 @@ export class ReportsService {
 
 		const transformed = registeredPlayers.map((s): EventPlayerSlot => {
 			if (!s) throw new Error("Unexpected missing slot data")
-			const slot = s.slot!
+			const slot = s.slot
 			const player = s.player
 			const registration = s.registration
 			const course = s.course
@@ -149,13 +148,13 @@ export class ReportsService {
 			if (event.canChoose) {
 				if (!course) throw new Error(`Missing course for slot id ${slot.id}`)
 				courseName = course.name
-				holes = holesMap.get(course.id!) ?? []
+				holes = holesMap.get(course.id) ?? []
 			}
 			// convert holes to domain model array when used
 
 			const startValue = getStart(event, slot, holes)
-			const allSlotsInRegistration = (regGroups.get(registration.id!) ?? []).map(
-				(x: RegisteredPlayer) => x.slot!,
+			const allSlotsInRegistration = (regGroups.get(registration.id) ?? []).map(
+				(x: ValidatedRegisteredPlayer) => x.slot,
 			)
 
 			const team = getGroup(event, slot, startValue, courseName, allSlotsInRegistration)

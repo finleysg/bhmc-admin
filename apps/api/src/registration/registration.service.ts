@@ -1,15 +1,17 @@
 import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
 
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common"
+import { validateRegisteredPlayer, validateRegistration } from "@repo/domain/functions"
 import {
 	AddAdminRegistration,
 	Player,
 	PlayerMap,
 	PlayerRecord,
 	RegisteredPlayer,
-	Registration,
 	RegistrationSlot,
 	SearchPlayers,
+	ValidatedRegisteredPlayer,
+	ValidatedRegistration,
 } from "@repo/domain/types"
 
 import { mapToCourseModel, toCourse, toHole } from "../courses/mappers"
@@ -46,7 +48,7 @@ export class RegistrationService {
 		private readonly events: EventsService,
 	) {}
 
-	async getRegisteredPlayers(eventId: number): Promise<RegisteredPlayer[]> {
+	async getRegisteredPlayers(eventId: number): Promise<ValidatedRegisteredPlayer[]> {
 		const rows = await this.drizzle.db
 			.select({
 				slot: registrationSlot,
@@ -120,7 +122,13 @@ export class RegistrationService {
 			parent.fees.push(fee)
 		}
 
-		return slotIds.map((id) => slotsMap.get(id)!)
+		// Require that all are valid
+		const results = slotIds.map((id) => validateRegisteredPlayer(slotsMap.get(id)!))
+		if (!results || results.length === 0 || results.some((r) => r == null)) {
+			throw new BadRequestException("Not all registered players are valid.")
+		}
+
+		return results.filter((r) => r != null)
 	}
 
 	async searchPlayers(query: SearchPlayers): Promise<Player[]> {
@@ -143,7 +151,7 @@ export class RegistrationService {
 		return results.map(mapToPlayerModel).map(toPlayer)
 	}
 
-	async findGroup(eventId: number, playerId: number): Promise<Registration> {
+	async findGroup(eventId: number, playerId: number): Promise<ValidatedRegistration> {
 		// Step 1: Find the registration ID via player's slot
 		const registrationId = await this.repository.findRegistrationIdByEventAndPlayer(
 			eventId,
@@ -215,7 +223,13 @@ export class RegistrationService {
 
 		// Step 5: Attach slots to registration and return
 		result.slots = slots
-		return result
+
+		const validatedResult = validateRegistration(result)
+		if (!validatedResult) {
+			throw new BadRequestException("The registration is not valid")
+		}
+
+		return validatedResult
 	}
 
 	async updatePlayerGgId(playerId: number, ggId: string): Promise<Player> {

@@ -114,7 +114,7 @@ describe("validateRegistration", () => {
 				},
 			],
 		}
-		const result = validateRegistration(partialReg, false)
+		const result = validateRegistration(partialReg)
 		expect(result).toBeDefined()
 	})
 

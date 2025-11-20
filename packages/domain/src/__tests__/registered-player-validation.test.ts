@@ -111,7 +111,7 @@ describe("validateRegisteredPlayer", () => {
 			...validRegisteredPlayer,
 			course: undefined,
 		}
-		const result = validateRegisteredPlayer(partialPlayer, false)
+		const result = validateRegisteredPlayer(partialPlayer)
 		expect(result).toBeDefined()
 	})
 

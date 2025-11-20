@@ -48,16 +48,14 @@ const hasValidSlots = (
  * Validates a Registration ensuring all fields, including nested ones, are present and valid.
  * When hasCourseDetails is false, course and slot holes can be undefined/null.
  * @param registration The Registration to validate
- * @param hasCourseDetails Whether to require course details (default: true)
  * @returns ValidatedRegistration if validation passes, null otherwise
  */
-export function validateRegistration(
-	registration: Registration,
-	hasCourseDetails = true,
-): ValidatedRegistration | null {
+export function validateRegistration(registration: Registration): ValidatedRegistration | null {
 	if (!registration?.id) {
 		return null
 	}
+
+	const hasCourseDetails = !!registration?.courseId
 
 	if (!hasValidSlots(registration.slots, hasCourseDetails)) {
 		return null
@@ -89,7 +87,6 @@ export function validateRegistration(
  */
 export function validateRegisteredPlayer(
 	registeredPlayer: RegisteredPlayer,
-	hasCourseDetails = true,
 ): ValidatedRegisteredPlayer | null {
 	if (!registeredPlayer) {
 		return null
@@ -107,6 +104,8 @@ export function validateRegisteredPlayer(
 	if (!registeredPlayer.registration?.id) {
 		return null
 	}
+
+	const hasCourseDetails = !!registeredPlayer.registration?.courseId
 
 	// Validate course if details are required
 	if (hasCourseDetails && !validateCourse(registeredPlayer.course)) {

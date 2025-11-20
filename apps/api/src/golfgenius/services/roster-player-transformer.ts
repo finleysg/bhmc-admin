@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { getGroup, getStart } from "@repo/domain/functions"
-import { RegisteredPlayer } from "@repo/domain/types"
 
 import { ValidRegisteredPlayer } from "../dto"
 import { RosterMemberSyncDto } from "../dto/internal.dto"
@@ -80,43 +79,5 @@ export class RosterPlayerTransformer {
 		}
 
 		return customFields
-	}
-
-	/**
-	 * Validate transformation inputs
-	 */
-	validateTransformationInputs(
-		registeredPlayer: RegisteredPlayer,
-		context: TransformationContext,
-	): { isValid: boolean; result: ValidRegisteredPlayer | string[] } {
-		const errors: string[] = []
-
-		if (!registeredPlayer.player) {
-			errors.push("Missing player data")
-		} else if (!registeredPlayer.player.id || registeredPlayer.player.id <= 0) {
-			errors.push("Player ID is missing or invalid")
-		}
-
-		if (!registeredPlayer.registration) {
-			errors.push("Missing registration data")
-		} else if (!registeredPlayer.registration.id || registeredPlayer.registration.id <= 0) {
-			errors.push("Registration ID is missing or invalid")
-		}
-
-		if (!registeredPlayer.slot) {
-			errors.push("Missing registration slot data")
-		} else if (!registeredPlayer.slot.id || registeredPlayer.slot.id <= 0) {
-			errors.push("Registration slot ID is missing or invalid")
-		}
-
-		if (context.event.canChoose && !context.course) {
-			errors.push("Missing course for slot when course choice is enabled")
-		}
-
-		if (errors.length === 0) {
-			return { isValid: true, result: registeredPlayer as ValidRegisteredPlayer }
-		}
-
-		return { isValid: false, result: errors }
 	}
 }

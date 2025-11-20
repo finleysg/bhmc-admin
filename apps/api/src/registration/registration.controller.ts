@@ -1,5 +1,9 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards } from "@nestjs/common"
-import type { AddAdminRegistration, RegisteredPlayer, SearchPlayers } from "@repo/domain/types"
+import type {
+	AddAdminRegistration,
+	SearchPlayers,
+	ValidatedRegisteredPlayer,
+} from "@repo/domain/types"
 
 import { JwtAuthGuard } from "../auth/jwt.guard"
 import { RegistrationService } from "./registration.service"
@@ -39,7 +43,7 @@ export class RegistrationController {
 	@Get(":eventId/players")
 	async getRegisteredPlayers(
 		@Param("eventId", ParseIntPipe) eventId: number,
-	): Promise<RegisteredPlayer[]> {
+	): Promise<ValidatedRegisteredPlayer[]> {
 		return await this.registrationService.getRegisteredPlayers(eventId)
 	}
 }
