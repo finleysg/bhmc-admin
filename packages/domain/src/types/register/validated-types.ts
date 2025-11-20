@@ -3,6 +3,7 @@
 import { ValidatedCourse, ValidatedHole } from "../courses/validated-types"
 import { EventFee } from "../events/event-fee"
 import { Player } from "./player"
+import { RegisteredPlayer } from "./registered-player"
 import { Registration } from "./registration"
 import { RegistrationFee } from "./registration-fee"
 import { RegistrationSlot } from "./registration-slot"
@@ -31,4 +32,17 @@ export type ValidatedRegistrationSlot = RegistrationSlot & {
 export type ValidatedRegistration = Omit<Registration, "slots" | "course"> & {
 	slots: ValidatedRegistrationSlot[]
 	course?: ValidatedCourse | null
+}
+
+/**
+ * A validated variation of RegisteredPlayer where all core fields are guaranteed to be present.
+ * course is optional (enforced at runtime based on hasCourseDetails).
+ * Used when validateRegisteredPlayer passes full validation.
+ */
+export type ValidatedRegisteredPlayer = RegisteredPlayer & {
+	player: ValidatedPlayer
+	registration: Registration & { id: number }
+	slot: ValidatedRegistrationSlot
+	course?: ValidatedCourse | null
+	fees?: ValidatedRegistrationFee[]
 }

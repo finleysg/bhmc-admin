@@ -1,7 +1,8 @@
 import { RegistrationSlot } from "../types"
+import { RegisteredPlayer } from "../types/register/registered-player"
 import { Registration } from "../types/register/registration"
 import { RegistrationFee } from "../types/register/registration-fee"
-import { ValidatedRegistration } from "../types/register/validated-types"
+import { ValidatedRegisteredPlayer, ValidatedRegistration } from "../types/register/validated-types"
 import { validateCourse } from "./course-validation"
 
 // Helper validation functions
@@ -11,10 +12,10 @@ const hasValidFees = (fees: RegistrationFee[] | undefined): boolean => {
 		fees.every((fee) => fee.id != null) &&
 		fees.every(
 			(fee) =>
-				fee.eventFee !== null &&
-				fee.eventFee?.id !== null &&
-				fee.eventFee?.feeType !== null &&
-				fee.eventFee?.feeType?.id !== null,
+				fee.eventFee != null &&
+				fee.eventFee?.id != null &&
+				fee.eventFee?.feeType != null &&
+				fee.eventFee?.feeType?.id != null,
 		)
 	)
 }
@@ -77,4 +78,48 @@ export function validateRegistration(
 
 	// All validations passed, return narrowed type
 	return registration as ValidatedRegistration
+}
+
+/**
+ * Validates a RegisteredPlayer ensuring all core fields are present and valid.
+ * When hasCourseDetails is false, course can be undefined/null.
+ * @param registeredPlayer The RegisteredPlayer to validate
+ * @param hasCourseDetails Whether to require course details (default: true)
+ * @returns ValidatedRegisteredPlayer if validation passes, null otherwise
+ */
+export function validateRegisteredPlayer(
+	registeredPlayer: RegisteredPlayer,
+	hasCourseDetails = true,
+): ValidatedRegisteredPlayer | null {
+	if (!registeredPlayer) {
+		return null
+	}
+
+	// Validate core required fields
+	if (!registeredPlayer.slot?.id) {
+		return null
+	}
+
+	if (!registeredPlayer.player?.id) {
+		return null
+	}
+
+	if (!registeredPlayer.registration?.id) {
+		return null
+	}
+
+	// Validate course if details are required
+	if (hasCourseDetails && !validateCourse(registeredPlayer.course)) {
+		return null
+	}
+
+	// Validate fees if present (undefined is acceptable, but empty arrays and invalid fees are invalid)
+	if (registeredPlayer.fees !== undefined) {
+		if (registeredPlayer.fees.length === 0 || !hasValidFees(registeredPlayer.fees)) {
+			return null
+		}
+	}
+
+	// All validations passed, return narrowed type
+	return registeredPlayer as ValidatedRegisteredPlayer
 }
