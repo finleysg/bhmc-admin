@@ -22,7 +22,7 @@ export function validateClubEvent(event: ClubEvent): ValidatedClubEvent | null {
 	const hasValidFees =
 		event.eventFees &&
 		event.eventFees.length > 0 &&
-		event.eventFees.some((fee) => fee.feeType !== undefined && fee.feeType.id !== null)
+		event.eventFees.some((fee) => fee.feeType != null && fee.feeType?.id !== undefined)
 
 	if (!hasValidFees) {
 		return null

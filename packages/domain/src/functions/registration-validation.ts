@@ -114,7 +114,7 @@ export function validateRegisteredPlayer(
 	}
 
 	// Validate fees if present (undefined is acceptable, but empty arrays and invalid fees are invalid)
-	if (registeredPlayer.fees !== undefined) {
+	if (registeredPlayer.fees != null) {
 		if (registeredPlayer.fees.length === 0 || !hasValidFees(registeredPlayer.fees)) {
 			return null
 		}

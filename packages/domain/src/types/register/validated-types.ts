@@ -1,7 +1,7 @@
 // Type intersections ensuring required fields for validated objects in Registration
 
 import { ValidatedCourse, ValidatedHole } from "../courses/validated-types"
-import { EventFee } from "../events/event-fee"
+import { ValidatedEventFee } from "../events/validated-types"
 import { Player } from "./player"
 import { RegisteredPlayer } from "./registered-player"
 import { Registration } from "./registration"
@@ -9,8 +9,6 @@ import { RegistrationFee } from "./registration-fee"
 import { RegistrationSlot } from "./registration-slot"
 
 export type ValidatedPlayer = Player & { id: number }
-
-export type ValidatedEventFee = EventFee & { id: number }
 
 export type ValidatedRegistrationFee = RegistrationFee & {
 	id: number
