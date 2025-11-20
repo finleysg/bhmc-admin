@@ -28,6 +28,7 @@ export type ValidatedRegistrationSlot = RegistrationSlot & {
  * Used when validateRegistration passes full validation.
  */
 export type ValidatedRegistration = Omit<Registration, "slots" | "course"> & {
+	id: number
 	slots: ValidatedRegistrationSlot[]
 	course?: ValidatedCourse | null
 }
