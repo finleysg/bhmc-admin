@@ -1,12 +1,17 @@
 import { Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
-import { Hole, ProgressEventDto, RegisteredPlayer, ValidatedClubEvent } from "@repo/domain/types"
+import {
+	Hole,
+	ProgressEventDto,
+	ValidatedClubEvent,
+	ValidatedRegisteredPlayer,
+} from "@repo/domain/types"
 
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
-import { ExportError, ExportResult, TransformationContext, ValidRegisteredPlayer } from "../dto"
+import { ExportError, ExportResult, TransformationContext } from "../dto"
 import { RosterMemberDto } from "../dto/internal.dto"
 import { ProgressTracker } from "./progress-tracker"
 import { RosterPlayerTransformer } from "./roster-player-transformer"
@@ -50,9 +55,9 @@ export class RosterExportService {
 	 * Process a single player registration slot and return the result
 	 */
 	private async processSinglePlayer(
-		registeredPlayer: RegisteredPlayer,
+		registeredPlayer: ValidatedRegisteredPlayer,
 		clubEvent: ValidatedClubEvent,
-		registeredPlayersGroup: RegisteredPlayer[],
+		registeredPlayersGroup: ValidatedRegisteredPlayer[],
 		holesMap: Map<number, Hole[]>,
 		rosterByGhin: Map<string, RosterMemberDto>,
 		rosterBySlotId: Map<number, RosterMemberDto>,
@@ -65,7 +70,8 @@ export class RosterExportService {
 			// Determine course and holes for transformation context
 			let holes: Hole[] = []
 			if (clubEvent.canChoose) {
-				holes = holesMap.get(registeredPlayer.course!.id!) ?? []
+				const courseId = registeredPlayer.course?.id
+				holes = courseId != null ? (holesMap.get(courseId) ?? []) : []
 			}
 
 			// Create transformation context
@@ -74,29 +80,11 @@ export class RosterExportService {
 				course: registeredPlayer.course,
 				holes,
 				group: registeredPlayersGroup.filter(
-					(s) => s.registration?.id === registeredPlayer.registration!.id,
+					(s) => s.registration?.id === registeredPlayer.registration.id,
 				),
 			}
-
-			// Validate transformation inputs
-			const validation = this.playerTransformer.validateTransformationInputs(
-				registeredPlayer,
-				context,
-			)
-			if (!validation.isValid) {
-				return {
-					success: false,
-					action: "error",
-					error: {
-						slotId: registeredPlayer.slot?.id,
-						playerId: registeredPlayer.player?.id,
-						email: registeredPlayer.player?.email,
-						error: (validation.result as string[]).join(", "),
-					},
-				}
-			}
-
-			const validRegisteredPlayer = validation.result as ValidRegisteredPlayer
+			// Transformation inputs are assumed valid (service returns validated players)
+			const validRegisteredPlayer = registeredPlayer
 			const member = this.playerTransformer.transformToGgMember(validRegisteredPlayer, context)
 
 			// Idempotency: match by slot id first, fallback to ghin
@@ -262,8 +250,6 @@ export class RosterExportService {
 			> = []
 
 			for (const reg of registeredPlayers) {
-				if (!reg) continue
-
 				const task = this.processSinglePlayer(
 					reg,
 					event,
@@ -326,8 +312,9 @@ export class RosterExportService {
 	}
 
 	// private extractMemberIdFromRoster(rosterMember: RosterMemberDto): string | null {
-	// 	if (!rosterMember) return null
-	// 	// RosterMemberDto.id is the member ID
-	// 	return rosterMember.id ?? null
+	//   if (!rosterMember) return null
+	//   // RosterMemberDto.id is the member ID
+	//   return rosterMember.id ?? null
+	//   // }
 	// }
 }
