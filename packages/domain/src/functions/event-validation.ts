@@ -1,23 +1,10 @@
 import { ClubEvent } from "../types"
 import { ValidatedClubEvent } from "../types/events/validated-types"
+import { validateCourses } from "./course-validation"
 
 // Helper validation functions
 const hasValidIdsInEventFees = (fees: ClubEvent["eventFees"]): boolean =>
 	fees != null && fees.every((fee) => fee.id != null && fee.feeType && fee.feeType.id != null)
-
-const hasValidIdsInCourses = (courses: ClubEvent["courses"]): boolean =>
-	courses != null
-		? courses.every(
-				(course) =>
-					course.id != null &&
-					course.holes != null &&
-					course.holes.length > 0 &&
-					course.holes.every((h) => h.id != null) &&
-					course.tees != null &&
-					course.tees.length > 0 &&
-					course.tees.every((t) => t.id != null),
-			)
-		: true
 
 const hasValidIdsAndGgIdsInRounds = (rounds: ClubEvent["eventRounds"]): boolean =>
 	rounds != null && rounds.every((round) => round.id != null && round.ggId != null)
@@ -35,24 +22,21 @@ export function validateClubEvent(event: ClubEvent): ValidatedClubEvent | null {
 	const hasValidFees =
 		event.eventFees &&
 		event.eventFees.length > 0 &&
-		event.eventFees.some((fee) => fee.feeType !== undefined && fee.feeType !== null)
+		event.eventFees.some((fee) => fee.feeType != null && fee.feeType?.id !== undefined)
 
 	if (!hasValidFees) {
 		return null
 	}
 
-	const hasValidCourses = !event.canChoose || (event.courses && event.courses.length > 0)
-
-	if (!hasValidCourses) {
-		return null
+	if (event.canChoose) {
+		const hasCourses = event.courses && event.courses.length > 0
+		if (!hasCourses || !validateCourses(event.courses!)) {
+			return null
+		}
 	}
 
 	// Validate that all objects in collections have required ids
 	if (!hasValidIdsInEventFees(event.eventFees)) {
-		return null
-	}
-
-	if (event.courses && !hasValidIdsInCourses(event.courses)) {
 		return null
 	}
 

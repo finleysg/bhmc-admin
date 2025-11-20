@@ -1,8 +1,6 @@
 // Type intersections ensuring required fields for validated objects in CompleteClubEvent
 
-import { Course } from "../courses/course"
-import { Hole } from "../courses/hole"
-import { Tee } from "../courses/tee"
+import { ValidatedCourse } from "../courses/validated-types"
 // Consolidated ValidatedClubEvent type with all guaranteed fields and sub-object validations
 import { ClubEvent } from "./event"
 import { EventFee, FeeType } from "./event-fee"
@@ -12,16 +10,6 @@ import { Tournament } from "./tournament"
 export type ValidatedFeeType = FeeType & { id: number }
 
 export type ValidatedEventFee = EventFee & { id: number; feeType: ValidatedFeeType }
-
-export type ValidatedHole = Hole & { id: number }
-
-export type ValidatedTee = Tee & { id: number }
-
-export type ValidatedCourse = Course & {
-	id: number
-	holes: ValidatedHole[]
-	tees: ValidatedTee[]
-}
 
 export type ValidatedRound = Round & { id: number; ggId: string }
 
