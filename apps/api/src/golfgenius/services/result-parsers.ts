@@ -139,3 +139,22 @@ export class StrokePlayResultParser extends BaseResultParser {
 		}
 	}
 }
+
+/**
+ * Parser for quota tournament results (saves to events_tournamentresult)
+ */
+export class QuotaResultParser extends BaseResultParser {
+	static parsePlayerData<
+		T extends { purse?: string; position?: string; total?: string; score?: string; name?: string },
+	>(aggregate: T, memberCard: GGMemberCard) {
+		return {
+			purse: aggregate.purse || "$0.00",
+			position: aggregate.position || "",
+			total: aggregate.total || "",
+			score: aggregate.score || "",
+			memberId: memberCard.member_id_str,
+			memberCardId: memberCard.member_card_id_str,
+			playerName: aggregate.name || "Unknown",
+		}
+	}
+}

@@ -10,9 +10,6 @@ export const INTEGRATION_ACTION_ENDPOINTS: Record<IntegrationActionName, string>
 	"Import Scores": "import-scores",
 	"Import Points": "import-points",
 	"Import Results": "import-results",
-	"Import Team Results": "import-team-results",
-	"Import Skins": "import-skins",
-	"Import Proxies": "import-proxies",
 	"Close Event": "close-event",
 }
 
@@ -24,9 +21,6 @@ export const STREAMING_ACTIONS: Set<IntegrationActionName> = new Set([
 	"Import Scores",
 	"Import Points",
 	"Import Results",
-	"Import Team Results",
-	"Import Skins",
-	"Import Proxies",
 ])
 
 /**

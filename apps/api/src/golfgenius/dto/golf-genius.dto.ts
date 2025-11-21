@@ -76,4 +76,5 @@ export interface GgTournamentDto {
 	id?: string | null
 	score_format?: string | null
 	handicap_format?: string | null
+	score_scope?: string | null
 }

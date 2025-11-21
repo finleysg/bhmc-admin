@@ -2,7 +2,6 @@ import { Observable, Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
 import {
-	IntegrationActionName,
 	PlayerMap,
 	PlayerRecord,
 	PreparedTournamentResult,
@@ -21,16 +20,23 @@ import {
 	GolfGeniusTournamentResults,
 	ImportResultSummary,
 	ProxyTournamentAggregate,
+	QuotaTournamentAggregate,
 	SkinsTournamentAggregate,
 	StrokeTournamentAggregate,
 } from "../dto/tournament-results.dto"
 import { ProgressTracker } from "./progress-tracker"
-import { ProxyResultParser, SkinsResultParser, StrokePlayResultParser } from "./result-parsers"
+import {
+	ProxyResultParser,
+	QuotaResultParser,
+	SkinsResultParser,
+	StrokePlayResultParser,
+} from "./result-parsers"
 import { TeamResultParser } from "./team-result-parser"
+import { parsePurseAmount } from "./utils"
 
 @Injectable()
-export class ResultsImportService {
-	private readonly logger = new Logger(ResultsImportService.name)
+export class ImportAllResultsService {
+	private readonly logger = new Logger(ImportAllResultsService.name)
 
 	constructor(
 		private readonly apiClient: ApiClient,
@@ -41,90 +47,15 @@ export class ResultsImportService {
 
 	// ============= PUBLIC METHODS =============
 
-	async importSkinsResults(eventId: number): Promise<ImportResultSummary[]> {
-		return this.importResultsByFormat(eventId, "skins", this.processSkinsResults.bind(this))
-	}
-
-	async importProxyResults(eventId: number): Promise<ImportResultSummary[]> {
-		return this.importResultsByFormat(eventId, "user_scored", this.processProxyResults.bind(this))
-	}
-
-	async importStrokePlayResults(eventId: number): Promise<ImportResultSummary[]> {
-		return this.importResultsByFormat(eventId, "stroke", this.processStrokeResults.bind(this))
-	}
-
-	async importTeamResults(eventId: number): Promise<ImportResultSummary[]> {
-		return this.importResultsByFormat(eventId, "team", this.processTeamResults.bind(this))
-	}
-
-	// ============= STREAMING METHODS =============
-
-	async importSkinsResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
-		return this.importResultsByFormatStream(
-			eventId,
-			"skins",
-			"Import Skins",
-			this.processSkinsResults.bind(this),
-		)
-	}
-
-	async importProxyResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
-		return this.importResultsByFormatStream(
-			eventId,
-			"user_scored",
-			"Import Proxies",
-			this.processProxyResults.bind(this),
-		)
-	}
-
-	async importStrokePlayResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
-		return this.importResultsByFormatStream(
-			eventId,
-			"quota",
-			"Import Results",
-			this.processStrokeResults.bind(this),
-		)
-	}
-
-	async importTeamResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
-		return this.importResultsByFormatStream(
-			eventId,
-			"stroke",
-			"Import Team Results",
-			this.processTeamResults.bind(this),
-		)
-	}
-
-	getProgressObservable(eventId: number): Subject<ProgressEventDto | ProgressTournamentDto> | null {
-		return this.progressTracker.getProgressObservable(eventId)
-	}
-
-	// ============= STREAMING HELPER METHODS =============
-
-	private async importResultsByFormatStream(
-		eventId: number,
-		format: string,
-		actionName: string,
-		processor: (
-			tournamentData: TournamentData,
-			result: ImportResultSummary,
-			ggResults: GolfGeniusTournamentResults,
-			playerMap: PlayerMap,
-			onPlayerProcessed?: (success: boolean, playerName?: string) => void,
-		) => Promise<void>,
-	): Promise<Observable<ProgressTournamentDto>> {
-		// Query tournaments for the specified format
+	async importAllResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
 		const clubEvent = await this.eventsService.getValidatedClubEventById(eventId)
-		const tournaments = clubEvent.tournaments.filter(
-			(t) => t.format === format && t.name !== "Overall",
-		)
+		const tournaments = clubEvent.tournaments.filter((t) => t.name !== "Overall")
 
 		if (tournaments.length === 0) {
-			throw new Error(`No ${format} tournaments found for event ${eventId}`)
+			throw new Error(`No tournaments found for event ${eventId}`)
 		}
 
 		// Start tracking progress with tournament count
-		let skippedCount = 0
 		const totalTournaments = tournaments.length
 		const progressObservable = this.progressTracker.startTournamentTracking(
 			eventId,
@@ -134,7 +65,7 @@ export class ResultsImportService {
 		void (async () => {
 			const result: ImportResult = {
 				eventId,
-				actionName,
+				actionName: "Import Results",
 				totalProcessed: 0,
 				created: 0,
 				updated: 0,
@@ -143,29 +74,6 @@ export class ResultsImportService {
 			}
 
 			let processedTournaments = 0
-
-			// Emit progress message if any tournaments were skipped
-			if (skippedCount > 0) {
-				this.progressTracker.emitTournamentProgress(eventId, {
-					totalTournaments,
-					processedTournaments: 0,
-					status: "processing",
-					message: `Skipped ${skippedCount} "Overall" tournament(s). Processing ${totalTournaments} remaining...`,
-				})
-			}
-
-			// Create callback for per-tournament progress updates
-			const onTournamentProcessed = (success: boolean, tournamentName?: string) => {
-				processedTournaments++
-				this.progressTracker.emitTournamentProgress(eventId, {
-					totalTournaments,
-					processedTournaments,
-					status: processedTournaments >= totalTournaments ? "complete" : "processing",
-					message: success
-						? `Processed ${tournamentName || "tournament"} (${processedTournaments}/${totalTournaments})`
-						: `Skipped ${tournamentName || "tournament"} (${processedTournaments}/${totalTournaments})`,
-				})
-			}
 
 			try {
 				for (let i = 0; i < tournaments.length; i++) {
@@ -181,9 +89,19 @@ export class ResultsImportService {
 					const tournamentData = toTournamentData(t, clubEvent)
 					const tournamentResult = await this.importTournamentResults(
 						tournamentData,
-						processor,
+						this.selectProcessor(t.format),
 						undefined, // No per-player progress for streaming
-						onTournamentProcessed, // Tournament completion callback
+						(success, tournamentName) => {
+							processedTournaments++
+							this.progressTracker.emitTournamentProgress(eventId, {
+								totalTournaments,
+								processedTournaments,
+								status: processedTournaments >= totalTournaments ? "complete" : "processing",
+								message: success
+									? `Processed ${tournamentName} (${processedTournaments}/${totalTournaments})`
+									: `Skipped ${tournamentName} (${processedTournaments}/${totalTournaments})`,
+							})
+						}, // Tournament completion callback
 					)
 
 					// Aggregate results
@@ -192,8 +110,8 @@ export class ResultsImportService {
 
 					// Convert errors to ImportError format
 					result.errors.push(
-						...tournamentResult.errors.map((error) => ({
-							itemId: t.id?.toString(),
+						...tournamentResult.errors.map((error: string) => ({
+							itemId: t.id?.toString() ?? "",
 							itemName: t.name,
 							error,
 						})),
@@ -205,7 +123,7 @@ export class ResultsImportService {
 			} catch (error) {
 				await this.progressTracker.errorOperation(
 					eventId,
-					actionName as IntegrationActionName,
+					"Import Results",
 					(error as Error).message,
 				)
 			}
@@ -214,54 +132,39 @@ export class ResultsImportService {
 		return progressObservable
 	}
 
-	// ============= PRIVATE HELPER METHODS =============
+	getProgressObservable(eventId: number): Subject<ProgressEventDto | ProgressTournamentDto> | null {
+		return this.progressTracker.getProgressObservable(eventId)
+	}
 
-	private async importResultsByFormat(
-		eventId: number,
+	private selectProcessor(
 		format: string,
-		processor: (
-			tournamentData: TournamentData,
-			result: ImportResultSummary,
-			ggResults: GolfGeniusTournamentResults,
-			playerMap: PlayerMap,
-		) => Promise<void>,
-	): Promise<ImportResultSummary[]> {
-		const clubEvent = await this.eventsService.getValidatedClubEventById(eventId)
-		const tournaments = clubEvent.tournaments.filter(
-			(t) => t.format === format && t.name !== "Overall",
-		)
-
-		if (tournaments.length === 0) {
-			this.logger.log("No " + format + " tournaments found for event", { eventId })
-			return []
-		}
-
-		const results: ImportResultSummary[] = []
-
-		for (const t of tournaments) {
-			const result = await this.importTournamentResults(toTournamentData(t, clubEvent), processor)
-			results.push(result)
-		}
-
-		return results
-	}
-
-	private async fetchPlayerMapForEvent(eventId: number): Promise<PlayerMap> {
-		return this.registrationService.getPlayerMapForEvent(eventId)
-	}
-
-	private resolvePlayerFromMap(
-		memberId: string,
-		playerMap: PlayerMap,
+	): (
+		tournamentData: TournamentData,
 		result: ImportResultSummary,
-	): PlayerRecord | null {
-		const player = playerMap.get(memberId)
-		if (!player) {
-			result.errors.push(`No player found for id ${memberId}`)
-			return null
+		ggResults: GolfGeniusTournamentResults,
+		playerMap: PlayerMap,
+		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
+	) => Promise<void> {
+		switch (format) {
+			case "skins":
+				return this.processSkinsResults.bind(this)
+			case "user_scored":
+				return this.processProxyResults.bind(this)
+			case "stroke":
+				return this.processStrokeResults.bind(this)
+			case "team":
+				return this.processTeamResults.bind(this)
+			case "quota":
+				return this.processQuotaResults.bind(this)
+			default:
+				this.logger.debug(`Format ${format} is not handled by Import Results process.`)
+				return async () => {
+					// Do nothing
+				}
 		}
-		return player
 	}
+
+	// ============= PRIVATE HELPER METHODS =============
 
 	private async importTournamentResults(
 		tournamentData: TournamentData,
@@ -284,11 +187,6 @@ export class ResultsImportService {
 		}
 
 		try {
-			// Validate tournament has GG IDs
-			if (!this.validateTournament(tournamentData, result)) {
-				return result
-			}
-
 			// Fetch player map for this event (optimization: single query instead of N+1)
 			const playerMap = await this.fetchPlayerMapForEvent(tournamentData.eventId)
 
@@ -321,15 +219,6 @@ export class ResultsImportService {
 		return result
 	}
 
-	private validateTournament(tournamentData: TournamentData, result: ImportResultSummary): boolean {
-		if (!tournamentData.ggId) {
-			result.errors.push("Tournament must be synced with Golf Genius first")
-			return false
-		}
-		// Add validation for event.gg_id and round.gg_id if needed
-		return true
-	}
-
 	private async deleteExistingResults(tournamentData: TournamentData): Promise<void> {
 		await this.eventsService.deleteTournamentResultsAndPoints(tournamentData.id)
 	}
@@ -337,7 +226,7 @@ export class ResultsImportService {
 	private async fetchGGResults(
 		tournamentData: TournamentData,
 		result: ImportResultSummary,
-	): Promise<any> {
+	): Promise<GolfGeniusTournamentResults | null> {
 		try {
 			if (!tournamentData.eventGgId) {
 				result.errors.push("Tournament event GG ID is missing")
@@ -355,19 +244,21 @@ export class ResultsImportService {
 		}
 	}
 
-	private parsePurseAmount(purseStr: string): number | null {
-		if (!purseStr || purseStr.trim() === "") return null
+	private async fetchPlayerMapForEvent(eventId: number): Promise<PlayerMap> {
+		return this.registrationService.getPlayerMapForEvent(eventId)
+	}
 
-		try {
-			const cleaned = purseStr.replace(/[$,]/g, "").trim()
-			if (!cleaned) return null
-
-			const amount = parseFloat(cleaned)
-			return amount > 0 ? amount : null
-		} catch {
-			this.logger.warn("Failed to parse purse amount", { purseStr })
+	private resolvePlayerFromMap(
+		memberId: string,
+		playerMap: PlayerMap,
+		result: ImportResultSummary,
+	): PlayerRecord | null {
+		const player = playerMap.get(memberId)
+		if (!player) {
+			result.errors.push(`No player found for id ${memberId}`)
 			return null
 		}
+		return player
 	}
 
 	private async processResults<T extends GGAggregate>(
@@ -506,6 +397,24 @@ export class ResultsImportService {
 		)
 	}
 
+	private async processQuotaResults(
+		tournamentData: TournamentData,
+		result: ImportResultSummary,
+		ggResults: GolfGeniusTournamentResults,
+		playerMap: PlayerMap,
+		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
+	): Promise<void> {
+		return this.processResults<QuotaTournamentAggregate>(
+			tournamentData,
+			result,
+			ggResults,
+			playerMap,
+			QuotaResultParser,
+			this.prepareQuotaPlayerResult.bind(this),
+			onPlayerProcessed,
+		)
+	}
+
 	private async processTeamResults(
 		tournamentData: TournamentData,
 		result: ImportResultSummary,
@@ -557,9 +466,8 @@ export class ResultsImportService {
 		const position = 1
 
 		// Parse purse amount
-		const amount = this.parsePurseAmount(playerData.purse)
+		const amount = parsePurseAmount(playerData.purse)
 		if (amount === null) {
-			result.errors.push(`Invalid purse amount for winner: ${playerData.purse}`)
 			return null
 		}
 
@@ -619,9 +527,8 @@ export class ResultsImportService {
 		const position = totalSkins
 
 		// Parse purse amount
-		const amount = this.parsePurseAmount(playerData.purse)
+		const amount = parsePurseAmount(playerData.purse)
 		if (amount === null) {
-			result.errors.push(`Invalid purse amount for skins winner: ${playerData.purse}`)
 			return null
 		}
 
@@ -654,12 +561,6 @@ export class ResultsImportService {
 		result: ImportResultSummary,
 		playerMap: PlayerMap,
 	): PreparedTournamentResult | null {
-		// Only process players who won money (purse is not empty)
-		this.logger.log(JSON.stringify(aggregate))
-		if (!aggregate.purse || aggregate.purse.trim() === "") {
-			return null // Skip players who didn't win money
-		}
-
 		// Extract member cards and get first member card
 		const memberCards = StrokePlayResultParser.extractMemberCards(aggregate as GGAggregate)
 		if (!memberCards || memberCards.length === 0) {
@@ -699,7 +600,7 @@ export class ResultsImportService {
 		}
 
 		// Parse purse amount
-		const amount = this.parsePurseAmount(playerData.purse)
+		const amount = parsePurseAmount(playerData.purse)
 		if (amount === null) {
 			return null
 		}
@@ -723,6 +624,84 @@ export class ResultsImportService {
 		}
 	}
 
+	private prepareQuotaPlayerResult(
+		tournamentData: TournamentData,
+		aggregate: QuotaTournamentAggregate,
+		flightName: string,
+		result: ImportResultSummary,
+		playerMap: PlayerMap,
+	): PreparedTournamentResult | null {
+		// Extract member cards and get first member card
+		const memberCards = QuotaResultParser.extractMemberCards(aggregate as GGAggregate)
+		if (!memberCards || memberCards.length === 0) {
+			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
+			return null
+		}
+		const memberId = memberCards[0].member_id_str
+
+		// Parse player data using parser
+		const playerData = QuotaResultParser.parsePlayerData(aggregate as GGAggregate, memberCards[0])
+
+		// Resolve player using pre-fetched player map
+		const player = this.resolvePlayerFromMap(memberId, playerMap, result)
+		if (!player) {
+			return null
+		}
+
+		// Parse position from aggregate.position
+		const positionStr = playerData.position
+		let position = 0
+		try {
+			position = positionStr && positionStr.trim() !== "" ? parseInt(positionStr, 10) : 0
+		} catch {
+			position = 0
+		}
+
+		// Parse score from aggregate.total (the quota result like +2, -1)
+		const totalStr = playerData.total
+		let score: number | null = null
+		try {
+			score = totalStr && totalStr.trim() !== "" ? parseInt(totalStr, 10) : null
+		} catch {
+			score = null
+		}
+
+		// Parse summary from aggregate.score formatted as "Quota score: [value]"
+		const scoreStr = playerData.score
+		let summary: string | null = null
+		try {
+			if (scoreStr && scoreStr.trim() !== "") {
+				summary = `Quota score: ${scoreStr}`
+			}
+		} catch {
+			summary = null
+		}
+
+		// Parse purse amount
+		const amount = parsePurseAmount(playerData.purse)
+		if (amount === null) {
+			return null
+		}
+
+		// Return prepared data
+		return {
+			tournamentId: tournamentData.id,
+			playerId: player.id,
+			flight: flightName || null,
+			position,
+			score,
+			amount: amount.toFixed(2),
+			details: null,
+			summary,
+			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			payoutDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			payoutStatus: "Pending",
+			payoutTo: "Individual",
+			payoutType: "Credit",
+			teamId: null,
+		}
+	}
+
 	private prepareTeamPlayerResult(
 		tournamentData: TournamentData,
 		aggregate: GGAggregate,
@@ -730,11 +709,6 @@ export class ResultsImportService {
 		result: ImportResultSummary,
 		playerMap: PlayerMap,
 	): PreparedTournamentResult[] | null {
-		// Skip if no purse (no payout)
-		if (!aggregate.purse || aggregate.purse.trim() === "") {
-			return null
-		}
-
 		// Parse team name to extract blind player names
 		const blindNames = new Set<string>()
 		const teamName = aggregate.name || "Unknown Team"
@@ -775,9 +749,8 @@ export class ResultsImportService {
 
 			// Parse team-level fields
 			const position = parseInt(aggregate.position || "0", 10) || 0
-			const amount = this.parsePurseAmount(aggregate.purse) // Full purse per player (no split)
+			const amount = parsePurseAmount(aggregate.purse) // Full purse per player (no split)
 			if (amount === null) {
-				result.errors.push(`Invalid purse for team ${teamName}: ${aggregate.purse}`)
 				continue
 			}
 

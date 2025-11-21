@@ -76,6 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Purse Amount Handling Refactor**: Unified purse amount logic across all tournament result import methods (points/skins/proxy/stroke/team/quota) to exit early on null/0/empty values without logging errors; removed redundant preliminary checks and error messages; updated `parsePurseAmount` to handle undefined/null values gracefully; ensures consistent business rule that tournament results are only saved when players have won actual money
+
 - **Type Error Fixes After Domain Package Migration**: Resolved 20 TypeScript compilation errors after moving types to domain package; updated import statements across 9 files in API package to use centralized `@repo/domain/types`; fixed NestJS decorator compatibility with type-only imports (`import type`) for `emitDecoratorMetadata` settings; resolved missing type issues in Golf Genius integration service by proper import consolidation
 - **Events Service Domain Conversion**: Completed toEvent mapper to return full domain Event objects with all child models (courses with holes, eventFees, eventRounds, tournaments); updated toCourse mapper for holes population; fixed method name typo in service and dependent code; decoupled service from EventModel to use domain Event type
 - **Domain Event Validation Function**: Created `validateClubEvent` domain function with CompleteClubEvent type for validating ClubEvent objects; supports conditional Golf Genius field exclusion with `excludeGolfGenius` parameter; returns CompleteClubEvent for default validation passes, original ClubEvent for exclude mode passes, or null for validation failures; includes comprehensive Jest test coverage for all validation scenarios and edge cases
@@ -120,6 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Invalid IntegrationActionName Usage**: Fixed `ImportAllResultsService` error handling to use valid IntegrationActionName "Import Results" instead of invalid "Import All Results" with type casting; ensures consistent action naming in logs and UI orchestrator
+- **Quota Tournament Documentation Inconsistency**: Fixed discrepancy between code and documentation - quota format is fully implemented in service but was documented as "Not Implemented"; updated flow diagram and added detailed documentation about quota tournament format and expected fields
 - **Event Report Infinite Re-render**: Fixed "Maximum update depth exceeded" error in event report page by moving `fixedColumnDefs` object outside component to prevent re-creation on every render; eliminated useEffect dependency changes that caused infinite loops
 - **SSE Roster Export**: Resolved "Connection lost" issue by implementing streaming-first architecture; eliminated race condition between export initialization and SSE connection by returning RxJS Subject synchronously while processing export asynchronously in background; simplified frontend to use single SSE endpoint that auto-starts export
 - **Roster Export Service**: Implemented parallel processing for roster export operations, fixed TypeScript type issues in roster-export.service.ts, added proper types for processSinglePlayer parameters, improved result aggregation method typing, and fixed getEventRoster to unwrap Golf Genius API member objects before mapping
