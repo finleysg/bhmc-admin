@@ -30,6 +30,7 @@ flowchart TD
 ## Supported Tournament Formats
 
 ### Quota Tournaments
+
 Quota tournaments involve players competing against a preset quota or handicap-adjusted target score. Results import:
 
 - **Position**: Player's finishing position

@@ -1,12 +1,6 @@
-import {
-	Observable,
-	Subject,
-} from "rxjs"
+import { Observable, Subject } from "rxjs"
 
-import {
-	Injectable,
-	Logger,
-} from "@nestjs/common"
+import { Injectable, Logger } from "@nestjs/common"
 import {
 	PlayerMap,
 	PlayerRecord,
@@ -38,6 +32,7 @@ import {
 	StrokePlayResultParser,
 } from "./result-parsers"
 import { TeamResultParser } from "./team-result-parser"
+import { parsePurseAmount } from "./utils"
 
 @Injectable()
 export class ImportAllResultsService {
@@ -162,7 +157,7 @@ export class ImportAllResultsService {
 			case "quota":
 				return this.processQuotaResults.bind(this)
 			default:
-				this.logger.warn(`Unknown format ${format}, skipping`)
+				this.logger.debug(`Format ${format} is not handled by Import Results process.`)
 				return async () => {
 					// Do nothing
 				}
@@ -438,21 +433,6 @@ export class ImportAllResultsService {
 		)
 	}
 
-	private parsePurseAmount(purseStr: string | undefined | null): number | null {
-		if (!purseStr || purseStr.trim() === "") return null
-
-		try {
-			const cleaned = purseStr.replace(/[$,]/g, "").trim()
-			if (!cleaned) return null
-
-			const amount = parseFloat(cleaned)
-			return amount > 0 ? amount : null
-		} catch {
-			this.logger.warn("Failed to parse purse amount", { purseStr })
-			return null
-		}
-	}
-
 	private prepareProxyPlayerResult(
 		tournamentData: TournamentData,
 		aggregate: ProxyTournamentAggregate,
@@ -486,7 +466,7 @@ export class ImportAllResultsService {
 		const position = 1
 
 		// Parse purse amount
-		const amount = this.parsePurseAmount(playerData.purse)
+		const amount = parsePurseAmount(playerData.purse)
 		if (amount === null) {
 			return null
 		}
@@ -547,7 +527,7 @@ export class ImportAllResultsService {
 		const position = totalSkins
 
 		// Parse purse amount
-		const amount = this.parsePurseAmount(playerData.purse)
+		const amount = parsePurseAmount(playerData.purse)
 		if (amount === null) {
 			return null
 		}
@@ -620,7 +600,7 @@ export class ImportAllResultsService {
 		}
 
 		// Parse purse amount
-		const amount = this.parsePurseAmount(playerData.purse)
+		const amount = parsePurseAmount(playerData.purse)
 		if (amount === null) {
 			return null
 		}
@@ -698,7 +678,7 @@ export class ImportAllResultsService {
 		}
 
 		// Parse purse amount
-		const amount = this.parsePurseAmount(playerData.purse)
+		const amount = parsePurseAmount(playerData.purse)
 		if (amount === null) {
 			return null
 		}
@@ -769,7 +749,7 @@ export class ImportAllResultsService {
 
 			// Parse team-level fields
 			const position = parseInt(aggregate.position || "0", 10) || 0
-			const amount = this.parsePurseAmount(aggregate.purse) // Full purse per player (no split)
+			const amount = parsePurseAmount(aggregate.purse) // Full purse per player (no split)
 			if (amount === null) {
 				continue
 			}
