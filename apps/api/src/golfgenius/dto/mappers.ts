@@ -85,8 +85,15 @@ export function mapTournament(tournament: GgTournamentDto): TournamentDto {
 
 	let scoreFormat = tournament.score_format
 
-	if (scoreFormat === "stroke" && tournament.name.toLowerCase().includes("points")) {
-		scoreFormat = "points"
+	if (scoreFormat === "stroke") {
+		if (tournament.name.toLowerCase().includes("points")) {
+			scoreFormat = "points"
+		} else if (tournament.score_scope === "pos_group") {
+			scoreFormat = "team"
+		} else if (tournament.score_scope === "pos_player") {
+			scoreFormat = "stroke"
+		}
+		// If score_scope is missing or any other value, keep as "stroke"
 	}
 
 	return {

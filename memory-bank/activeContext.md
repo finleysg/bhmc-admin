@@ -7,6 +7,8 @@ Current focus:
 
 Recent changes:
 
+- **11/21/2025: Enhanced Golf Genius tournament format detection** by implementing `score_scope` logic in `mapTournament` function to distinguish "team" vs "stroke" formats based on Golf Genius API attribute; added comprehensive unit tests with full coverage
+- **11/20/2025: Refactored purse amount handling logic** in import-all-results.service.ts across all tournament format methods to exit early on 0/null/empty values without logging errors; removed redundant checks and unified logic: no money = no record saved = no error logged; updated parsePurseAmount parameter type to handle undefined/null values
 - **11/18/2025: Created validateClubEvent domain function** with CompleteClubEvent type for ClubEvent validation, supporting GolfGenius field exclusion and type narrowing
 - **11/18/2025: Updated systemPatterns.md "Code organization patterns" section** to better reflect current solution state, adding details on web app structure (Next.js app router), domain package organization, integration module patterns (e.g., golfgenius subfolders), and refined barrel exports across apps/packages.
 - **Points Report Implementation**: Complete end-to-end points report with backend database joins (tournamentPoints + tournament + player), frontend TanStack Table with sorting/filtering/pagination, Excel export, and API proxy routes; displays tournament name, position, full name, GHIN, score, points, type (Gross/Net), and details with default tournament name + position sorting; follows event report patterns for consistency

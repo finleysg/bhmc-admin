@@ -11,9 +11,6 @@ export type IntegrationActionName =
 	| "Import Scores"
 	| "Import Points"
 	| "Import Results"
-	| "Import Team Results"
-	| "Import Skins"
-	| "Import Proxies"
 	| "Close Event"
 
 /**

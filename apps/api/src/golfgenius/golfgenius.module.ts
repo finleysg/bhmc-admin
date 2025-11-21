@@ -16,7 +16,6 @@ import { IntegrationLogService } from "./services/integration-log.service"
 import { MemberSyncService } from "./services/member-sync.service"
 import { PointsImportService } from "./services/points-import.service"
 import { ProgressTracker } from "./services/progress-tracker"
-import { ResultsImportService } from "./services/results-import.service"
 import { RosterExportService } from "./services/roster-export.service"
 import { RosterPlayerTransformer } from "./services/roster-player-transformer"
 import { ScoresImportService } from "./services/scores-import.service"
@@ -41,7 +40,6 @@ import { ScoresImportService } from "./services/scores-import.service"
 		PointsImportService,
 		ProgressTracker,
 		MemberSyncService,
-		ResultsImportService,
 		RosterExportService,
 		RosterPlayerTransformer,
 		ScoresImportService,

@@ -84,10 +84,6 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 			return "Import Points"
 		} else if (url.includes("/events/") && url.includes("/import-results")) {
 			return "Import Results"
-		} else if (url.includes("/events/") && url.includes("/import-skins")) {
-			return "Import Skins"
-		} else if (url.includes("/events/") && url.includes("/import-proxies")) {
-			return "Import Proxies"
 		} else if (url.includes("/events/") && url.includes("/close")) {
 			return "Close Event"
 		} else {
