@@ -17,9 +17,10 @@ export function mapToScoreModel(entity: any): ScoreModel {
  * Maps database entity to Scorecard model
  */
 export function mapToScorecardModel(entity: any): ScorecardModel {
+	const index = String(entity.handicapIndex)
 	return {
 		id: entity.id,
-		handicapIndex: entity.handicapIindex,
+		handicapIndex: index?.length > 0 ? index : undefined,
 		courseHandicap: entity.courseHandicap,
 		courseId: entity.courseId,
 		eventId: entity.eventId,

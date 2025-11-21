@@ -34,11 +34,7 @@ export class EventsService {
 		clubEvent.eventRounds = await this.repository.findRoundsByEventId(eventId)
 		clubEvent.tournaments = await this.repository.findTournamentsByEventId(eventId)
 
-		const result = validateClubEvent(toEvent(clubEvent))
-		if (!result) {
-			throw new Error("Event is not valid")
-		}
-		return result
+		return validateClubEvent(toEvent(clubEvent))
 	}
 
 	async exists(eventId: number): Promise<boolean> {

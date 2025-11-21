@@ -1,10 +1,10 @@
 import { Observable, Subject } from "rxjs"
 
-import { Injectable } from "@nestjs/common"
+import { Injectable, Logger } from "@nestjs/common"
 import { ProgressEventDto } from "@repo/domain/types"
 
 import { CoursesRepository } from "../../courses"
-import { ScoreModel } from "../../database/models"
+import { ScorecardModel, ScoreModel } from "../../database/models"
 import { EventsService } from "../../events"
 import { RegistrationRepository } from "../../registration"
 import { ScoresRepository } from "../../scores"
@@ -49,6 +49,8 @@ export interface ImportEventScoresResult {
 
 @Injectable()
 export class ScoresImportService {
+	private readonly logger = new Logger(ScoresImportService.name)
+
 	constructor(
 		private readonly scoresService: ScoresRepository,
 		private readonly apiClient: ApiClient,
@@ -122,20 +124,30 @@ export class ScoresImportService {
 	}
 
 	private async identifyPlayer(playerData: GgTeeSheetPlayerDto): Promise<number | null> {
-		if (playerData.handicap_network_id) {
-			const player = await this.registration.findPlayerById(
-				parseInt(playerData.handicap_network_id),
-			)
-			if (player) return player.id!
-		}
-
 		if (playerData.external_id) {
-			const slot = await this.registration.findRegistrationSlotByGgId(playerData.external_id)
+			this.logger.debug(`Searching for player by slot id: ${playerData.external_id}`)
+			const slot = await this.registration.findRegistrationSlotById(
+				parseInt(playerData.external_id),
+			)
+			this.logger.verbose("Found registration slot " + JSON.stringify(slot))
 			if (slot?.playerId) return slot.playerId
 		}
 
+		if (playerData.handicap_network_id) {
+			this.logger.debug(`Searching for player by ghin: ${playerData.handicap_network_id}`)
+			const player = await this.registration.findPlayerById(
+				parseInt(playerData.handicap_network_id),
+			)
+			this.logger.verbose("Found player " + JSON.stringify(player))
+			if (player) return player.id!
+		}
+
 		if (playerData.player_roster_id) {
+			this.logger.debug(
+				`Searching for player by slot's golf genius id: ${playerData.player_roster_id}`,
+			)
 			const slot = await this.registration.findRegistrationSlotByGgId(playerData.player_roster_id)
+			this.logger.verbose("Found registration slot " + JSON.stringify(slot))
 			if (slot?.playerId) return slot.playerId
 		}
 
@@ -174,17 +186,17 @@ export class ScoresImportService {
 			return await this.scoresService.updateScorecard(existing.id!, {
 				eventId,
 				playerId,
-				handicapIndex,
+				handicapIndex: handicapIndex?.toString(),
 				courseHandicap: courseHandicap ?? 0,
 				courseId,
 				teeId,
-			})
+			} as ScorecardModel)
 		} else {
 			results.scorecards.created++
 			return await this.scoresService.createScorecard({
 				eventId,
 				playerId,
-				handicapIndex,
+				handicapIndex: handicapIndex?.toString(),
 				courseHandicap: courseHandicap ?? 0,
 				courseId,
 				teeId,

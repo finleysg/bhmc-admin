@@ -60,6 +60,34 @@ export class ProgressTracker {
 		return subject
 	}
 
+	startTournamentTracking(
+		eventId: number,
+		totalTournaments: number,
+	): Subject<ProgressEventDto | ProgressTournamentDto> {
+		// Check if operation is already running
+		if (this.activeOperations.has(eventId)) {
+			throw new Error(`Operation already in progress for event ${eventId}`)
+		}
+
+		const subject = new Subject<ProgressEventDto | ProgressTournamentDto>()
+		this.activeOperations.set(eventId, subject)
+
+		// Auto-cleanup after configured timeout
+		setTimeout(() => {
+			this.cleanupOperation(eventId)
+		}, this.config.progressCleanupMs)
+
+		// Emit initial tournament-based progress
+		this.emitTournamentProgress(eventId, {
+			totalTournaments,
+			processedTournaments: 0,
+			status: "processing",
+			message: "Starting import...",
+		})
+
+		return subject
+	}
+
 	/**
 	 * Get the progress observable for an active operation
 	 */

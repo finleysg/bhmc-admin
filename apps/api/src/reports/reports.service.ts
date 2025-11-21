@@ -1,7 +1,7 @@
 import { and, eq, sql } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
-import { getAge, getFullName, getGroup, getStart } from "@repo/domain/functions"
+import { getAge, getFullName, getPlayerStartName, getPlayerTeamName } from "@repo/domain/functions"
 import {
 	EventReportRowDto,
 	EventResultsReportDto,
@@ -131,42 +131,24 @@ export class ReportsService {
 			}),
 		)
 
-		const transformed = registeredPlayers.map((s): EventPlayerSlot => {
-			if (!s) throw new Error("Unexpected missing slot data")
-			const slot = s.slot
-			const player = s.player
-			const registration = s.registration
-			const course = s.course
+		const transformed = registeredPlayers.map((registeredPlayer): EventPlayerSlot => {
+			const player = registeredPlayer.player
+			const registration = registeredPlayer.registration
 
-			if (!player) throw new Error(`Missing player for slot id ${slot.id}`)
-			if (!registration) throw new Error(`Missing registration for slot id ${slot.id}`)
-
-			// If the event does not allow choosing a course, there will be no course info.
-			// In that case we return "N/A" for course/start values. Otherwise require course.
-			let courseName = "N/A"
-			let holes: Hole[] = []
-			if (event.canChoose) {
-				if (!course) throw new Error(`Missing course for slot id ${slot.id}`)
-				courseName = course.name
-				holes = holesMap.get(course.id) ?? []
-			}
-			// convert holes to domain model array when used
-
-			const startValue = getStart(event, slot, holes)
-			const allSlotsInRegistration = (regGroups.get(registration.id) ?? []).map(
+			// Get derived column values
+			const playerGroup = (regGroups.get(registration.id) ?? []).map(
 				(x: ValidatedRegisteredPlayer) => x.slot,
 			)
-
-			const team = getGroup(event, slot, startValue, courseName, allSlotsInRegistration)
-
+			const startValue = getPlayerStartName(event, registeredPlayer)
+			const team = getPlayerTeamName(event, registeredPlayer, playerGroup)
 			const ageRes = getAge(player, new Date())
 			const age = typeof ageRes.age === "number" ? ageRes.age : 0
-
 			const fullName = getFullName(player)
+			const courseName = registeredPlayer.course?.name ?? "N/A"
 
 			// Build fees array from the fee definitions
 			const fees: EventPlayerFee[] = event.eventFees.map((fd) => {
-				const fee = (s.fees ?? []).find((f) => f.eventFee?.id === fd.id)
+				const fee = (registeredPlayer.fees ?? []).find((f) => f.eventFee?.id === fd.id)
 				const paid = fee?.isPaid
 				const amount = paid ? fee?.amount : "0"
 				return {

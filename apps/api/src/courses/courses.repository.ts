@@ -33,7 +33,9 @@ export class CoursesRepository {
 			.leftJoin(course, eq(eventCourses.courseId, course.id))
 			.where(eq(eventCourses.eventId, eventId))
 
-		const courses = courseData.map((c) => mapToCourseModel(c))
+		const courses = courseData
+			.filter((c) => c.course !== null)
+			.map((c) => mapToCourseModel(c.course!))
 
 		if (includeHoles) {
 			for (const course of courses) {

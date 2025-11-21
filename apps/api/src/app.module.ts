@@ -1,7 +1,8 @@
 import { Module } from "@nestjs/common"
-import { APP_GUARD } from "@nestjs/core"
+import { APP_FILTER, APP_GUARD } from "@nestjs/core"
 
 import { JwtAuthGuard } from "./auth/jwt.guard"
+import { DatabaseExceptionFilter } from "./database/database-exception.filter"
 import { DatabaseModule } from "./database/database.module"
 import { EventsModule } from "./events/events.module"
 import { GolfgeniusModule } from "./golfgenius/golfgenius.module"
@@ -14,6 +15,10 @@ import { ReportsModule } from "./reports/reports.module"
 		{
 			provide: APP_GUARD,
 			useClass: JwtAuthGuard,
+		},
+		{
+			provide: APP_FILTER,
+			useClass: DatabaseExceptionFilter,
 		},
 	],
 })

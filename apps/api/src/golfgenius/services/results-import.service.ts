@@ -80,7 +80,7 @@ export class ResultsImportService {
 	async importStrokePlayResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
 		return this.importResultsByFormatStream(
 			eventId,
-			"stroke",
+			"quota",
 			"Import Results",
 			this.processStrokeResults.bind(this),
 		)
@@ -126,7 +126,7 @@ export class ResultsImportService {
 		// Start tracking progress with tournament count
 		let skippedCount = 0
 		const totalTournaments = tournaments.length
-		const progressObservable = this.progressTracker.startTracking(
+		const progressObservable = this.progressTracker.startTournamentTracking(
 			eventId,
 			totalTournaments,
 		) as Observable<ProgressTournamentDto>
@@ -655,6 +655,7 @@ export class ResultsImportService {
 		playerMap: PlayerMap,
 	): PreparedTournamentResult | null {
 		// Only process players who won money (purse is not empty)
+		this.logger.log(JSON.stringify(aggregate))
 		if (!aggregate.purse || aggregate.purse.trim() === "") {
 			return null // Skip players who didn't win money
 		}
@@ -700,7 +701,6 @@ export class ResultsImportService {
 		// Parse purse amount
 		const amount = this.parsePurseAmount(playerData.purse)
 		if (amount === null) {
-			result.errors.push(`Invalid purse amount for stroke play winner: ${playerData.purse}`)
 			return null
 		}
 

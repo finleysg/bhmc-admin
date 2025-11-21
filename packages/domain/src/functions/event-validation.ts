@@ -16,54 +16,60 @@ const hasValidIdsAndGgIdsInTournaments = (tournaments: ClubEvent["tournaments"])
 /**
  * Validates a ClubEvent ensuring all fields, including GolfGenius-related ones, are present and valid.
  * @param event The ClubEvent to validate
- * @returns ValidatedClubEvent if validation passes, null otherwise
+ * @returns ValidatedClubEvent if validation passes, throws Error otherwise
+ * @throws Error with concatenated validation issues if validation fails
  */
-export function validateClubEvent(event: ClubEvent): ValidatedClubEvent | null {
+export function validateClubEvent(event: ClubEvent): ValidatedClubEvent {
+	const issues: string[] = []
 	const hasValidFees =
 		event.eventFees &&
 		event.eventFees.length > 0 &&
 		event.eventFees.some((fee) => fee.feeType != null && fee.feeType?.id !== undefined)
 
 	if (!hasValidFees) {
-		return null
+		issues.push("The eventFees collection is incomplete.")
 	}
 
 	if (event.canChoose) {
 		const hasCourses = event.courses && event.courses.length > 0
 		if (!hasCourses || !validateCourses(event.courses!)) {
-			return null
+			issues.push("The course information is incomplete.")
 		}
 	}
 
 	// Validate that all objects in collections have required ids
 	if (!hasValidIdsInEventFees(event.eventFees)) {
-		return null
+		issues.push("One or more ids are missing in the eventFees collection.")
 	}
 
 	// Default validation: require GolfGenius fields
 	if (!event.ggId) {
-		return null
+		issues.push("The event is missing the Golf Genius id - run Event Sync!")
 	}
 
 	if (!event.id) {
-		return null
+		issues.push("The event is missing its id (PK).")
 	}
 
 	if (!event.eventRounds || event.eventRounds.length === 0) {
-		return null
+		issues.push("The event is missing the rounds from Golf Genius - run Event Sync!")
 	}
 
 	if (!event.tournaments || event.tournaments.length === 0) {
-		return null
+		issues.push("The event is missing the tournaments from Golf Genius - run Event Sync!")
 	}
 
 	// Validate that all GolfGenius objects have required ids and ggIds
 	if (!hasValidIdsAndGgIdsInRounds(event.eventRounds)) {
-		return null
+		issues.push("The rounds from Golf Genius are missing ids - run Event Sync!")
 	}
 
 	if (!hasValidIdsAndGgIdsInTournaments(event.tournaments)) {
-		return null
+		issues.push("The tournaments from Golf Genius are missing ids - run Event Sync!")
+	}
+
+	if (issues.length > 0) {
+		throw new Error(issues.join("\n"))
 	}
 
 	// All validations passed, return narrowed type

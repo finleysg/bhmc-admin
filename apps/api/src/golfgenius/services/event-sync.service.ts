@@ -46,6 +46,15 @@ export class EventSyncService {
 		const ggEventId = ggEvent.id.toString()
 
 		// 3) Delete existing tournaments and rounds by event id (bulk deletes to respect FK)
+		// First delete child records (results & points) for each tournament to avoid FK constraint errors.
+		const existingTournaments = await this.events.findTournamentsByEventId(localEventId)
+		for (const t of existingTournaments) {
+			if (t && t.id) {
+				// Ensure child rows removed before deleting parent tournament
+				await this.events.deleteTournamentResults(t.id)
+				await this.events.deleteTournamentPoints(t.id)
+			}
+		}
 		await this.events.deleteTournamentsByEventId(localEventId)
 		await this.events.deleteRoundsByEventId(localEventId)
 
