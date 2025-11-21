@@ -122,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Invalid IntegrationActionName Usage**: Fixed `ImportAllResultsService` error handling to use valid IntegrationActionName "Import Results" instead of invalid "Import All Results" with type casting; ensures consistent action naming in logs and UI orchestrator
 - **Event Report Infinite Re-render**: Fixed "Maximum update depth exceeded" error in event report page by moving `fixedColumnDefs` object outside component to prevent re-creation on every render; eliminated useEffect dependency changes that caused infinite loops
 - **SSE Roster Export**: Resolved "Connection lost" issue by implementing streaming-first architecture; eliminated race condition between export initialization and SSE connection by returning RxJS Subject synchronously while processing export asynchronously in background; simplified frontend to use single SSE endpoint that auto-starts export
 - **Roster Export Service**: Implemented parallel processing for roster export operations, fixed TypeScript type issues in roster-export.service.ts, added proper types for processSinglePlayer parameters, improved result aggregation method typing, and fixed getEventRoster to unwrap Golf Genius API member objects before mapping

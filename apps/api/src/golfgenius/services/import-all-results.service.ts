@@ -1,8 +1,13 @@
-import { Observable, Subject } from "rxjs"
-
-import { Injectable, Logger } from "@nestjs/common"
 import {
-	IntegrationActionName,
+	Observable,
+	Subject,
+} from "rxjs"
+
+import {
+	Injectable,
+	Logger,
+} from "@nestjs/common"
+import {
 	PlayerMap,
 	PlayerRecord,
 	PreparedTournamentResult,
@@ -123,7 +128,7 @@ export class ImportAllResultsService {
 			} catch (error) {
 				await this.progressTracker.errorOperation(
 					eventId,
-					"Import All Results" as IntegrationActionName,
+					"Import Results",
 					(error as Error).message,
 				)
 			}
