@@ -11,6 +11,7 @@ import golfGeniusConfig from "./config/golf-genius.config"
 import { validationSchema } from "./config/validation.schema"
 import { GolfgeniusController } from "./golfgenius.controller"
 import { EventSyncService } from "./services/event-sync.service"
+import { ImportAllResultsService } from "./services/import-all-results.service"
 import { IntegrationLogService } from "./services/integration-log.service"
 import { MemberSyncService } from "./services/member-sync.service"
 import { PointsImportService } from "./services/points-import.service"
@@ -44,6 +45,7 @@ import { ScoresImportService } from "./services/scores-import.service"
 		RosterExportService,
 		RosterPlayerTransformer,
 		ScoresImportService,
+		ImportAllResultsService,
 	],
 })
 export class GolfgeniusModule {}
