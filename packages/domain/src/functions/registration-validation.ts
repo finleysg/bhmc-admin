@@ -87,36 +87,49 @@ export function validateRegistration(registration: Registration): ValidatedRegis
  */
 export function validateRegisteredPlayer(
 	registeredPlayer: RegisteredPlayer,
-): ValidatedRegisteredPlayer | null {
+): ValidatedRegisteredPlayer {
+	const issues: string[] = []
+
 	if (!registeredPlayer) {
-		return null
+		issues.push("No registered player object provided.")
 	}
 
 	// Validate core required fields
 	if (!registeredPlayer.slot?.id) {
-		return null
+		issues.push("The slot object is missing.")
 	}
 
 	if (!registeredPlayer.player?.id) {
-		return null
+		issues.push("The player object is missing.")
 	}
 
 	if (!registeredPlayer.registration?.id) {
-		return null
+		issues.push("The registration object is missing.")
 	}
 
 	const hasCourseDetails = !!registeredPlayer.registration?.courseId
 
-	// Validate course if details are required
-	if (hasCourseDetails && !validateCourse(registeredPlayer.course)) {
-		return null
+	// Validate course and hole if details are required (canChoose event)
+	if (hasCourseDetails) {
+		if (!registeredPlayer.course || !registeredPlayer.course?.id) {
+			issues.push("The course information is incomplete.")
+		}
+		if (!registeredPlayer.hole || !registeredPlayer.hole?.id) {
+			issues.push("The starting hole information is incomplete.")
+		}
 	}
 
 	// Validate fees if present (undefined is acceptable, but empty arrays and invalid fees are invalid)
 	if (registeredPlayer.fees != null) {
 		if (registeredPlayer.fees.length === 0 || !hasValidFees(registeredPlayer.fees)) {
-			return null
+			issues.push("The registration fee collection is incomplete.")
 		}
+	}
+
+	if (issues.length > 0) {
+		throw new Error(
+			`Validation failed for player ${registeredPlayer?.player?.email}: ` + issues.join("\n"),
+		)
 	}
 
 	// All validations passed, return narrowed type

@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsOptional, Max, Min } from "class-validator"
+import { IsDecimal, IsInt, IsNumber, IsOptional, Max, Min } from "class-validator"
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
 import { eventScore, eventScorecard } from "../schema"
@@ -13,7 +13,8 @@ export class ScorecardModel {
 	id?: number
 
 	@IsOptional()
-	handicapIndex?: number
+	@IsDecimal()
+	handicapIndex?: string
 
 	@IsInt()
 	courseHandicap!: number

@@ -1,12 +1,7 @@
 import { Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
-import {
-	Hole,
-	ProgressEventDto,
-	ValidatedClubEvent,
-	ValidatedRegisteredPlayer,
-} from "@repo/domain/types"
+import { ProgressEventDto, ValidatedClubEvent, ValidatedRegisteredPlayer } from "@repo/domain/types"
 
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
@@ -43,22 +38,21 @@ export class RosterExportService {
 	}
 
 	// ---------- Helpers for master roster sync (original functionality) ----------
-
+	// TODO: move to domain function
 	private normalizeGhin(ghin?: string | null) {
 		if (!ghin) return null
 		const trimmed = String(ghin).trim()
-		// strip leading zeros for comparison and also keep a padded version
-		return trimmed.replace(/^0+/, "") || "0"
+		// strip leading zeros
+		return trimmed.replace(/^0+/, "")
 	}
 
 	/**
 	 * Process a single player registration slot and return the result
 	 */
 	private async processSinglePlayer(
-		registeredPlayer: ValidatedRegisteredPlayer,
 		clubEvent: ValidatedClubEvent,
+		registeredPlayer: ValidatedRegisteredPlayer,
 		registeredPlayersGroup: ValidatedRegisteredPlayer[],
-		holesMap: Map<number, Hole[]>,
 		rosterByGhin: Map<string, RosterMemberDto>,
 		rosterBySlotId: Map<number, RosterMemberDto>,
 	): Promise<{
@@ -67,75 +61,49 @@ export class RosterExportService {
 		error?: ExportError
 	}> {
 		try {
-			// Determine course and holes for transformation context
-			let holes: Hole[] = []
-			if (clubEvent.canChoose) {
-				const courseId = registeredPlayer.course?.id
-				holes = courseId != null ? (holesMap.get(courseId) ?? []) : []
-			}
-
 			// Create transformation context
 			const context: TransformationContext = {
 				event: clubEvent,
-				course: registeredPlayer.course,
-				holes,
 				group: registeredPlayersGroup.filter(
 					(s) => s.registration?.id === registeredPlayer.registration.id,
 				),
+				course: registeredPlayer.course,
 			}
-			// Transformation inputs are assumed valid (service returns validated players)
-			const validRegisteredPlayer = registeredPlayer
-			const member = this.playerTransformer.transformToGgMember(validRegisteredPlayer, context)
+
+			// Transform our registered player to the shape GG expects
+			const member = this.playerTransformer.transformToGgMember(registeredPlayer, context)
 
 			// Idempotency: match by slot id first, fallback to ghin
 			let existing: RosterMemberDto | null | undefined
-			existing = rosterBySlotId.get(validRegisteredPlayer.slot.id)
+			existing = rosterBySlotId.get(registeredPlayer.slot.id)
 
 			if (!existing) {
-				const playerGhinRaw = validRegisteredPlayer.player.ghin
-				const playerGhin = this.normalizeGhin(playerGhinRaw)
+				const playerGhin = this.normalizeGhin(registeredPlayer.player.ghin)
 				if (playerGhin) {
 					existing = rosterByGhin.get(playerGhin)
 				}
 			}
 
 			if (!existing) {
-				this.logger.debug(`CREATE: Did not find player: ${validRegisteredPlayer.player.email}`)
-				try {
-					const res = await this.apiClient.createMemberRegistration(clubEvent.ggId, member)
-					const memberId = this.extractMemberId(res)
-					if (memberId) {
-						await this.registration.updateRegistrationSlotGgId(
-							validRegisteredPlayer.slot.id,
-							String(memberId),
-						)
-					}
-					return { success: true, action: "created" }
-				} catch (err: unknown) {
-					this.logger.warn("Failed to create member", {
-						slotId: validRegisteredPlayer.slot.id,
-						err: String(err),
-					})
-					return {
-						success: false,
-						action: "error",
-						error: {
-							slotId: validRegisteredPlayer.slot.id,
-							playerId: validRegisteredPlayer.player.id,
-							email: validRegisteredPlayer.player.email,
-							error: String(err),
-						},
-					}
+				this.logger.debug(`CREATE: Did not find player: ${registeredPlayer.player.email}`)
+				const res = await this.apiClient.createMemberRegistration(clubEvent.ggId, member)
+				const memberId = this.extractMemberId(res)
+				if (memberId) {
+					await this.registration.updateRegistrationSlotGgId(
+						registeredPlayer.slot.id,
+						String(memberId),
+					)
 				}
+				return { success: true, action: "created" }
 			} else {
 				this.logger.debug(
-					`UPDATE: Player ${validRegisteredPlayer.player.email} has already been exported.`,
+					`UPDATE: Player ${registeredPlayer.player.email} has already been exported.`,
 				)
 				await this.apiClient.updateMemberRegistration(clubEvent.ggId, existing.id, member)
 				return { success: true, action: "updated" }
 			}
-		} catch (err: any) {
-			this.logger.error("Unexpected error exporting slot", { err: String(err) })
+		} catch (err: unknown) {
+			this.logger.error("Failed to export registered player", { err: String(err) })
 			return {
 				success: false,
 				action: "error",
@@ -195,9 +163,8 @@ export class RosterExportService {
 	 */
 	private async processExportAsync(eventId: number, result: ExportResult) {
 		try {
-			// 1. Validation
+			// 1. Retrieve this club event
 			const event = await this.events.getValidatedClubEventById(eventId)
-			if (!event) throw new Error(`ClubEvent ${eventId} not found or is invalid.`)
 
 			// 2. Get existing roster from GG for idempotency
 			let existingRoster: RosterMemberDto[] = []
@@ -211,10 +178,10 @@ export class RosterExportService {
 			const rosterByGhin = new Map<string, RosterMemberDto>()
 			const rosterBySlotId = new Map<number, RosterMemberDto>()
 			for (const mem of existingRoster) {
-				const rawGhin = mem?.ghin ?? null
+				const rawGhin = mem.ghin ?? null
 				const normalized = this.normalizeGhin(rawGhin)
 				if (normalized) rosterByGhin.set(normalized, mem)
-				if (mem?.externalId) rosterBySlotId.set(+mem.externalId, mem)
+				if (mem.externalId) rosterBySlotId.set(+mem.externalId, mem)
 			}
 
 			// 3. Get all registered players
@@ -233,12 +200,6 @@ export class RosterExportService {
 				message: "Starting export...",
 			})
 
-			// Holes map for convenience
-			const holesMap = new Map<number, Hole[]>()
-			event.courses?.map((course) => {
-				holesMap.set(course.id, course.holes ?? [])
-			})
-
 			// 4. Process players in parallel batches
 			const CONCURRENCY_LIMIT = 10 // Tune this based on API rate limits
 			const playerTasks: Array<
@@ -249,12 +210,11 @@ export class RosterExportService {
 				}>
 			> = []
 
-			for (const reg of registeredPlayers) {
+			for (const registeredPlayer of registeredPlayers) {
 				const task = this.processSinglePlayer(
-					reg,
 					event,
+					registeredPlayer,
 					registeredPlayers,
-					holesMap,
 					rosterByGhin,
 					rosterBySlotId,
 				)
@@ -310,11 +270,4 @@ export class RosterExportService {
 		// Prefer the string form returned by Golf Genius to avoid JS integer overflow
 		return res.member_id_str ?? null
 	}
-
-	// private extractMemberIdFromRoster(rosterMember: RosterMemberDto): string | null {
-	//   if (!rosterMember) return null
-	//   // RosterMemberDto.id is the member ID
-	//   return rosterMember.id ?? null
-	//   // }
-	// }
 }

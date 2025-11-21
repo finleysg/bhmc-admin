@@ -1,6 +1,15 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common"
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
+/**
+ * Justification: This file wraps the underlying mysql2 Pool at runtime to add
+ * development-time logging. Those wrappers access `any`-typed pool internals
+ * (query/execute) and accept `any` params from callers; disabling the unsafe
+ * rules here keeps the rest of the project strict while allowing this targeted
+ * runtime instrumentation.
+ */
 import { drizzle, MySql2Database } from "drizzle-orm/mysql2"
 import * as mysql from "mysql2/promise"
+
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common"
 
 @Injectable()
 export class DrizzleService implements OnModuleInit, OnModuleDestroy {
@@ -11,6 +20,40 @@ export class DrizzleService implements OnModuleInit, OnModuleDestroy {
 		this.pool = mysql.createPool({
 			uri: process.env.DATABASE_URL,
 		})
+
+		// In non-production environments wrap pool.query/execute to log queries & params.
+		// This gives Drizzle a visible query stream for debugging without changing callers.
+		const logger = new Logger(DrizzleService.name)
+		if (process.env.NODE_ENV !== "production") {
+			const originalQuery = (this.pool as any).query.bind(this.pool)
+			const originalExecute = (this.pool as any).execute.bind(this.pool)
+
+			;(this.pool as any).query = async (sql: string, params?: any) => {
+				const start = Date.now()
+				try {
+					const res = await originalQuery(sql, params)
+					const ms = Date.now() - start
+					logger.debug(`[mysql] ${ms}ms ${sql} -- params: ${JSON.stringify(params)}`)
+					return res
+				} catch (err) {
+					logger.error({ message: "MySQL query error", sql, params, err })
+					throw err
+				}
+			}
+			;(this.pool as any).execute = async (sql: string, params?: any) => {
+				const start = Date.now()
+				try {
+					const res = await originalExecute(sql, params)
+					const ms = Date.now() - start
+					logger.debug(`[mysql] ${ms}ms ${sql} -- params: ${JSON.stringify(params)}`)
+					return res
+				} catch (err) {
+					logger.error({ message: "MySQL execute error", sql, params, err })
+					throw err
+				}
+			}
+		}
+
 		this.db = drizzle(this.pool)
 		// Dummy await to satisfy linter
 		await Promise.resolve()

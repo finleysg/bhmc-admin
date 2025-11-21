@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
 
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common"
+import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { validateRegisteredPlayer, validateRegistration } from "@repo/domain/functions"
 import {
 	AddAdminRegistration,
@@ -14,12 +14,13 @@ import {
 	ValidatedRegistration,
 } from "@repo/domain/types"
 
-import { mapToCourseModel, toCourse, toHole } from "../courses/mappers"
+import { mapToCourseModel, mapToHoleModel, toCourse, toHole } from "../courses/mappers"
 import {
 	course,
 	DrizzleService,
 	eventFee,
 	feeType,
+	hole,
 	payment,
 	player,
 	registration,
@@ -42,6 +43,8 @@ import { RegistrationRepository } from "./registration.repository"
 
 @Injectable()
 export class RegistrationService {
+	private readonly logger = new Logger(RegistrationService.name)
+
 	constructor(
 		private drizzle: DrizzleService,
 		private repository: RegistrationRepository,
@@ -55,11 +58,13 @@ export class RegistrationService {
 				player: player,
 				registration: registration,
 				course: course,
+				hole: hole,
 			})
 			.from(registrationSlot)
 			.leftJoin(registration, eq(registrationSlot.registrationId, registration.id))
 			.leftJoin(course, eq(registration.courseId, course.id))
 			.leftJoin(player, eq(registrationSlot.playerId, player.id))
+			.leftJoin(hole, eq(registrationSlot.holeId, hole.id))
 			.where(
 				and(
 					eq(registrationSlot.eventId, eventId),
@@ -71,6 +76,7 @@ export class RegistrationService {
 		const slotsMap = new Map<number, RegisteredPlayer>()
 		const slotIds: number[] = []
 		for (const row of rows) {
+			this.logger.log(JSON.stringify(row))
 			const sid = row.slot.id
 			slotIds.push(sid)
 			slotsMap.set(sid, {
@@ -80,6 +86,7 @@ export class RegistrationService {
 					? toRegistration(mapToRegistrationModel(row.registration))
 					: undefined,
 				course: row.course ? toCourse(mapToCourseModel(row.course)) : undefined,
+				hole: row.hole ? toHole(mapToHoleModel(row.hole)) : undefined,
 				fees: [],
 			})
 		}
@@ -122,13 +129,9 @@ export class RegistrationService {
 			parent.fees.push(fee)
 		}
 
-		// Require that all are valid
+		// Requires that all are valid or an error is thrown
 		const results = slotIds.map((id) => validateRegisteredPlayer(slotsMap.get(id)!))
-		if (!results || results.length === 0 || results.some((r) => r == null)) {
-			throw new BadRequestException("Not all registered players are valid.")
-		}
-
-		return results.filter((r) => r != null)
+		return results
 	}
 
 	async searchPlayers(query: SearchPlayers): Promise<Player[]> {

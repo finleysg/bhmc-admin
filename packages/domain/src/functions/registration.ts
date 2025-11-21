@@ -1,4 +1,4 @@
-import { ClubEvent, Hole, RegistrationSlot } from "../types"
+import { ClubEvent, Hole, RegistrationSlot, ValidatedRegisteredPlayer } from "../types"
 import { formatTime, parseTeeTimeSplits, parseTime } from "./time-utils"
 
 /**
@@ -65,6 +65,23 @@ export function calculateStartingHole(slot: RegistrationSlot, holes: Hole[]): st
 
 	const holeNumber = hole.holeNumber
 	const order = slot.startingOrder
+	if (order !== 0 && order !== 1) {
+		throw new Error(`Invalid startingOrder: ${order}`)
+	}
+	const letter = order === 0 ? "A" : "B"
+	return `${holeNumber}${letter}`
+}
+
+/**
+ * Returns a shotgun starting hole string (e.g. "8B").
+ *
+ * Rules:
+ * - `startingOrder` is 0 or 1 mapping to "A" or "B".
+ * - Returns `${holeNumber}${letter}`.
+ */
+export function getStartingHole(registeredPlayer: ValidatedRegisteredPlayer): string {
+	const holeNumber = registeredPlayer.hole?.holeNumber ?? "ERR"
+	const order = registeredPlayer.slot.startingOrder
 	if (order !== 0 && order !== 1) {
 		throw new Error(`Invalid startingOrder: ${order}`)
 	}
@@ -148,4 +165,74 @@ export function getStart(event: ClubEvent, slot: RegistrationSlot, holes: Hole[]
 	}
 
 	return "N/A"
+}
+
+/**
+ * Public domain function that calculates the "start" value for a registered player.
+ *
+ * Behavior:
+ * - If event.eventType !== "N" return "N/A"
+ * - If eventType === "N" and startType === "TT" -> return tee time (H:MM AM|PM)
+ * - If eventType === "N" and startType === "SG" -> return starting hole (e.g. "8B")
+ *
+ * This function is pure and deterministic: all required data must be provided by the caller.
+ */
+export function getPlayerStartName(
+	event: ClubEvent,
+	registeredPlayer: ValidatedRegisteredPlayer,
+): string {
+	// Use the canChoose flag to determine whether course-based starts apply.
+	// If canChoose is falsy (0/false/undefined) there is no course data and we return "N/A".
+	if (!event.canChoose) {
+		return "N/A"
+	}
+
+	const startType = event.startType ?? null
+
+	if (startType === "TT") {
+		// For tee times, we expect startTime and teeTimeSplits to be present;
+		// calculateTeeTime will throw a helpful error if not.
+		return calculateTeeTime(event, registeredPlayer.slot)
+	}
+
+	if (startType === "SG") {
+		return getStartingHole(registeredPlayer)
+	}
+
+	return "N/A"
+}
+
+/**
+ * Returns a team name for a registered player.
+ *
+ * - Nine-hole "canChoose" events: CourseName-StartingTime or CourseName-StartingHole
+ * - Otherwise: registrationId (+ a/b when teamSize==2 and 4 players)
+ */
+export function getPlayerTeamName(
+	event: ClubEvent,
+	registeredPlayer: ValidatedRegisteredPlayer,
+	groupMembers: RegistrationSlot[] = [],
+): string {
+	// Nine hole events: we expect a course name
+	if (event.eventType === "N") {
+		const courseName = registeredPlayer.course?.name ?? "Error"
+		const startValue = getPlayerStartName(event, registeredPlayer)
+		return `${courseName}-${startValue}`
+	}
+	// Majors or open events are most common alternatives
+	else {
+		const regId = registeredPlayer.registration.id
+
+		// This is handling two-man teams events who signed up as a group of four.
+		// We want to ensure we make them into two teams of 2.
+		if (event.teamSize === 2 && groupMembers.length === 4) {
+			const sorted = [...groupMembers].sort((a, b) => a.slot - b.slot)
+			const idx = sorted.findIndex((s) => s.id === registeredPlayer.slot.id)
+			if (idx === -1) throw new Error("Current slot not found in allSlotsInRegistration")
+			const suffix = idx < 2 ? "a" : "b"
+			return `${regId}${suffix}`
+		}
+
+		return String(regId)
+	}
 }

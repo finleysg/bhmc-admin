@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common"
-import { getGroup, getStart } from "@repo/domain/functions"
+import { getPlayerStartName, getPlayerTeamName } from "@repo/domain/functions"
+import { ValidatedRegisteredPlayer } from "@repo/domain/types"
 
-import { ValidRegisteredPlayer } from "../dto"
 import { RosterMemberSyncDto } from "../dto/internal.dto"
 import { TransformationContext } from "../dto/roster.dto"
 
@@ -13,7 +13,7 @@ export class RosterPlayerTransformer {
 	 * Transform a player registration into a Golf Genius member sync DTO
 	 */
 	transformToGgMember(
-		registeredPlayer: ValidRegisteredPlayer,
+		registeredPlayer: ValidatedRegisteredPlayer,
 		context: TransformationContext,
 	): RosterMemberSyncDto {
 		const customFields = this.buildCustomFields(registeredPlayer, context)
@@ -35,10 +35,10 @@ export class RosterPlayerTransformer {
 	 * Build custom fields object for Golf Genius member
 	 */
 	private buildCustomFields(
-		registeredPlayer: ValidRegisteredPlayer,
+		registeredPlayer: ValidatedRegisteredPlayer,
 		context: TransformationContext,
 	): Record<string, string | null> {
-		const { event, course, holes, group } = context
+		const { event, course, group } = context
 
 		// Determine course name
 		let courseName = "N/A"
@@ -47,12 +47,10 @@ export class RosterPlayerTransformer {
 		}
 
 		// Calculate team and start using domain logic
-		const startValue = getStart(event, registeredPlayer.slot, holes)
-		const team = getGroup(
+		const startValue = getPlayerStartName(event, registeredPlayer)
+		const team = getPlayerTeamName(
 			event,
-			registeredPlayer.slot,
-			startValue,
-			courseName,
+			registeredPlayer,
 			group.flatMap((s) => (s.slot ? [s.slot] : [])),
 		)
 
@@ -70,7 +68,7 @@ export class RosterPlayerTransformer {
 
 		// Add dynamic skins fee columns
 		for (const fd of event.eventFees) {
-			const fee = (group.find((s) => s.slot!.id === registeredPlayer.slot.id)?.fees ?? []).find(
+			const fee = (group.find((s) => s.slot.id === registeredPlayer.slot.id)?.fees ?? []).find(
 				(f) => f.eventFee?.id === fd.id,
 			)
 			const paid = fee?.isPaid

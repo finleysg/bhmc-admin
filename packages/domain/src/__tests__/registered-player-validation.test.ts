@@ -97,6 +97,7 @@ describe("validateRegisteredPlayer", () => {
 		player: validPlayer,
 		registration: validRegistration,
 		course: validCourse,
+		hole: validHole,
 		fees: [validRegistrationFee],
 	}
 
@@ -106,10 +107,11 @@ describe("validateRegisteredPlayer", () => {
 		expect(result).toEqual(validRegisteredPlayer)
 	})
 
-	it("validates registered player without course details", () => {
+	it("validates registered player without course details when registration has no courseId", () => {
 		const partialPlayer: RegisteredPlayer = {
 			...validRegisteredPlayer,
 			course: undefined,
+			registration: { ...validRegistration, courseId: undefined },
 		}
 		const result = validateRegisteredPlayer(partialPlayer)
 		expect(result).toBeDefined()
@@ -125,7 +127,7 @@ describe("validateRegisteredPlayer", () => {
 	})
 
 	it("fails if registered player is null", () => {
-		expect(validateRegisteredPlayer(null as unknown as RegisteredPlayer)).toBeNull()
+		expect(() => validateRegisteredPlayer(null as unknown as RegisteredPlayer)).toThrow()
 	})
 
 	it("fails if slot missing", () => {
@@ -133,7 +135,7 @@ describe("validateRegisteredPlayer", () => {
 			...validRegisteredPlayer,
 			slot: undefined,
 		}
-		expect(validateRegisteredPlayer(invalidPlayer)).toBeNull()
+		expect(() => validateRegisteredPlayer(invalidPlayer)).toThrow()
 	})
 
 	it("fails if slot missing id", () => {
@@ -142,7 +144,7 @@ describe("validateRegisteredPlayer", () => {
 			...validRegisteredPlayer,
 			slot: invalidSlot,
 		}
-		expect(validateRegisteredPlayer(invalidPlayer)).toBeNull()
+		expect(() => validateRegisteredPlayer(invalidPlayer)).toThrow()
 	})
 
 	it("fails if player missing", () => {
@@ -150,7 +152,7 @@ describe("validateRegisteredPlayer", () => {
 			...validRegisteredPlayer,
 			player: undefined,
 		}
-		expect(validateRegisteredPlayer(invalidPlayer)).toBeNull()
+		expect(() => validateRegisteredPlayer(invalidPlayer)).toThrow()
 	})
 
 	it("fails if player missing id", () => {
@@ -162,7 +164,7 @@ describe("validateRegisteredPlayer", () => {
 			...validRegisteredPlayer,
 			player: invalidPlayerData,
 		}
-		expect(validateRegisteredPlayer(invalidPlayer)).toBeNull()
+		expect(() => validateRegisteredPlayer(invalidPlayer)).toThrow()
 	})
 
 	it("fails if registration missing", () => {
@@ -170,7 +172,7 @@ describe("validateRegisteredPlayer", () => {
 			...validRegisteredPlayer,
 			registration: undefined,
 		}
-		expect(validateRegisteredPlayer(invalidPlayer)).toBeNull()
+		expect(() => validateRegisteredPlayer(invalidPlayer)).toThrow()
 	})
 
 	it("fails if registration missing id", () => {
@@ -182,7 +184,7 @@ describe("validateRegisteredPlayer", () => {
 			...validRegisteredPlayer,
 			registration: invalidReg,
 		}
-		expect(validateRegisteredPlayer(invalidPlayer)).toBeNull()
+		expect(() => validateRegisteredPlayer(invalidPlayer)).toThrow()
 	})
 
 	it("fails if course required but missing", () => {
@@ -190,19 +192,19 @@ describe("validateRegisteredPlayer", () => {
 			...validRegisteredPlayer,
 			course: undefined,
 		}
-		expect(validateRegisteredPlayer(invalidPlayer)).toBeNull()
+		expect(() => validateRegisteredPlayer(invalidPlayer)).toThrow()
 	})
 
 	it("fails if course required but invalid", () => {
 		const invalidCourse: Course = {
 			...validCourse,
-			holes: [],
+			id: undefined,
 		}
 		const invalidPlayer: RegisteredPlayer = {
 			...validRegisteredPlayer,
 			course: invalidCourse,
 		}
-		expect(validateRegisteredPlayer(invalidPlayer)).toBeNull()
+		expect(() => validateRegisteredPlayer(invalidPlayer)).toThrow()
 	})
 
 	it("fails if fees array is empty", () => {
@@ -210,7 +212,7 @@ describe("validateRegisteredPlayer", () => {
 			...validRegisteredPlayer,
 			fees: [],
 		}
-		expect(validateRegisteredPlayer(invalidPlayer)).toBeNull()
+		expect(() => validateRegisteredPlayer(invalidPlayer)).toThrow()
 	})
 
 	it("fails if fees have invalid structure", () => {
@@ -225,6 +227,6 @@ describe("validateRegisteredPlayer", () => {
 			...validRegisteredPlayer,
 			fees: [invalidFee],
 		}
-		expect(validateRegisteredPlayer(invalidPlayer)).toBeNull()
+		expect(() => validateRegisteredPlayer(invalidPlayer)).toThrow()
 	})
 })

@@ -88,7 +88,7 @@ export class PointsImportService {
 
 		// Start tracking progress with tournament count
 		const totalTournaments = tournaments.length
-		const progressObservable = this.progressTracker.startTracking(
+		const progressObservable = this.progressTracker.startTournamentTracking(
 			eventId,
 			totalTournaments,
 		) as Observable<ProgressTournamentDto>
