@@ -8,6 +8,7 @@ Current focus:
 Recent changes:
 
 - **11/21/2025 (Bug Fix): Fixed invalid IntegrationActionName usage** in `ImportAllResultsService` error handling - changed "Import All Results" (invalid) to "Import Results" (valid) and removed type casting to ensure consistent action naming in logs and UI orchestrator
+- **11/21/2025 (Documentation Fix): Resolved quota tournament documentation inconsistency** - quota format was documented as "Not Implemented" but is fully functional in service with complete DTOs, parser, and processor logic; updated mermaid flow diagram and added detailed documentation about quota tournament behavior and expected fields
 - **11/21/2025: Enhanced Golf Genius tournament format detection** by implementing `score_scope` logic in `mapTournament` function to distinguish "team" vs "stroke" formats based on Golf Genius API attribute; added comprehensive unit tests with full coverage
 - **11/20/2025: Refactored purse amount handling logic** in import-all-results.service.ts across all tournament format methods to exit early on 0/null/empty values without logging errors; removed redundant checks and unified logic: no money = no record saved = no error logged; updated parsePurseAmount parameter type to handle undefined/null values
 - **11/18/2025: Created validateClubEvent domain function** with CompleteClubEvent type for ClubEvent validation, supporting GolfGenius field exclusion and type narrowing
