@@ -76,7 +76,7 @@ export class RegistrationService {
 		const slotsMap = new Map<number, RegisteredPlayer>()
 		const slotIds: number[] = []
 		for (const row of rows) {
-			this.logger.log(JSON.stringify(row))
+			this.logger.debug(`Processing slot ${row.slot.id} for player ${row.player?.id}`)
 			const sid = row.slot.id
 			slotIds.push(sid)
 			slotsMap.set(sid, {
