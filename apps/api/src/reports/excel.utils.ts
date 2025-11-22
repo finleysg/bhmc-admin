@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs"
+import * as ExcelJS from "exceljs"
 
 import { EventReportRowDto } from "@repo/domain/types"
 
