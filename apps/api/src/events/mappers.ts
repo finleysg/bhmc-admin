@@ -1,4 +1,10 @@
-import { ClubEvent, EventFee, FeeType, Round, Tournament } from "@repo/domain/types"
+import {
+	ClubEvent,
+	EventFee,
+	FeeType,
+	Round,
+	Tournament,
+} from "@repo/domain/types"
 
 import { toCourse } from "../courses/mappers"
 import type {
@@ -121,14 +127,14 @@ export function mapToTournamentResultModel(entity: Record<string, any>): Tournam
 		score: entity.score,
 		amount: entity.amount,
 		details: entity.details,
-		playerId: entity.player_id,
-		tournamentId: entity.tournament_id,
-		teamId: entity.team_id,
-		createDate: entity.create_date,
-		payoutDate: entity.payout_date,
-		payoutStatus: entity.payout_status,
-		payoutTo: entity.payout_to,
-		payoutType: entity.payout_type,
+		playerId: entity.playerId,
+		tournamentId: entity.tournamentId,
+		teamId: entity.teamId,
+		createDate: entity.createDate,
+		payoutDate: entity.payoutDate,
+		payoutStatus: entity.payoutStatus,
+		payoutTo: entity.payoutTo,
+		payoutType: entity.payoutType,
 		summary: entity.summary,
 	}
 }
@@ -142,10 +148,10 @@ export function mapToTournamentPointsModel(entity: Record<string, any>): Tournam
 		position: entity.position,
 		score: entity.score,
 		points: entity.points,
-		createDate: entity.create_date,
+		createDate: entity.createDate,
 		details: entity.details,
-		tournamentId: entity.tournament_id,
-		playerId: entity.player_id,
+		tournamentId: entity.tournamentId,
+		playerId: entity.playerId,
 	}
 }
 
