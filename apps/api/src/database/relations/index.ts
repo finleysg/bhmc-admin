@@ -1,3 +1,4 @@
+export * from "./core.relations"
 export * from "./courses.relations"
 export * from "./events.relations"
 export * from "./registration.relations"
