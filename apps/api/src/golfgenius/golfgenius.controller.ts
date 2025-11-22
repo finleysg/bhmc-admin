@@ -19,6 +19,7 @@ import { LogIntegrationInterceptor } from "./interceptors/log-integration.interc
 import { EventSyncService } from "./services/event-sync.service"
 import { ImportAllResultsService } from "./services/import-all-results.service"
 import { IntegrationLogService } from "./services/integration-log.service"
+import { LowScoresImportService } from "./services/low-scores-import.service"
 import { MemberSyncService } from "./services/member-sync.service"
 import { PointsImportService } from "./services/points-import.service"
 import { RosterExportService } from "./services/roster-export.service"
@@ -35,6 +36,7 @@ export class GolfgeniusController {
 		private readonly rosterExport: RosterExportService,
 		private readonly pointsImport: PointsImportService,
 		private readonly importAllResults: ImportAllResultsService,
+		private readonly lowScoresImport: LowScoresImportService,
 		private readonly integrationLog: IntegrationLogService,
 		private readonly events: EventsService,
 	) {}
@@ -61,6 +63,12 @@ export class GolfgeniusController {
 	@UseInterceptors(LogIntegrationInterceptor)
 	async closeEvent(@Param("eventId", ParseIntPipe) eventId: number) {
 		return this.events.closeEvent(eventId)
+	}
+
+	@Post("events/:eventId/import-low-scores")
+	@UseInterceptors(LogIntegrationInterceptor)
+	async importLowScores(@Param("eventId", ParseIntPipe) eventId: number) {
+		return this.lowScoresImport.importLowScores(eventId)
 	}
 
 	@Get("/events/:id/logs")

@@ -33,7 +33,7 @@ const PHASES: Phase[] = [
 	{
 		number: 3,
 		title: "Finalize Results",
-		actions: ["Close Event"],
+		actions: ["Import Low Scores", "Close Event"],
 	},
 ]
 
@@ -51,8 +51,8 @@ function determinePhase(logs: IntegrationLogDto[]): PhaseInfo {
 		hasSuccessfulRun("Import Points") &&
 		hasSuccessfulRun("Import Results")
 
-	// Phase 3: Finalize (Close Event)
-	const phase3Complete = hasSuccessfulRun("Close Event")
+	// Phase 3: Finalize (Import Low Scores, Close Event)
+	const phase3Complete = hasSuccessfulRun("Import Low Scores") && hasSuccessfulRun("Close Event")
 
 	// Determine current phase
 	if (!phase1Complete) {
@@ -77,7 +77,11 @@ function determinePhase(logs: IntegrationLogDto[]): PhaseInfo {
 		currentPhase: 3,
 		isPhaseComplete: phase3Complete,
 		canAdvanceToNext: phase2Complete,
-		nextActionToRun: phase3Complete ? undefined : "Close Event",
+		nextActionToRun: phase3Complete
+			? undefined
+			: !hasSuccessfulRun("Import Low Scores")
+				? "Import Low Scores"
+				: "Close Event",
 	}
 }
 

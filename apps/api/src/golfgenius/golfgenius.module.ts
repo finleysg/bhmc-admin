@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common"
 import { ConfigModule } from "@nestjs/config"
 
+import { CoreModule } from "../core/core.module"
 import { CoursesModule } from "../courses/courses.module"
 import { DatabaseModule } from "../database/database.module"
 import { EventsModule } from "../events/events.module"
@@ -13,6 +14,7 @@ import { GolfgeniusController } from "./golfgenius.controller"
 import { EventSyncService } from "./services/event-sync.service"
 import { ImportAllResultsService } from "./services/import-all-results.service"
 import { IntegrationLogService } from "./services/integration-log.service"
+import { LowScoresImportService } from "./services/low-scores-import.service"
 import { MemberSyncService } from "./services/member-sync.service"
 import { PointsImportService } from "./services/points-import.service"
 import { ProgressTracker } from "./services/progress-tracker"
@@ -29,6 +31,7 @@ import { ScoresImportService } from "./services/scores-import.service"
 		DatabaseModule,
 		RegistrationModule,
 		EventsModule,
+		CoreModule,
 		CoursesModule,
 		ScoresModule,
 	],
@@ -37,6 +40,7 @@ import { ScoresImportService } from "./services/scores-import.service"
 		ApiClient,
 		EventSyncService,
 		IntegrationLogService,
+		LowScoresImportService,
 		PointsImportService,
 		ProgressTracker,
 		MemberSyncService,

@@ -32,6 +32,9 @@ export class ScorecardModel {
 	@IsInt()
 	@IsOptional()
 	teeId?: number
+
+	@IsOptional()
+	scores?: ScoreModel[]
 }
 
 export class ScoreModel {

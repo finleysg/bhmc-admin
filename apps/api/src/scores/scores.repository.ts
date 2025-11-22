@@ -10,7 +10,7 @@ import {
 	scoreInsertSchema,
 	ScoreModel,
 } from "../database/models"
-import { mapToScorecardModel } from "./mappers"
+import { mapToScorecardModel, mapToScoreModel } from "./mappers"
 
 @Injectable()
 export class ScoresRepository {
@@ -61,5 +61,49 @@ export class ScoresRepository {
 
 		const data = scores.map((s) => scoreInsertSchema.parse(s))
 		await this.drizzle.db.insert(eventScore).values(data)
+	}
+
+	async findScorecardsByEventAndCourse(
+		eventId: number,
+		courseId: number,
+		isNet: boolean,
+	): Promise<ScorecardModel[]> {
+		const isNetValue = isNet ? 1 : 0
+		const results = await this.drizzle.db
+			.select({
+				score: eventScore,
+				scorecard: eventScorecard,
+			})
+			.from(eventScorecard)
+			.innerJoin(eventScore, eq(eventScore.scorecardId, eventScorecard.id))
+			.where(
+				and(
+					eq(eventScorecard.eventId, eventId),
+					eq(eventScorecard.courseId, courseId),
+					eq(eventScore.isNet, isNetValue),
+				),
+			)
+
+		// Group by scorecard to build nested structure
+		const grouped: Map<
+			number,
+			{ scorecard: Record<string, unknown>; scores: Record<string, unknown>[] }
+		> = new Map()
+		results.forEach((r) => {
+			const scorecardId = r.scorecard.id
+			if (!grouped.has(scorecardId)) {
+				grouped.set(scorecardId, { scorecard: r.scorecard, scores: [] })
+			}
+			grouped.get(scorecardId)!.scores.push(r.score)
+		})
+
+		const scorecards: ScorecardModel[] = []
+		for (const { scorecard, scores } of grouped.values()) {
+			const model = mapToScorecardModel(scorecard)
+			model.scores = scores.map((s) => mapToScoreModel({ ...s, playerId: scorecard.playerId }))
+			scorecards.push(model)
+		}
+
+		return scorecards
 	}
 }

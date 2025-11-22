@@ -1,4 +1,5 @@
 export * from "./scores.models"
+export * from "./core.models"
 export * from "./courses.models"
 export * from "./events.models"
 export * from "./registration.models"

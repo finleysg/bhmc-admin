@@ -1,5 +1,6 @@
 export * from "./auth.schema"
 export * from "./courses.schema"
+export * from "./core.schema"
 export * from "./events.schema"
 export * from "./registration.schema"
 export * from "./scores.schema"
