@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm/relations"
 
 import { authUser } from "../schema/auth.schema"
-import { lowScore } from "../schema/core.schema"
+import { champion, lowScore } from "../schema/core.schema"
 import { course, hole } from "../schema/courses.schema"
 import { event, eventFee } from "../schema/events.schema"
 import {
@@ -21,6 +21,7 @@ export const playerRelations = relations(player, ({ one, many }) => ({
 		relationName: "playerFavorites_toPlayerId_player_id",
 	}),
 	registrationslots: many(registrationSlot),
+	champions: many(champion),
 	lowScores: many(lowScore),
 	authUser: one(authUser, {
 		fields: [player.userId],

@@ -2,9 +2,14 @@ import { and, asc, eq } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 
-import { DrizzleService, lowScore } from "../database"
-import { lowScoreInsertSchema, LowScoreModel } from "../database/models"
-import { mapToLowScoreModel } from "./mappers"
+import { champion, DrizzleService, lowScore } from "../database"
+import {
+	championInsertSchema,
+	ChampionModel,
+	lowScoreInsertSchema,
+	LowScoreModel,
+} from "../database/models"
+import { mapToChampionModel, mapToLowScoreModel } from "./mappers"
 
 @Injectable()
 export class CoreRepository {
@@ -78,5 +83,36 @@ export class CoreRepository {
 			)
 			.limit(1)
 		return existing.length > 0
+	}
+
+	async findChampionById(id: number): Promise<ChampionModel> {
+		const [championData] = await this.drizzle.db
+			.select()
+			.from(champion)
+			.where(eq(champion.id, id))
+			.limit(1)
+		if (championData) {
+			return mapToChampionModel(championData)
+		}
+		throw new Error(`No champion found for id ${id}.`)
+	}
+
+	async findChampions(eventId: number): Promise<ChampionModel[]> {
+		const results = await this.drizzle.db
+			.select()
+			.from(champion)
+			.where(eq(champion.eventId, eventId))
+			.orderBy(asc(champion.flight), asc(champion.score))
+		return results.map(mapToChampionModel)
+	}
+
+	async createChampion(model: ChampionModel): Promise<ChampionModel> {
+		const data = championInsertSchema.parse(model)
+		const [result] = await this.drizzle.db.insert(champion).values(data)
+		return this.findChampionById(result.insertId)
+	}
+
+	async deleteChampions(eventId: number): Promise<void> {
+		await this.drizzle.db.delete(champion).where(eq(champion.eventId, eventId))
 	}
 }

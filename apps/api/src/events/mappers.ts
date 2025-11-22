@@ -2,8 +2,6 @@ import {
 	ClubEvent,
 	EventFee,
 	FeeType,
-	PreparedTournamentPoints,
-	PreparedTournamentResult,
 	Round,
 	Tournament,
 } from "@repo/domain/types"
@@ -118,6 +116,45 @@ export function mapToTournamentModel(entity: Record<string, any>): TournamentMod
 	}
 }
 
+/**
+ * Maps database entity to TournamentResultModel
+ */
+export function mapToTournamentResultModel(entity: Record<string, any>): TournamentResultModel {
+	return {
+		id: entity.id,
+		flight: entity.flight,
+		position: entity.position,
+		score: entity.score,
+		amount: entity.amount,
+		details: entity.details,
+		playerId: entity.playerId,
+		tournamentId: entity.tournamentId,
+		teamId: entity.teamId,
+		createDate: entity.createDate,
+		payoutDate: entity.payoutDate,
+		payoutStatus: entity.payoutStatus,
+		payoutTo: entity.payoutTo,
+		payoutType: entity.payoutType,
+		summary: entity.summary,
+	}
+}
+
+/**
+ * Maps database entity to TournamentPointsModel
+ */
+export function mapToTournamentPointsModel(entity: Record<string, any>): TournamentPointsModel {
+	return {
+		id: entity.id,
+		position: entity.position,
+		score: entity.score,
+		points: entity.points,
+		createDate: entity.createDate,
+		details: entity.details,
+		tournamentId: entity.tournamentId,
+		playerId: entity.playerId,
+	}
+}
+
 // Domain mappers from Model to Domain
 
 /**
@@ -219,47 +256,5 @@ export function toTournament(model: TournamentModel): Tournament {
 		format: model.format,
 		isNet: Boolean(model.isNet),
 		ggId: model.ggId,
-	}
-}
-
-/**
- * Maps PreparedTournamentResult to TournamentResultModel for database insertion.
- * TODO: align these two models
- */
-export function mapToTournamentResultModel(
-	record: PreparedTournamentResult,
-): TournamentResultModel {
-	return {
-		tournamentId: record.tournamentId,
-		playerId: record.playerId,
-		flight: record.flight ?? undefined,
-		position: record.position,
-		score: record.score ?? undefined,
-		amount: record.amount,
-		details: record.details ?? undefined,
-		summary: record.summary ?? undefined,
-		createDate: record.createDate,
-		payoutDate: record.payoutDate ?? undefined,
-		payoutStatus: record.payoutStatus ?? undefined,
-		payoutTo: record.payoutTo ?? undefined,
-		payoutType: record.payoutType ?? undefined,
-		teamId: record.teamId ?? undefined,
-	}
-}
-
-/**
- * Maps PreparedTournamentPoints to TournamentPointsModel for database insertion.
- */
-export function mapToTournamentPointsModel(
-	record: PreparedTournamentPoints,
-): TournamentPointsModel {
-	return {
-		tournamentId: record.tournamentId,
-		playerId: record.playerId,
-		position: record.position,
-		score: record.score ?? undefined,
-		points: record.points,
-		details: record.details ?? undefined,
-		createDate: record.createDate,
 	}
 }

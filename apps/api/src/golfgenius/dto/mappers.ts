@@ -1,5 +1,13 @@
-import { ClubEvent, IntegrationLogDto, Tournament, TournamentData } from "@repo/domain/types"
+import {
+	ClubEvent,
+	IntegrationLogDto,
+	PreparedTournamentPoints,
+	PreparedTournamentResult,
+	Tournament,
+	TournamentData,
+} from "@repo/domain/types"
 
+import { TournamentPointsModel, TournamentResultModel } from "../../database/models"
 import {
 	GgCreateMemberDto,
 	GgEventDto,
@@ -128,6 +136,48 @@ export function mapToIntegrationLogDto(log: any): IntegrationLogDto {
 		details: log.details,
 		eventId: log.eventId,
 		isSuccessful: log.isSuccessful,
+	}
+}
+
+/**
+ * Maps PreparedTournamentResult to TournamentResultModel for database insertion.
+ * TODO: align these two models
+ */
+export function mapPreparedResultsToTournamentResultModel(
+	record: PreparedTournamentResult,
+): TournamentResultModel {
+	return {
+		tournamentId: record.tournamentId,
+		playerId: record.playerId,
+		flight: record.flight ?? undefined,
+		position: record.position,
+		score: record.score ?? undefined,
+		amount: record.amount,
+		details: record.details ?? undefined,
+		summary: record.summary ?? undefined,
+		createDate: record.createDate,
+		payoutDate: record.payoutDate ?? undefined,
+		payoutStatus: record.payoutStatus ?? undefined,
+		payoutTo: record.payoutTo ?? undefined,
+		payoutType: record.payoutType ?? undefined,
+		teamId: record.teamId ?? undefined,
+	}
+}
+
+/**
+ * Maps PreparedTournamentPoints to TournamentPointsModel for database insertion.
+ */
+export function mapPreparedPointsToTournamentPointsModel(
+	record: PreparedTournamentPoints,
+): TournamentPointsModel {
+	return {
+		tournamentId: record.tournamentId,
+		playerId: record.playerId,
+		position: record.position,
+		score: record.score ?? undefined,
+		points: record.points,
+		details: record.details ?? undefined,
+		createDate: record.createDate,
 	}
 }
 
