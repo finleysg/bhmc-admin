@@ -244,7 +244,7 @@ export class PointsImportService {
 			const playerMap = await this.fetchPlayerMapForEvent(tournamentData.eventId)
 
 			// Delete existing points (idempotent)
-			await this.deleteExistingPoints(tournamentData)
+			await this.eventsService.deleteTournamentPoints(tournamentData.id)
 
 			// Fetch results from Golf Genius
 			const ggResults = await this.fetchGGResults(tournamentData, result)
@@ -279,10 +279,6 @@ export class PointsImportService {
 		}
 		// Add validation for event.gg_id and round.gg_id if needed
 		return true
-	}
-
-	private async deleteExistingPoints(tournamentData: TournamentData): Promise<void> {
-		await this.eventsService.deleteTournamentResultsAndPoints(tournamentData.id)
 	}
 
 	private async fetchGGResults(
