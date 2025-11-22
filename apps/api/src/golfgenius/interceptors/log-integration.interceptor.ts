@@ -86,6 +86,8 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 			return "Import Results"
 		} else if (url.includes("/events/") && url.includes("/import-low-scores")) {
 			return "Import Low Scores"
+		} else if (url.includes("/events/") && url.includes("/import-champions")) {
+			return "Import Champions"
 		} else if (url.includes("/events/") && url.includes("/close")) {
 			return "Close Event"
 		} else {

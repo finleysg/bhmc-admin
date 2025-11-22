@@ -1,6 +1,13 @@
-import { and, eq, inArray } from "drizzle-orm"
+import {
+	and,
+	eq,
+	inArray,
+} from "drizzle-orm"
 
-import { BadRequestException, Injectable } from "@nestjs/common"
+import {
+	BadRequestException,
+	Injectable,
+} from "@nestjs/common"
 import { validateClubEvent } from "@repo/domain/functions"
 import {
 	PreparedTournamentPoints,
@@ -9,15 +16,22 @@ import {
 } from "@repo/domain/types"
 
 import { CoursesRepository } from "../courses"
-import { DrizzleService, player, tournamentResult } from "../database"
+import {
+	DrizzleService,
+	player,
+	tournamentResult,
+} from "../database"
 import { TournamentResultModel } from "../database/models"
 import {
 	mapPreparedPointsToTournamentPointsModel,
 	mapPreparedResultsToTournamentResultModel,
 } from "../golfgenius/dto/mappers"
-import { mapToPlayerModel } from "../registration"
+import { mapToPlayerModel } from "../registration/mappers"
 import { EventsRepository } from "./events.repository"
-import { mapToTournamentResultModel, toEvent } from "./mappers"
+import {
+	mapToTournamentResultModel,
+	toEvent,
+} from "./mappers"
 
 @Injectable()
 export class EventsService {

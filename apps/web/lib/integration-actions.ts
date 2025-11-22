@@ -11,6 +11,7 @@ export const INTEGRATION_ACTION_ENDPOINTS: Record<IntegrationActionName, string>
 	"Import Points": "import-points",
 	"Import Results": "import-results",
 	"Import Low Scores": "import-low-scores",
+	"Import Champions": "import-champions",
 	"Close Event": "close-event",
 }
 

@@ -12,6 +12,7 @@ export type IntegrationActionName =
 	| "Import Points"
 	| "Import Results"
 	| "Import Low Scores"
+	| "Import Champions"
 	| "Close Event"
 
 /**
