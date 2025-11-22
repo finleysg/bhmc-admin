@@ -1,6 +1,6 @@
 import { LowScore } from "@repo/domain/types"
 
-import { ChampionModel, LowScoreModel } from "../database/models"
+import { ChampionModel, LowScoreModel, TournamentResultModel } from "../database/models"
 import { toPlayer } from "../registration/mappers"
 
 /**
@@ -64,5 +64,27 @@ export function toChampion(model: ChampionModel): any {
 		eventId: model.eventId,
 		teamId: model.teamId,
 		player: model.player ? toPlayer(model.player) : undefined,
+	}
+}
+
+/**
+ * Maps tournament winner result (with player data) to ChampionModel
+ */
+export function mapTournamentWinnerToChampion(
+	winner: TournamentResultModel,
+	isNet: boolean,
+	eventId: number,
+	eventSeason: number,
+	eventName: string,
+): ChampionModel {
+	return {
+		season: eventSeason,
+		eventName: eventName,
+		flight: winner.flight!,
+		score: winner.score!,
+		playerId: winner.playerId,
+		isNet: isNet ? 1 : 0,
+		eventId,
+		teamId: winner.teamId,
 	}
 }

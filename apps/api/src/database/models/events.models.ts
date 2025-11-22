@@ -20,6 +20,7 @@ import {
 	tournamentResult,
 } from "../schema"
 import { CourseModel } from "./courses.models"
+import { PlayerModel } from "./registration.models"
 
 export const eventInsertSchema = createInsertSchema(event)
 export const eventUpdateSchema = createUpdateSchema(event)
@@ -390,6 +391,9 @@ export class TournamentResultModel {
 	@IsString()
 	@MaxLength(40)
 	summary?: string
+
+	@IsOptional()
+	player?: PlayerModel
 }
 
 // Tournament Points
@@ -421,4 +425,7 @@ export class TournamentPointsModel {
 
 	@IsInt()
 	playerId!: number
+
+	@IsOptional()
+	player?: PlayerModel
 }
