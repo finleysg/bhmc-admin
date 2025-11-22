@@ -20,6 +20,7 @@ export class LowScoreModel {
 	courseName!: string
 
 	@IsInt()
+	@Min(0)
 	score!: number
 
 	@IsInt()
