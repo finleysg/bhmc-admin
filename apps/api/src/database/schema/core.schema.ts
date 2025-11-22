@@ -1,10 +1,4 @@
-import {
-	int,
-	mysqlTable,
-	primaryKey,
-	tinyint,
-	varchar,
-} from "drizzle-orm/mysql-core"
+import { int, mysqlTable, primaryKey, tinyint, varchar } from "drizzle-orm/mysql-core"
 
 import { event } from "./events.schema"
 import { player } from "./registration.schema"

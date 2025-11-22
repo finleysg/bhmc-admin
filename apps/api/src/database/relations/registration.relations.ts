@@ -1,18 +1,9 @@
 import { relations } from "drizzle-orm/relations"
 
 import { authUser } from "../schema/auth.schema"
-import {
-	champion,
-	lowScore,
-} from "../schema/core.schema"
-import {
-	course,
-	hole,
-} from "../schema/courses.schema"
-import {
-	event,
-	eventFee,
-} from "../schema/events.schema"
+import { champion, lowScore } from "../schema/core.schema"
+import { course, hole } from "../schema/courses.schema"
+import { event, eventFee } from "../schema/events.schema"
 import {
 	payment,
 	player,

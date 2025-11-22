@@ -1,22 +1,7 @@
-import {
-	IsInt,
-	IsNumber,
-	IsOptional,
-	IsString,
-	Max,
-	MaxLength,
-	Min,
-} from "class-validator"
-import {
-	createInsertSchema,
-	createUpdateSchema,
-} from "drizzle-zod"
+import { IsInt, IsNumber, IsOptional, IsString, Max, MaxLength, Min } from "class-validator"
+import { createInsertSchema, createUpdateSchema } from "drizzle-zod"
 
-import {
-	champion,
-	lowScore,
-} from "../schema"
-import { EventModel } from "./events.models"
+import { champion, lowScore } from "../schema"
 import { PlayerModel } from "./registration.models"
 
 export const lowScoreInsertSchema = createInsertSchema(lowScore)
@@ -92,7 +77,4 @@ export class ChampionModel {
 
 	@IsOptional()
 	player?: PlayerModel
-
-	@IsOptional()
-	event?: EventModel
 }

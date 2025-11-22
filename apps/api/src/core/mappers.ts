@@ -1,6 +1,6 @@
 import { LowScore } from "@repo/domain/types"
 
-import { LowScoreModel } from "../database/models"
+import { ChampionModel, LowScoreModel } from "../database/models"
 import { toPlayer } from "../registration/mappers"
 
 /**
@@ -30,4 +30,39 @@ export function toLowScore(model: LowScoreModel): LowScore {
 		isNet: Boolean(model.isNet),
 		player: model.player ? toPlayer(model.player) : undefined,
 	} as LowScore
+}
+
+/**
+ * Maps database entity to ChampionModel
+ */
+export function mapToChampionModel(entity: Record<string, any>): ChampionModel {
+	return {
+		id: entity.id,
+		season: entity.season,
+		eventName: entity.eventName,
+		flight: entity.flight,
+		score: entity.score,
+		playerId: entity.playerId,
+		isNet: entity.isNet,
+		eventId: entity.eventId,
+		teamId: entity.teamId,
+	}
+}
+
+/**
+ * Maps ChampionModel to Champion domain class
+ */
+export function toChampion(model: ChampionModel): any {
+	return {
+		id: model.id,
+		season: model.season,
+		eventName: model.eventName,
+		flight: model.flight,
+		score: model.score,
+		playerId: model.playerId,
+		isNet: Boolean(model.isNet),
+		eventId: model.eventId,
+		teamId: model.teamId,
+		player: model.player ? toPlayer(model.player) : undefined,
+	}
 }

@@ -1,9 +1,6 @@
 import { relations } from "drizzle-orm/relations"
 
-import {
-	champion,
-	lowScore,
-} from "../schema/core.schema"
+import { champion, lowScore } from "../schema/core.schema"
 import { event } from "../schema/events.schema"
 import { player } from "../schema/registration.schema"
 
