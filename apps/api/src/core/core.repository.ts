@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 
@@ -25,6 +25,7 @@ export class CoreRepository {
 					eq(lowScore.isNet, isNet ? 1 : 0),
 				),
 			)
+			.orderBy(asc(lowScore.score))
 		return results.map(mapToLowScoreModel)
 	}
 
