@@ -50,17 +50,25 @@ export class LowScoresImportService {
 					created++
 				}
 			} else if (grossMinScore === grossCurrentLow) {
-				// Tie: insert all players with the score (if not already exists? Logic: no dup check)
+				// Tie: insert all players with the score (avoid duplicates)
 				const playersWithTie = scorecardTotals.filter((st) => st.totalScore === grossMinScore)
 				for (const st of playersWithTie) {
-					await this.core.createLowScore({
+					const alreadyExists = await this.core.existsLowScore(
 						season,
-						courseName: course.name,
-						score: grossMinScore,
-						playerId: st.playerId,
-						isNet: 0,
-					})
-					created++
+						course.name,
+						false,
+						st.playerId,
+					)
+					if (!alreadyExists) {
+						await this.core.createLowScore({
+							season,
+							courseName: course.name,
+							score: grossMinScore,
+							playerId: st.playerId,
+							isNet: 0,
+						})
+						created++
+					}
 				}
 			}
 
@@ -94,14 +102,22 @@ export class LowScoresImportService {
 			} else if (netMinScore === netCurrentLow) {
 				const playersWithTie = netScorecardTotals.filter((st) => st.totalScore === netMinScore)
 				for (const st of playersWithTie) {
-					await this.core.createLowScore({
+					const alreadyExists = await this.core.existsLowScore(
 						season,
-						courseName: course.name,
-						score: netMinScore,
-						playerId: st.playerId,
-						isNet: 1,
-					})
-					created++
+						course.name,
+						true,
+						st.playerId,
+					)
+					if (!alreadyExists) {
+						await this.core.createLowScore({
+							season,
+							courseName: course.name,
+							score: netMinScore,
+							playerId: st.playerId,
+							isNet: 1,
+						})
+						created++
+					}
 				}
 			}
 

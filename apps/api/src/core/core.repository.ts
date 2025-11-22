@@ -46,9 +46,36 @@ export class CoreRepository {
 		throw new Error(`No low score found for id ${id}.`)
 	}
 
-	async deleteLowScores(season: number, courseName: string): Promise<void> {
+	async deleteLowScores(season: number, courseName: string, isNet: boolean): Promise<void> {
 		await this.drizzle.db
 			.delete(lowScore)
-			.where(and(eq(lowScore.season, season), eq(lowScore.courseName, courseName)))
+			.where(
+				and(
+					eq(lowScore.season, season),
+					eq(lowScore.courseName, courseName),
+					eq(lowScore.isNet, isNet ? 1 : 0),
+				),
+			)
+	}
+
+	async existsLowScore(
+		season: number,
+		courseName: string,
+		isNet: boolean,
+		playerId: number,
+	): Promise<boolean> {
+		const existing = await this.drizzle.db
+			.select({ id: lowScore.id })
+			.from(lowScore)
+			.where(
+				and(
+					eq(lowScore.season, season),
+					eq(lowScore.courseName, courseName),
+					eq(lowScore.isNet, isNet ? 1 : 0),
+					eq(lowScore.playerId, playerId),
+				),
+			)
+			.limit(1)
+		return existing.length > 0
 	}
 }
