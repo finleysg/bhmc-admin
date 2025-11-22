@@ -17,10 +17,11 @@ import {
 	tournamentPoints,
 	tournamentResult,
 } from "../schema"
+import { champion } from "../schema/core.schema"
 import { integrationLog } from "../schema/golf-genius.schema"
 
 export const eventRelations = relations(event, ({ many }) => ({
-	// coreMajorchampions: many(coreMajorchampion),
+	champions: many(champion),
 	// coreSeasonsettings_matchPlayEventId: many(coreSeasonsettings, {
 	// 	relationName: "coreSeasonsettings_matchPlayEventId_eventsEvent_id",
 	// }),
