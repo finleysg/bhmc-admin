@@ -1,6 +1,13 @@
-import { LowScore } from "@repo/domain/types"
+import {
+	Champion,
+	LowScore,
+} from "@repo/domain/types"
 
-import { ChampionModel, LowScoreModel, TournamentResultModel } from "../database/models"
+import {
+	ChampionModel,
+	LowScoreModel,
+	TournamentResultModel,
+} from "../database/models"
 import { toPlayer } from "../registration/mappers"
 
 /**
@@ -52,7 +59,7 @@ export function mapToChampionModel(entity: Record<string, any>): ChampionModel {
 /**
  * Maps ChampionModel to Champion domain class
  */
-export function toChampion(model: ChampionModel): any {
+export function toChampion(model: ChampionModel): Champion {
 	return {
 		id: model.id,
 		season: model.season,
@@ -77,11 +84,28 @@ export function mapTournamentWinnerToChampion(
 	eventSeason: number,
 	eventName: string,
 ): ChampionModel {
+	// Validate required fields for champion mapping
+	if (!winner) {
+		throw new Error(`Winner result is null or undefined`)
+	}
+
+	if (!winner.flight) {
+		throw new Error(
+			`Winner (ID: ${winner.id}) has missing flight information for tournament ${winner.tournamentId}`,
+		)
+	}
+
+	if (winner.score === null || winner.score === undefined) {
+		throw new Error(
+			`Winner (ID: ${winner.id}) has missing score for tournament ${winner.tournamentId}`,
+		)
+	}
+
 	return {
 		season: eventSeason,
 		eventName: eventName,
-		flight: winner.flight!,
-		score: winner.score!,
+		flight: winner.flight,
+		score: winner.score,
 		playerId: winner.playerId,
 		isNet: isNet ? 1 : 0,
 		eventId,
