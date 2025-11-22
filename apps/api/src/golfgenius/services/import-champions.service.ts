@@ -1,6 +1,12 @@
-import { Injectable, Logger } from "@nestjs/common"
+import {
+	Injectable,
+	Logger,
+} from "@nestjs/common"
 
-import { CoreRepository, mapTournamentWinnerToChampion } from "../../core"
+import {
+	CoreRepository,
+	mapTournamentWinnerToChampion,
+} from "../../core"
 import { EventsService } from "../../events"
 
 // Internal DTO for import result
@@ -69,7 +75,7 @@ export class ImportChampionsService {
 		}
 
 		this.logger.log(
-			`Champion import complete: ${championsCreated} champions created, ${errors.length} errors, ${errors.length} errors`,
+			`Champion import complete: ${championsCreated} champions created, ${errors.length} errors`,
 		)
 		return { championsCreated, errors }
 	}
