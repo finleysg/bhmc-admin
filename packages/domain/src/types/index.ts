@@ -1,5 +1,6 @@
 // Score exports
 export { Score } from "./scores/score"
+export { LowScore } from "./scores/low-score"
 export { Scorecard } from "./scores/scorecard"
 
 // Course exports
