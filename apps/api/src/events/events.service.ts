@@ -69,11 +69,12 @@ export class EventsService {
 				payoutDate: now,
 			})
 			.where(inArray(tournamentResult.tournamentId, tournamentIds))
+
+		return { success: true }
 	}
 
-	async deleteTournamentResultsAndPoints(tournamentId: number) {
+	async deleteTournamentPoints(tournamentId: number) {
 		await this.repository.deleteTournamentPoints(tournamentId)
-		await this.repository.deleteTournamentResults(tournamentId)
 	}
 
 	async deleteTournamentResults(tournamentId: number): Promise<void> {

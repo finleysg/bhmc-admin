@@ -1,13 +1,12 @@
-import { Workbook, Worksheet } from "exceljs"
+import * as ExcelJS from "exceljs"
 
 import { EventReportRowDto } from "@repo/domain/types"
 
-export async function createWorkbook(): Promise<Workbook> {
-	const ExcelJS = await import("exceljs")
+export function createWorkbook(): ExcelJS.Workbook {
 	return new ExcelJS.Workbook()
 }
 
-export function styleHeaderRow(worksheet: Worksheet, rowNum: number): void {
+export function styleHeaderRow(worksheet: ExcelJS.Worksheet, rowNum: number): void {
 	const headerRow = worksheet.getRow(rowNum)
 	headerRow.font = { bold: true }
 	headerRow.fill = {
@@ -18,14 +17,14 @@ export function styleHeaderRow(worksheet: Worksheet, rowNum: number): void {
 }
 
 export function addFixedColumns(
-	worksheet: Worksheet,
+	worksheet: ExcelJS.Worksheet,
 	columns: Array<{ header: string; key: string; width: number }>,
 ): void {
 	worksheet.columns = columns
 }
 
 export function addDataRows<T extends Record<string, unknown>>(
-	worksheet: Worksheet,
+	worksheet: ExcelJS.Worksheet,
 	startRow: number,
 	rows: T[],
 	columns: Array<{ header: string; key: string; width: number }>,
@@ -56,7 +55,7 @@ export function deriveDynamicColumns(
 	}))
 }
 
-export async function generateBuffer(workbook: Workbook): Promise<Buffer> {
+export async function generateBuffer(workbook: ExcelJS.Workbook): Promise<Buffer> {
 	const buffer = await workbook.xlsx.writeBuffer()
 	return Buffer.from(buffer as ArrayBuffer)
 }

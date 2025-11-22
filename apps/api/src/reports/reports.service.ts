@@ -207,7 +207,7 @@ export class ReportsService {
 	async generateEventReportExcel(eventId: number): Promise<Buffer> {
 		const rows = await this.getEventReport(eventId)
 
-		const workbook = await createWorkbook()
+		const workbook = createWorkbook()
 		const worksheet = workbook.addWorksheet("ClubEvent Report")
 
 		// Define fixed columns
@@ -291,7 +291,7 @@ export class ReportsService {
 	async generatePointsReportExcel(eventId: number): Promise<Buffer> {
 		const rows = await this.getPointsReport(eventId)
 
-		const workbook = await createWorkbook()
+		const workbook = createWorkbook()
 		const worksheet = workbook.addWorksheet("Points Report")
 
 		const fixedColumns = [
@@ -443,7 +443,7 @@ export class ReportsService {
 	async generateFinanceReportExcel(eventId: number): Promise<Buffer> {
 		const report = await this.getFinanceReport(eventId)
 
-		const workbook = await createWorkbook()
+		const workbook = createWorkbook()
 		const worksheet = workbook.addWorksheet("Finance Report")
 
 		// Define fixed columns
@@ -640,7 +640,7 @@ export class ReportsService {
 	async generateEventResultsReportExcel(eventId: number): Promise<Buffer> {
 		const report = await this.getEventResultsReport(eventId)
 
-		const workbook = await createWorkbook()
+		const workbook = createWorkbook()
 		const worksheet = workbook.addWorksheet("ClubEvent Results")
 
 		let currentRow = 1

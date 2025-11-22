@@ -191,7 +191,7 @@ export class ImportAllResultsService {
 			const playerMap = await this.fetchPlayerMapForEvent(tournamentData.eventId)
 
 			// Delete existing results (idempotent)
-			await this.deleteExistingResults(tournamentData)
+			await this.eventsService.deleteTournamentResults(tournamentData.id)
 
 			// Fetch results from Golf Genius
 			const ggResults = await this.fetchGGResults(tournamentData, result)
@@ -217,10 +217,6 @@ export class ImportAllResultsService {
 		}
 
 		return result
-	}
-
-	private async deleteExistingResults(tournamentData: TournamentData): Promise<void> {
-		await this.eventsService.deleteTournamentResultsAndPoints(tournamentData.id)
 	}
 
 	private async fetchGGResults(
@@ -500,12 +496,6 @@ export class ImportAllResultsService {
 		result: ImportResultSummary,
 		playerMap: PlayerMap,
 	): PreparedTournamentResult | null {
-		// Only process players who won skins (total > 0)
-		const totalSkins = parseInt(aggregate.total || "0", 10)
-		if (isNaN(totalSkins) || totalSkins <= 0) {
-			return null // Skip players who didn't win skins
-		}
-
 		// Extract member cards and get first member card
 		const memberCards = SkinsResultParser.extractMemberCards(aggregate as GGAggregate)
 		if (!memberCards || memberCards.length === 0) {
@@ -523,14 +513,17 @@ export class ImportAllResultsService {
 			return null
 		}
 
-		// Position is the number of skins won
-		const position = totalSkins
-
 		// Parse purse amount
 		const amount = parsePurseAmount(playerData.purse)
 		if (amount === null) {
 			return null
 		}
+
+		// Position is the number of skins won
+		// Default to 1 in the case of ties - when the leaderboard
+		// is adjusted to break a tie, no total will be available
+		let position = parseInt(aggregate.total || "1", 10)
+		if (!position) position = 1
 
 		// Score is not relevant for skins tournaments
 		const score: number | null = null

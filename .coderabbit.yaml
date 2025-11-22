@@ -1,3 +1,43 @@
-path_filters:
-  - "!dist/**"
-  - "!node_modules/**"
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en"
+early_access: true
+reviews:
+  request_changes_workflow: true
+  high_level_summary: true
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: false
+  estimate_code_review_effort: false
+  path_instructions:
+    - path: "**/*.{ts,tsx}"
+      instructions: |
+        "Review the Typescript and React code for conformity with best practices in React, NextJS, and Typescript. Highlight any deviations."
+        - Optimal use of TypeScript for component and utility type safety."
+    - path: "apps/api/src/*"
+      instructions: |
+        "Confirm that the code adheres to the following:
+        - NestJS best practices, including proper module organization, dependency injection, and separation of concerns (Controllers vs Services).
+        - Proper usage of Drizzle ORM patterns and repository abstraction where applicable.
+        - Early validation and usage of validated types: parse, don't validate patterns."
+    - path: "apps/web/*"
+      instructions: |
+        "Confirm that the code adheres to the following:
+        - NextJS best practices, including file structure, API routes, and static generation methods.
+        - Efficient state management and server-side rendering techniques."
+    - path: "packages/domain/src/*"
+      instructions: |
+        "Confirm that the code adheres to the following:
+        - Pure TypeScript domain logic with no UI framework dependencies (React/Next.js).
+        - Strict usage of Zod schemas and TypeScript types for validation.
+        - High test coverage for all utility functions and validators.
+        - Proper error handling without implicit any."
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+  tools:
+    eslint:
+      enabled: true
+chat:
+  auto_reply: true
