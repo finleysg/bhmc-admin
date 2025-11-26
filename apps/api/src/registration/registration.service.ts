@@ -484,4 +484,52 @@ export class RegistrationService {
 
 		return result
 	}
+
+	async reserveSlots(eventId: number, slotIds: number[]): Promise<number> {
+		// Fetch all requested slots
+		const slots = await this.drizzle.db
+			.select()
+			.from(registrationSlot)
+			.where(inArray(registrationSlot.id, slotIds))
+
+		// Validation: Ensure all slots are found
+		if (slots.length !== slotIds.length) {
+			throw new BadRequestException("Not all requested slots are available!")
+		}
+
+		// Validation: Ensure all slots belong to the event
+		const invalidEventSlots = slots.filter(slot => slot.eventId !== eventId)
+		if (invalidEventSlots.length > 0) {
+			throw new BadRequestException("Not all requested slots belong to the given event!")
+		}
+
+		// Validation: Ensure all slots are available (status == "A")
+		const unavailableSlots = slots.filter(slot => slot.status !== "A")
+		if (unavailableSlots.length > 0) {
+			throw new BadRequestException("Not all requested slots are available!")
+		}
+
+		// Use transaction to create registration and update slots
+		return await this.drizzle.db.transaction(async (tx) => {
+			// Create empty registration record
+			const [registrationResult] = await tx.insert(registration).values({
+				eventId,
+				startingHole: 1,
+				startingOrder: 0,
+				createdDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			})
+			const registrationId = Number(registrationResult.insertId)
+
+			// Update slots: set registrationId and status to "P" (pending)
+			await tx
+				.update(registrationSlot)
+				.set({
+					registrationId,
+					status: "P",
+				})
+				.where(inArray(registrationSlot.id, slotIds))
+
+			return registrationId
+		})
+	}
 }

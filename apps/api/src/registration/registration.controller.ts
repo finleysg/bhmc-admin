@@ -58,4 +58,13 @@ export class RegistrationController {
 	): Promise<AvailableSlotGroup[]> {
 		return await this.registrationService.getAvailableSlots(eventId, courseId, players)
 	}
+
+	@Post(":eventId/reserve-admin-slots")
+	@UseGuards(JwtAuthGuard)
+	async reserveAdminSlots(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Body() slotIds: number[],
+	) {
+		return this.registrationService.reserveSlots(eventId, slotIds)
+	}
 }
