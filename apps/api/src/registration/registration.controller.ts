@@ -42,6 +42,7 @@ export class RegistrationController {
 	}
 
 	@Get(":eventId/players")
+	@UseGuards(JwtAuthGuard)
 	async getRegisteredPlayers(
 		@Param("eventId", ParseIntPipe) eventId: number,
 	): Promise<ValidatedRegisteredPlayer[]> {
@@ -49,6 +50,7 @@ export class RegistrationController {
 	}
 
 	@Get(":eventId/available-slots")
+	@UseGuards(JwtAuthGuard)
 	async getAvailableSlots(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Query("courseId", ParseIntPipe) courseId: number,

@@ -7,6 +7,7 @@ Current focus:
 
 Recent changes:
 
+- **11/26/2025: Implemented available-slots endpoint** Added GET `/registration/:eventId/available-slots?courseId=123&players=2` endpoint to return slot groups with sufficient available slots for requested player count; created `AvailableSlotGroup` type, repository method to query available slots by event and course, service method to group slots by holeId and startingOrder with filtering logic, and controller endpoint with proper parameter parsing
 - **11/21/2025: Implemented "Import Low Scores" feature** Completed backend `LowScoresImportService` for calculating and storing season-long low scores per course (Gross/Net), added idempotency with `existsLowScore` checks to prevent duplicates, updated UI orchestration with Phase 3 action, enhanced `LogIntegrationInterceptor` to recognize the new `/api/golfgenius/events/:eventId/import-low-scores` endpoint, and fixed data integrity issues for tie scenarios
 - **11/21/2025 (Bug Fix): Fixed invalid IntegrationActionName usage** in `ImportAllResultsService` error handling - changed "Import All Results" (invalid) to "Import Results" (valid) and removed type casting to ensure consistent action naming in logs and UI orchestrator
 - **11/21/2025 (Documentation Fix): Resolved quota tournament documentation inconsistency** - quota format was documented as "Not Implemented" but is fully functional in service with complete DTOs, parser, and processor logic; updated mermaid flow diagram and added detailed documentation about quota tournament behavior and expected fields

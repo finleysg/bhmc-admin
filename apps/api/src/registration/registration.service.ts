@@ -452,7 +452,11 @@ export class RegistrationService {
 	 * Get available slot groups for an event and course.
 	 * Returns groups of slots with the same holeId and startingOrder that have enough available slots for the requested number of players.
 	 */
-	async getAvailableSlots(eventId: number, courseId: number, players: number): Promise<AvailableSlotGroup[]> {
+	async getAvailableSlots(
+		eventId: number,
+		courseId: number,
+		players: number,
+	): Promise<AvailableSlotGroup[]> {
 		const slotModels = await this.repository.findAvailableSlots(eventId, courseId)
 
 		// Group slots by holeId and startingOrder
@@ -469,7 +473,7 @@ export class RegistrationService {
 		const result: AvailableSlotGroup[] = []
 		for (const [key, slots] of groups) {
 			if (slots.length >= players) {
-				const [holeId, startingOrder] = key.split('-').map(Number)
+				const [holeId, startingOrder] = key.split("-").map(Number)
 				result.push({
 					holeId,
 					startingOrder,
