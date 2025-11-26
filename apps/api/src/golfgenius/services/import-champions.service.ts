@@ -1,12 +1,6 @@
-import {
-	Injectable,
-	Logger,
-} from "@nestjs/common"
+import { Injectable, Logger } from "@nestjs/common"
 
-import {
-	CoreRepository,
-	mapTournamentWinnerToChampion,
-} from "../../core"
+import { CoreRepository, mapTournamentWinnerToChampion } from "../../core"
 import { EventsService } from "../../events"
 
 // Internal DTO for import result

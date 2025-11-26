@@ -1,10 +1,4 @@
-import {
-	ClubEvent,
-	EventFee,
-	FeeType,
-	Round,
-	Tournament,
-} from "@repo/domain/types"
+import { ClubEvent, EventFee, FeeType, Round, Tournament } from "@repo/domain/types"
 
 import { toCourse } from "../courses/mappers"
 import type {

@@ -19,6 +19,7 @@
 		"@repo/domain": "workspace:*",
 		"axios": "^1.13.1",
 		"class-validator": "^0.14.2",
+		"dotenv": "^17.2.3",
 		"drizzle-orm": "^0.44.7",
 		"drizzle-zod": "^0.8.3",
 		"exceljs": "^4.4.0",
