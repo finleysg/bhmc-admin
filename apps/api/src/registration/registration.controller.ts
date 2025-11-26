@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards } from "@nestjs/common"
 import type {
 	AddAdminRegistration,
+	AvailableSlotGroup,
 	SearchPlayers,
 	ValidatedRegisteredPlayer,
 } from "@repo/domain/types"
@@ -45,5 +46,14 @@ export class RegistrationController {
 		@Param("eventId", ParseIntPipe) eventId: number,
 	): Promise<ValidatedRegisteredPlayer[]> {
 		return await this.registrationService.getRegisteredPlayers(eventId)
+	}
+
+	@Get(":eventId/available-slots")
+	async getAvailableSlots(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Query("courseId", ParseIntPipe) courseId: number,
+		@Query("players", ParseIntPipe) players: number,
+	): Promise<AvailableSlotGroup[]> {
+		return await this.registrationService.getAvailableSlots(eventId, courseId, players)
 	}
 }

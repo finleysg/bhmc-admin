@@ -4,6 +4,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from "@nes
 import { validateRegisteredPlayer, validateRegistration } from "@repo/domain/functions"
 import {
 	AddAdminRegistration,
+	AvailableSlotGroup,
 	Player,
 	PlayerMap,
 	PlayerRecord,
@@ -445,5 +446,38 @@ export class RegistrationService {
 			// Return the registration ID
 			return registrationId
 		})
+	}
+
+	/**
+	 * Get available slot groups for an event and course.
+	 * Returns groups of slots with the same holeId and startingOrder that have enough available slots for the requested number of players.
+	 */
+	async getAvailableSlots(eventId: number, courseId: number, players: number): Promise<AvailableSlotGroup[]> {
+		const slotModels = await this.repository.findAvailableSlots(eventId, courseId)
+
+		// Group slots by holeId and startingOrder
+		const groups = new Map<string, RegistrationSlot[]>()
+		for (const slotModel of slotModels) {
+			const key = `${slotModel.holeId}-${slotModel.startingOrder}`
+			if (!groups.has(key)) {
+				groups.set(key, [])
+			}
+			groups.get(key)!.push(toRegistrationSlot(slotModel))
+		}
+
+		// Filter groups that have enough available slots and transform to AvailableSlotGroup
+		const result: AvailableSlotGroup[] = []
+		for (const [key, slots] of groups) {
+			if (slots.length >= players) {
+				const [holeId, startingOrder] = key.split('-').map(Number)
+				result.push({
+					holeId,
+					startingOrder,
+					slots,
+				})
+			}
+		}
+
+		return result
 	}
 }

@@ -28,6 +28,7 @@ import {
 	mapToRegistrationWithCourse,
 	mapToSlotsWithPlayerAndHole,
 } from "./mappers"
+import { mapToHoleModel } from "../courses/mappers"
 
 @Injectable()
 export class RegistrationRepository {
@@ -163,5 +164,32 @@ export class RegistrationRepository {
 			.where(inArray(registrationFee.registrationSlotId, slotIds))
 
 		return mapToFeesWithEventFeeAndFeeType(results)
+	}
+
+	/**
+	 * Find available slots for an event and course.
+	 * Returns slots with status 'A' (Available) for the given event and course.
+	 */
+	async findAvailableSlots(eventId: number, courseId: number): Promise<RegistrationSlotModel[]> {
+		const results = await this.drizzle.db
+			.select({
+				slot: registrationSlot,
+				hole: hole,
+			})
+			.from(registrationSlot)
+			.innerJoin(hole, eq(registrationSlot.holeId, hole.id))
+			.where(
+				and(
+					eq(registrationSlot.eventId, eventId),
+					eq(registrationSlot.status, "A"),
+					eq(hole.courseId, courseId),
+				),
+			)
+
+		return results.map((result) => {
+			const slotModel = mapToRegistrationSlotModel(result.slot)
+			slotModel.hole = result.hole ? mapToHoleModel(result.hole) : undefined
+			return slotModel
+		})
 	}
 }
