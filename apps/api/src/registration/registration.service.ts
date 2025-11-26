@@ -498,13 +498,13 @@ export class RegistrationService {
 		}
 
 		// Validation: Ensure all slots belong to the event
-		const invalidEventSlots = slots.filter(slot => slot.eventId !== eventId)
+		const invalidEventSlots = slots.filter((slot) => slot.eventId !== eventId)
 		if (invalidEventSlots.length > 0) {
 			throw new BadRequestException("Not all requested slots belong to the given event!")
 		}
 
 		// Validation: Ensure all slots are available (status == "A")
-		const unavailableSlots = slots.filter(slot => slot.status !== "A")
+		const unavailableSlots = slots.filter((slot) => slot.status !== "A")
 		if (unavailableSlots.length > 0) {
 			throw new BadRequestException("Not all requested slots are available!")
 		}

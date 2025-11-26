@@ -76,6 +76,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Reserve Admin Slots Endpoint**: Added POST `/:eventId/reserve-admin-slots` endpoint for administrative slot reservation; accepts array of slot IDs in request body; creates empty registration record and updates slots to pending status in transaction; validates all slots are available before reservation; returns new registration ID
+
+### Changed
+
+- **Commit Policy Enforcement**: Updated `.clinerules/commit-policy.md` to require all commits to go through the `/commit-task.md` workflow; discourages manual `git add`/`git commit` commands outside the workflow; ensures comprehensive quality checks and documentation updates before committing
+
 - **Purse Amount Handling Refactor**: Unified purse amount logic across all tournament result import methods (points/skins/proxy/stroke/team/quota) to exit early on null/0/empty values without logging errors; removed redundant preliminary checks and error messages; updated `parsePurseAmount` to handle undefined/null values gracefully; ensures consistent business rule that tournament results are only saved when players have won actual money
 
 - **Type Error Fixes After Domain Package Migration**: Resolved 20 TypeScript compilation errors after moving types to domain package; updated import statements across 9 files in API package to use centralized `@repo/domain/types`; fixed NestJS decorator compatibility with type-only imports (`import type`) for `emitDecoratorMetadata` settings; resolved missing type issues in Golf Genius integration service by proper import consolidation

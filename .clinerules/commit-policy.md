@@ -6,23 +6,35 @@ applyTo: "**"
 
 # Git Commit Policy
 
-**NEVER commit changes unless explicitly asked by the user.**
+**NEVER commit changes outside of the `/commit-task.md` workflow.**
 
-This rule ensures that all commits are intentional and approved by the user. Changes should be staged and ready, but commits should only happen when the user specifically requests them.
+All commits must go through the comprehensive `/commit-task.md` workflow which includes:
+
+- Code quality checks (formatting, linting, build, testing)
+- Proper changelog updates
+- Conventional commit message generation
+- User approval for each step
+
+Manual `git add` and `git commit` commands are **discouraged** and should only be used in exceptional cases with explicit user approval.
 
 ## Rationale
 
 - Prevents accidental commits of incomplete or untested changes
-- Ensures user has final approval over what gets committed
-- Maintains control over the git history
+- Ensures consistent code quality standards are maintained
+- Maintains detailed changelog and documentation
+- Provides comprehensive quality gates before commits
+- Ensures user has final approval over each step of the process
 
 ## Workflow
 
 1. Make code changes as requested
-2. Stage changes with `git add` when appropriate
-3. **Wait for explicit user instruction** before committing
-4. Only commit when user says something like "commit the changes" or "please commit"
+2. Run `/commit-task.md` to initiate the complete deployment workflow
+3. Follow the workflow until completion or user decline
+4. Commits will be made as part of step 7 of the workflow with explicit user approval
 
 ## Exceptions
 
-None. This rule always applies.
+- Emergency hotfixes may bypass some checks with explicit user approval
+- Manual commits must include justification for bypassing the workflow
+
+This rule always applies to maintain code quality and documentation standards.
