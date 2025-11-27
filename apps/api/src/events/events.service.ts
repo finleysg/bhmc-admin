@@ -27,7 +27,10 @@ export class EventsService {
 		private readonly courses: CoursesRepository,
 	) {}
 
-	async getValidatedClubEventById(eventId: number): Promise<ValidatedClubEvent> {
+	async getValidatedClubEventById(
+		eventId: number,
+		requireIntegration: boolean | undefined = true,
+	): Promise<ValidatedClubEvent> {
 		const clubEvent = await this.repository.findEventById(eventId)
 		if (!clubEvent) throw new BadRequestException(`Event with id ${eventId} does not exist.`)
 
@@ -40,7 +43,7 @@ export class EventsService {
 		clubEvent.eventRounds = await this.repository.findRoundsByEventId(eventId)
 		clubEvent.tournaments = await this.repository.findTournamentsByEventId(eventId)
 
-		return validateClubEvent(toEvent(clubEvent))
+		return validateClubEvent(toEvent(clubEvent), requireIntegration)
 	}
 
 	async exists(eventId: number): Promise<boolean> {
