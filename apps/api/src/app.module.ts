@@ -8,6 +8,7 @@ import { DatabaseModule } from "./database/database.module"
 import { EventsModule } from "./events/events.module"
 import { GolfgeniusModule } from "./golfgenius/golfgenius.module"
 import { HealthModule } from "./health/health.module"
+import { MailModule } from "./mail/mail.module"
 import { ReportsModule } from "./reports/reports.module"
 
 @Module({
@@ -17,6 +18,7 @@ import { ReportsModule } from "./reports/reports.module"
 		EventsModule,
 		GolfgeniusModule,
 		HealthModule,
+		MailModule,
 		ReportsModule,
 	],
 	providers: [
