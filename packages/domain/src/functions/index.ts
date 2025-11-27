@@ -11,3 +11,4 @@ export {
 export { validateRegisteredPlayer, validateRegistration } from "./registration-validation"
 export { formatTime, parseTeeTimeSplits, parseTime } from "./time-utils"
 export { validateClubEvent } from "./event-validation"
+export { calculateTransactionFee } from "./payment"

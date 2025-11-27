@@ -34,7 +34,7 @@ export type { EventResultsSectionDto } from "./reports/event-results-section.dto
 export type { EventResultsReportRowDto } from "./reports/event-results-report-row.dto"
 
 // Registration exports
-export type { AddAdminRegistration, AddAdminRegistrationSlot } from "./register/admin-registration"
+export type { AdminRegistration, AdminRegistrationSlot } from "./register/admin-registration"
 export type { AvailableSlotGroup } from "./register/available-slot-group"
 export type { Player } from "./register/player"
 export type { RegisteredPlayer } from "./register/registered-player"

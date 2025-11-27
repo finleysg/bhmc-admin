@@ -1,6 +1,16 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards } from "@nestjs/common"
+import {
+	Body,
+	Controller,
+	Get,
+	Param,
+	ParseIntPipe,
+	Post,
+	Put,
+	Query,
+	UseGuards,
+} from "@nestjs/common"
 import type {
-	AddAdminRegistration,
+	AdminRegistration,
 	AvailableSlotGroup,
 	SearchPlayers,
 	ValidatedRegisteredPlayer,
@@ -32,13 +42,14 @@ export class RegistrationController {
 		return this.registrationService.findGroup(eventId, playerId)
 	}
 
-	@Post(":eventId")
+	@Put(":eventId/admin-registration/:registrationId")
 	@UseGuards(JwtAuthGuard)
-	async createAdminRegistration(
+	async completeAdminRegistration(
 		@Param("eventId", ParseIntPipe) eventId: number,
-		@Body() dto: AddAdminRegistration,
+		@Param("registrationId", ParseIntPipe) registrationId: number,
+		@Body() dto: AdminRegistration,
 	) {
-		return this.registrationService.createAdminRegistration(+eventId, dto)
+		await this.registrationService.completeAdminRegistration(eventId, registrationId, dto)
 	}
 
 	@Get(":eventId/players")

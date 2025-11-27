@@ -77,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Reserve Admin Slots Endpoint**: Added POST `/:eventId/reserve-admin-slots` endpoint for administrative slot reservation; accepts array of slot IDs in request body; creates empty registration record and updates slots to pending status in transaction; validates all slots are available before reservation; returns new registration ID
+- **Transaction Fee Calculation**: Added `calculateTransactionFee` domain function implementing Stripe-like fee calculation (2.9% + $0.30); returns 0 for $0 payments; integrated into `completeAdminRegistration` service to automatically calculate fees when `collectPayment` is true; added comprehensive test suite with edge cases and floating point precision handling
 
 ### Changed
 

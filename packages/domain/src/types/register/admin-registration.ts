@@ -1,14 +1,9 @@
 import { Type as TransformerType } from "class-transformer"
 import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 
-export class AddAdminRegistration {
-	@IsOptional()
-	@IsString()
-	paymentCode?: string | null
+import { EventFee } from "../events/event-fee"
 
-	@IsBoolean()
-	requestPayment!: boolean
-
+export class AdminRegistration {
 	@IsNumber()
 	userId!: number
 
@@ -16,24 +11,43 @@ export class AddAdminRegistration {
 	signedUpBy!: string
 
 	@IsOptional()
+	@IsNumber()
+	courseId?: number | null
+
+	@IsNumber()
+	startingHoleId!: number
+
+	@IsNumber()
+	startingOrder!: number
+
+	@IsNumber()
+	expires!: number
+
+	@IsOptional()
 	@IsString()
 	notes?: string | null
 
+	@IsBoolean()
+	collectPayment!: boolean
+
 	@IsArray()
 	@ValidateNested({ each: true })
-	@TransformerType(() => AddAdminRegistrationSlot)
-	slots!: AddAdminRegistrationSlot[]
+	@TransformerType(() => AdminRegistrationSlot)
+	slots!: AdminRegistrationSlot[]
 }
 
-export class AddAdminRegistrationSlot {
+export class AdminRegistrationSlot {
+	@IsNumber()
+	registrationId!: number
+
+	@IsNumber()
+	slotId!: number
+
 	@IsNumber()
 	playerId!: number
 
-	@IsOptional()
-	@IsNumber()
-	slotId?: number | null
-
 	@IsArray()
-	@IsNumber({}, { each: true })
-	eventFeeIds!: number[]
+	@ValidateNested({ each: true })
+	@TransformerType(() => EventFee)
+	fees!: EventFee[]
 }
