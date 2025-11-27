@@ -429,32 +429,9 @@ export class RegistrationService {
 	}
 
 	async reserveSlots(eventId: number, slotIds: number[]): Promise<number> {
-		// Fetch all requested slots
-		const slots = await this.drizzle.db
-			.select()
-			.from(registrationSlot)
-			.where(inArray(registrationSlot.id, slotIds))
-
-		// Validation: Ensure all slots are found
-		if (slots.length !== slotIds.length) {
-			throw new BadRequestException("Not all requested slots are available!")
-		}
-
-		// Validation: Ensure all slots belong to the event
-		const invalidEventSlots = slots.filter((slot) => slot.eventId !== eventId)
-		if (invalidEventSlots.length > 0) {
-			throw new BadRequestException("Not all requested slots belong to the given event!")
-		}
-
-		// Validation: Ensure all slots are available (status == "A")
-		const unavailableSlots = slots.filter((slot) => slot.status !== "A")
-		if (unavailableSlots.length > 0) {
-			throw new BadRequestException("Not all requested slots are available!")
-		}
-
-		// Use transaction to create registration and update slots
+		// Use transaction to atomically validate and reserve slots
 		return await this.drizzle.db.transaction(async (tx) => {
-			// Create empty registration record
+			// Create empty registration record first
 			const [registrationResult] = await tx.insert(registration).values({
 				eventId,
 				startingHole: 1,
@@ -463,14 +440,27 @@ export class RegistrationService {
 			})
 			const registrationId = Number(registrationResult.insertId)
 
-			// Update slots: set registrationId and status to "P" (pending)
-			await tx
+			// Atomically update slots: only reserve slots that are available ('A') and belong to the event
+			// This prevents TOCTOU race conditions by checking and updating in a single atomic operation
+			const updateResult = await tx
 				.update(registrationSlot)
 				.set({
 					registrationId,
 					status: "P",
 				})
-				.where(inArray(registrationSlot.id, slotIds))
+				.where(
+					and(
+						inArray(registrationSlot.id, slotIds),
+						eq(registrationSlot.eventId, eventId),
+						eq(registrationSlot.status, "A"),
+					),
+				)
+
+			// Validate that all requested slots were successfully reserved
+			// If the affected row count doesn't match slotIds.length, some slots were not available
+			if ((updateResult as any).affectedRows !== slotIds.length) {
+				throw new BadRequestException("Not all requested slots are available!")
+			}
 
 			return registrationId
 		})

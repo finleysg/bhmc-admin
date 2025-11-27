@@ -12,6 +12,6 @@ describe("calculateTransactionFee", () => {
 	})
 
 	it("handles decimal amounts", () => {
-		expect(calculateTransactionFee(50.5)).toBeCloseTo(1.7665) // 50.50 * 0.029 + 0.30 ≈ 1.4645 + 0.30 = 1.7645
+		expect(calculateTransactionFee(50.5)).toBeCloseTo(1.7645) // 50.50 * 0.029 + 0.30 ≈ 1.4645 + 0.30 = 1.7645
 	})
 })

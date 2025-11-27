@@ -169,6 +169,8 @@ export class RegistrationRepository {
 	/**
 	 * Find available slots for an event and course.
 	 * Returns slots with status 'A' (Available) for the given event and course.
+	 * NOTE: holeId is nullable, but for events where players choose their own tee times,
+	 * all slots should have a holeId assigned.
 	 */
 	async findAvailableSlots(eventId: number, courseId: number): Promise<RegistrationSlotModel[]> {
 		const results = await this.drizzle.db
