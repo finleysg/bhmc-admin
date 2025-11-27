@@ -75,7 +75,7 @@ describe("validateRegistration", () => {
 		eventId: 1,
 		startingOrder: 0,
 		slot: 1,
-		status: "active",
+		status: "R",
 		holeId: 1,
 		hole: validHole,
 		player: validPlayer,

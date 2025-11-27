@@ -14,6 +14,7 @@ import {
 	PlayerRecord,
 	RegisteredPlayer,
 	RegistrationSlot,
+	RegistrationStatus,
 	SearchPlayers,
 	ValidatedRegisteredPlayer,
 	ValidatedRegistration,
@@ -73,7 +74,7 @@ export class RegistrationService {
 			.where(
 				and(
 					eq(registrationSlot.eventId, eventId),
-					eq(registrationSlot.status, "R"),
+					eq(registrationSlot.status, RegistrationStatus.RESERVED),
 					isNotNull(registrationSlot.playerId),
 				),
 			)
@@ -368,7 +369,7 @@ export class RegistrationService {
 				await tx
 					.update(registrationSlot)
 					.set({
-						status: "X",
+						status: RegistrationStatus.AWAITING_PAYMENT,
 						playerId: slot.playerId,
 						holeId: dto.startingHoleId,
 						startingOrder: dto.startingOrder,
@@ -446,13 +447,13 @@ export class RegistrationService {
 				.update(registrationSlot)
 				.set({
 					registrationId,
-					status: "P",
+					status: RegistrationStatus.PENDING,
 				})
 				.where(
 					and(
 						inArray(registrationSlot.id, slotIds),
 						eq(registrationSlot.eventId, eventId),
-						eq(registrationSlot.status, "A"),
+						eq(registrationSlot.status, RegistrationStatus.AVAILABLE),
 					),
 				)
 

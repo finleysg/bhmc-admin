@@ -2,6 +2,8 @@ import { and, eq, inArray } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 
+import { RegistrationStatus } from "@repo/domain/types"
+
 import {
 	course,
 	DrizzleService,
@@ -183,7 +185,7 @@ export class RegistrationRepository {
 			.where(
 				and(
 					eq(registrationSlot.eventId, eventId),
-					eq(registrationSlot.status, "A"),
+					eq(registrationSlot.status, RegistrationStatus.AVAILABLE),
 					eq(hole.courseId, courseId),
 				),
 			)
