@@ -34,11 +34,14 @@ export type { EventResultsSectionDto } from "./reports/event-results-section.dto
 export type { EventResultsReportRowDto } from "./reports/event-results-report-row.dto"
 
 // Registration exports
-export type { AddAdminRegistration, AddAdminRegistrationSlot } from "./register/admin-registration"
+export type { AdminRegistration, AdminRegistrationSlot } from "./register/admin-registration"
+export type { AvailableSlotGroup } from "./register/available-slot-group"
 export type { Player } from "./register/player"
 export type { RegisteredPlayer } from "./register/registered-player"
 export type { Registration } from "./register/registration"
 export type { RegistrationFee } from "./register/registration-fee"
+export { RegistrationStatus } from "./register/registration-status"
+export type { RegistrationStatusValue } from "./register/registration-status"
 export type { RegistrationSlot } from "./register/registration-slot"
 export type { SearchPlayers } from "./register/search-players"
 export type { Payment } from "./register/payment"

@@ -8,6 +8,6 @@ module.exports = {
 	},
 	collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts", "!src/**/__tests__/**"],
 	moduleFileExtensions: ["ts", "js", "json"],
-	setupFilesAfterEnv: [],
+	setupFilesAfterEnv: ["<rootDir>/test.setup.ts"],
 	testTimeout: 10000,
 }

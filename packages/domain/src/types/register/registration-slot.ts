@@ -4,6 +4,7 @@ import { IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 import { Hole } from "../courses/hole"
 import { Player } from "./player"
 import { RegistrationFee } from "./registration-fee"
+import type { RegistrationStatusValue } from "./registration-status"
 
 export class RegistrationSlot {
 	@IsOptional()
@@ -23,7 +24,7 @@ export class RegistrationSlot {
 	slot!: number
 
 	@IsString()
-	status!: string
+	status!: RegistrationStatusValue
 
 	@IsOptional()
 	@IsNumber()

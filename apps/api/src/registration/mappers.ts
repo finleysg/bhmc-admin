@@ -1,4 +1,10 @@
-import { Player, Registration, RegistrationFee, RegistrationSlot } from "@repo/domain/types"
+import {
+	Player,
+	Registration,
+	RegistrationFee,
+	RegistrationSlot,
+	RegistrationStatusValue,
+} from "@repo/domain/types"
 
 import { mapToCourseModel, mapToHoleModel } from "../courses/mappers"
 import {
@@ -120,7 +126,7 @@ export function toRegistrationSlot(model: RegistrationSlotModel): RegistrationSl
 		eventId: model.eventId,
 		startingOrder: model.startingOrder,
 		slot: model.slot,
-		status: model.status,
+		status: model.status as RegistrationStatusValue,
 		holeId: model.holeId,
 		hole: undefined, // Not populated in current model structure
 		playerId: model.playerId,

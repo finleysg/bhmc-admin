@@ -1,14 +1,20 @@
 import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
 
 import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common"
-import { validateRegisteredPlayer, validateRegistration } from "@repo/domain/functions"
 import {
-	AddAdminRegistration,
+	calculateTransactionFee,
+	validateRegisteredPlayer,
+	validateRegistration,
+} from "@repo/domain/functions"
+import {
+	AdminRegistration,
+	AvailableSlotGroup,
 	Player,
 	PlayerMap,
 	PlayerRecord,
 	RegisteredPlayer,
 	RegistrationSlot,
+	RegistrationStatus,
 	SearchPlayers,
 	ValidatedRegisteredPlayer,
 	ValidatedRegistration,
@@ -68,7 +74,7 @@ export class RegistrationService {
 			.where(
 				and(
 					eq(registrationSlot.eventId, eventId),
-					eq(registrationSlot.status, "R"),
+					eq(registrationSlot.status, RegistrationStatus.RESERVED),
 					isNotNull(registrationSlot.playerId),
 				),
 			)
@@ -285,164 +291,176 @@ export class RegistrationService {
 		return playerMap
 	}
 
-	async createAdminRegistration(eventId: number, dto: AddAdminRegistration): Promise<number> {
-		const eventRecord = await this.events.getValidatedClubEventById(eventId)
+	async completeAdminRegistration(
+		eventId: number,
+		registrationId: number,
+		dto: AdminRegistration,
+	): Promise<void> {
+		// Fetch existing registration to validate
+		const [existingRegistration] = await this.drizzle.db
+			.select()
+			.from(registration)
+			.where(eq(registration.id, registrationId))
+			.limit(1)
 
+		if (!existingRegistration) {
+			throw new NotFoundException(`Registration ${registrationId} not found`)
+		}
+
+		if (existingRegistration.eventId !== eventId) {
+			throw new BadRequestException(
+				`Registration ${registrationId} does not belong to event ${eventId}`,
+			)
+		}
+
+		// Get event record for fee validation
+		const eventRecord = await this.events.getValidatedClubEventById(eventId)
 		if (!eventRecord) {
 			throw new BadRequestException("event id not found")
 		}
 
-		if (!dto.requestPayment && !dto.paymentCode) {
-			throw new BadRequestException("paymentCode is required when requestPayment is false")
-		}
+		// Calculate payment amount from fees (using cents to avoid floating-point issues)
+		const allFees = dto.slots.flatMap((slot) => slot.fees)
+		const totalCents = allFees.reduce((sum, fee) => sum + Math.round(fee.amount * 100), 0)
+		const totalAmount = (totalCents / 100).toFixed(2)
 
-		const slotIds = new Set<number>()
-		if (eventRecord.canChoose) {
-			for (const slot of dto.slots) {
-				if (!slot.slotId) {
-					throw new BadRequestException("slotId is required for canChoose events")
-				}
-				if (slotIds.has(slot.slotId)) {
-					throw new BadRequestException("Duplicate slotId in slots")
-				}
-				slotIds.add(slot.slotId)
-
-				// Fetch and validate slot
-				const [existingSlot] = await this.drizzle.db
-					.select()
-					.from(registrationSlot)
-					.where(eq(registrationSlot.id, slot.slotId))
-					.limit(1)
-				if (!existingSlot) {
-					throw new NotFoundException(`Slot ${slot.slotId} not found`)
-				}
-				if (existingSlot.eventId !== eventId) {
-					throw new BadRequestException(`Slot ${slot.slotId} does not belong to event ${eventId}`)
-				}
-				if (existingSlot.status !== "A") {
-					throw new BadRequestException(
-						`Slot ${slot.slotId} is not available (status: ${existingSlot.status})`,
-					)
-				}
-				if (existingSlot.playerId !== null) {
-					throw new BadRequestException(`Slot ${slot.slotId} is already taken`)
-				}
-			}
-		}
-
-		// Derive courseId for canChoose using preloaded data
-		let courseId: number | null = null
-		if (eventRecord.canChoose && dto.slots.length > 0) {
-			const firstSlotId = dto.slots[0].slotId!
-			const firstSlot = await this.repository.findRegistrationSlotById(firstSlotId)
-
-			// Find courseId from the first slot
-			const holeData = eventRecord
-				.courses!.flatMap((c) => c.holes)
-				.find((h) => h.id === firstSlot.holeId)
-			if (!holeData) {
-				throw new BadRequestException(
-					`Hole ${firstSlot.holeId} is not part of event ${eventId} course configuration`,
-				)
-			}
-			courseId = holeData.courseId
-		}
-
-		// Calculate payment amount using preloaded eventFees
-		const allEventFeeIds = dto.slots.flatMap((s: { eventFeeIds: number[] }) => s.eventFeeIds)
-		const uniqueEventFeeIds = [...new Set(allEventFeeIds)]
-		let totalAmount = "0.00"
-		for (const feeId of uniqueEventFeeIds) {
-			const fee = eventRecord.eventFees.find((f) => f.id === feeId)
-			if (fee) {
-				const amount = fee.amount
-				totalAmount = (parseFloat(totalAmount) + amount).toFixed(2)
-			}
-		}
+		// Calculate expiry datetime
+		const expires = new Date()
+		expires.setHours(expires.getHours() + dto.expires)
 
 		// Use transaction
+		await this.drizzle.db.transaction(async (tx) => {
+			// Update registration
+			await tx
+				.update(registration)
+				.set({
+					userId: dto.userId,
+					signedUpBy: dto.signedUpBy,
+					notes: dto.notes,
+					courseId: dto.courseId,
+					startingHole: 1, // legacy field, always 1
+					startingOrder: 0, // legacy field, always 0
+					expires: expires.toISOString().slice(0, 19).replace("T", " "),
+				})
+				.where(eq(registration.id, registrationId))
+
+			// Create payment
+			const paymentCode = dto.collectPayment ? "Requested" : "Waived"
+			let transactionFee = "0.00"
+			if (dto.collectPayment) {
+				const fee = calculateTransactionFee(parseFloat(totalAmount))
+				transactionFee = fee.toFixed(2)
+			}
+			const [paymentResult] = await tx.insert(payment).values({
+				paymentCode,
+				eventId,
+				userId: dto.userId,
+				paymentAmount: totalAmount,
+				transactionFee,
+				confirmed: 0,
+				notificationType: "A",
+			})
+			const paymentId = Number(paymentResult.insertId)
+
+			// Update slots
+			for (const slot of dto.slots) {
+				await tx
+					.update(registrationSlot)
+					.set({
+						status: RegistrationStatus.AWAITING_PAYMENT,
+						playerId: slot.playerId,
+						holeId: dto.startingHoleId,
+						startingOrder: dto.startingOrder,
+					})
+					.where(eq(registrationSlot.id, slot.slotId))
+			}
+
+			// Create registration fees
+			for (const slot of dto.slots) {
+				for (const eventFee of slot.fees) {
+					await tx.insert(registrationFee).values({
+						isPaid: 0,
+						eventFeeId: eventFee.id!,
+						paymentId,
+						registrationSlotId: slot.slotId,
+						amount: eventFee.amount.toFixed(2),
+					})
+				}
+			}
+		})
+	}
+
+	/**
+	 * Get available slot groups for an event and course.
+	 * Returns groups of slots with the same holeId and startingOrder that have enough available slots for the requested number of players.
+	 */
+	async getAvailableSlots(
+		eventId: number,
+		courseId: number,
+		players: number,
+	): Promise<AvailableSlotGroup[]> {
+		const slotModels = await this.repository.findAvailableSlots(eventId, courseId)
+
+		// Group slots by holeId and startingOrder
+		const groups = new Map<string, RegistrationSlot[]>()
+		for (const slotModel of slotModels) {
+			const key = `${slotModel.holeId}-${slotModel.startingOrder}`
+			if (!groups.has(key)) {
+				groups.set(key, [])
+			}
+			groups.get(key)!.push(toRegistrationSlot(slotModel))
+		}
+
+		// Filter groups that have enough available slots and transform to AvailableSlotGroup
+		const result: AvailableSlotGroup[] = []
+		for (const [key, slots] of groups) {
+			if (slots.length >= players) {
+				const [holeId, startingOrder] = key.split("-").map(Number)
+				result.push({
+					holeId,
+					startingOrder,
+					slots,
+				})
+			}
+		}
+
+		return result
+	}
+
+	async reserveSlots(eventId: number, slotIds: number[]): Promise<number> {
+		// Use transaction to atomically validate and reserve slots
 		return await this.drizzle.db.transaction(async (tx) => {
-			// Create registration
+			// Create empty registration record first
 			const [registrationResult] = await tx.insert(registration).values({
 				eventId,
-				courseId,
-				signedUpBy: dto.signedUpBy,
-				userId: dto.userId,
-				notes: dto.notes,
 				startingHole: 1,
 				startingOrder: 0,
 				createdDate: new Date().toISOString().slice(0, 19).replace("T", " "),
 			})
 			const registrationId = Number(registrationResult.insertId)
 
-			// Create payment
-			const paymentCode = dto.requestPayment ? "requested" : dto.paymentCode!
-			const [paymentResult] = await tx.insert(payment).values({
-				paymentCode,
-				eventId,
-				userId: dto.userId,
-				paymentAmount: totalAmount,
-				transactionFee: "0.00",
-				confirmed: 0,
-				notificationType: "A",
-			})
-			const paymentId = Number(paymentResult.insertId)
+			// Atomically update slots: only reserve slots that are available ('A') and belong to the event
+			// This prevents TOCTOU race conditions by checking and updating in a single atomic operation
+			const updateResult = await tx
+				.update(registrationSlot)
+				.set({
+					registrationId,
+					status: RegistrationStatus.PENDING,
+				})
+				.where(
+					and(
+						inArray(registrationSlot.id, slotIds),
+						eq(registrationSlot.eventId, eventId),
+						eq(registrationSlot.status, RegistrationStatus.AVAILABLE),
+					),
+				)
 
-			// Handle slots
-			const slotIdMap = new Map<number, number>() // slotId -> new/updated slotId
-			const status = dto.requestPayment ? "X" : "R"
-
-			if (eventRecord.canChoose) {
-				for (const slot of dto.slots) {
-					await tx
-						.update(registrationSlot)
-						.set({
-							status,
-							playerId: slot.playerId,
-							registrationId,
-						})
-						.where(eq(registrationSlot.id, slot.slotId!))
-					slotIdMap.set(slot.slotId!, slot.slotId!)
-				}
-			} else {
-				for (let i = 0; i < dto.slots.length; i++) {
-					const slot = dto.slots[i]
-					const [slotResult] = await tx.insert(registrationSlot).values({
-						eventId,
-						playerId: slot.playerId,
-						registrationId,
-						status,
-						startingOrder: 0,
-						slot: 0,
-					})
-					slotIdMap.set(i, Number(slotResult.insertId)) // Use index as key for non-canChoose
-				}
+			// Validate that all requested slots were successfully reserved
+			// If the affected row count doesn't match slotIds.length, some slots were not available
+			if ((updateResult as any).affectedRows !== slotIds.length) {
+				throw new BadRequestException("Not all requested slots are available!")
 			}
 
-			// Create registration fees
-			for (const slot of dto.slots) {
-				const slotId = eventRecord.canChoose
-					? slot.slotId!
-					: slotIdMap.get(dto.slots.indexOf(slot))!
-				for (const eventFeeId of slot.eventFeeIds) {
-					const [feeRecord] = await tx
-						.select({ amount: eventFee.amount })
-						.from(eventFee)
-						.where(eq(eventFee.id, eventFeeId))
-						.limit(1)
-					if (!feeRecord) continue
-
-					await tx.insert(registrationFee).values({
-						isPaid: 0,
-						eventFeeId,
-						paymentId,
-						registrationSlotId: slotId,
-						amount: feeRecord.amount,
-					})
-				}
-			}
-
-			// Return the registration ID
 			return registrationId
 		})
 	}

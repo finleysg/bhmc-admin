@@ -1,6 +1,24 @@
 import { Type } from "class-transformer"
 import { IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 
+export class FeeType {
+	@IsOptional()
+	@IsNumber()
+	id?: number
+
+	@IsString()
+	name!: string
+
+	@IsString()
+	code!: string
+
+	@IsString()
+	payout!: string
+
+	@IsString()
+	restriction!: string
+}
+
 export class EventFee {
 	@IsOptional()
 	@IsNumber()
@@ -33,22 +51,4 @@ export class EventFee {
 	@IsOptional()
 	@IsString()
 	overrideRestriction?: string | null
-}
-
-export class FeeType {
-	@IsOptional()
-	@IsNumber()
-	id?: number
-
-	@IsString()
-	name!: string
-
-	@IsString()
-	code!: string
-
-	@IsString()
-	payout!: string
-
-	@IsString()
-	restriction!: string
 }

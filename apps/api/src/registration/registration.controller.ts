@@ -1,6 +1,17 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards } from "@nestjs/common"
+import {
+	Body,
+	Controller,
+	Get,
+	Param,
+	ParseIntPipe,
+	Post,
+	Put,
+	Query,
+	UseGuards,
+} from "@nestjs/common"
 import type {
-	AddAdminRegistration,
+	AdminRegistration,
+	AvailableSlotGroup,
 	SearchPlayers,
 	ValidatedRegisteredPlayer,
 } from "@repo/domain/types"
@@ -31,19 +42,40 @@ export class RegistrationController {
 		return this.registrationService.findGroup(eventId, playerId)
 	}
 
-	@Post(":eventId")
+	@Put(":eventId/admin-registration/:registrationId")
 	@UseGuards(JwtAuthGuard)
-	async createAdminRegistration(
+	async completeAdminRegistration(
 		@Param("eventId", ParseIntPipe) eventId: number,
-		@Body() dto: AddAdminRegistration,
+		@Param("registrationId", ParseIntPipe) registrationId: number,
+		@Body() dto: AdminRegistration,
 	) {
-		return this.registrationService.createAdminRegistration(+eventId, dto)
+		await this.registrationService.completeAdminRegistration(eventId, registrationId, dto)
 	}
 
 	@Get(":eventId/players")
+	@UseGuards(JwtAuthGuard)
 	async getRegisteredPlayers(
 		@Param("eventId", ParseIntPipe) eventId: number,
 	): Promise<ValidatedRegisteredPlayer[]> {
 		return await this.registrationService.getRegisteredPlayers(eventId)
+	}
+
+	@Get(":eventId/available-slots")
+	@UseGuards(JwtAuthGuard)
+	async getAvailableSlots(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Query("courseId", ParseIntPipe) courseId: number,
+		@Query("players", ParseIntPipe) players: number,
+	): Promise<AvailableSlotGroup[]> {
+		return await this.registrationService.getAvailableSlots(eventId, courseId, players)
+	}
+
+	@Post(":eventId/reserve-admin-slots")
+	@UseGuards(JwtAuthGuard)
+	async reserveAdminSlots(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Body() slotIds: number[],
+	) {
+		return this.registrationService.reserveSlots(eventId, slotIds)
 	}
 }
