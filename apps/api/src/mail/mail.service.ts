@@ -14,16 +14,25 @@ export interface SendEmailOptions {
 export class MailService {
 	private readonly logger = new Logger(MailService.name)
 	private transporter: nodemailer.Transporter
+	private readonly fromAddress: string
 
+	// TODO: handle authentication for mail server in production
 	constructor(private configService: ConfigService) {
+		this.fromAddress = this.configService.getOrThrow<string>("MAIL_FROM")
+		const host = this.configService.getOrThrow<string>("MAIL_HOST")
+		const port = this.configService.getOrThrow<number>("MAIL_PORT")
+		const secure = this.configService.get<boolean>("MAIL_SECURE") || false
+		// const user = this.configService.get<string>("MAIL_USER")
+		// const pass = this.configService.get<string>("MAIL_PASS")
+
 		this.transporter = nodemailer.createTransport({
-			host: this.configService.get<string>("MAIL_HOST"),
-			port: this.configService.get<number>("MAIL_PORT"),
-			secure: false, // true for 465, false for other ports
-			auth: {
-				user: this.configService.get<string>("MAIL_USER"),
-				pass: this.configService.get<string>("MAIL_PASS"),
-			},
+			host,
+			port,
+			secure,
+			// auth: {
+			// 	user: this.configService.get<string>("MAIL_USER"),
+			// 	pass: this.configService.get<string>("MAIL_PASS"),
+			// },
 		})
 	}
 
@@ -36,7 +45,7 @@ export class MailService {
 
 			// Send email
 			const mailOptions = {
-				from: this.configService.get<string>("MAIL_FROM"),
+				from: this.fromAddress,
 				to: Array.isArray(to) ? to.join(",") : to,
 				subject,
 				html,
@@ -45,7 +54,9 @@ export class MailService {
 			const info = await this.transporter.sendMail(mailOptions)
 			this.logger.log(`Email sent successfully: ${info.messageId}`)
 		} catch (error) {
-			this.logger.error("Failed to send email", error)
+			this.logger.error(
+				`Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`,
+			)
 			throw error
 		}
 	}
