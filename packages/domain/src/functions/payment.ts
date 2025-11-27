@@ -5,6 +5,9 @@
  * @returns The calculated transaction fee
  */
 export function calculateTransactionFee(amount: number): number {
+	if (amount < 0 || !Number.isFinite(amount)) {
+		throw new Error('Transaction amount must be a non-negative finite number')
+	}
 	if (amount === 0) return 0
 	return amount * 0.029 + 0.3
 }
