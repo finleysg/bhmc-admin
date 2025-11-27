@@ -319,12 +319,10 @@ export class RegistrationService {
 			throw new BadRequestException("event id not found")
 		}
 
-		// Calculate payment amount from fees
+		// Calculate payment amount from fees (using cents to avoid floating-point issues)
 		const allFees = dto.slots.flatMap((slot) => slot.fees)
-		let totalAmount = "0.00"
-		for (const fee of allFees) {
-			totalAmount = (parseFloat(totalAmount) + fee.amount).toFixed(2)
-		}
+		const totalCents = allFees.reduce((sum, fee) => sum + Math.round(fee.amount * 100), 0)
+		const totalAmount = (totalCents / 100).toFixed(2)
 
 		// Calculate expiry datetime
 		const expires = new Date()
