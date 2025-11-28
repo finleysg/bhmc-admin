@@ -1,4 +1,13 @@
-import { Controller, Get, Logger, Param, ParseIntPipe, Query } from "@nestjs/common"
+import {
+	ClassSerializerInterceptor,
+	Controller,
+	Get,
+	Logger,
+	Param,
+	ParseIntPipe,
+	Query,
+	UseInterceptors,
+} from "@nestjs/common"
 import { ClubEvent } from "@repo/domain/types"
 
 import { EventsRepository } from "./events.repository"
@@ -24,6 +33,7 @@ export class EventsController {
 		return results.map((r) => toEvent(r))
 	}
 
+	@UseInterceptors(ClassSerializerInterceptor)
 	@Get(":eventId")
 	async getEventById(@Param("eventId", ParseIntPipe) eventId: number): Promise<ClubEvent> {
 		return await this.service.getValidatedClubEventById(eventId, false)

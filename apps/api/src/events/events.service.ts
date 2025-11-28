@@ -1,8 +1,10 @@
+import { plainToInstance } from "class-transformer"
 import { and, eq, inArray } from "drizzle-orm"
 
 import { BadRequestException, Injectable } from "@nestjs/common"
 import { validateClubEvent } from "@repo/domain/functions"
 import {
+	ClubEvent,
 	PreparedTournamentPoints,
 	PreparedTournamentResult,
 	ValidatedClubEvent,
@@ -43,7 +45,10 @@ export class EventsService {
 		clubEvent.eventRounds = await this.repository.findRoundsByEventId(eventId)
 		clubEvent.tournaments = await this.repository.findTournamentsByEventId(eventId)
 
-		return validateClubEvent(toEvent(clubEvent), requireIntegration)
+		return plainToInstance(
+			ClubEvent,
+			validateClubEvent(toEvent(clubEvent), requireIntegration),
+		) as ValidatedClubEvent
 	}
 
 	async exists(eventId: number): Promise<boolean> {

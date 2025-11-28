@@ -1,4 +1,4 @@
-import { Type } from "class-transformer"
+import { Transform, Type } from "class-transformer"
 import { IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 
 export class FeeType {
@@ -28,6 +28,9 @@ export class EventFee {
 	eventId!: number
 
 	@IsNumber()
+	@Transform(({ value }: { value: unknown }) =>
+		typeof value === "string" ? parseFloat(value) : value,
+	)
 	amount!: number
 
 	@IsBoolean()
@@ -46,6 +49,9 @@ export class EventFee {
 
 	@IsOptional()
 	@IsNumber()
+	@Transform(({ value }: { value: unknown }) =>
+		typeof value === "string" ? parseFloat(value) : value,
+	)
 	overrideAmount?: number | null
 
 	@IsOptional()

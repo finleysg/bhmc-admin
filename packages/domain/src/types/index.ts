@@ -35,6 +35,7 @@ export type { EventResultsReportRowDto } from "./reports/event-results-report-ro
 
 // Registration exports
 export type { AdminRegistration, AdminRegistrationSlot } from "./register/admin-registration"
+export type { AmountDue } from "./register/payment"
 export type { AvailableSlotGroup } from "./register/available-slot-group"
 export type { Player } from "./register/player"
 export type { RegisteredPlayer } from "./register/registered-player"

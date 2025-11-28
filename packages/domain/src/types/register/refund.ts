@@ -1,3 +1,4 @@
+import { Transform } from "class-transformer"
 import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from "class-validator"
 
 export class Refund {
@@ -9,6 +10,9 @@ export class Refund {
 	refundCode!: string
 
 	@IsNumber()
+	@Transform(({ value }: { value: unknown }) =>
+		typeof value === "string" ? parseFloat(value) : value,
+	)
 	refundAmount!: number
 
 	@IsOptional()

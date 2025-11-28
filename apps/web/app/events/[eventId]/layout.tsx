@@ -53,7 +53,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 
 	if (loading) {
 		return (
-			<div className="flex items-center justify-center p-8">
+			<div className="flex items-center justify-center md:p-8">
 				<span className="loading loading-spinner loading-lg"></span>
 			</div>
 		)
@@ -61,7 +61,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 
 	if (error || !event) {
 		return (
-			<div className="text-center p-8">
+			<div className="text-center md:p-8">
 				<h1 className="text-2xl font-bold mb-4">Error</h1>
 				<p className="text-muted-foreground mb-4">{error || "Event not found"}</p>
 				<button onClick={() => router.push("/events")} className="btn btn-primary">
@@ -84,7 +84,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 
 	return (
 		<div>
-			<div className="text-center mb-6 p-4 bg-base-200 rounded">
+			<div className="p-4">
 				<h2 className="text-xl font-bold text-primary">{headerText}</h2>
 			</div>
 			{children}

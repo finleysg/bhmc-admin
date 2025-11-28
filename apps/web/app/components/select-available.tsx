@@ -104,8 +104,8 @@ export function SelectAvailable({
 	return (
 		<div className="w-full">
 			{/* Course Selection */}
-			<div className="form-control">
-				<label className="label">
+			<div className="form-control mb-2">
+				<label className="label mb-1 me-2">
 					<span className="label-text">Course</span>
 				</label>
 				<select
@@ -126,8 +126,8 @@ export function SelectAvailable({
 
 			{/* Available Slots */}
 			{selectedCourseId && (
-				<div className="form-control">
-					<label className="label">
+				<div className="form-control mb-2">
+					<label className="label mb-1 me-2">
 						<span className="label-text">Starting Time</span>
 					</label>
 					{loadingSlots ? (
