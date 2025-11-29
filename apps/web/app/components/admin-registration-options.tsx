@@ -1,7 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
-
 export interface AdminRegistrationOptionsState {
 	expires: number
 	sendPaymentRequest: boolean
@@ -9,21 +7,22 @@ export interface AdminRegistrationOptionsState {
 }
 
 interface AdminRegistrationOptionsProps {
+	options: AdminRegistrationOptionsState
 	onChange: (options: AdminRegistrationOptionsState) => void
 }
 
-export function AdminRegistrationOptions({ onChange }: AdminRegistrationOptionsProps) {
-	const [expires, setExpires] = useState(24)
-	const [sendPaymentRequest, setSendPaymentRequest] = useState(true)
-	const [notes, setNotes] = useState("")
+export function AdminRegistrationOptions({ options, onChange }: AdminRegistrationOptionsProps) {
+	const handleExpiresChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		onChange({ ...options, expires: Number(e.target.value) })
+	}
 
-	useEffect(() => {
-		onChange({
-			expires,
-			sendPaymentRequest,
-			notes,
-		})
-	}, [expires, sendPaymentRequest, notes, onChange])
+	const handleSendPaymentRequestChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		onChange({ ...options, sendPaymentRequest: e.target.checked })
+	}
+
+	const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+		onChange({ ...options, notes: e.target.value })
+	}
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -34,8 +33,8 @@ export function AdminRegistrationOptions({ onChange }: AdminRegistrationOptionsP
 						<input
 							type="checkbox"
 							className="toggle toggle-primary"
-							checked={sendPaymentRequest}
-							onChange={(e) => setSendPaymentRequest(e.target.checked)}
+							checked={options.sendPaymentRequest}
+							onChange={handleSendPaymentRequestChange}
 						/>
 					</label>
 				</div>
@@ -46,10 +45,10 @@ export function AdminRegistrationOptions({ onChange }: AdminRegistrationOptionsP
 					<input
 						type="number"
 						className="input input-bordered w-full"
-						value={expires}
-						onChange={(e) => setExpires(Number(e.target.value))}
+						value={options.expires}
+						onChange={handleExpiresChange}
 						min={1}
-						disabled={!sendPaymentRequest}
+						disabled={!options.sendPaymentRequest}
 					/>
 				</div>
 			</div>
@@ -61,8 +60,8 @@ export function AdminRegistrationOptions({ onChange }: AdminRegistrationOptionsP
 				<textarea
 					className="textarea textarea-bordered h-24"
 					placeholder="Optional notes for this registration"
-					value={notes}
-					onChange={(e) => setNotes(e.target.value)}
+					value={options.notes}
+					onChange={handleNotesChange}
 				></textarea>
 			</div>
 		</div>

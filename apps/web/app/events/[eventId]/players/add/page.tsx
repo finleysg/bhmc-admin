@@ -1,19 +1,18 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useReducer } from "react"
 
 import { useParams } from "next/navigation"
 
-import {
-	AdminRegistrationOptions,
-	type AdminRegistrationOptionsState,
-} from "@/components/admin-registration-options"
+import { AdminRegistrationOptions } from "@/components/admin-registration-options"
 import { EventFeePicker } from "@/components/event-fee-picker"
 import { PlayerSearch } from "@/components/player-search"
 import { ReserveSpot } from "@/components/reserve-spot"
 import { SelectAvailable } from "@/components/select-available"
 import { useSession } from "@/lib/auth-client"
-import type { AdminRegistration, AvailableSlotGroup, ClubEvent, Player } from "@repo/domain/types"
+import type { AvailableSlotGroup, ClubEvent, Player } from "@repo/domain/types"
+
+import { reducer, getInitialState } from "./reducer"
 
 export default function AddPlayerPage() {
 	const { data: session, isPending } = useSession()
@@ -21,21 +20,18 @@ export default function AddPlayerPage() {
 	const params = useParams()
 	const eventId = params.eventId as string
 
-	const [event, setEvent] = useState<ClubEvent | null>(null)
-	const [loadingEvent, setLoadingEvent] = useState(true)
-	const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([])
-	const [selectedSlotIds, setSelectedSlotIds] = useState<number[]>([])
-	const [selectedSlotGroup, setSelectedSlotGroup] = useState<AvailableSlotGroup | null>(null)
-	const [selectedFees, setSelectedFees] = useState<{ playerId: number; eventFeeId: number }[]>([])
-	const [error, setError] = useState<unknown>(null)
-	const [registrationId, setRegistrationId] = useState<number | null>(null)
-	const [registrationOptions, setRegistrationOptions] = useState<AdminRegistrationOptionsState>({
-		expires: 24,
-		sendPaymentRequest: true,
-		notes: "",
-	})
-	const [isCompleting, setIsCompleting] = useState(false)
-	const [completeSuccess, setCompleteSuccess] = useState(false)
+	const [state, dispatch] = useReducer(reducer, getInitialState())
+
+	useEffect(() => {
+		if (session?.user) {
+			dispatch({
+				type: "SET_USER",
+				payload: {
+					signedUpBy: session.user.name || "Admin",
+				},
+			})
+		}
+	}, [session?.user])
 
 	// Fetch event details
 	useEffect(() => {
@@ -44,14 +40,14 @@ export default function AddPlayerPage() {
 				const response = await fetch(`/api/events/${eventId}`)
 				if (response.ok) {
 					const eventData = (await response.json()) as ClubEvent
-					setEvent(eventData)
+					dispatch({ type: "SET_EVENT", payload: eventData })
 				} else {
 					console.error("Failed to fetch event")
 				}
 			} catch (error) {
 				console.error("Error fetching event:", error)
 			} finally {
-				setLoadingEvent(false)
+				dispatch({ type: "SET_IS_LOADING", payload: false })
 			}
 		}
 
@@ -61,83 +57,39 @@ export default function AddPlayerPage() {
 	}, [signedIn, isPending, eventId])
 
 	const handlePlayerSelected = (player: Player) => {
-		console.log("Player selected:", player)
-		setSelectedPlayers((prev) => [...prev, player])
+		dispatch({ type: "ADD_PLAYER", payload: player })
 	}
 
 	const handlePlayerRemoved = (player: Player) => {
-		console.log("Player removed:", player)
-		setSelectedPlayers((prev) => prev.filter((p) => p.id !== player.id || p.email !== player.email))
+		dispatch({ type: "REMOVE_PLAYER", payload: player })
 	}
 
 	const handleSlotSelect = (slotIds: number[], group?: AvailableSlotGroup) => {
-		console.log("Slots selected:", slotIds)
-		setSelectedSlotIds(slotIds)
-		if (group) {
-			setSelectedSlotGroup(group)
-		}
-		// Clear any previous errors when new slots are selected
-		setRegistrationId(null)
-		setCompleteSuccess(false)
+		dispatch({ type: "SELECT_SLOTS", payload: { slotIds, group } })
 	}
 
 	const handleFeeChange = useCallback((selections: { playerId: number; eventFeeId: number }[]) => {
-		console.log("Fee selections changed:", selections)
-		setSelectedFees(selections)
+		dispatch({ type: "SET_FEES", payload: selections })
 	}, [])
 
 	const handleReserved = (registrationId: number) => {
-		setRegistrationId(registrationId)
+		dispatch({ type: "SET_REGISTRATION_ID", payload: registrationId })
+	}
+
+	const handleError = (err: unknown) => {
+		dispatch({ type: "SET_ERROR", payload: err })
 	}
 
 	const handleCompleteRegistration = async () => {
-		if (!registrationId || !selectedSlotGroup) return
+		if (!state.registrationId || !state.selectedSlotGroup) return
 
-		setIsCompleting(true)
+		dispatch({ type: "SET_IS_LOADING", payload: true })
 
 		try {
-			// Find course ID based on hole ID
-			let courseId: number | null = null
-			if (event?.courses) {
-				for (const course of event.courses) {
-					if (course.holes?.some((h) => h.id === selectedSlotGroup.holeId)) {
-						courseId = course.id
-						break
-					}
-				}
-			}
-
-			// Map fees to full objects required by DTO
-			const feesMap = new Map<number, number>() // playerId -> eventFeeId
-			selectedFees.forEach((f) => feesMap.set(f.playerId, f.eventFeeId))
-
-			const slots = selectedSlotIds.map((slotId, index) => {
-				const player = selectedPlayers[index]
-				const feeId = player ? feesMap.get(player.id) : undefined
-				const eventFee = feeId ? event?.eventFees?.find((f) => f.id === feeId) : undefined
-
-				return {
-					registrationId,
-					slotId,
-					playerId: player?.id || 0,
-					fees: eventFee ? [eventFee] : [],
-				}
-			})
-
-			const dto: AdminRegistration = {
-				userId: Number(session?.user?.id),
-				signedUpBy: session?.user?.name || "Admin",
-				courseId,
-				startingHoleId: selectedSlotGroup.holeId,
-				startingOrder: selectedSlotGroup.startingOrder,
-				expires: registrationOptions.expires,
-				notes: registrationOptions.notes,
-				collectPayment: registrationOptions.sendPaymentRequest,
-				slots,
-			}
+			const dto = state.adminRegistration
 
 			const response = await fetch(
-				`/api/registration/${eventId}/admin-registration/${registrationId}`,
+				`/api/registration/${eventId}/admin-registration/${state.registrationId}`,
 				{
 					method: "PUT",
 					headers: {
@@ -148,18 +100,18 @@ export default function AddPlayerPage() {
 			)
 
 			if (response.ok) {
-				setCompleteSuccess(true)
+				dispatch({ type: "SET_COMPLETE_SUCCESS", payload: true })
 			} else {
-				setError("Failed to complete registration")
+				dispatch({ type: "SET_ERROR", payload: "Failed to complete registration" })
 			}
 		} catch (err) {
-			setError(err)
+			dispatch({ type: "SET_ERROR", payload: err })
 		} finally {
-			setIsCompleting(false)
+			dispatch({ type: "SET_IS_LOADING", payload: false })
 		}
 	}
 
-	if (isPending || loadingEvent) {
+	if (isPending || state.isLoading) {
 		return (
 			<div className="flex items-center justify-center p-8">
 				<span className="loading loading-spinner loading-lg"></span>
@@ -171,16 +123,16 @@ export default function AddPlayerPage() {
 		return null // Redirecting
 	}
 
-	if (error) {
+	if (state.error) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<div className="alert alert-error m-8">
-					<span>Error: {JSON.stringify(error)}</span>
+					<span>Error: {JSON.stringify(state.error)}</span>
 				</div>
 				<button
 					className="btn btn-neutral"
 					onClick={() => {
-						setError(null)
+						dispatch({ type: "RESET_ERROR" })
 					}}
 				>
 					Back
@@ -189,7 +141,7 @@ export default function AddPlayerPage() {
 		)
 	}
 
-	const membersOnly = event?.registrationType === "M"
+	const membersOnly = state.event?.registrationType === "M"
 
 	return (
 		<main className="min-h-screen flex justify-center md:p-8">
@@ -203,62 +155,63 @@ export default function AddPlayerPage() {
 								membersOnly={membersOnly}
 								onPlayerSelected={handlePlayerSelected}
 								onPlayerRemoved={handlePlayerRemoved}
-								onError={(err) => setError(err)}
+								onError={handleError}
 							/>
 						</div>
 
-						{selectedPlayers.length > 0 && (
+						{state.canSelectGroup && (
 							<div className="mb-6">
 								<h4 className="font-semibold mb-2">Find an Open Spot</h4>
 								<SelectAvailable
-									players={selectedPlayers.length}
-									courses={event.courses || []}
-									clubEvent={event}
-									onError={(err) => setError(err)}
+									players={state.selectedPlayers.length}
+									courses={state.event?.courses || []}
+									clubEvent={state.event}
+									onError={handleError}
 									onSlotSelect={handleSlotSelect}
 								/>
 							</div>
 						)}
 
-						{selectedSlotIds.length > 0 && (
+						{state.canSelectFees && (
 							<div className="mb-6">
 								<h4 className="font-semibold mb-2">Select Fees</h4>
-								{event?.eventFees && (
+								{state.event?.eventFees && (
 									<EventFeePicker
-										fees={event.eventFees}
-										players={selectedPlayers}
+										fees={state.event.eventFees}
+										players={state.selectedPlayers}
 										onChange={handleFeeChange}
 									/>
 								)}
 							</div>
 						)}
 
-						{selectedSlotIds.length > 0 && selectedFees.length > 0 && (
+						{state.canReserveSpot && (
 							<div className="mb-6">
 								<h4 className="font-semibold mb-2">Hold This Spot</h4>{" "}
 								<ReserveSpot
 									eventId={eventId}
-									selectedSlotIds={selectedSlotIds}
+									selectedSlotIds={state.selectedSlotGroup?.slots.map((s) => s.id) ?? []}
 									onReserved={handleReserved}
+									onError={handleError}
 									disabled={false}
 								/>
-								{registrationId && (
-									<div className="alert alert-success mb-4">
-										<span>Slots reserved successfully! Registration ID: {registrationId}</span>
-									</div>
-								)}
 							</div>
 						)}
 
-						{registrationId || (
+						{state.canCompleteRegistration && (
 							<>
 								<div className="mb-6">
 									<h4 className="font-semibold mb-2">Registration Details</h4>
-									<AdminRegistrationOptions onChange={setRegistrationOptions} />
+									<AdminRegistrationOptions
+										options={state.registrationOptions}
+										onChange={(opts) =>
+											dispatch({ type: "SET_REGISTRATION_OPTIONS", payload: opts })
+										}
+									/>
 								</div>
 
 								<div>
-									{completeSuccess ? (
+									{state.completeSuccess ? (
 										<div className="alert alert-success">
 											<span>Registration completed successfully!</span>
 										</div>
@@ -267,9 +220,9 @@ export default function AddPlayerPage() {
 											type="button"
 											className="btn btn-success"
 											onClick={() => void handleCompleteRegistration()}
-											disabled={isCompleting}
+											disabled={state.isLoading}
 										>
-											{isCompleting ? (
+											{state.isLoading ? (
 												<>
 													<span className="loading loading-spinner loading-sm"></span>
 													Completing...
