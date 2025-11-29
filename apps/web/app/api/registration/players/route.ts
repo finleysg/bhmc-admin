@@ -14,6 +14,6 @@ export async function GET(request: NextRequest) {
 		)
 	}
 
-	const backendPath = `/registration/players?searchText=${encodeURIComponent(searchText)}${isMember !== null ? `&isMember=${encodeURIComponent(isMember)}` : ""}`
+	const backendPath = "/registration/players"
 	return fetchWithAuth({ request, backendPath })
 }
