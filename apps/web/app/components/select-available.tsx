@@ -1,29 +1,28 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import type { AvailableSlotGroup, ClubEvent, Course } from "@repo/domain/types"
+import { AvailableSlotGroup, ClubEvent, Course } from "@repo/domain/types"
 import { getStart } from "@repo/domain/functions"
 
 interface SelectAvailableProps {
-	eventId: number
 	players: number
 	courses: Course[]
-	event: ClubEvent
-	onSlotSelect: (slotIds: number[]) => void
+	clubEvent: ClubEvent
+	onSlotSelect: (slotIds: number[], group?: AvailableSlotGroup) => void
+	onError?: (error: unknown) => void
 }
 
 export function SelectAvailable({
-	eventId,
 	players,
 	courses,
-	event,
+	clubEvent,
 	onSlotSelect,
+	onError,
 }: SelectAvailableProps) {
 	const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
 	const [availableSlotGroups, setAvailableSlotGroups] = useState<AvailableSlotGroup[]>([])
 	const [selectedSlotIds, setSelectedSlotIds] = useState<number[]>([])
 	const [loadingSlots, setLoadingSlots] = useState(false)
-	const [error, setError] = useState<string | null>(null)
 
 	// Fetch available slots when course is selected
 	useEffect(() => {
@@ -34,10 +33,9 @@ export function SelectAvailable({
 
 		const fetchSlots = async () => {
 			setLoadingSlots(true)
-			setError(null)
 			try {
 				const response = await fetch(
-					`/api/registration/${eventId}/available-slots?courseId=${selectedCourseId}&players=${players}`,
+					`/api/registration/${clubEvent.id}/available-slots?courseId=${selectedCourseId}&players=${players}`,
 				)
 				if (!response.ok) {
 					throw new Error(`Failed to fetch slots: ${response.statusText}`)
@@ -45,14 +43,16 @@ export function SelectAvailable({
 				const slotsData = (await response.json()) as AvailableSlotGroup[]
 				setAvailableSlotGroups(slotsData)
 			} catch (err) {
-				setError(err instanceof Error ? err.message : "Failed to fetch slots")
+				if (onError) {
+					onError(err)
+				}
 			} finally {
 				setLoadingSlots(false)
 			}
 		}
 
 		void fetchSlots()
-	}, [selectedCourseId, eventId, players])
+	}, [selectedCourseId, clubEvent.id, players])
 
 	const handleCourseChange = useCallback(
 		(courseId: number) => {
@@ -69,7 +69,7 @@ export function SelectAvailable({
 				.map((slot) => slot.id)
 				.filter((id): id is number => id !== undefined)
 			setSelectedSlotIds(slotIds)
-			onSlotSelect(slotIds)
+			onSlotSelect(slotIds, slotGroup)
 		},
 		[onSlotSelect],
 	)
@@ -88,18 +88,10 @@ export function SelectAvailable({
 					)
 					const selectedCourse = courses.find((c) => c.id === selectedCourseId)
 					return selectedGroup && selectedCourse
-						? getStart(event, selectedGroup.slots[0], selectedCourse.holes || [])
+						? getStart(clubEvent, selectedGroup.slots[0], selectedCourse.holes || [])
 						: "Unknown"
 				})()
 			: ""
-
-	if (error) {
-		return (
-			<div className="alert alert-error">
-				<span>{error}</span>
-			</div>
-		)
-	}
 
 	return (
 		<div className="w-full">
@@ -166,7 +158,7 @@ export function SelectAvailable({
 							{availableSlotGroups.map((slotGroup, index) => {
 								const selectedCourse = courses.find((c) => c.id === selectedCourseId)
 								const startName = selectedCourse
-									? getStart(event, slotGroup.slots[0], selectedCourse.holes || [])
+									? getStart(clubEvent, slotGroup.slots[0], selectedCourse.holes || [])
 									: "Unknown"
 								return (
 									<option key={startName} value={index.toString()}>

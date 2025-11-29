@@ -10,17 +10,19 @@ import type { Player } from "@repo/domain/types"
 interface PlayerSearchProps {
 	membersOnly?: boolean
 	minChars?: number
+	initialSelectedPlayers?: Player[]
 	onPlayerSelected: (player: Player) => void
 	onPlayerRemoved: (player: Player) => void
-	initialSelectedPlayers?: Player[]
+	onError?: (error: unknown) => void
 }
 
 export function PlayerSearch({
 	membersOnly = true,
 	minChars = 3,
+	initialSelectedPlayers = [],
 	onPlayerSelected,
 	onPlayerRemoved,
-	initialSelectedPlayers = [],
+	onError,
 }: PlayerSearchProps) {
 	const [selectedPlayers, setSelectedPlayers] = useState<Player[]>(initialSelectedPlayers)
 	const [searchText, setSearchText] = useState("")
@@ -49,7 +51,9 @@ export function PlayerSearch({
 					setSearchResults([])
 				}
 			} catch (error) {
-				console.error("Error fetching players:", error)
+				if (onError) {
+					onError(error)
+				}
 				setSearchResults([])
 			} finally {
 				setLoading(false)
