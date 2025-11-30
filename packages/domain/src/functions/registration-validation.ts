@@ -44,10 +44,11 @@ return true
 }
 
 /**
- * Validates a Registration ensuring all fields, including nested ones, are present and valid.
- * When hasCourseDetails is false, course and slot holes can be undefined/null.
- * @param registration The Registration to validate
- * @returns ValidatedRegistration if validation passes, null otherwise
+ * Validate a Registration's required fields and nested data.
+ *
+ * @param registration - The Registration to validate
+ * @returns The validated registration as a `ValidatedRegistration`
+ * @throws Error - If validation fails; the error message begins with the registration id (when available) and lists all validation issues on separate lines.
  */
 export function validateRegistration(registration: Registration): ValidatedRegistration | null {
 	const issues: string[] = []
