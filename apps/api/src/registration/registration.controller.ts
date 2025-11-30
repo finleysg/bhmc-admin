@@ -78,6 +78,15 @@ export class RegistrationController {
 		return await this.registrationService.getAvailableSlots(eventId, courseId, players)
 	}
 
+	@Get(":eventId/groups/search")
+	@UseGuards(JwtAuthGuard)
+	async searchGroups(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Query("searchText") searchText: string,
+	) {
+		return this.registrationService.findGroups(eventId, searchText)
+	}
+
 	@Post(":eventId/reserve-admin-slots")
 	@UseGuards(JwtAuthGuard)
 	async reserveAdminSlots(
