@@ -62,7 +62,7 @@ export function validateRegistration(registration: Registration): ValidatedRegis
 		issues.push("The registration slots are invalid or missing.")
 	}
 
-	// Only require minimal courrse information
+	// Only require minimal course information
 	if (hasCourseDetails && (!registration.course || !registration.course?.id)) {
 		issues.push("The course information is invalid or missing.")
 	}
