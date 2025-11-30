@@ -15,6 +15,11 @@ import type { ValidatedClubEvent } from "@repo/domain/types"
  */
 import { reducer, initialState } from "./reducer"
 
+/**
+ * Renders the Drop Player page, handling event fetching and the group/player selection UI.
+ *
+ * @returns The React element for the Drop Player page, including loading and error states, a group search, and a player selection section when a group is selected.
+ */
 export default function DropPlayerPage() {
 	const { eventId } = useParams<{ eventId: string }>()
 	const [state, dispatch] = useReducer(reducer, initialState)

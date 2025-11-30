@@ -2,14 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { fetchWithAuth } from "@/lib/api-proxy"
 
 /**
- * Search groups for a specific event using the `searchText` query parameter.
+ * Proxy a group search for an event using the `searchText` query parameter.
  *
- * Validates that `searchText` is at least 3 characters long, then proxies the request
- * to the backend endpoint `/registration/{eventId}/groups/search`.
- *
- * @param request - Incoming Next.js request containing the `searchText` query parameter
- * @param params - Promise resolving to route parameters; must include `eventId`
- * @returns A NextResponse with the backend search result, or a 400 JSON error when `searchText` is invalid.
+ * @param request - Incoming Next.js request; must include the `searchText` query parameter
+ * @param params - Promise resolving to route parameters; must include `eventId` used to build the backend path
+ * @returns A NextResponse with the backend search result; if `searchText` is missing or shorter than 3 characters, returns a 400 JSON error
  */
 export async function GET(
 	request: NextRequest,
