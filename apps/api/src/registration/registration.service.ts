@@ -253,6 +253,74 @@ export class RegistrationService {
 		return validatedResult
 	}
 
+	/**
+	 * Find all ValidatedRegistrations for an event where any related player's first or last name matches searchText.
+	 */
+	async findGroups(eventId: number, searchText: string): Promise<ValidatedRegistration[]> {
+		const registrationIds = await this.repository.findRegistrationIdsByEventAndPlayerName(
+			eventId,
+			searchText,
+		)
+		const results: ValidatedRegistration[] = []
+		for (const registrationId of registrationIds) {
+			const registrationModel = await this.repository.findRegistrationWithCourse(registrationId)
+			if (!registrationModel) continue
+
+			const result = toRegistration(registrationModel)
+			if (registrationModel.course) {
+				result.course = toCourse(registrationModel.course)
+			}
+
+			const slotModels = await this.repository.findSlotsWithPlayerAndHole(registrationId)
+			const slots = slotModels.map((slotModel) => {
+				const slot = toRegistrationSlot(slotModel)
+				if (slotModel.player) {
+					slot.player = toPlayer(slotModel.player)
+				}
+				if (slotModel.hole) {
+					slot.hole = toHole(slotModel.hole)
+				}
+				slot.fees = []
+				return slot
+			})
+
+			const slotIds = slots
+				.filter((s): s is RegistrationSlot & { id: number } => s.id !== undefined)
+				.map((s) => s.id)
+			const feeModels = await this.repository.findFeesWithEventFeeAndFeeType(slotIds)
+
+			const slotMap = new Map<number, RegistrationSlot>()
+			for (const slot of slots) {
+				if (slot.id) {
+					slotMap.set(slot.id, slot)
+				}
+			}
+
+			for (const feeModel of feeModels) {
+				const slotId = feeModel.registrationSlotId
+				if (!slotId) continue
+
+				const slot = slotMap.get(slotId)
+				if (!slot) continue
+
+				const fee = toRegistrationFee(feeModel)
+				if (feeModel.eventFee) {
+					fee.eventFee = toEventFee(feeModel.eventFee)
+				}
+
+				slot.fees!.push(fee)
+			}
+
+			result.slots = slots
+
+			const validatedResult = validateRegistration(result)
+			if (validatedResult) {
+				results.push(validatedResult)
+			}
+		}
+		return results
+	}
+
 	async updatePlayerGgId(playerId: number, ggId: string): Promise<Player> {
 		const player = await this.repository.findPlayerById(playerId)
 		player.ggId = ggId
@@ -407,16 +475,12 @@ export class RegistrationService {
 		const convertedSlots: AdminRegistrationSlotWithAmount[] = []
 
 		// Collect all playerIds from slots
-		const playerIds = Array.from(
-			new Set(slots.map((slot) => slot.playerId)),
-		)
+		const playerIds = Array.from(new Set(slots.map((slot) => slot.playerId)))
 
 		// Batch fetch all players
 		const players = await this.repository.findPlayersByIds(playerIds)
 		// Only include players with valid id
-		const playerLookup = new Map<number, Player>(
-			players.map((p) => [p.id as number, toPlayer(p)]),
-		)
+		const playerLookup = new Map<number, Player>(players.map((p) => [p.id as number, toPlayer(p)]))
 
 		for (const slot of slots) {
 			const convertedSlot: AdminRegistrationSlotWithAmount = {

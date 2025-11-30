@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, or, like } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 
@@ -117,6 +117,31 @@ export class RegistrationRepository {
 			.limit(1)
 
 		return slot?.registrationId ?? null
+	}
+
+	/**
+	 * Find registration IDs for a given event where any related player's first or last name matches searchText.
+	 */
+	async findRegistrationIdsByEventAndPlayerName(
+		eventId: number,
+		searchText: string,
+	): Promise<number[]> {
+		const search = `%${searchText}%`
+		const results = await this.drizzle.db
+			.select({ registrationId: registrationSlot.registrationId })
+			.from(registrationSlot)
+			.leftJoin(player, eq(registrationSlot.playerId, player.id))
+			.where(
+				and(
+					eq(registrationSlot.eventId, eventId),
+					or(like(player.firstName, search), like(player.lastName, search)),
+				),
+			)
+		// Filter out nulls and duplicates
+		const ids = results
+			.map((r) => r.registrationId)
+			.filter((id): id is number => typeof id === "number" && !isNaN(id))
+		return Array.from(new Set(ids))
 	}
 
 	/**
