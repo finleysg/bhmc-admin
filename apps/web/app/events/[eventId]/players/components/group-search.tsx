@@ -85,8 +85,11 @@ export function GroupSearch({
 		}
 
 		// A can-choose event is guaranteed to have course data
-		const slot = group.slots[0]
-		const holes = clubEvent.courses.filter((c) => c.id === group.courseId)[0]?.holes || []
+const slot = group.slots[0]
+if (!slot) return null
+
+const course = clubEvent.courses?.find((c) => c.id === group.courseId)
+const holes = course?.holes || []
 
 		return getStart(clubEvent, slot, holes)
 	}
