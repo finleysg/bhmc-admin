@@ -12,14 +12,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en" data-theme="lemonade" suppressHydrationWarning={true}>
+		<html lang="en" data-theme="corporate" suppressHydrationWarning={true}>
 			<head>
 				<script
 					dangerouslySetInnerHTML={{
 						__html: `
 try {
-const theme = localStorage.getItem('theme') || 'lemonade';
-if (theme !== 'lemonade') {
+const theme = localStorage.getItem('theme') || 'corporate';
+if (theme !== 'corporate') {
 document.documentElement.setAttribute('data-theme', theme);
 }
 } catch (e) {}

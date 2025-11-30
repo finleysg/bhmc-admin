@@ -1,9 +1,10 @@
 import { Type as TransformerType } from "class-transformer"
 import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 
-import { EventFee } from "../events/event-fee"
-
 export class AdminRegistration {
+	@IsNumber()
+	id!: number
+
 	@IsNumber()
 	userId!: number
 
@@ -47,7 +48,6 @@ export class AdminRegistrationSlot {
 	playerId!: number
 
 	@IsArray()
-	@ValidateNested({ each: true })
-	@TransformerType(() => EventFee)
-	fees!: EventFee[]
+	@IsNumber({}, { each: true })
+	feeIds!: number[]
 }

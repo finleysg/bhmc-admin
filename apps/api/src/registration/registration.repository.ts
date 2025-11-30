@@ -45,6 +45,15 @@ export class RegistrationRepository {
 		return mapToPlayerModel(p)
 	}
 
+	/**
+	 * Batch fetch players by IDs.
+	 */
+	async findPlayersByIds(ids: number[]): Promise<PlayerModel[]> {
+		if (!ids.length) return []
+		const results = await this.drizzle.db.select().from(player).where(inArray(player.id, ids))
+		return results.map(mapToPlayerModel)
+	}
+
 	async findMemberPlayers(): Promise<PlayerModel[]> {
 		const players = await this.drizzle.db.select().from(player).where(eq(player.isMember, 1))
 		return players.map(mapToPlayerModel)

@@ -1,15 +1,17 @@
+import { plainToInstance } from "class-transformer"
 import { and, eq, inArray } from "drizzle-orm"
 
 import { BadRequestException, Injectable } from "@nestjs/common"
 import { validateClubEvent } from "@repo/domain/functions"
 import {
+	ClubEvent,
 	PreparedTournamentPoints,
 	PreparedTournamentResult,
 	ValidatedClubEvent,
 } from "@repo/domain/types"
 
 import { CoursesRepository } from "../courses"
-import { DrizzleService, player, tournamentResult } from "../database"
+import { DrizzleService, player, toDbString, tournamentResult } from "../database"
 import { TournamentResultModel } from "../database/models"
 import {
 	mapPreparedPointsToTournamentPointsModel,
@@ -27,7 +29,10 @@ export class EventsService {
 		private readonly courses: CoursesRepository,
 	) {}
 
-	async getValidatedClubEventById(eventId: number): Promise<ValidatedClubEvent> {
+	async getValidatedClubEventById(
+		eventId: number,
+		requireIntegration: boolean | undefined = true,
+	): Promise<ValidatedClubEvent> {
 		const clubEvent = await this.repository.findEventById(eventId)
 		if (!clubEvent) throw new BadRequestException(`Event with id ${eventId} does not exist.`)
 
@@ -40,7 +45,10 @@ export class EventsService {
 		clubEvent.eventRounds = await this.repository.findRoundsByEventId(eventId)
 		clubEvent.tournaments = await this.repository.findTournamentsByEventId(eventId)
 
-		return validateClubEvent(toEvent(clubEvent))
+		return plainToInstance(
+			ClubEvent,
+			validateClubEvent(toEvent(clubEvent), requireIntegration),
+		) as ValidatedClubEvent
 	}
 
 	async exists(eventId: number): Promise<boolean> {
@@ -84,7 +92,7 @@ export class EventsService {
 		}
 
 		const tournamentIds = tournaments.map((t) => t.id!)
-		const now = new Date().toISOString().slice(0, 19).replace("T", " ")
+		const now = toDbString(new Date())
 
 		await this.drizzle.db
 			.update(tournamentResult)
