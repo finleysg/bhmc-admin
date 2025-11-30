@@ -79,6 +79,19 @@ export function GroupSearch({
 		return getStart(clubEvent, slot, holes)
 	}
 
+	// Helper to render player names
+	function renderPlayerNames(slots: ValidatedRegistration["slots"]) {
+		if (!slots) return null
+		return slots.map((slot, idx) =>
+			slot.player ? (
+				<span key={slot.player.id ?? idx}>
+					{slot.player.firstName} {slot.player.lastName}
+					{idx < slots.length - 1 ? ", " : ""}
+				</span>
+			) : null,
+		)
+	}
+
 	return (
 		<div className="w-full">
 			<Combobox value={selectedGroup ?? null} onChange={handleGroupSelect}>
@@ -105,14 +118,7 @@ export function GroupSearch({
 									<div>
 										<div className="font-medium">{renderStartInfo(group)}</div>
 										<div className="text-sm text-base-content/70">
-											{group.slots?.map((slot, idx) =>
-												slot.player ? (
-													<span key={slot.player.id ?? idx}>
-														{slot.player.firstName} {slot.player.lastName}
-														{idx < group.slots.length - 1 ? ", " : ""}
-													</span>
-												) : null,
-											)}
+											{renderPlayerNames(group.slots)}
 										</div>
 									</div>
 								</ComboboxOption>
@@ -126,14 +132,7 @@ export function GroupSearch({
 				<div className="mt-2 card card-bordered bg-base-100 p-4">
 					<div className="font-bold">{renderStartInfo(selectedGroup)}</div>
 					<div className="text-sm text-base-content/70">
-						{selectedGroup.slots?.map((slot, idx) =>
-							slot.player ? (
-								<span key={slot.player.id ?? idx}>
-									{slot.player.firstName} {slot.player.lastName}
-									{idx < selectedGroup.slots.length - 1 ? ", " : ""}
-								</span>
-							) : null,
-						)}
+						{renderPlayerNames(selectedGroup.slots)}
 					</div>
 				</div>
 			)}
