@@ -8,6 +8,15 @@ Current focus:
 
 Recent changes:
 
+- **11/30/2025: Added SelectPlayers component, drop reducer, and tests**  
+  - Created `select-players.tsx` for player selection UI in event player management  
+  - Updated `group-search.tsx` for new selection logic  
+  - Added `drop/reducer.ts` and `drop/__tests__/reducer.test.ts` for drop functionality  
+  - Updated `drop/page.tsx` to integrate new reducer  
+  - Updated domain logic in `registration-validation.ts`  
+  - Minor update to registration groups search API route  
+  - Passed formatting, linting, build, and test checks; committed on feature/select-players-component branch
+
 - **11/30/2025: Created GroupSearch component for event player management** Built new GroupSearch React component for searching player groups in events; added supporting API route and backend logic; updated registration controller, repository, and service for group search; improved registration validation and tests to allow optional player and fees; passed all formatting, linting, build, and test checks.
 - **11/30/2025: Added findGroups endpoint for registration search** Implemented `findGroups(eventId, searchText)` service and controller endpoint to return all ValidatedRegistration objects for an event where any related player's first or last name matches the search text; added repository method for efficient registration ID querying by player name; updated controller, service, and repository files; passed all formatting, linting, build, and test checks.
 - **11/29/2025: Refactored Player Registration Flow** Refactored the "Add Player" workflow by creating a `ReserveSpot` component to encapsulate reservation logic and an `AdminRegistrationOptions` component for post-reservation details; updated the main page to orchestrate the new components; added necessary API proxy routes for `reserve` and `admin-registration` endpoints.

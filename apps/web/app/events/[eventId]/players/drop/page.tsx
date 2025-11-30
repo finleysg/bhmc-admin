@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useReducer, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { GroupSearch } from "../components/group-search"
-import type { ValidatedClubEvent, ValidatedRegistration } from "@repo/domain/types"
+import SelectPlayers from "../components/select-players"
+import type { ValidatedClubEvent } from "@repo/domain/types"
 
 /**
  * Render the Drop Player page for a club event.
@@ -12,12 +13,11 @@ import type { ValidatedClubEvent, ValidatedRegistration } from "@repo/domain/typ
  *
  * @returns The page's React element.
  */
+import { reducer, initialState } from "./reducer"
+
 export default function DropPlayerPage() {
 	const { eventId } = useParams<{ eventId: string }>()
-	const [clubEvent, setClubEvent] = useState<ValidatedClubEvent | null>(null)
-	const [, setSelectedGroup] = useState<ValidatedRegistration | undefined>(undefined)
-	const [error, setError] = useState<unknown>(null)
-	const [isLoading, setIsLoading] = useState(true)
+	const [state, dispatch] = useReducer(reducer, initialState)
 
 	useEffect(() => {
 		const fetchEvent = async () => {
@@ -25,14 +25,14 @@ export default function DropPlayerPage() {
 				const response = await fetch(`/api/events/${eventId}`)
 				if (response.ok) {
 					const eventData = (await response.json()) as ValidatedClubEvent
-					setClubEvent(eventData)
+					dispatch({ type: "SET_EVENT", payload: eventData })
 				} else {
-					setError("Failed to fetch event")
+					dispatch({ type: "SET_ERROR", payload: "Failed to fetch event" })
 				}
 			} catch (err) {
-				setError(err)
+				dispatch({ type: "SET_ERROR", payload: err })
 			} finally {
-				setIsLoading(false)
+				dispatch({ type: "SET_LOADING", payload: false })
 			}
 		}
 		if (eventId) {
@@ -40,7 +40,7 @@ export default function DropPlayerPage() {
 		}
 	}, [eventId])
 
-	if (isLoading) {
+	if (state.isLoading) {
 		return (
 			<div className="flex items-center justify-center p-8">
 				<span className="loading loading-spinner loading-lg"></span>
@@ -48,7 +48,7 @@ export default function DropPlayerPage() {
 		)
 	}
 
-	if (!clubEvent) {
+	if (!state.clubEvent) {
 		return (
 			<div className="flex items-center justify-center p-8">
 				<div className="alert alert-error">Event not found</div>
@@ -65,17 +65,31 @@ export default function DropPlayerPage() {
 						<div className="mb-6">
 							<h4 className="font-semibold mb-2">Select Group</h4>
 							<GroupSearch
-								clubEvent={clubEvent}
-								onGroupSelected={setSelectedGroup}
-								onError={setError}
+								clubEvent={state.clubEvent}
+								onGroupSelected={(group) => dispatch({ type: "SET_GROUP", payload: group })}
+								onError={(err) => dispatch({ type: "SET_ERROR", payload: err })}
 							/>
 						</div>
-
-						{error && (
+						{state.selectedGroup && (
+							<div className="mb-6">
+								<h4 className="font-semibold mb-2">Select Players</h4>
+								<SelectPlayers
+									group={state.selectedGroup}
+									selectedPlayers={state.selectedPlayers}
+									onSelect={(player) => dispatch({ type: "SELECT_PLAYER", payload: player })}
+									onRemove={(player) => {
+										setTimeout(() => dispatch({ type: "REMOVE_PLAYER", payload: player }), 0)
+									}}
+								/>
+							</div>
+						)}
+						{state.error && (
 							<div className="mb-6">
 								<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
 								<div className="alert alert-error text-xs mb-2">
-									<span className="text-wrap">Error: {JSON.stringify(error)}</span>
+									<span className="text-wrap">
+										Error: {typeof state.error === "string" ? state.error : "Unknown error"}
+									</span>
 								</div>
 							</div>
 						)}
