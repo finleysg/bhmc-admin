@@ -406,15 +406,27 @@ export class RegistrationService {
 		const startDate = new Date(eventRecord.startDate)
 		const convertedSlots: AdminRegistrationSlotWithAmount[] = []
 
+		// Collect all playerIds from slots
+		const playerIds = Array.from(
+			new Set(slots.map((slot) => slot.playerId)),
+		)
+
+		// Batch fetch all players
+		const players = await this.repository.findPlayersByIds(playerIds)
+		// Only include players with valid id
+		const playerLookup = new Map<number, Player>(
+			players.map((p) => [p.id as number, toPlayer(p)]),
+		)
+
 		for (const slot of slots) {
 			const convertedSlot: AdminRegistrationSlotWithAmount = {
 				...slot,
 				amounts: [],
 			}
-			const player = toPlayer(await this.repository.findPlayerById(slot.playerId))
+			const player = playerLookup.get(slot.playerId)
 			const eventFees = eventRecord.eventFees.filter((ef) => slot.feeIds.includes(ef.id))
 			convertedSlot.amounts = eventFees.map((ef) => {
-				const playerAmount = getAmount(ef, player, startDate)
+				const playerAmount = getAmount(ef, player ?? ({} as Player), startDate)
 				return { eventFeeId: ef.id, amount: playerAmount }
 			})
 			convertedSlots.push(convertedSlot)
