@@ -245,12 +245,13 @@ export class RegistrationService {
 		// Step 5: Attach slots to registration and return
 		result.slots = slots
 
-		const validatedResult = validateRegistration(result)
-		if (!validatedResult) {
+		try {
+			const validatedResult = validateRegistration(result)
+			return validatedResult
+		} catch (error) {
+			this.logger.warn(`Validation failed for registration ${registrationId}: ${String(error)}`)
 			throw new BadRequestException("The registration is not valid")
 		}
-
-		return validatedResult
 	}
 
 	/**
@@ -319,9 +320,7 @@ export class RegistrationService {
 
 			try {
 				const validatedResult = validateRegistration(result)
-				if (validatedResult) {
-					results.push(validatedResult)
-				}
+				results.push(validatedResult)
 			} catch (error) {
 				this.logger.warn(
 					`Skipping registration ${registrationId} due to validation error: ${String(error)}`,

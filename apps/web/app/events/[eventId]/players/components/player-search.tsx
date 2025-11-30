@@ -98,32 +98,31 @@ export function PlayerSearch({
 							<span className="loading loading-spinner loading-sm"></span>
 						</span>
 					)}
-				</div>
-
-				{searchResults.length > 0 && (
-					<ComboboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-						{searchResults.map((player) => (
-							<ComboboxOption
-								key={player.id}
-								value={player}
-								className="cursor-pointer select-none px-4 py-2 hover:bg-base-200 data-focus:bg-base-200"
-							>
-								<div className="flex items-center">
-									<div>
-										<div className="font-medium">
-											{player.firstName} {player.lastName}
-										</div>
-										<div className="text-sm text-base-content/70">
-											{player.email}
-											{player.ghin && ` • GHIN: ${player.ghin}`}
-											{!player.isMember && " • Non-member"}
+					{searchResults.length > 0 && (
+						<ComboboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+							{searchResults.map((player) => (
+								<ComboboxOption
+									key={player.id}
+									value={player}
+									className="cursor-pointer select-none px-4 py-2 hover:bg-base-200 data-focus:bg-base-200"
+								>
+									<div className="flex items-center">
+										<div>
+											<div className="font-medium">
+												{player.firstName} {player.lastName}
+											</div>
+											<div className="text-sm text-base-content/70">
+												{player.email}
+												{player.ghin && ` • GHIN: ${player.ghin}`}
+												{!player.isMember && " • Non-member"}
+											</div>
 										</div>
 									</div>
-								</div>
-							</ComboboxOption>
-						))}
-					</ComboboxOptions>
-				)}
+								</ComboboxOption>
+							))}
+						</ComboboxOptions>
+					)}
+				</div>
 			</Combobox>
 
 			{/* Selected Players as Badges */}

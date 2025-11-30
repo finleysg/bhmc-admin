@@ -1,4 +1,4 @@
-// "use client"
+"use client"
 
 import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from "@headlessui/react"
 import { useDebounceValue } from "usehooks-ts"
@@ -94,32 +94,32 @@ export function GroupSearch({
 							<span className="loading loading-spinner loading-sm"></span>
 						</span>
 					)}
-				</div>
-				{searchResults.length > 0 && (
-					<ComboboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-						{searchResults.map((group) => (
-							<ComboboxOption
-								key={group.id}
-								value={group}
-								className="cursor-pointer select-none px-4 py-2 hover:bg-base-200 data-focus:bg-base-200"
-							>
-								<div>
-									<div className="font-medium">{renderStartInfo(group)}</div>
-									<div className="text-sm text-base-content/70">
-										{group.slots?.map((slot, idx) =>
-											slot.player ? (
-												<span key={slot.player.id ?? idx}>
-													{slot.player.firstName} {slot.player.lastName}
-													{idx < group.slots.length - 1 ? ", " : ""}
-												</span>
-											) : null,
-										)}
+					{searchResults.length > 0 && (
+						<ComboboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+							{searchResults.map((group) => (
+								<ComboboxOption
+									key={group.id}
+									value={group}
+									className="cursor-pointer select-none px-4 py-2 hover:bg-base-200 data-focus:bg-base-200"
+								>
+									<div>
+										<div className="font-medium">{renderStartInfo(group)}</div>
+										<div className="text-sm text-base-content/70">
+											{group.slots?.map((slot, idx) =>
+												slot.player ? (
+													<span key={slot.player.id ?? idx}>
+														{slot.player.firstName} {slot.player.lastName}
+														{idx < group.slots.length - 1 ? ", " : ""}
+													</span>
+												) : null,
+											)}
+										</div>
 									</div>
-								</div>
-							</ComboboxOption>
-						))}
-					</ComboboxOptions>
-				)}
+								</ComboboxOption>
+							))}
+						</ComboboxOptions>
+					)}
+				</div>
 			</Combobox>
 			{/* Selected Group Info */}
 			{selectedGroup && (

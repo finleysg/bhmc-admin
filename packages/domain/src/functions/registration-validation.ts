@@ -33,13 +33,13 @@ const hasValidSlots = (
 				return false
 			}
 		}
-if (slot.player != null && !slot.player.id) {
-return false
-}
-if (slot.fees != null && !hasValidFees(slot.fees)) {
-return false
-}
-return true
+		if (slot.player != null && !slot.player.id) {
+			return false
+		}
+		if (slot.fees != null && !hasValidFees(slot.fees)) {
+			return false
+		}
+		return true
 	})
 }
 
@@ -49,7 +49,7 @@ return true
  * @param registration The Registration to validate
  * @returns ValidatedRegistration if validation passes, null otherwise
  */
-export function validateRegistration(registration: Registration): ValidatedRegistration | null {
+export function validateRegistration(registration: Registration): ValidatedRegistration {
 	const issues: string[] = []
 
 	if (!registration?.id) {
