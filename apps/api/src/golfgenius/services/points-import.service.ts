@@ -23,6 +23,7 @@ import {
 } from "../dto/tournament-results.dto"
 import { ProgressTracker } from "./progress-tracker"
 import { PointsResultParser } from "./result-parsers"
+import { toDbString } from "../../database"
 
 export interface PointsImportSummary {
 	tournamentId: number
@@ -457,7 +458,7 @@ export class PointsImportService {
 			score,
 			points,
 			details,
-			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			createDate: toDbString(new Date()),
 		}
 	}
 }

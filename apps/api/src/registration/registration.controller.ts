@@ -49,7 +49,15 @@ export class RegistrationController {
 		@Param("registrationId", ParseIntPipe) registrationId: number,
 		@Body() dto: AdminRegistration,
 	) {
-		await this.registrationService.completeAdminRegistration(eventId, registrationId, dto)
+		const paymentId = await this.registrationService.completeAdminRegistration(
+			eventId,
+			registrationId,
+			dto,
+		)
+		if (dto.collectPayment && paymentId > 0) {
+			// TODO: Trigger payment request email
+		}
+		return { paymentId }
 	}
 
 	@Get(":eventId/players")

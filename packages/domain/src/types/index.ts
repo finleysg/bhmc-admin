@@ -11,7 +11,7 @@ export { Hole } from "./courses/hole"
 
 // Event exports
 export { ClubEvent } from "./events/event"
-export type { ValidatedClubEvent } from "./events/validated-types"
+export type * from "./events/validated-types"
 export { EventFee, FeeType } from "./events/event-fee"
 export { Round } from "./events/round"
 export { Tournament } from "./events/tournament"
@@ -35,6 +35,7 @@ export type { EventResultsReportRowDto } from "./reports/event-results-report-ro
 
 // Registration exports
 export type { AdminRegistration, AdminRegistrationSlot } from "./register/admin-registration"
+export type { AmountDue } from "./register/payment"
 export type { AvailableSlotGroup } from "./register/available-slot-group"
 export type { Player } from "./register/player"
 export type { RegisteredPlayer } from "./register/registered-player"
@@ -46,4 +47,4 @@ export type { RegistrationSlot } from "./register/registration-slot"
 export type { SearchPlayers } from "./register/search-players"
 export type { Payment } from "./register/payment"
 export type { Refund } from "./register/refund"
-export type { ValidatedRegisteredPlayer, ValidatedRegistration } from "./register/validated-types"
+export type * from "./register/validated-types"

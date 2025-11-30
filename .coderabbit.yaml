@@ -33,7 +33,7 @@ reviews:
         - Proper error handling without implicit any."
   auto_review:
     enabled: true
-    drafts: false
+    drafts: true
     base_branches:
       - "main"
   tools:

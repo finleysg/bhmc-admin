@@ -1,3 +1,4 @@
+import { Transform } from "class-transformer"
 import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from "class-validator"
 
 export class Payment {
@@ -26,9 +27,15 @@ export class Payment {
 	userId!: number
 
 	@IsNumber()
+	@Transform(({ value }: { value: unknown }) =>
+		typeof value === "string" ? parseFloat(value) : value,
+	)
 	paymentAmount!: number
 
 	@IsNumber()
+	@Transform(({ value }: { value: unknown }) =>
+		typeof value === "string" ? parseFloat(value) : value,
+	)
 	transactionFee!: number
 
 	@IsDateString()
@@ -37,4 +44,15 @@ export class Payment {
 	@IsOptional()
 	@IsDateString()
 	confirmDate?: string | null
+}
+
+export class AmountDue {
+	@IsNumber()
+	subtotal!: number
+
+	@IsNumber()
+	transactionFee!: number
+
+	@IsNumber()
+	total!: number
 }

@@ -23,7 +23,8 @@
 			"@/*": ["./*"],
 			"@/lib/*": ["./lib/*"],
 			"@/components/*": ["./app/components/*"]
-		}
+		},
+		"types": ["node", "jest"]
 	},
 	"include": [
 		"next-env.d.ts",

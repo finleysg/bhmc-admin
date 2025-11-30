@@ -1,5 +1,5 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-	themes: lemonade, forest;
+	themes: corporate, business;
 }
 /* @import "./calendar.css"; */

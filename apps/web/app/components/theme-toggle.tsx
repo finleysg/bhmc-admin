@@ -8,11 +8,11 @@ export default function ThemeToggle() {
 	useEffect(() => {
 		// Check initial theme
 		const theme = document.documentElement.getAttribute("data-theme")
-		setIsDark(theme === "forest")
+		setIsDark(theme === "business")
 	}, [])
 
 	const toggleTheme = () => {
-		const newTheme = isDark ? "forest" : "lemonade"
+		const newTheme = isDark ? "business" : "corporate"
 		document.documentElement.setAttribute("data-theme", newTheme)
 		setIsDark(!isDark)
 		localStorage.setItem("theme", newTheme)

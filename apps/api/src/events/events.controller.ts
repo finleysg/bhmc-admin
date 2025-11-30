@@ -1,14 +1,27 @@
-import { Controller, Get, Logger, Param, ParseIntPipe, Query } from "@nestjs/common"
+import {
+	ClassSerializerInterceptor,
+	Controller,
+	Get,
+	Logger,
+	Param,
+	ParseIntPipe,
+	Query,
+	UseInterceptors,
+} from "@nestjs/common"
 import { ClubEvent } from "@repo/domain/types"
 
 import { EventsRepository } from "./events.repository"
 import { toEvent } from "./mappers"
+import { EventsService } from "./events.service"
 
 @Controller("events")
 export class EventsController {
 	private readonly logger = new Logger(EventsController.name)
 
-	constructor(private readonly events: EventsRepository) {}
+	constructor(
+		private readonly events: EventsRepository,
+		private readonly service: EventsService,
+	) {}
 
 	@Get("search")
 	async searchEventsByDate(@Query("date") date: string): Promise<ClubEvent[]> {
@@ -20,12 +33,9 @@ export class EventsController {
 		return results.map((r) => toEvent(r))
 	}
 
+	@UseInterceptors(ClassSerializerInterceptor)
 	@Get(":eventId")
 	async getEventById(@Param("eventId", ParseIntPipe) eventId: number): Promise<ClubEvent> {
-		const event = await this.events.findEventById(eventId)
-		if (!event) {
-			throw new Error(`ClubEvent ${eventId} not found`)
-		}
-		return toEvent(event)
+		return await this.service.getValidatedClubEventById(eventId, false)
 	}
 }
