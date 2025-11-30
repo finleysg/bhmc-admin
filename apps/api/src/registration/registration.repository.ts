@@ -137,10 +137,9 @@ export class RegistrationRepository {
 					or(like(player.firstName, search), like(player.lastName, search)),
 				),
 			)
-		// Filter out nulls and duplicates
-		const ids = results
-			.map((r) => r.registrationId)
-			.filter((id): id is number => typeof id === "number" && !isNaN(id))
+
+		// Set ensures no duplicates
+		const ids = results.map((r) => r.registrationId!)
 		return Array.from(new Set(ids))
 	}
 

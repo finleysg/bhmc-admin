@@ -245,22 +245,27 @@ export class RegistrationService {
 		// Step 5: Attach slots to registration and return
 		result.slots = slots
 
-		const validatedResult = validateRegistration(result)
-		if (!validatedResult) {
+		try {
+			const validatedResult = validateRegistration(result)
+			return validatedResult
+		} catch (error) {
+			this.logger.warn(`Validation failed for registration ${registrationId}: ${String(error)}`)
 			throw new BadRequestException("The registration is not valid")
 		}
-
-		return validatedResult
 	}
 
 	/**
 	 * Find all ValidatedRegistrations for an event where any related player's first or last name matches searchText.
 	 */
 	async findGroups(eventId: number, searchText: string): Promise<ValidatedRegistration[]> {
+		this.logger.log(`Searching groups for event ${eventId} with text "${searchText}"`)
+
 		const registrationIds = await this.repository.findRegistrationIdsByEventAndPlayerName(
 			eventId,
 			searchText,
 		)
+		this.logger.log(`Found ${registrationIds.length} matching registration IDs`)
+
 		const results: ValidatedRegistration[] = []
 		for (const registrationId of registrationIds) {
 			const registrationModel = await this.repository.findRegistrationWithCourse(registrationId)
@@ -313,9 +318,13 @@ export class RegistrationService {
 
 			result.slots = slots
 
-			const validatedResult = validateRegistration(result)
-			if (validatedResult) {
+			try {
+				const validatedResult = validateRegistration(result)
 				results.push(validatedResult)
+			} catch (error) {
+				this.logger.warn(
+					`Skipping registration ${registrationId} due to validation error: ${String(error)}`,
+				)
 			}
 		}
 		return results
@@ -563,7 +572,8 @@ export class RegistrationService {
 					),
 				)
 
-			this.logger.debug(`Update result: ${JSON.stringify(updateResult)}`)
+			const updateResultAny = updateResult as any
+			this.logger.debug("Update result: " + JSON.stringify(updateResultAny))
 
 			// Validate that all requested slots were successfully reserved
 			// If the affected row count doesn't match slotIds.length, some slots were not available
