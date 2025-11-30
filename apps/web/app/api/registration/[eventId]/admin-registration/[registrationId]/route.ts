@@ -1,22 +1,18 @@
-import { NextRequest, NextResponse } from "next/server"
+// Proxy PUT requests for admin registration completion to backend API
 
+import { NextRequest } from "next/server"
 import { fetchWithAuth } from "@/lib/api-proxy"
 
 export async function PUT(
 	request: NextRequest,
-	{ params }: { params: Promise<{ eventId: string; registrationId: string }> },
+	context: { params: Promise<{ eventId: string; registrationId: string }> },
 ) {
-	const { eventId, registrationId } = await params
-
-	if (!eventId || !registrationId) {
-		return NextResponse.json(
-			{ error: "Event ID and Registration ID are required" },
-			{ status: 400 },
-		)
-	}
-
-	const backendPath = `/registration/${eventId}/admin-registration/${registrationId}`
-	const body = (await request.json()) as unknown
-
-	return fetchWithAuth({ request, backendPath, method: "PUT", body })
+	const params = await context.params
+	const backendPath = `/registration/${params.eventId}/admin-registration/${params.registrationId}`
+	return fetchWithAuth({
+		request,
+		backendPath,
+		method: "PUT",
+		body: await request.json(),
+	})
 }

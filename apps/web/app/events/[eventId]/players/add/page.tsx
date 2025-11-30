@@ -73,6 +73,7 @@ export default function AddPlayerPage() {
 	}, [])
 
 	const handleReserved = (registrationId: number) => {
+		console.log("Handling reserved with registration ID:", registrationId)
 		dispatch({ type: "SET_REGISTRATION_ID", payload: registrationId })
 	}
 
@@ -81,6 +82,8 @@ export default function AddPlayerPage() {
 	}
 
 	const handleCompleteRegistration = async () => {
+		console.log("Completing registration with state:", state)
+
 		if (!state.registrationId || !state.selectedSlotGroup) return
 
 		dispatch({ type: "SET_IS_LOADING", payload: true })
@@ -123,24 +126,6 @@ export default function AddPlayerPage() {
 		return null // Redirecting
 	}
 
-	if (state.error) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="alert alert-error m-8">
-					<span>Error: {JSON.stringify(state.error)}</span>
-				</div>
-				<button
-					className="btn btn-neutral"
-					onClick={() => {
-						dispatch({ type: "RESET_ERROR" })
-					}}
-				>
-					Back
-				</button>
-			</div>
-		)
-	}
-
 	const membersOnly = state.event?.registrationType === "M"
 
 	return (
@@ -152,6 +137,7 @@ export default function AddPlayerPage() {
 						<div className="mb-6">
 							<h4 className="font-semibold mb-2">Select Players</h4>
 							<PlayerSearch
+								initialSelectedPlayers={state.selectedPlayers}
 								membersOnly={membersOnly}
 								onPlayerSelected={handlePlayerSelected}
 								onPlayerRemoved={handlePlayerRemoved}
@@ -211,29 +197,62 @@ export default function AddPlayerPage() {
 								</div>
 
 								<div>
-									{state.completeSuccess ? (
-										<div className="alert alert-success">
-											<span>Registration completed successfully!</span>
-										</div>
-									) : (
-										<button
-											type="button"
-											className="btn btn-success"
-											onClick={() => void handleCompleteRegistration()}
-											disabled={state.isLoading}
-										>
-											{state.isLoading ? (
-												<>
-													<span className="loading loading-spinner loading-sm"></span>
-													Completing...
-												</>
-											) : (
-												"Complete Registration"
-											)}
-										</button>
-									)}
+									<button
+										type="button"
+										className="btn btn-primary"
+										onClick={() => void handleCompleteRegistration()}
+										disabled={state.isLoading}
+									>
+										{state.isLoading ? (
+											<>
+												<span className="loading loading-spinner loading-sm"></span>
+												Completing...
+											</>
+										) : (
+											"Complete Registration"
+										)}
+									</button>
 								</div>
 							</>
+						)}
+
+						{state.completeSuccess && (
+							<div className="mt-6">
+								<div className="text-success mb-6">Registration created!</div>
+								<div>
+									<button
+										className="btn btn-success me-2"
+										onClick={() => {
+											window.location.reload()
+										}}
+									>
+										Add More
+									</button>
+									<button
+										className="btn btn-neutral"
+										// onClick={TODO}
+									>
+										Player Menu
+									</button>
+								</div>
+							</div>
+						)}
+
+						{state.error && (
+							<div className="mb-6">
+								<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>{" "}
+								<div className="alert alert-error text-xs mb-2">
+									<span className="text-wrap">Error: {JSON.stringify(state.error)}</span>
+								</div>
+								<button
+									className="btn btn-neutral"
+									onClick={() => {
+										dispatch({ type: "RESET_ERROR" })
+									}}
+								>
+									Try Again
+								</button>
+							</div>
 						)}
 					</div>
 				</div>

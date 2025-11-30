@@ -86,8 +86,7 @@ describe("AddPlayer reducer", () => {
 		const state = getInitialState()
 		expect(state.event).toBeNull()
 		expect(state.selectedPlayers).toEqual([])
-		expect(state.adminRegistration.userId).toBe(0)
-		expect(state.adminRegistration.slots).toEqual([])
+		expect(state.adminRegistration).toBeNull()
 		expect(state.isLoading).toBe(true)
 	})
 
@@ -95,7 +94,6 @@ describe("AddPlayer reducer", () => {
 		const event = mockEvent()
 		const state = reducer(getInitialState(), { type: "SET_EVENT", payload: event })
 		expect(state.event).toEqual(event)
-		expect(state.adminRegistration.courseId).toBeNull()
 	})
 
 	it("handles SET_IS_LOADING", () => {
@@ -109,7 +107,6 @@ describe("AddPlayer reducer", () => {
 		const player = mockPlayer(1)
 		state = reducer(state, { type: "ADD_PLAYER", payload: player })
 		expect(state.selectedPlayers).toContainEqual(player)
-		expect(state.adminRegistration.userId).toBe(player.id)
 		expect(state.canSelectGroup).toBe(true)
 	})
 
@@ -123,7 +120,6 @@ describe("AddPlayer reducer", () => {
 		state = reducer(state, { type: "REMOVE_PLAYER", payload: player1 })
 		expect(state.selectedPlayers).not.toContainEqual(player1)
 		expect(state.selectedPlayers).toContainEqual(player2)
-		expect(state.adminRegistration.userId).toBe(player2.id)
 	})
 
 	it("handles SELECT_SLOTS", () => {
@@ -137,9 +133,6 @@ describe("AddPlayer reducer", () => {
 			payload: { slotIds: group.slots.map((s) => s.id), group },
 		})
 		expect(state.selectedSlotGroup).toEqual(group)
-		expect(state.adminRegistration.courseId).toBe(event.courses[0].id)
-		expect(state.adminRegistration.startingHoleId).toBe(group.holeId)
-		expect(state.adminRegistration.slots.length).toBe(group.slots.length)
 	})
 
 	it("handles SET_FEES", () => {
@@ -155,7 +148,6 @@ describe("AddPlayer reducer", () => {
 		const fees = [{ playerId: player.id, eventFeeId: event.eventFees[0].id }]
 		state = reducer(state, { type: "SET_FEES", payload: fees })
 		expect(state.selectedFees).toEqual(fees)
-		expect(state.adminRegistration.slots[0].fees[0].id).toBe(event.eventFees[0].id)
 	})
 
 	it("handles SET_REGISTRATION_ID", () => {
@@ -167,6 +159,10 @@ describe("AddPlayer reducer", () => {
 		state = reducer(state, {
 			type: "SELECT_SLOTS",
 			payload: { slotIds: group.slots.map((s) => s.id), group },
+		})
+		state = reducer(state, {
+			type: "SET_FEES",
+			payload: [{ playerId: player.id, eventFeeId: event.eventFees[0].id }],
 		})
 		state = reducer(state, { type: "SET_REGISTRATION_ID", payload: 555 })
 		expect(state.registrationId).toBe(555)
@@ -180,9 +176,6 @@ describe("AddPlayer reducer", () => {
 		const options = mockOptions()
 		state = reducer(state, { type: "SET_REGISTRATION_OPTIONS", payload: options })
 		expect(state.registrationOptions).toEqual(options)
-		expect(state.adminRegistration.expires).toBe(options.expires)
-		expect(state.adminRegistration.notes).toBe(options.notes)
-		expect(state.adminRegistration.collectPayment).toBe(options.sendPaymentRequest)
 	})
 
 	it("handles SET_COMPLETE_SUCCESS", () => {
@@ -200,6 +193,6 @@ describe("AddPlayer reducer", () => {
 	it("handles SET_USER", () => {
 		let state = getInitialState()
 		state = reducer(state, { type: "SET_USER", payload: { signedUpBy: "admin" } })
-		expect(state.adminRegistration.signedUpBy).toBe("admin")
+		expect(state.signedUpBy).toBe("admin")
 	})
 })

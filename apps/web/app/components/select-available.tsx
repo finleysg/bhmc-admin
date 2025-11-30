@@ -5,6 +5,7 @@ import { AvailableSlotGroup, ClubEvent, Course } from "@repo/domain/types"
 import { getStart } from "@repo/domain/functions"
 
 interface SelectAvailableProps {
+	initialGroup?: AvailableSlotGroup
 	players: number
 	courses: Course[]
 	clubEvent: ClubEvent
@@ -13,6 +14,7 @@ interface SelectAvailableProps {
 }
 
 export function SelectAvailable({
+	// initialGroup, TODO: implement initial selection
 	players,
 	courses,
 	clubEvent,

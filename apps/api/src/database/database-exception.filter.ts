@@ -53,7 +53,7 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
 				message = "Missing referenced record"
 			} else {
 				// Fallback to original message when available
-				message = error.message ?? String(error)
+				message = JSON.stringify(error)
 			}
 
 			// Collect details for logging and (in dev) for the response body
@@ -82,7 +82,7 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
 		}
 
 		// Unknown error: generic handling
-		this.logger.error("Unexpected exception", String(exception))
+		this.logger.error("Unhandled exception", JSON.stringify(exception))
 		response.status(status).json({ statusCode: status, message })
 	}
 }

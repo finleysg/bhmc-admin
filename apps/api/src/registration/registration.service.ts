@@ -2,12 +2,14 @@ import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
 
 import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import {
-	calculateTransactionFee,
+	calculateAmountDue,
+	getAmount,
 	validateRegisteredPlayer,
 	validateRegistration,
 } from "@repo/domain/functions"
 import {
 	AdminRegistration,
+	AdminRegistrationSlot,
 	AvailableSlotGroup,
 	Player,
 	PlayerMap,
@@ -16,6 +18,7 @@ import {
 	RegistrationSlot,
 	RegistrationStatus,
 	SearchPlayers,
+	ValidatedClubEvent,
 	ValidatedRegisteredPlayer,
 	ValidatedRegistration,
 } from "@repo/domain/types"
@@ -46,6 +49,14 @@ import {
 	toRegistrationSlot,
 } from "./mappers"
 import { RegistrationRepository } from "./registration.repository"
+
+type ActualFeeAmount = {
+	eventFeeId: number
+	amount: number
+}
+type AdminRegistrationSlotWithAmount = Omit<AdminRegistrationSlot, "feeIds"> & {
+	amounts: ActualFeeAmount[]
+}
 
 @Injectable()
 export class RegistrationService {
@@ -295,34 +306,30 @@ export class RegistrationService {
 		eventId: number,
 		registrationId: number,
 		dto: AdminRegistration,
-	): Promise<void> {
+	): Promise<number> {
+		// This will be returned so we can make a payment request
+		let paymentId: number = -1
+
 		// Fetch existing registration to validate
 		const [existingRegistration] = await this.drizzle.db
 			.select()
 			.from(registration)
-			.where(eq(registration.id, registrationId))
+			.where(and(eq(registration.id, registrationId), eq(registration.eventId, eventId)))
 			.limit(1)
 
 		if (!existingRegistration) {
 			throw new NotFoundException(`Registration ${registrationId} not found`)
 		}
 
-		if (existingRegistration.eventId !== eventId) {
-			throw new BadRequestException(
-				`Registration ${registrationId} does not belong to event ${eventId}`,
-			)
-		}
-
-		// Get event record for fee validation
-		const eventRecord = await this.events.getValidatedClubEventById(eventId)
+		// Get event record for fee calculations
+		const eventRecord = await this.events.getValidatedClubEventById(eventId, false)
 		if (!eventRecord) {
 			throw new BadRequestException("event id not found")
 		}
 
-		// Calculate payment amount from fees (using cents to avoid floating-point issues)
-		const allFees = dto.slots.flatMap((slot) => slot.fees)
-		const totalCents = allFees.reduce((sum, fee) => sum + Math.round(fee.amount * 100), 0)
-		const totalAmount = (totalCents / 100).toFixed(2)
+		const convertedSlots = await this.convertSlots(eventRecord, dto.slots)
+		const allAmounts = convertedSlots.flatMap((slot) => slot.amounts.map((a) => a.amount))
+		const totalAmountDue = calculateAmountDue(allAmounts)
 
 		// Calculate expiry datetime
 		const expires = new Date()
@@ -346,24 +353,19 @@ export class RegistrationService {
 
 			// Create payment
 			const paymentCode = dto.collectPayment ? "Requested" : "Waived"
-			let transactionFee = "0.00"
-			if (dto.collectPayment) {
-				const fee = calculateTransactionFee(parseFloat(totalAmount))
-				transactionFee = fee.toFixed(2)
-			}
 			const [paymentResult] = await tx.insert(payment).values({
 				paymentCode,
 				eventId,
 				userId: dto.userId,
-				paymentAmount: totalAmount,
-				transactionFee,
+				paymentAmount: totalAmountDue.total.toFixed(2),
+				transactionFee: totalAmountDue.transactionFee.toFixed(2),
 				confirmed: 0,
 				notificationType: "A",
 			})
-			const paymentId = Number(paymentResult.insertId)
+			paymentId = Number(paymentResult.insertId)
 
-			// Update slots
-			for (const slot of dto.slots) {
+			// Update slots and insert related fees
+			for (const slot of convertedSlots) {
 				await tx
 					.update(registrationSlot)
 					.set({
@@ -373,21 +375,50 @@ export class RegistrationService {
 						startingOrder: dto.startingOrder,
 					})
 					.where(eq(registrationSlot.id, slot.slotId))
-			}
 
-			// Create registration fees
-			for (const slot of dto.slots) {
-				for (const eventFee of slot.fees) {
+				for (const fee of slot.amounts) {
 					await tx.insert(registrationFee).values({
 						isPaid: 0,
-						eventFeeId: eventFee.id!,
+						eventFeeId: fee.eventFeeId,
 						paymentId,
 						registrationSlotId: slot.slotId,
-						amount: eventFee.amount.toFixed(2),
+						amount: fee.amount.toFixed(2),
 					})
 				}
 			}
 		})
+
+		return paymentId
+	}
+
+	/**
+	 * Convert slots to AdminRegistrationSlotWithAmount, which has
+	 * the amount calculated for each player (Senior discounts, for example)
+	 * @param eventRecord - A valid club event
+	 * @param slot - Player and their selected fees
+	 * @returns
+	 */
+	async convertSlots(
+		eventRecord: ValidatedClubEvent,
+		slots: AdminRegistrationSlot[],
+	): Promise<AdminRegistrationSlotWithAmount[]> {
+		const startDate = new Date(eventRecord.startDate)
+		const convertedSlots: AdminRegistrationSlotWithAmount[] = []
+
+		for (const slot of slots) {
+			const convertedSlot: AdminRegistrationSlotWithAmount = {
+				...slot,
+				amounts: [],
+			}
+			const player = toPlayer(await this.repository.findPlayerById(slot.playerId))
+			const eventFees = eventRecord.eventFees.filter((ef) => slot.feeIds.includes(ef.id))
+			convertedSlot.amounts = eventFees.map((ef) => {
+				const playerAmount = getAmount(ef, player, startDate)
+				return { eventFeeId: ef.id, amount: playerAmount }
+			})
+			convertedSlots.push(convertedSlot)
+		}
+		return convertedSlots
 	}
 
 	/**
@@ -455,9 +486,11 @@ export class RegistrationService {
 					),
 				)
 
+			console.log(JSON.stringify(updateResult))
+
 			// Validate that all requested slots were successfully reserved
 			// If the affected row count doesn't match slotIds.length, some slots were not available
-			if ((updateResult as any).affectedRows !== slotIds.length) {
+			if ((updateResult as any)[0].affectedRows !== slotIds.length) {
 				throw new BadRequestException("Not all requested slots are available!")
 			}
 

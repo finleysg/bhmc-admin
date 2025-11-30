@@ -34,10 +34,10 @@ export function ReserveSpot({
 			})
 
 			if (response.ok) {
-				const data = (await response.json()) as { id: number }
-				onReserved(data.id)
+				const registrationId = (await response.json()) as number
+				onReserved(registrationId)
 			} else {
-				onError?.("Slots no longer available")
+				onError?.(`Reserve returned status ${response.status}`)
 			}
 		} catch (err) {
 			onError?.(err)
@@ -49,7 +49,7 @@ export function ReserveSpot({
 	return (
 		<button
 			type="button"
-			className="btn btn-primary"
+			className="btn btn-secondary"
 			onClick={() => void handleReserveSlots()}
 			disabled={isReserving || disabled}
 		>
