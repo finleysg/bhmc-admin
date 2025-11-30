@@ -78,7 +78,14 @@ export function GroupSearch({
 		onGroupSelected(group)
 	}
 
-	// Helper to render start info
+	/**
+	 * Produce the start information for a group's first slot when available for the current club event.
+	 *
+	 * Returns the start information for the group's first slot when the club event allows choosing, the group has at least one slot, and matching course data (holes) can be resolved; returns `null` otherwise.
+	 *
+	 * @param group - The validated registration representing the group to render start information for
+	 * @returns The start information for the group's first slot, or `null` if not applicable
+	 */
 	function renderStartInfo(group: ValidatedRegistration) {
 		if (!clubEvent.canChoose) {
 			return null

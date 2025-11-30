@@ -18,6 +18,21 @@ export type Action =
 	| { type: "SELECT_PLAYER"; payload: ValidatedPlayer }
 	| { type: "REMOVE_PLAYER"; payload: ValidatedPlayer }
 
+/**
+ * Produce the next reducer state for the Drop Player page given the current state and an action.
+ *
+ * Handles these actions:
+ * - `SET_EVENT`: sets the current `clubEvent`.
+ * - `SET_GROUP`: sets `selectedGroup` and derives `selectedPlayers` from the group's `slots` (extracts present players).
+ * - `SET_ERROR`: sets the `error` field.
+ * - `SET_LOADING`: sets the `isLoading` flag.
+ * - `SELECT_PLAYER`: appends the player to `selectedPlayers` only if a player with the same `id` is not already present.
+ * - `REMOVE_PLAYER`: removes the player with a matching `id` from `selectedPlayers`.
+ *
+ * @param state - The current reducer state.
+ * @param action - The action to apply.
+ * @returns The updated state after applying the action.
+ */
 export function reducer(state: State, action: Action): State {
 	switch (action.type) {
 		case "SET_EVENT":

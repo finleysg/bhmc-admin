@@ -9,6 +9,19 @@ export interface SelectPlayersProps {
 	onRemove: (player: ValidatedPlayer) => void
 }
 
+/**
+ * Renders a list of players from a registration's slots as selectable checkboxes.
+ *
+ * Renders each player found in `group.slots` with a checkbox that reflects whether the player
+ * is present in `selectedPlayers`. Toggling a checkbox calls `onSelect` when checked and
+ * `onRemove` when unchecked.
+ *
+ * @param group - Registration object whose `slots` are used to build the player list
+ * @param selectedPlayers - Currently selected players (defaults to an empty array)
+ * @param onSelect - Called with a player when that player's checkbox is checked and they were not previously selected
+ * @param onRemove - Called with a player when that player's checkbox is unchecked and they were previously selected
+ * @returns A JSX element containing the list of player checkboxes
+ */
 export function SelectPlayers({
 	group,
 	selectedPlayers = [],

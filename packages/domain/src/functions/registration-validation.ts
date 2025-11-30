@@ -77,11 +77,13 @@ export function validateRegistration(registration: Registration): ValidatedRegis
 }
 
 /**
- * Validates a RegisteredPlayer ensuring all core fields are present and valid.
- * When hasCourseDetails is false, course can be undefined/null.
- * @param registeredPlayer The RegisteredPlayer to validate
- * @param hasCourseDetails Whether to require course details (default: true)
- * @returns ValidatedRegisteredPlayer if validation passes, null otherwise
+ * Validates that a RegisteredPlayer contains required identifiers and, when the registration includes course details, has course and hole information.
+ *
+ * The function ensures slot.id, player.id, and registration.id are present. If the registration references a course (registration.courseId), course.id and hole.id are required. If `fees` is provided, it must be a non-empty collection with valid fee entries.
+ *
+ * @param registeredPlayer - The RegisteredPlayer to validate
+ * @returns The input cast as a ValidatedRegisteredPlayer when validation succeeds
+ * @throws Error when one or more required fields are missing or invalid; the error message lists the validation issues
  */
 export function validateRegisteredPlayer(
 	registeredPlayer: RegisteredPlayer,
