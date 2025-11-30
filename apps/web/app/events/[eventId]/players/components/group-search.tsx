@@ -25,7 +25,7 @@ interface GroupSearchProps {
  * @param initialGroup - Optional initial selection to populate the component.
  * @param onGroupSelected - Callback invoked with the chosen `ValidatedRegistration` when a group is selected.
  * @param onError - Optional callback invoked with any error that occurs while fetching search results.
- * @returns The component UI for searching and selecting a group. 
+ * @returns The component UI for searching and selecting a group.
  */
 export function GroupSearch({
 	clubEvent,
@@ -78,18 +78,25 @@ export function GroupSearch({
 		onGroupSelected(group)
 	}
 
-	// Helper to render start info
+	/**
+	 * Produce the start information for a group's first slot when available for the current club event.
+	 *
+	 * Returns the start information for the group's first slot when the club event allows choosing, the group has at least one slot, and matching course data (holes) can be resolved; returns `null` otherwise.
+	 *
+	 * @param group - The validated registration representing the group to render start information for
+	 * @returns The start information for the group's first slot, or `null` if not applicable
+	 */
 	function renderStartInfo(group: ValidatedRegistration) {
 		if (!clubEvent.canChoose) {
 			return null
 		}
 
 		// A can-choose event is guaranteed to have course data
-const slot = group.slots[0]
-if (!slot) return null
+		const slot = group.slots[0]
+		if (!slot) return null
 
-const course = clubEvent.courses?.find((c) => c.id === group.courseId)
-const holes = course?.holes || []
+		const course = clubEvent.courses?.find((c) => c.id === group.courseId)
+		const holes = course?.holes || []
 
 		return getStart(clubEvent, slot, holes)
 	}
@@ -144,7 +151,7 @@ const holes = course?.holes || []
 			</Combobox>
 			{/* Selected Group Info */}
 			{selectedGroup && (
-				<div className="mt-2 card card-bordered bg-base-100 p-4">
+				<div className="mt-2 card card-bordered bg-base-100">
 					<div className="font-bold">{renderStartInfo(selectedGroup)}</div>
 					<div className="text-sm text-base-content/70">
 						{renderPlayerNames(selectedGroup.slots)}
