@@ -34,6 +34,18 @@ export class RegistrationController {
 		return this.registrationService.searchPlayers(dto)
 	}
 
+	@Get(":eventId/groups/search")
+	@UseGuards(JwtAuthGuard)
+	async searchGroups(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Query("searchText") searchText: string,
+	): Promise<ValidatedRegistration[]> {
+		if (!searchText?.trim()) {
+			return []
+		}
+		return this.registrationService.findGroups(eventId, searchText)
+	}
+
 	@Get(":eventId/groups/:playerId")
 	@UseGuards(JwtAuthGuard)
 	async getGroup(
@@ -77,18 +89,6 @@ export class RegistrationController {
 		@Query("players", ParseIntPipe) players: number,
 	): Promise<AvailableSlotGroup[]> {
 		return await this.registrationService.getAvailableSlots(eventId, courseId, players)
-	}
-
-	@Get(":eventId/groups/search")
-	@UseGuards(JwtAuthGuard)
-	async searchGroups(
-		@Param("eventId", ParseIntPipe) eventId: number,
-		@Query("searchText") searchText: string,
-	): Promise<ValidatedRegistration[]> {
-		if (!searchText?.trim()) {
-			return []
-		}
-		return this.registrationService.findGroups(eventId, searchText)
 	}
 
 	@Post(":eventId/reserve-admin-slots")

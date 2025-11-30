@@ -3,7 +3,6 @@ import { RegisteredPlayer } from "../types/register/registered-player"
 import { Registration } from "../types/register/registration"
 import { RegistrationFee } from "../types/register/registration-fee"
 import { ValidatedRegisteredPlayer, ValidatedRegistration } from "../types/register/validated-types"
-import { validateCourse } from "./course-validation"
 
 // Helper validation functions
 const hasValidFees = (fees: RegistrationFee[] | undefined): boolean => {
@@ -34,13 +33,13 @@ const hasValidSlots = (
 				return false
 			}
 		}
-		if (!slot.player?.id) {
-			return false
-		}
-		if (!hasValidFees(slot.fees)) {
-			return false
-		}
-		return true
+if (slot.player != null && !slot.player.id) {
+return false
+}
+if (slot.fees != null && !hasValidFees(slot.fees)) {
+return false
+}
+return true
 	})
 }
 
@@ -51,27 +50,25 @@ const hasValidSlots = (
  * @returns ValidatedRegistration if validation passes, null otherwise
  */
 export function validateRegistration(registration: Registration): ValidatedRegistration | null {
+	const issues: string[] = []
+
 	if (!registration?.id) {
-		return null
+		issues.push("The registration ID is missing.")
 	}
 
 	const hasCourseDetails = !!registration?.courseId
 
 	if (!hasValidSlots(registration.slots, hasCourseDetails)) {
-		return null
+		issues.push("The registration slots are invalid or missing.")
 	}
 
-	if (hasCourseDetails && !validateCourse(registration.course)) {
-		return null
+	// Only require minimal courrse information
+	if (hasCourseDetails && (!registration.course || !registration.course?.id)) {
+		issues.push("The course information is invalid or missing.")
 	}
 
-	// If course is present, ensure courseId matches if set
-	if (
-		registration.course &&
-		registration.courseId != null &&
-		registration.course.id !== registration.courseId
-	) {
-		return null
+	if (issues.length > 0) {
+		throw new Error(`Validation failed for registration ${registration?.id}: ` + issues.join("\n"))
 	}
 
 	// All validations passed, return narrowed type

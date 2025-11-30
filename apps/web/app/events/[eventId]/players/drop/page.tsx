@@ -1,25 +1,39 @@
 "use client"
 
-import { useEffect } from "react"
-
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-
-import { useSession } from "../../../../../lib/auth-client"
+import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
+import { GroupSearch } from "../components/group-search"
+import type { ValidatedClubEvent, ValidatedRegistration } from "@repo/domain/types"
 
 export default function DropPlayerPage() {
-	const { data: session, isPending } = useSession()
-	const signedIn = !!session?.user
-	const router = useRouter()
+	const { eventId } = useParams<{ eventId: string }>()
+	const [clubEvent, setClubEvent] = useState<ValidatedClubEvent | null>(null)
+	const [, setSelectedGroup] = useState<ValidatedRegistration | undefined>(undefined)
+	const [error, setError] = useState<unknown>(null)
+	const [isLoading, setIsLoading] = useState(true)
 
-	// Redirect if not authenticated
 	useEffect(() => {
-		if (!signedIn && !isPending) {
-			router.push("/sign-in")
+		const fetchEvent = async () => {
+			try {
+				const response = await fetch(`/api/events/${eventId}`)
+				if (response.ok) {
+					const eventData = (await response.json()) as ValidatedClubEvent
+					setClubEvent(eventData)
+				} else {
+					setError("Failed to fetch event")
+				}
+			} catch (err) {
+				setError(err)
+			} finally {
+				setIsLoading(false)
+			}
 		}
-	}, [signedIn, isPending, router])
+		if (eventId) {
+			void fetchEvent()
+		}
+	}, [eventId])
 
-	if (isPending) {
+	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center p-8">
 				<span className="loading loading-spinner loading-lg"></span>
@@ -27,22 +41,37 @@ export default function DropPlayerPage() {
 		)
 	}
 
-	if (!signedIn && !isPending) {
-		return null // Redirecting
+	if (!clubEvent) {
+		return (
+			<div className="flex items-center justify-center p-8">
+				<div className="alert alert-error">Event not found</div>
+			</div>
+		)
 	}
 
 	return (
-		<main className="min-h-screen flex justify-center p-8">
+		<main className="min-h-screen flex justify-center md:p-8">
 			<div className="w-full max-w-3xl">
-				<div className="card bg-base-100 shadow-xl">
-					<div className="card-body text-center">
-						<h2 className="card-title text-2xl font-bold mb-4">Drop Player</h2>
-						<p className="text-muted-foreground mb-6">Remove a player or group from the event.</p>
-						<div className="card-actions justify-center">
-							<Link href="../players" className="btn btn-primary">
-								Back to Players
-							</Link>
+				<div className="card bg-base-100 shadow-xs">
+					<div className="card-body">
+						<h3 className="card-title text-secondary font-semibold mb-4">Drop Player</h3>
+						<div className="mb-6">
+							<h4 className="font-semibold mb-2">Select Group</h4>
+							<GroupSearch
+								clubEvent={clubEvent}
+								onGroupSelected={setSelectedGroup}
+								onError={setError}
+							/>
 						</div>
+
+						{error && (
+							<div className="mb-6">
+								<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
+								<div className="alert alert-error text-xs mb-2">
+									<span className="text-wrap">Error: {JSON.stringify(error)}</span>
+								</div>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>

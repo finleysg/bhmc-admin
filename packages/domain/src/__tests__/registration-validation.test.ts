@@ -120,7 +120,7 @@ describe("validateRegistration", () => {
 
 	it("fails if registration id is missing", () => {
 		const invalidReg = { ...validRegistration, id: undefined } as unknown as Registration
-		expect(validateRegistration(invalidReg)).toBeNull()
+		expect(() => validateRegistration(invalidReg)).toThrow()
 	})
 
 	it("fails if slots empty", () => {
@@ -128,7 +128,7 @@ describe("validateRegistration", () => {
 			...validRegistration,
 			slots: [],
 		}
-		expect(validateRegistration(invalidReg)).toBeNull()
+		expect(() => validateRegistration(invalidReg)).toThrow()
 	})
 
 	it("fails if slot missing id", () => {
@@ -137,7 +137,7 @@ describe("validateRegistration", () => {
 			...validRegistration,
 			slots: [invalidSlot],
 		}
-		expect(validateRegistration(invalidReg)).toBeNull()
+		expect(() => validateRegistration(invalidReg)).toThrow()
 	})
 
 	it("fails if player missing an id", () => {
@@ -153,7 +153,7 @@ describe("validateRegistration", () => {
 			...validRegistration,
 			slots: [invalidSlot],
 		}
-		expect(validateRegistration(invalidReg)).toBeNull()
+		expect(() => validateRegistration(invalidReg)).toThrow()
 	})
 
 	it("fails if course required but missing", () => {
@@ -161,19 +161,7 @@ describe("validateRegistration", () => {
 			...validRegistration,
 			course: undefined,
 		}
-		expect(validateRegistration(invalidReg)).toBeNull()
-	})
-
-	it("fails if courseId mismatch", () => {
-		const invalidReg: Registration = {
-			...validRegistration,
-			courseId: 2,
-			course: {
-				...validCourse,
-				id: 1,
-			},
-		}
-		expect(validateRegistration(invalidReg)).toBeNull()
+		expect(() => validateRegistration(invalidReg)).toThrow()
 	})
 
 	it("validates optional player (no player in slot)", () => {
