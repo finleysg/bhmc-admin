@@ -15,6 +15,18 @@ interface GroupSearchProps {
 	onError?: (error: unknown) => void
 }
 
+/**
+ * Render a searchable combobox to find and select a group for a club event.
+ *
+ * Fetches matching groups from the server as the user types (debounced), displays start information and player names for each result, and shows a summary card for the selected group.
+ *
+ * @param clubEvent - The club event used to determine available courses, slots, and to scope the group search.
+ * @param minChars - Minimum number of characters required before triggering a search (default: 3).
+ * @param initialGroup - Optional initial selection to populate the component.
+ * @param onGroupSelected - Callback invoked with the chosen `ValidatedRegistration` when a group is selected.
+ * @param onError - Optional callback invoked with any error that occurs while fetching search results.
+ * @returns The component UI for searching and selecting a group. 
+ */
 export function GroupSearch({
 	clubEvent,
 	minChars = 3,
