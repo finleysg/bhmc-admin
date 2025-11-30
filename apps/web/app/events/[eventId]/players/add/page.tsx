@@ -21,8 +21,7 @@ import { reducer, getInitialState } from "./reducer"
 export default function AddPlayerPage() {
 	const { data: session, isPending } = useSession()
 	const signedIn = !!session?.user
-	const params = useParams()
-	const eventId = params.eventId as string
+	const { eventId } = useParams<{ eventId: string }>()
 
 	const [state, dispatch] = useReducer(reducer, getInitialState())
 
@@ -118,16 +117,16 @@ export default function AddPlayerPage() {
 		}
 	}
 
+	if (!signedIn && !isPending) {
+		return null // Redirecting
+	}
+
 	if (isPending || state.isLoading) {
 		return (
 			<div className="flex items-center justify-center p-8">
 				<span className="loading loading-spinner loading-lg"></span>
 			</div>
 		)
-	}
-
-	if (!signedIn && !isPending) {
-		return null // Redirecting
 	}
 
 	const membersOnly = state.event?.registrationType === "M"

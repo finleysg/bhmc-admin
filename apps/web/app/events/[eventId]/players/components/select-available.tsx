@@ -45,16 +45,14 @@ export function SelectAvailable({
 				const slotsData = (await response.json()) as AvailableSlotGroup[]
 				setAvailableSlotGroups(slotsData)
 			} catch (err) {
-				if (onError) {
-					onError(err)
-				}
+				onError?.(err)
 			} finally {
 				setLoadingSlots(false)
 			}
 		}
 
 		void fetchSlots()
-	}, [selectedCourseId, clubEvent.id, players])
+	}, [selectedCourseId, clubEvent.id, players, onError])
 
 	const handleCourseChange = useCallback(
 		(courseId: number) => {

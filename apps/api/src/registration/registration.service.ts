@@ -488,9 +488,13 @@ export class RegistrationService {
 				)
 
 			this.logger.debug(`Update result: ${JSON.stringify(updateResult)}`)
+
 			// Validate that all requested slots were successfully reserved
 			// If the affected row count doesn't match slotIds.length, some slots were not available
-			if ((updateResult as any)[0].affectedRows !== slotIds.length) {
+			// Drizzle MySQL2 update returns [ResultSetHeader, FieldPacket[]]; access affectedRows from the header
+			if (
+				(updateResult as [{ affectedRows: number }, unknown])[0].affectedRows !== slotIds.length
+			) {
 				throw new BadRequestException("Not all requested slots are available!")
 			}
 

@@ -48,5 +48,6 @@ export class AdminRegistrationSlot {
 	playerId!: number
 
 	@IsArray()
+	@IsNumber({}, { each: true })
 	feeIds!: number[]
 }

@@ -51,9 +51,7 @@ export function PlayerSearch({
 					setSearchResults([])
 				}
 			} catch (error) {
-				if (onError) {
-					onError(error)
-				}
+				onError?.(error)
 				setSearchResults([])
 			} finally {
 				setLoading(false)
@@ -61,17 +59,13 @@ export function PlayerSearch({
 		}
 
 		void fetchPlayers()
-	}, [debouncedSearchText, minChars, membersOnly])
+	}, [debouncedSearchText, minChars, membersOnly, onError])
 
 	const handlePlayerSelect = (player: Player | null) => {
 		if (!player) return
 
-		// Check if player is already selected (using email as fallback if id is undefined)
-		const isAlreadySelected = selectedPlayers.some(
-			(p) =>
-				(p.id && player.id && p.id === player.id) ||
-				(!p.id && !player.id && p.email === player.email),
-		)
+		// Check if player is already selected by id
+		const isAlreadySelected = selectedPlayers.some((p) => p.id === player.id)
 		if (isAlreadySelected) {
 			return
 		}
@@ -84,11 +78,7 @@ export function PlayerSearch({
 	}
 
 	const handlePlayerRemove = (player: Player) => {
-		const newSelectedPlayers = selectedPlayers.filter(
-			(p) =>
-				!(p.id && player.id && p.id === player.id) &&
-				!(!p.id && !player.id && p.email === player.email),
-		)
+		const newSelectedPlayers = selectedPlayers.filter((p) => p.id !== player.id)
 		setSelectedPlayers(newSelectedPlayers)
 		onPlayerRemoved(player)
 	}
@@ -114,7 +104,7 @@ export function PlayerSearch({
 					<ComboboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-base-100 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
 						{searchResults.map((player) => (
 							<ComboboxOption
-								key={player.id || `${player.firstName}-${player.lastName}`}
+								key={player.id}
 								value={player}
 								className="cursor-pointer select-none px-4 py-2 hover:bg-base-200 data-focus:bg-base-200"
 							>
@@ -140,10 +130,7 @@ export function PlayerSearch({
 			{selectedPlayers.length > 0 && (
 				<div className="mt-2 flex flex-wrap gap-2">
 					{selectedPlayers.map((player) => (
-						<div
-							key={player.id || `${player.firstName}-${player.lastName}`}
-							className="badge badge-info gap-2"
-						>
+						<div key={player.id} className="badge badge-info gap-2">
 							<span>
 								{player.firstName} {player.lastName}
 							</span>

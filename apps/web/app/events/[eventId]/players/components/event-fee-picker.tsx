@@ -66,6 +66,10 @@ export function EventFeePicker({ fees, players, onChange }: EventFeePickerProps)
 	const selectedFees = selections.map((selection) => {
 		const fee = fees.find((f) => f.id === selection.eventFeeId)
 		const player = players.find((p) => p.id === selection.playerId)
+		if (!fee || !player) {
+			console.warn("Unexpected selection found:", selection)
+			return 0
+		}
 		return getAmount(fee, player)
 	})
 
