@@ -5,10 +5,10 @@ import { useCallback, useEffect, useReducer } from "react"
 import { useParams } from "next/navigation"
 
 import { AdminRegistrationOptions } from "@/components/admin-registration-options"
-import { EventFeePicker } from "@/components/event-fee-picker"
-import { PlayerSearch } from "@/components/player-search"
-import { ReserveSpot } from "@/components/reserve-spot"
-import { SelectAvailable } from "@/components/select-available"
+import { EventFeePicker } from "@/app/events/[eventId]/players/components/event-fee-picker"
+import { PlayerSearch } from "@/app/events/[eventId]/players/components/player-search"
+import { ReserveSpot } from "@/app/events/[eventId]/players/components/reserve-spot"
+import { SelectAvailable } from "@/app/events/[eventId]/players/components/select-available"
 import { useSession } from "@/lib/auth-client"
 import type {
 	AvailableSlotGroup,
