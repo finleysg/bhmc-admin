@@ -3,8 +3,8 @@
 import type { AdminRegistrationOptionsState } from "@/components/admin-registration-options"
 import type {
 	AvailableSlotGroup,
-	ClubEvent,
-	Player,
+	ValidatedClubEvent as ClubEvent,
+	ValidatedPlayer as Player,
 	AdminRegistration,
 	AdminRegistrationSlot,
 } from "@repo/domain/types"

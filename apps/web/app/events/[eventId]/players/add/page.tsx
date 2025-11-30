@@ -10,7 +10,11 @@ import { PlayerSearch } from "@/components/player-search"
 import { ReserveSpot } from "@/components/reserve-spot"
 import { SelectAvailable } from "@/components/select-available"
 import { useSession } from "@/lib/auth-client"
-import type { AvailableSlotGroup, ClubEvent, Player } from "@repo/domain/types"
+import type {
+	AvailableSlotGroup,
+	ValidatedClubEvent as ClubEvent,
+	ValidatedPlayer as Player,
+} from "@repo/domain/types"
 
 import { reducer, getInitialState } from "./reducer"
 

@@ -5,7 +5,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline"
 import { useDebounceValue } from "usehooks-ts"
 import { useEffect, useState } from "react"
 
-import type { Player } from "@repo/domain/types"
+import type { ValidatedPlayer as Player } from "@repo/domain/types"
 
 interface PlayerSearchProps {
 	membersOnly?: boolean
