@@ -11,7 +11,7 @@ import {
 } from "@repo/domain/types"
 
 import { CoursesRepository } from "../courses"
-import { DrizzleService, player, tournamentResult } from "../database"
+import { DrizzleService, player, toDbString, tournamentResult } from "../database"
 import { TournamentResultModel } from "../database/models"
 import {
 	mapPreparedPointsToTournamentPointsModel,
@@ -92,7 +92,7 @@ export class EventsService {
 		}
 
 		const tournamentIds = tournaments.map((t) => t.id!)
-		const now = new Date().toISOString().slice(0, 19).replace("T", " ")
+		const now = toDbString(new Date())
 
 		await this.drizzle.db
 			.update(tournamentResult)

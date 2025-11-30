@@ -33,6 +33,7 @@ import {
 } from "./result-parsers"
 import { TeamResultParser } from "./team-result-parser"
 import { parsePurseAmount } from "./utils"
+import { toDbString } from "../../database"
 
 @Injectable()
 export class ImportAllResultsService {
@@ -480,8 +481,8 @@ export class ImportAllResultsService {
 			amount: amount.toFixed(2),
 			details: null,
 			summary: null,
-			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
-			payoutDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			createDate: toDbString(new Date()),
+			payoutDate: toDbString(new Date()),
 			payoutStatus: "Pending",
 			payoutTo: "Individual",
 			payoutType: "Credit",
@@ -538,8 +539,8 @@ export class ImportAllResultsService {
 			amount: amount.toFixed(2),
 			summary: playerData.details,
 			details: null,
-			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
-			payoutDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			createDate: toDbString(new Date()),
+			payoutDate: toDbString(new Date()),
 			payoutStatus: "Pending",
 			payoutTo: "Individual", // TODO: Implement team handling for team skins
 			payoutType: "Cash",
@@ -608,8 +609,8 @@ export class ImportAllResultsService {
 			amount: amount.toFixed(2),
 			details: null,
 			summary: null,
-			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
-			payoutDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			createDate: toDbString(new Date()),
+			payoutDate: toDbString(new Date()),
 			payoutStatus: "Pending",
 			payoutTo: "Individual",
 			payoutType: "Credit",
@@ -686,8 +687,8 @@ export class ImportAllResultsService {
 			amount: amount.toFixed(2),
 			details: null,
 			summary,
-			createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
-			payoutDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+			createDate: toDbString(new Date()),
+			payoutDate: toDbString(new Date()),
 			payoutStatus: "Pending",
 			payoutTo: "Individual",
 			payoutType: "Credit",
@@ -767,8 +768,8 @@ export class ImportAllResultsService {
 				amount: amount.toFixed(2),
 				details: teamName, // Team name in details
 				summary: "Team win",
-				createDate: new Date().toISOString().slice(0, 19).replace("T", " "),
-				payoutDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+				createDate: toDbString(new Date()),
+				payoutDate: toDbString(new Date()),
 				payoutStatus: "Pending",
 				payoutTo: "Team", // Or "Individual" if per-player payout
 				payoutType: "Credit",

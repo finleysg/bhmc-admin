@@ -35,6 +35,7 @@ import {
 	registration,
 	registrationFee,
 	registrationSlot,
+	toDbString,
 } from "../database"
 import { EventsService } from "../events"
 import { mapToEventFeeModel, mapToFeeTypeModel, toEventFee } from "../events/mappers"
@@ -347,7 +348,7 @@ export class RegistrationService {
 					courseId: dto.courseId,
 					startingHole: 1, // legacy field, always 1
 					startingOrder: 0, // legacy field, always 0
-					expires: expires.toISOString().slice(0, 19).replace("T", " "),
+					expires: toDbString(expires),
 				})
 				.where(eq(registration.id, registrationId))
 
@@ -466,7 +467,7 @@ export class RegistrationService {
 				eventId,
 				startingHole: 1,
 				startingOrder: 0,
-				createdDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+				createdDate: toDbString(new Date()),
 			})
 			const registrationId = Number(registrationResult.insertId)
 
