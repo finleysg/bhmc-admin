@@ -487,8 +487,7 @@ export class RegistrationService {
 					),
 				)
 
-			console.log(JSON.stringify(updateResult))
-
+			this.logger.debug(`Update result: ${JSON.stringify(updateResult)}`)
 			// Validate that all requested slots were successfully reserved
 			// If the affected row count doesn't match slotIds.length, some slots were not available
 			if ((updateResult as any)[0].affectedRows !== slotIds.length) {
