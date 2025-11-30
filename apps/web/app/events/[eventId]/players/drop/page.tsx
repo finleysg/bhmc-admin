@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import { GroupSearch } from "../components/group-search"
 import SelectPlayers from "../components/select-players"
 import type { ValidatedClubEvent } from "@repo/domain/types"
+import { reducer, initialState } from "./reducer"
 
 /**
  * Render the Drop Player page for a club event.
@@ -12,13 +13,6 @@ import type { ValidatedClubEvent } from "@repo/domain/types"
  * The component loads event data for the `eventId` route parameter, shows a centered loading spinner while the event is being fetched, displays an "Event not found" error when no event is available, and otherwise renders a card containing a GroupSearch to select a registration and an area to surface any fetch or selection errors.
  *
  * @returns The page's React element.
- */
-import { reducer, initialState } from "./reducer"
-
-/**
- * Renders the Drop Player page, handling event fetching and the group/player selection UI.
- *
- * @returns The React element for the Drop Player page, including loading and error states, a group search, and a player selection section when a group is selected.
  */
 export default function DropPlayerPage() {
 	const { eventId } = useParams<{ eventId: string }>()
