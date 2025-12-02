@@ -38,7 +38,7 @@ export function PaidFeePicker({ clubEvent, slots, onChange }: PaidFeePickerProps
 		const playerFees: PlayerFees[] = convertSlotsToPlayerFees(slots, sortedEventFees)
 		setPlayerFeesList(playerFees)
 		onChange(transformSelections(playerFees))
-	}, [sortedEventFees, slots])
+	}, [sortedEventFees, slots, onChange])
 
 	const transformSelections = (playerFeesList: PlayerFees[]) => {
 		if (!playerFeesList) return []
