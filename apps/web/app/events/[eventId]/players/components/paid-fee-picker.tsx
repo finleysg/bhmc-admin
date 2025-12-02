@@ -15,6 +15,17 @@ interface PaidFeePickerProps {
 	onChange: (selections: { slotId: number; registrationFeeIds: number[] }[]) => void
 }
 
+/**
+ * Renders a paid-fee selector UI for event registration and synchronizes selected fees with the parent.
+ *
+ * Loads initial fee selections from the provided slots, allows per-player fee selection (desktop grid and mobile card layouts),
+ * computes subtotal, transaction fee, and total, and invokes `onChange` with the current selections whenever they change.
+ *
+ * @param clubEvent - The event object containing available event fees (used to render fee columns in display order).
+ * @param slots - Registration slots to map selections back to slot IDs and to initialize per-player selections.
+ * @param onChange - Callback invoked with an array of { slotId, registrationFeeIds } whenever selected fees change.
+ * @returns The React element that renders the paid fee picker UI.
+ */
 export function PaidFeePicker({ clubEvent, slots, onChange }: PaidFeePickerProps) {
 	const [playerFeesList, setPlayerFeesList] = useState<PlayerFees[]>([])
 

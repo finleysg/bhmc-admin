@@ -9,11 +9,9 @@ import { reducer, initialState } from "./reducer"
 import { PaidFeePicker } from "../components/paid-fee-picker"
 
 /**
- * Render the Drop Player page for a club event.
+ * Display the Drop Player page for a club event, allowing selection of a registration group, selection/removal of player(s) to drop, and picking fees to refund.
  *
- * The component loads event data for the `eventId` route parameter, shows a centered loading spinner while the event is being fetched, displays an "Event not found" error when no event is available, and otherwise renders a card containing a GroupSearch to select a registration and an area to surface any fetch or selection errors.
- *
- * @returns The page's React element.
+ * @returns The page's React element
  */
 export default function DropPlayerPage() {
 	const { eventId } = useParams<{ eventId: string }>()
