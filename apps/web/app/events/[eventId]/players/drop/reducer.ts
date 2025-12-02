@@ -25,15 +25,16 @@ export type Action =
  *
  * Handles these actions:
  * - `SET_EVENT`: sets the current `clubEvent`.
- * - `SET_GROUP`: sets `selectedGroup` and derives `selectedPlayers` from the group's `slots` (extracts present players).
+ * - `SET_GROUP`: sets `selectedGroup` and derives `selectedPlayers` from the group's `slots` by extracting present players.
  * - `SET_ERROR`: sets the `error` field.
  * - `SET_LOADING`: sets the `isLoading` flag.
  * - `SELECT_PLAYER`: appends the player to `selectedPlayers` only if a player with the same `id` is not already present.
- * - `REMOVE_PLAYER`: removes the player with a matching `id` from `selectedPlayers`.
+ * - `REMOVE_PLAYER`: removes players with a matching `id` from `selectedPlayers`.
+ * - `SET_FEES`: replaces `selectedFees` with the provided array of `{ slotId, registrationFeeIds }`.
  *
- * @param state - The current reducer state.
- * @param action - The action to apply.
- * @returns The updated state after applying the action.
+ * @param state - The current reducer state
+ * @param action - The action to apply
+ * @returns The new state resulting from applying `action` to `state`
  */
 export function reducer(state: State, action: Action): State {
 	switch (action.type) {

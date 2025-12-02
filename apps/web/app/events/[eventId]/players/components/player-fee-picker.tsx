@@ -10,6 +10,20 @@ interface PlayerFeePickerProps {
 	gridTemplateColumns?: string
 }
 
+/**
+ * Renders a per-player fee selection UI in either a desktop grid or a mobile card layout.
+ *
+ * The component shows the player's name, each fee with a checkbox reflecting selection state,
+ * and the player's subtotal formatted as currency. Checkboxes are disabled when a fee's `canChange`
+ * is false; interacting with an enabled checkbox invokes `onFeeChange` with the fee's id and the
+ * toggled selection state.
+ *
+ * @param playerFees - Player-specific fees, player name, and subtotal to display
+ * @param onFeeChange - Callback invoked with `(feeId, isSelected)` when a fee selection changes
+ * @param variant - Layout variant to render: `"desktop"` or `"mobile"`
+ * @param gridTemplateColumns - Optional CSS grid template columns string used by the desktop layout
+ * @returns A React element rendering the player's fee picker UI for the requested variant
+ */
 export function PlayerFeePicker({
 	playerFees,
 	onFeeChange,

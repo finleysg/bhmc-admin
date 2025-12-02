@@ -1,6 +1,13 @@
 import { PlayerFees } from "@/types/event-fee"
 import { ValidatedEventFee, ValidatedRegistrationSlot } from "@repo/domain/types"
 
+/**
+ * Convert validated registration slots and event fee definitions into per-player fee summaries.
+ *
+ * @param slots - Validated registration slots to convert into player fee entries
+ * @param eventFees - Event fee definitions to map onto each slot
+ * @returns An array of PlayerFees where each element contains a player's id, name, mapped fees (with selection, amount, and registration association) and a subtotal of selected fees
+ */
 export function convertSlotsToPlayerFees(
 	slots: ValidatedRegistrationSlot[],
 	eventFees: ValidatedEventFee[],
