@@ -43,6 +43,8 @@ export function PaidFeePicker({ clubEvent, slots, onChange }: PaidFeePickerProps
 	const transformSelections = (playerFeesList: PlayerFees[]) => {
 		if (!playerFeesList) return []
 
+		// NOTE: convertSlotsToPlayerFees ensures playerFeesList and slots are aligned.
+		// Each playerFeesList item corresponds to the slot with the same player.
 		return playerFeesList.map((pf) => {
 			return {
 				slotId: slots.find((s) => s.player.id === pf.playerId).id,

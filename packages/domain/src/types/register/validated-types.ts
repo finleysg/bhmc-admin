@@ -17,9 +17,9 @@ export type ValidatedRegistrationFee = RegistrationFee & {
 
 export type ValidatedRegistrationSlot = RegistrationSlot & {
 	id: number
-	player?: ValidatedPlayer
+	player: ValidatedPlayer
 	hole?: ValidatedHole | null
-	fees?: ValidatedRegistrationFee[]
+	fees: ValidatedRegistrationFee[]
 }
 
 /**
