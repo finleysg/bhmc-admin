@@ -1,22 +1,31 @@
 "use client"
 
-import { useReducer, useEffect } from "react"
+import { useReducer, useEffect, useMemo } from "react"
 import { useParams } from "next/navigation"
 import { GroupSearch } from "../components/group-search"
 import SelectPlayers from "../components/select-players"
 import type { ValidatedClubEvent } from "@repo/domain/types"
 import { reducer, initialState } from "./reducer"
+import { PaidFeePicker } from "../components/paid-fee-picker"
 
 /**
- * Render the Drop Player page for a club event.
+ * Display the Drop Player page for a club event, allowing selection of a registration group, selection/removal of player(s) to drop, and picking fees to refund.
  *
- * The component loads event data for the `eventId` route parameter, shows a centered loading spinner while the event is being fetched, displays an "Event not found" error when no event is available, and otherwise renders a card containing a GroupSearch to select a registration and an area to surface any fetch or selection errors.
- *
- * @returns The page's React element.
+ * @returns The page's React element
  */
 export default function DropPlayerPage() {
 	const { eventId } = useParams<{ eventId: string }>()
 	const [state, dispatch] = useReducer(reducer, initialState)
+
+	const slots = useMemo(
+		() =>
+			state.selectedGroup
+				? state.selectedGroup.slots.filter(
+						(slot) => slot.player && state.selectedPlayers.some((p) => p.id === slot.player.id),
+					)
+				: [],
+		[state.selectedGroup, state.selectedPlayers],
+	)
 
 	useEffect(() => {
 		const fetchEvent = async () => {
@@ -38,6 +47,10 @@ export default function DropPlayerPage() {
 			void fetchEvent()
 		}
 	}, [eventId])
+
+	const handleFeesChange = (selections: { slotId: number; registrationFeeIds: number[] }[]) => {
+		dispatch({ type: "SET_FEES", payload: selections })
+	}
 
 	if (state.isLoading) {
 		return (
@@ -71,7 +84,7 @@ export default function DropPlayerPage() {
 						</div>
 						{state.selectedGroup && (
 							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Select Players</h4>
+								<h4 className="font-semibold mb-2">Select Player(s) to Drop</h4>
 								<SelectPlayers
 									group={state.selectedGroup}
 									selectedPlayers={state.selectedPlayers}
@@ -79,6 +92,16 @@ export default function DropPlayerPage() {
 									onRemove={(player) => {
 										setTimeout(() => dispatch({ type: "REMOVE_PLAYER", payload: player }), 0)
 									}}
+								/>
+							</div>
+						)}
+						{state.selectedPlayers.length > 0 && (
+							<div className="mb-6">
+								<h4 className="font-semibold mb-2">Select Fees to Refund</h4>
+								<PaidFeePicker
+									clubEvent={state.clubEvent}
+									slots={slots}
+									onChange={handleFeesChange}
 								/>
 							</div>
 						)}
