@@ -6,6 +6,7 @@ export type State = {
 	clubEvent: ValidatedClubEvent | null
 	selectedGroup: ValidatedRegistration | undefined
 	selectedPlayers: ValidatedPlayer[]
+	selectedFees: { slotId: number; registrationFeeIds: number[] }[]
 	error: unknown
 	isLoading: boolean
 }
@@ -17,6 +18,7 @@ export type Action =
 	| { type: "SET_LOADING"; payload: boolean }
 	| { type: "SELECT_PLAYER"; payload: ValidatedPlayer }
 	| { type: "REMOVE_PLAYER"; payload: ValidatedPlayer }
+	| { type: "SET_FEES"; payload: { slotId: number; registrationFeeIds: number[] }[] }
 
 /**
  * Produce the next reducer state for the Drop Player page given the current state and an action.
@@ -61,6 +63,8 @@ export function reducer(state: State, action: Action): State {
 				...state,
 				selectedPlayers: state.selectedPlayers.filter((p) => p.id !== action.payload.id),
 			}
+		case "SET_FEES":
+			return { ...state, selectedFees: action.payload }
 		default:
 			return state
 	}
@@ -70,6 +74,7 @@ export const initialState: State = {
 	clubEvent: null,
 	selectedGroup: undefined,
 	selectedPlayers: [],
+	selectedFees: [],
 	error: null,
 	isLoading: true,
 }

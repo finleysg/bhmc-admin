@@ -8,13 +8,13 @@ Current focus:
 
 Recent changes:
 
-- **11/30/2025: Added SelectPlayers component, drop reducer, and tests**  
-  - Created `select-players.tsx` for player selection UI in event player management  
-  - Updated `group-search.tsx` for new selection logic  
-  - Added `drop/reducer.ts` and `drop/__tests__/reducer.test.ts` for drop functionality  
-  - Updated `drop/page.tsx` to integrate new reducer  
-  - Updated domain logic in `registration-validation.ts`  
-  - Minor update to registration groups search API route  
+- **11/30/2025: Added SelectPlayers component, drop reducer, and tests**
+  - Created `select-players.tsx` for player selection UI in event player management
+  - Updated `group-search.tsx` for new selection logic
+  - Added `drop/reducer.ts` and `drop/__tests__/reducer.test.ts` for drop functionality
+  - Updated `drop/page.tsx` to integrate new reducer
+  - Updated domain logic in `registration-validation.ts`
+  - Minor update to registration groups search API route
   - Passed formatting, linting, build, and test checks; committed on feature/select-players-component branch
 
 - **11/30/2025: Created GroupSearch component for event player management** Built new GroupSearch React component for searching player groups in events; added supporting API route and backend logic; updated registration controller, repository, and service for group search; improved registration validation and tests to allow optional player and fees; passed all formatting, linting, build, and test checks.
