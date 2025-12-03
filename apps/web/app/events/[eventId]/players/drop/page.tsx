@@ -9,9 +9,9 @@ import { reducer, initialState } from "./reducer"
 import { PaidFeePicker } from "../components/paid-fee-picker"
 
 /**
- * Display the Drop Player page for a club event, allowing selection of a registration group, selection/removal of player(s) to drop, and picking fees to refund.
+ * Render the Drop Player page for a club event, allowing selection of a registration group, choosing player(s) to drop, and selecting fees to refund.
  *
- * @returns The page's React element
+ * @returns The React element for the Drop Player page
  */
 export default function DropPlayerPage() {
 	const { eventId } = useParams<{ eventId: string }>()
