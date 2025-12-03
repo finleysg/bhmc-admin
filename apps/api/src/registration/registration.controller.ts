@@ -12,6 +12,7 @@ import {
 import type {
 	AdminRegistration,
 	AvailableSlotGroup,
+	RefundRequest,
 	SearchPlayers,
 	ValidatedRegisteredPlayer,
 	ValidatedRegistration,
@@ -98,5 +99,23 @@ export class RegistrationController {
 		@Body() slotIds: number[],
 	) {
 		return this.registrationService.reserveSlots(eventId, slotIds)
+	}
+
+	@Post(":registrationId/drop-players")
+	@UseGuards(JwtAuthGuard)
+	async dropPlayers(
+		@Param("registrationId", ParseIntPipe) registrationId: number,
+		@Body() slotIds: number[],
+	) {
+		const droppedCount = await this.registrationService.dropPlayers(registrationId, slotIds)
+		return { droppedCount }
+	}
+
+	@Post("refund")
+	@UseGuards(JwtAuthGuard)
+	async processRefunds(@Body() refundRequests: RefundRequest[]) {
+		const issuerId = 1 // TODO: change issuer to a string
+		await this.registrationService.processRefunds(refundRequests, issuerId)
+		return { success: true }
 	}
 }

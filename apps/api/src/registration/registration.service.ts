@@ -14,6 +14,7 @@ import {
 	Player,
 	PlayerMap,
 	PlayerRecord,
+	RefundRequest,
 	RegisteredPlayer,
 	RegistrationSlot,
 	RegistrationStatus,
@@ -39,6 +40,7 @@ import {
 } from "../database"
 import { EventsService } from "../events"
 import { mapToEventFeeModel, mapToFeeTypeModel, toEventFee } from "../events/mappers"
+import { StripeService } from "../stripe/stripe.service"
 import {
 	mapToPlayerModel,
 	mapToRegistrationFeeModel,
@@ -67,6 +69,7 @@ export class RegistrationService {
 		private drizzle: DrizzleService,
 		private repository: RegistrationRepository,
 		private readonly events: EventsService,
+		private readonly stripeService: StripeService,
 	) {}
 
 	async getRegisteredPlayers(eventId: number): Promise<ValidatedRegisteredPlayer[]> {
@@ -586,5 +589,145 @@ export class RegistrationService {
 
 			return registrationId
 		})
+	}
+
+	/**
+	 * Drop players from a registration by releasing or deleting their slots.
+	 * Updates registration notes to record the dropped players.
+	 * @param registrationId - The registration ID
+	 * @param slotIds - Array of slot IDs to drop
+	 * @returns Number of players dropped
+	 */
+	async dropPlayers(registrationId: number, slotIds: number[]): Promise<number> {
+		// Validate payload
+		if (!slotIds.length) {
+			throw new BadRequestException("At least one slot ID is required")
+		}
+
+		const allPlayerSlots = await this.repository.findSlotsWithPlayerAndHole(registrationId)
+		const playerSlots = allPlayerSlots.filter((s) => slotIds.includes(s.id))
+
+		if (playerSlots.length !== slotIds.length) {
+			throw new BadRequestException(
+				`Not all slots provided belong to registration ${registrationId}`,
+			)
+		}
+		if (playerSlots.some((slotRow) => !slotRow.player)) {
+			throw new BadRequestException("Not all slots provided have a player assigned")
+		}
+		if (playerSlots.some((slotRow) => slotRow.status !== RegistrationStatus.RESERVED)) {
+			throw new BadRequestException(
+				`Not all slots provided have status ${RegistrationStatus.RESERVED}`,
+			)
+		}
+
+		// Fetch registration
+		const registrationModel = await this.repository.findRegistrationById(registrationId)
+		if (!registrationModel) {
+			throw new NotFoundException(`Registration ${registrationId} not found`)
+		}
+
+		// Fetch event
+		const eventRecord = await this.events.getValidatedClubEventById(
+			registrationModel.eventId,
+			false,
+		)
+
+		// Prepare notes
+		const droppedPlayerNames = playerSlots.map((row) => {
+			const p = row.player
+			return p ? `${p.firstName} ${p.lastName}`.trim() : "Unknown Player"
+		})
+		const currentNotes = registrationModel.notes || ""
+		const dropDate = new Date().toISOString().split("T")[0] // YYYY-MM-DD
+		const newNotes =
+			`${currentNotes}\nDropped ${droppedPlayerNames.join(", ")} on ${dropDate}`.trim()
+
+		// Execute transaction
+		await this.drizzle.db.transaction(async (tx) => {
+			// Update registration notes
+			await tx
+				.update(registration)
+				.set({ notes: newNotes })
+				.where(eq(registration.id, registrationId))
+
+			// Update fees to nullify slot references
+			await tx
+				.update(registrationFee)
+				.set({ registrationSlotId: null })
+				.where(inArray(registrationFee.registrationSlotId, slotIds))
+
+			// Handle slots based on event.canChoose
+			if (eventRecord.canChoose) {
+				// Reset slots to available
+				await tx
+					.update(registrationSlot)
+					.set({
+						registrationId: null,
+						playerId: null,
+						status: RegistrationStatus.AVAILABLE,
+					})
+					.where(inArray(registrationSlot.id, slotIds))
+			} else {
+				// Delete slots
+				await tx.delete(registrationSlot).where(inArray(registrationSlot.id, slotIds))
+			}
+		})
+
+		return slotIds.length
+	}
+
+	/**
+	 * Process refunds for the given event.
+	 * For each RefundRequest, retrieves payment intent, calculates refund amount,
+	 * requests refund from Stripe, creates refund record, and updates fees.
+	 * @param eventId - The event ID
+	 * @param issuerId - The ID of the user issuing the refund
+	 * @param requests - Array of refund requests
+	 */
+	async processRefunds(requests: RefundRequest[], issuerId: number): Promise<void> {
+		if (!requests.length) {
+			throw new BadRequestException("At least one refund request is required")
+		}
+
+		for (const request of requests) {
+			// Retrieve payment with associated fees
+			const payment = await this.repository.findPaymentWithDetailsById(request.paymentId)
+			if (!payment || !payment.paymentCode || !payment.paymentDetails) {
+				throw new NotFoundException(`Payment ${request.paymentId} is not valid for refund`)
+			}
+
+			// Calculate total refund amount
+			const refundAmount = payment.paymentDetails.reduce((total, fee) => {
+				const amount = fee.isPaid ? fee.amount * 100 : 0
+				return total + amount
+			}, 0)
+
+			if (refundAmount <= 0) {
+				throw new BadRequestException("Refund amount must be greater than zero")
+			}
+
+			const refundInDollars = refundAmount / 100
+
+			// Request the refund from the StripeService
+			const stripeRefundId = await this.stripeService.createRefund(
+				payment.paymentCode,
+				refundInDollars,
+			)
+
+			// Create a refund record in our database
+			const refundRecord = {
+				refundCode: stripeRefundId,
+				refundAmount: refundInDollars,
+				confirmed: 0, // Will be confirmed when Stripe notifies us
+				refundDate: toDbString(new Date()),
+				issuerId,
+				paymentId: request.paymentId,
+			}
+			await this.repository.createRefund(refundRecord)
+
+			// Update the refunded registration fees to unpaid
+			await this.repository.updateRegistrationFeeStatus(request.registrationFeeIds, false)
+		}
 	}
 }

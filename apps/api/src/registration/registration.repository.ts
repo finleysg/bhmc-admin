@@ -10,7 +10,9 @@ import {
 	eventFee,
 	feeType,
 	hole,
+	payment,
 	player,
+	refund,
 	registration,
 	registrationFee,
 	registrationSlot,
@@ -18,6 +20,8 @@ import {
 import {
 	PlayerModel,
 	playerUpdateSchema,
+	refundInsertSchema,
+	RefundModel,
 	RegistrationFeeModel,
 	RegistrationModel,
 	RegistrationSlotModel,
@@ -25,7 +29,10 @@ import {
 } from "../database/models"
 import {
 	mapToFeesWithEventFeeAndFeeType,
+	mapToPaymentModel,
 	mapToPlayerModel,
+	mapToRegistrationFeeModel,
+	mapToRegistrationModel,
 	mapToRegistrationSlotModel,
 	mapToRegistrationWithCourse,
 	mapToSlotsWithPlayerAndHole,
@@ -100,6 +107,15 @@ export class RegistrationRepository {
 			.where(eq(registrationSlot.ggId, ggId))
 			.limit(1)
 		return slot ? mapToRegistrationSlotModel(slot) : null
+	}
+
+	async findRegistrationById(registrationId: number): Promise<RegistrationModel | null> {
+		const [reg] = await this.drizzle.db
+			.select()
+			.from(registration)
+			.where(eq(registration.id, registrationId))
+			.limit(1)
+		return reg ? mapToRegistrationModel(reg) : null
 	}
 
 	/**
@@ -228,5 +244,63 @@ export class RegistrationRepository {
 			slotModel.hole = result.hole ? mapToHoleModel(result.hole) : undefined
 			return slotModel
 		})
+	}
+
+	/**
+	 * Find payment by ID.
+	 */
+	async findPaymentWithDetailsById(paymentId: number) {
+		const results = await this.drizzle.db
+			.select({
+				payment,
+				details: registrationFee,
+			})
+			.from(payment)
+			.leftJoin(registrationFee, eq(payment.id, registrationFee.paymentId))
+			.where(eq(payment.id, paymentId))
+			.limit(1)
+
+		const result = results[0]?.payment ? mapToPaymentModel(results[0].payment) : null
+
+		if (result) {
+			const details = results
+				.filter((r) => r.details !== null)
+				.map((d) => mapToRegistrationFeeModel(d))
+			result.paymentDetails = details
+		}
+
+		return result
+	}
+
+	/**
+	 * Find registration fees by IDs.
+	 */
+	async findRegistrationFeesByPayment(paymentId: number) {
+		const results = await this.drizzle.db
+			.select()
+			.from(registrationFee)
+			.where(eq(registrationFee.paymentId, paymentId))
+
+		return results.map(mapToRegistrationFeeModel)
+	}
+
+	/**
+	 * Create a new refund record.
+	 */
+	async createRefund(data: RefundModel): Promise<number> {
+		const refundData = refundInsertSchema.parse(data)
+		const [result] = await this.drizzle.db.insert(refund).values(refundData)
+		return Number(result.insertId)
+	}
+
+	/**
+	 * Update registration fees to mark them as paid/unpaid.
+	 */
+	async updateRegistrationFeeStatus(feeIds: number[], isPaid: boolean) {
+		if (feeIds.length === 0) return
+		await this.drizzle.db
+			.update(registrationFee)
+			.set({ isPaid: isPaid ? 1 : 0 })
+			.where(inArray(registrationFee.id, feeIds))
 	}
 }

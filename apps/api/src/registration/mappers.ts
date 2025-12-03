@@ -8,7 +8,9 @@ import {
 
 import { mapToCourseModel, mapToHoleModel } from "../courses/mappers"
 import {
+	PaymentModel,
 	PlayerModel,
+	RefundModel,
 	RegistrationFeeModel,
 	RegistrationModel,
 	RegistrationSlotModel,
@@ -32,6 +34,37 @@ export function mapToPlayerModel(entity: Record<string, any>): PlayerModel {
 		isMember: entity.isMember,
 		userId: entity.userId,
 		ggId: entity.ggId,
+	}
+}
+
+export function mapToRefundModel(entity: Record<string, any>): RefundModel {
+	return {
+		id: entity.id,
+		paymentId: entity.paymentId,
+		refundCode: entity.refundCode,
+		refundAmount: entity.refundAmount,
+		notes: entity.notes,
+		confirmed: entity.confirmed,
+		refundDate: entity.refundDate,
+		issuerId: entity.issuerId,
+	}
+}
+
+export function mapToPaymentModel(entity: Record<string, any>): PaymentModel {
+	return {
+		id: entity.id,
+		paymentCode: entity.paymentCode,
+		paymentKey: entity.paymentKey,
+		notificationType: entity.notificationType,
+		confirmed: entity.confirmed,
+		eventId: entity.eventId,
+		userId: entity.userId,
+		paymentAmount: entity.paymentAmount,
+		transactionFee: entity.transactionFee,
+		paymentDate: entity.paymentDate,
+		confirmDate: entity.confirmDate,
+		paymentDetails: undefined,
+		refunds: undefined,
 	}
 }
 

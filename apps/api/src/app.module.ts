@@ -10,6 +10,7 @@ import { GolfgeniusModule } from "./golfgenius/golfgenius.module"
 import { HealthModule } from "./health/health.module"
 import { MailModule } from "./mail/mail.module"
 import { ReportsModule } from "./reports/reports.module"
+import { StripeModule } from "./stripe/stripe.module"
 
 @Module({
 	imports: [
@@ -20,6 +21,7 @@ import { ReportsModule } from "./reports/reports.module"
 		HealthModule,
 		MailModule,
 		ReportsModule,
+		StripeModule,
 	],
 	providers: [
 		{

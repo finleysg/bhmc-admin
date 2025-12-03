@@ -1,5 +1,5 @@
 import { Transform } from "class-transformer"
-import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from "class-validator"
+import { IsArray, IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from "class-validator"
 
 export class Refund {
 	@IsOptional()
@@ -31,4 +31,13 @@ export class Refund {
 
 	@IsNumber()
 	paymentId!: number
+}
+
+export class RefundRequest {
+	@IsNumber()
+	paymentId!: number
+
+	@IsArray()
+	@IsNumber({}, { each: true })
+	registrationFeeIds!: number[]
 }
