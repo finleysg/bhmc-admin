@@ -18,7 +18,10 @@ import {
 import { mapToEventFeeModel, mapToFeeTypeModel, toEventFee } from "../events/mappers"
 
 /**
- * Maps database entity to PlayerModel
+ * Create a PlayerModel from a database row.
+ *
+ * @param entity - The database row (object) containing player columns
+ * @returns A PlayerModel populated from the provided row (fields include `id`, `firstName`, `lastName`, `email`, `phoneNumber`, `ghin`, `tee`, `birthDate`, `saveLastCard`, `isMember`, `userId`, and `ggId`)
  */
 export function mapToPlayerModel(entity: Record<string, any>): PlayerModel {
 	return {
@@ -37,6 +40,12 @@ export function mapToPlayerModel(entity: Record<string, any>): PlayerModel {
 	}
 }
 
+/**
+ * Convert a raw database row into a RefundModel.
+ *
+ * @param entity - Raw database row containing refund columns
+ * @returns A RefundModel with fields `id`, `paymentId`, `refundCode`, `refundAmount`, `notes`, `confirmed`, `refundDate`, and `issuerId`
+ */
 export function mapToRefundModel(entity: Record<string, any>): RefundModel {
 	return {
 		id: entity.id,
@@ -50,6 +59,12 @@ export function mapToRefundModel(entity: Record<string, any>): RefundModel {
 	}
 }
 
+/**
+ * Map a database row to a PaymentModel.
+ *
+ * @param entity - Source row containing payment fields (e.g., `id`, `paymentCode`, `paymentKey`, `notificationType`, `confirmed`, `eventId`, `userId`, `paymentAmount`, `transactionFee`, `paymentDate`, `confirmDate`)
+ * @returns A PaymentModel populated from the input row; `paymentDetails` and `refunds` are set to `undefined`
+ */
 export function mapToPaymentModel(entity: Record<string, any>): PaymentModel {
 	return {
 		id: entity.id,
