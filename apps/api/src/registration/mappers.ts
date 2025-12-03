@@ -41,10 +41,10 @@ export function mapToPlayerModel(entity: Record<string, any>): PlayerModel {
 }
 
 /**
- * Convert a raw database row into a RefundModel.
+ * Creates a refund model from a database row.
  *
  * @param entity - Raw database row containing refund columns
- * @returns A RefundModel with fields `id`, `paymentId`, `refundCode`, `refundAmount`, `notes`, `confirmed`, `refundDate`, and `issuerId`
+ * @returns A RefundModel with `id`, `paymentId`, `refundCode`, `refundAmount`, `notes`, `confirmed`, `refundDate`, and `issuerId`
  */
 export function mapToRefundModel(entity: Record<string, any>): RefundModel {
 	return {
@@ -296,8 +296,14 @@ export function hydrateSlotsWithPlayerAndHole(
 }
 
 /**
- * Attaches fees to slots based on joined query results.
- * Takes pre-hydrated slots and fee rows, mutates slots by populating their fees arrays.
+ * Attach registration fees to their corresponding RegistrationSlot objects.
+ *
+ * Mutates the provided `slots` array in place by locating the slot for each entry in `feeRows`
+ * and appending a mapped RegistrationFee (with its EventFee and FeeType) when `eventFee` and
+ * `feeType` are present and the row contains a valid `registrationSlotId`.
+ *
+ * @param slots - Pre-hydrated RegistrationSlot objects whose `fees` arrays will be populated
+ * @param feeRows - Joined query rows containing `fee`, and optionally `eventFee` and `feeType`; rows without `eventFee`, `feeType`, or a valid `registrationSlotId` are ignored
  */
 export function attachFeesToSlots(
 	slots: RegistrationSlot[],
