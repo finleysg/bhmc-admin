@@ -18,6 +18,7 @@ import {
 	registrationSlot,
 } from "../database"
 import {
+	PaymentModel,
 	PlayerModel,
 	playerUpdateSchema,
 	refundInsertSchema,
@@ -249,7 +250,7 @@ export class RegistrationRepository {
 	/**
 	 * Find payment by ID.
 	 */
-	async findPaymentWithDetailsById(paymentId: number) {
+	async findPaymentWithDetailsById(paymentId: number): Promise<PaymentModel | null> {
 		const results = await this.drizzle.db
 			.select({
 				payment,
@@ -258,14 +259,13 @@ export class RegistrationRepository {
 			.from(payment)
 			.leftJoin(registrationFee, eq(payment.id, registrationFee.paymentId))
 			.where(eq(payment.id, paymentId))
-			.limit(1)
 
 		const result = results[0]?.payment ? mapToPaymentModel(results[0].payment) : null
 
 		if (result) {
 			const details = results
 				.filter((r) => r.details !== null)
-				.map((d) => mapToRegistrationFeeModel(d))
+				.map((d) => mapToRegistrationFeeModel(d.details!))
 			result.paymentDetails = details
 		}
 
@@ -275,7 +275,7 @@ export class RegistrationRepository {
 	/**
 	 * Find registration fees by IDs.
 	 */
-	async findRegistrationFeesByPayment(paymentId: number) {
+	async findRegistrationFeesByPayment(paymentId: number): Promise<RegistrationFeeModel[]> {
 		const results = await this.drizzle.db
 			.select()
 			.from(registrationFee)
@@ -294,9 +294,19 @@ export class RegistrationRepository {
 	}
 
 	/**
+	 * Update a refund record with the Stripe refund code.
+	 */
+	async updateRefundCode(refundId: number, refundCode: string): Promise<void> {
+		await this.drizzle.db
+			.update(refund)
+			.set({ refundCode })
+			.where(eq(refund.id, refundId))
+	}
+
+	/**
 	 * Update registration fees to mark them as paid/unpaid.
 	 */
-	async updateRegistrationFeeStatus(feeIds: number[], isPaid: boolean) {
+	async updateRegistrationFeeStatus(feeIds: number[], isPaid: boolean): Promise<void> {
 		if (feeIds.length === 0) return
 		await this.drizzle.db
 			.update(registrationFee)

@@ -1,5 +1,5 @@
-import { PlayerFees } from "@/types/event-fee"
-import { ValidatedEventFee, ValidatedRegistrationSlot } from "@repo/domain/types"
+import type { PlayerFees } from "@/types/event-fee"
+import type { ValidatedEventFee, ValidatedRegistrationSlot } from "@repo/domain/types"
 
 /**
  * Convert validated registration slots and event fee definitions into per-player fee summaries.

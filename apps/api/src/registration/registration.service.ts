@@ -33,6 +33,7 @@ import {
 	hole,
 	payment,
 	player,
+	refund,
 	registration,
 	registrationFee,
 	registrationSlot,
@@ -41,6 +42,7 @@ import {
 import { EventsService } from "../events"
 import { mapToEventFeeModel, mapToFeeTypeModel, toEventFee } from "../events/mappers"
 import { StripeService } from "../stripe/stripe.service"
+import { RegistrationFeeModel } from "../database/models"
 import {
 	mapToPlayerModel,
 	mapToRegistrationFeeModel,
@@ -680,8 +682,8 @@ export class RegistrationService {
 	/**
 	 * Process refunds for the given event.
 	 * For each RefundRequest, retrieves payment intent, calculates refund amount,
-	 * requests refund from Stripe, creates refund record, and updates fees.
-	 * @param eventId - The event ID
+	 * creates a pending refund record in a transaction, then requests refund from Stripe.
+	 * Uses a two-phase approach: DB transaction first (with pending state), then Stripe call.
 	 * @param issuerId - The ID of the user issuing the refund
 	 * @param requests - Array of refund requests
 	 */
@@ -692,16 +694,19 @@ export class RegistrationService {
 
 		for (const request of requests) {
 			// Retrieve payment with associated fees
-			const payment = await this.repository.findPaymentWithDetailsById(request.paymentId)
-			if (!payment || !payment.paymentCode || !payment.paymentDetails) {
+			const paymentRecord = await this.repository.findPaymentWithDetailsById(request.paymentId)
+			if (!paymentRecord || !paymentRecord.paymentCode || !paymentRecord.paymentDetails) {
 				throw new NotFoundException(`Payment ${request.paymentId} is not valid for refund`)
 			}
 
 			// Calculate total refund amount
-			const refundAmount = payment.paymentDetails.reduce((total, fee) => {
-				const amount = fee.isPaid ? fee.amount * 100 : 0
-				return total + amount
-			}, 0)
+			const refundAmount = paymentRecord.paymentDetails.reduce(
+				(total: number, fee: RegistrationFeeModel) => {
+					const amount = fee.isPaid ? Math.round(fee.amount * 100) : 0
+					return total + amount
+				},
+				0,
+			)
 
 			if (refundAmount <= 0) {
 				throw new BadRequestException("Refund amount must be greater than zero")
@@ -709,25 +714,60 @@ export class RegistrationService {
 
 			const refundInDollars = refundAmount / 100
 
-			// Request the refund from the StripeService
-			const stripeRefundId = await this.stripeService.createRefund(
-				payment.paymentCode,
-				refundInDollars,
-			)
+			// Phase 1: Create pending refund record and update fees in a transaction
+			// This ensures DB consistency - both operations succeed or both fail
+			let refundId: number
+			try {
+				refundId = await this.drizzle.db.transaction(async (tx) => {
+					// Create a refund record with "pending" status (no refundCode yet)
+					const refundRecord = {
+						refundCode: "pending",
+						refundAmount: refundInDollars.toFixed(2),
+						confirmed: 0,
+						refundDate: toDbString(new Date()),
+						issuerId,
+						paymentId: request.paymentId,
+					}
+					const [result] = await tx.insert(refund).values(refundRecord)
+					const newRefundId = Number(result.insertId)
 
-			// Create a refund record in our database
-			const refundRecord = {
-				refundCode: stripeRefundId,
-				refundAmount: refundInDollars,
-				confirmed: 0, // Will be confirmed when Stripe notifies us
-				refundDate: toDbString(new Date()),
-				issuerId,
-				paymentId: request.paymentId,
+					// Update the registration fees to unpaid within the same transaction
+					if (request.registrationFeeIds.length > 0) {
+						await tx
+							.update(registrationFee)
+							.set({ isPaid: 0 })
+							.where(inArray(registrationFee.id, request.registrationFeeIds))
+					}
+
+					return newRefundId
+				})
+			} catch (dbError) {
+				this.logger.error(
+					`Failed to create pending refund record for payment ${request.paymentId}`,
+					dbError,
+				)
+				throw dbError
 			}
-			await this.repository.createRefund(refundRecord)
 
-			// Update the refunded registration fees to unpaid
-			await this.repository.updateRegistrationFeeStatus(request.registrationFeeIds, false)
+			// Phase 2: Request the refund from Stripe
+			// If this fails, the DB record remains in "pending" state for manual review/retry
+			try {
+				const stripeRefundId = await this.stripeService.createRefund(
+					paymentRecord.paymentCode,
+					refundInDollars,
+				)
+
+				// Update the refund record with the Stripe refund ID
+				await this.repository.updateRefundCode(refundId, stripeRefundId)
+			} catch (stripeError) {
+				this.logger.error(
+					`Stripe refund failed for payment ${request.paymentId}. ` +
+						`Refund record ${refundId} remains in pending state for manual review.`,
+					stripeError,
+				)
+				// Re-throw to indicate failure - the pending record allows for retry/investigation
+				throw stripeError
+			}
 		}
 	}
 }

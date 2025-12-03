@@ -32,6 +32,7 @@ export default function DropPlayerPage() {
 			try {
 				const response = await fetch(`/api/events/${eventId}`)
 				if (response.ok) {
+					// We only return validated club events to the UI
 					const eventData = (await response.json()) as ValidatedClubEvent
 					dispatch({ type: "SET_EVENT", payload: eventData })
 				} else {
@@ -89,9 +90,7 @@ export default function DropPlayerPage() {
 									group={state.selectedGroup}
 									selectedPlayers={state.selectedPlayers}
 									onSelect={(player) => dispatch({ type: "SELECT_PLAYER", payload: player })}
-									onRemove={(player) => {
-										setTimeout(() => dispatch({ type: "REMOVE_PLAYER", payload: player }), 0)
-									}}
+									onRemove={(player) => dispatch({ type: "REMOVE_PLAYER", payload: player })}
 								/>
 							</div>
 						)}
