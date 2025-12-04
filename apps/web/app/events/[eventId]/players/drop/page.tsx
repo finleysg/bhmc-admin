@@ -1,11 +1,11 @@
 "use client"
 
-import { useReducer, useEffect, useMemo } from "react"
-import { useParams } from "next/navigation"
+import { useReducer, useEffect, useMemo, useRef, useCallback } from "react"
+import { useParams, useRouter } from "next/navigation"
 import { GroupSearch } from "../components/group-search"
 import SelectPlayers from "../components/select-players"
 import type { ValidatedClubEvent } from "@repo/domain/types"
-import { reducer, initialState } from "./reducer"
+import { reducer, initialState, translateRefundRequests } from "./reducer"
 import { PaidFeePicker } from "../components/paid-fee-picker"
 
 /**
@@ -13,9 +13,94 @@ import { PaidFeePicker } from "../components/paid-fee-picker"
  *
  * @returns The React element for the Drop Player page
  */
+
 export default function DropPlayerPage() {
 	const { eventId } = useParams<{ eventId: string }>()
+	const router = useRouter()
 	const [state, dispatch] = useReducer(reducer, initialState)
+	const abortControllerRef = useRef<AbortController | null>(null)
+
+	// Cleanup on unmount
+	useEffect(() => {
+		return () => {
+			if (abortControllerRef.current) {
+				abortControllerRef.current.abort()
+			}
+		}
+	}, [])
+
+	const handleCompleteDrop = (): void => {
+		const { selectedGroup, selectedPlayers, selectedFees } = state
+		if (!selectedGroup || selectedPlayers.length === 0) return
+
+		// Cancel any ongoing request
+		if (abortControllerRef.current) {
+			abortControllerRef.current.abort()
+		}
+
+		const controller = new AbortController()
+		abortControllerRef.current = controller
+
+		dispatch({ type: "SET_PROCESSING", payload: true })
+
+		void (async () => {
+			try {
+				// Step 1: Drop players
+				const slotIds: number[] = selectedGroup.slots
+					.filter((slot) => selectedPlayers.some((p) => p.id === slot.player.id))
+					.map((slot) => slot.id)
+
+				const dropResponse = await fetch(
+					`/api/registration/drop-players?registrationId=${state.selectedGroup.id}`,
+					{
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(slotIds),
+						signal: controller.signal,
+					},
+				)
+
+				if (!dropResponse.ok) {
+					const errorBody = await dropResponse.text()
+					throw new Error(`Failed to drop players: ${errorBody}`)
+				}
+
+				// Step 2: Process refunds (if any fees selected)
+				if (state.selectedFees.length > 0) {
+					// compute refundRequests from the captured snapshot to avoid stale-narrowing
+					const snapshotState = { ...state, selectedGroup, selectedPlayers, selectedFees }
+					const refundRequests = translateRefundRequests(snapshotState)
+
+					const refundResponse = await fetch("/api/registration/refund", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(refundRequests),
+						signal: controller.signal,
+					})
+
+					if (!refundResponse.ok) {
+						const errorBody = await refundResponse.text()
+						throw new Error(`Failed to process refunds: ${errorBody}`)
+					}
+				}
+
+				if (!controller.signal.aborted) {
+					dispatch({ type: "SET_DROP_SUCCESS", payload: true })
+				}
+			} catch (err) {
+				if (err instanceof Error && err.name === "AbortError") {
+					return
+				}
+				if (!controller.signal.aborted) {
+					dispatch({ type: "SET_ERROR", payload: err })
+				}
+			} finally {
+				if (!controller.signal.aborted) {
+					dispatch({ type: "SET_PROCESSING", payload: false })
+				}
+			}
+		})()
+	}
 
 	const slots = useMemo(
 		() =>
@@ -49,9 +134,12 @@ export default function DropPlayerPage() {
 		}
 	}, [eventId])
 
-	const handleFeesChange = (selections: { slotId: number; registrationFeeIds: number[] }[]) => {
-		dispatch({ type: "SET_FEES", payload: selections })
-	}
+	const handleFeesChange = useCallback(
+		(selections: { slotId: number; registrationFeeIds: number[] }[]) => {
+			dispatch({ type: "SET_FEES", payload: selections })
+		},
+		[dispatch],
+	)
 
 	if (state.isLoading) {
 		return (
@@ -104,6 +192,46 @@ export default function DropPlayerPage() {
 								/>
 							</div>
 						)}
+
+						{state.selectedPlayers.length > 0 && !state.dropSuccess && (
+							<div className="mb-6">
+								<button
+									type="button"
+									className="btn btn-primary"
+									onClick={handleCompleteDrop}
+									disabled={state.isProcessing}
+								>
+									{state.isProcessing ? (
+										<>
+											<span className="loading loading-spinner loading-sm"></span>
+											Processing...
+										</>
+									) : (
+										"Complete Drop"
+									)}
+								</button>
+							</div>
+						)}
+						{state.dropSuccess && (
+							<div className="mt-6">
+								<div className="text-success mb-6">Players dropped and refunds processed!</div>
+								<div>
+									<button
+										className="btn btn-success me-2"
+										onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
+									>
+										Drop More
+									</button>
+									<button
+										className="btn btn-neutral"
+										onClick={() => router.push(`/events/${eventId}/players`)}
+									>
+										Player Menu
+									</button>
+								</div>
+							</div>
+						)}
+
 						{state.error && (
 							<div className="mb-6">
 								<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
@@ -112,6 +240,12 @@ export default function DropPlayerPage() {
 										Error: {typeof state.error === "string" ? state.error : "Unknown error"}
 									</span>
 								</div>
+								<button
+									className="btn btn-neutral"
+									onClick={() => dispatch({ type: "RESET_ERROR" })}
+								>
+									Try Again
+								</button>
 							</div>
 						)}
 					</div>

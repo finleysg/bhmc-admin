@@ -297,10 +297,7 @@ export class RegistrationRepository {
 	 * Update a refund record with the Stripe refund code.
 	 */
 	async updateRefundCode(refundId: number, refundCode: string): Promise<void> {
-		await this.drizzle.db
-			.update(refund)
-			.set({ refundCode })
-			.where(eq(refund.id, refundId))
+		await this.drizzle.db.update(refund).set({ refundCode }).where(eq(refund.id, refundId))
 	}
 
 	/**

@@ -1,6 +1,11 @@
 // Reducer and types for DropPlayerPage
 
-import type { ValidatedClubEvent, ValidatedRegistration, ValidatedPlayer } from "@repo/domain/types"
+import type {
+	ValidatedClubEvent,
+	ValidatedRegistration,
+	ValidatedPlayer,
+	RefundRequest,
+} from "@repo/domain/types"
 
 export type State = {
 	clubEvent: ValidatedClubEvent | null
@@ -9,6 +14,8 @@ export type State = {
 	selectedFees: { slotId: number; registrationFeeIds: number[] }[]
 	error: unknown
 	isLoading: boolean
+	dropSuccess: boolean
+	isProcessing: boolean
 }
 
 export type Action =
@@ -19,6 +26,31 @@ export type Action =
 	| { type: "SELECT_PLAYER"; payload: ValidatedPlayer }
 	| { type: "REMOVE_PLAYER"; payload: ValidatedPlayer }
 	| { type: "SET_FEES"; payload: { slotId: number; registrationFeeIds: number[] }[] }
+	| { type: "SET_PROCESSING"; payload: boolean }
+	| { type: "SET_DROP_SUCCESS"; payload: boolean }
+	| { type: "RESET_STATE" }
+	| { type: "RESET_SELECTIONS" }
+	| { type: "RESET_ERROR" }
+
+export function translateRefundRequests(state: State): RefundRequest[] {
+	const refundRequests: RefundRequest[] = []
+	const paymentMap: Map<number, number[]> = new Map()
+	state.selectedFees.forEach(({ slotId, registrationFeeIds }) => {
+		const slot = state.selectedGroup?.slots.find((s) => s.id === slotId)
+		if (!slot) return
+		registrationFeeIds.forEach((feeId) => {
+			const fee = slot.fees.find((f) => f.id === feeId)
+			if (fee) {
+				const existing = paymentMap.get(fee.paymentId) ?? []
+				paymentMap.set(fee.paymentId, [...existing, feeId])
+			}
+		})
+	})
+	paymentMap.forEach((registrationFeeIds: number[], paymentId: number) => {
+		refundRequests.push({ paymentId, registrationFeeIds })
+	})
+	return refundRequests
+}
 
 /**
  * Produce the next reducer state for the Drop Player page given the current state and an action.
@@ -53,19 +85,35 @@ export function reducer(state: State, action: Action): State {
 		case "SET_LOADING":
 			return { ...state, isLoading: action.payload }
 		case "SELECT_PLAYER":
-			// Add player if not already selected
 			if (state.selectedPlayers.some((p) => p.id === action.payload.id)) {
 				return state
 			}
 			return { ...state, selectedPlayers: [...state.selectedPlayers, action.payload] }
 		case "REMOVE_PLAYER":
-			// Remove player by id
 			return {
 				...state,
 				selectedPlayers: state.selectedPlayers.filter((p) => p.id !== action.payload.id),
 			}
 		case "SET_FEES":
 			return { ...state, selectedFees: action.payload }
+		case "SET_PROCESSING":
+			return { ...state, isProcessing: action.payload }
+		case "SET_DROP_SUCCESS":
+			return { ...state, dropSuccess: action.payload }
+		case "RESET_STATE":
+			return { ...initialState }
+		case "RESET_SELECTIONS":
+			return {
+				...state,
+				selectedGroup: undefined,
+				selectedPlayers: [],
+				selectedFees: [],
+				dropSuccess: false,
+				isProcessing: false,
+				error: null,
+			}
+		case "RESET_ERROR":
+			return { ...state, error: null }
 		default:
 			return state
 	}
@@ -78,4 +126,6 @@ export const initialState: State = {
 	selectedFees: [],
 	error: null,
 	isLoading: true,
+	dropSuccess: false,
+	isProcessing: false,
 }
