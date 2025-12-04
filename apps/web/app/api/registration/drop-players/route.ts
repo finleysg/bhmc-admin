@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { fetchWithAuth } from "@/lib/api-proxy"
 
-export async function POST(
-request: NextRequest,
-) {
+export async function POST(request: NextRequest) {
 	const registrationId = request.nextUrl.searchParams.get("registrationId")
 
 	if (!registrationId) {
@@ -17,6 +15,6 @@ request: NextRequest,
 	} catch {
 		return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 })
 	}
-	
+
 	return fetchWithAuth({ request, backendPath, method: "POST", body })
 }

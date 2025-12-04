@@ -12,6 +12,21 @@ const mockPlayer = (id: number): ValidatedPlayer => ({
 	isMember: true,
 })
 
+const mockClubEvent: ValidatedClubEvent = {
+	id: 1,
+	name: "Test Event",
+} as ValidatedClubEvent
+
+const mockRegistration = (playerIds: Array<number | null>): ValidatedRegistration =>
+	({
+		id: 10,
+		slots: playerIds.map((id, idx) => ({
+			id: idx + 1,
+			player: id !== null ? mockPlayer(id) : null,
+			fees: [],
+		})),
+	}) as ValidatedRegistration
+
 describe("SET_FEES", () => {
 	it("should set selectedFees", () => {
 		const fees = [{ slotId: 1, registrationFeeIds: [101, 102] }]
@@ -157,21 +172,6 @@ describe("translateRefundRequests", () => {
 		expect(translateRefundRequests(state)).toEqual([{ paymentId: 1, registrationFeeIds: [101] }])
 	})
 })
-
-const mockClubEvent: ValidatedClubEvent = {
-	id: 1,
-	name: "Test Event",
-} as ValidatedClubEvent
-
-const mockRegistration = (playerIds: Array<number | null>): ValidatedRegistration =>
-	({
-		id: 10,
-		slots: playerIds.map((id, idx) => ({
-			id: idx + 1,
-			player: id !== null ? mockPlayer(id) : null,
-			fees: [],
-		})),
-	}) as ValidatedRegistration
 
 describe("DropPlayer reducer", () => {
 	// Action is a discriminated union, so unknown actions are not allowed by TypeScript.

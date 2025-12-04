@@ -30,7 +30,8 @@ export default function DropPlayerPage() {
 	}, [])
 
 	const handleCompleteDrop = (): void => {
-		if (!state.selectedGroup || state.selectedPlayers.length === 0) return
+		const { selectedGroup, selectedPlayers, selectedFees } = state
+		if (!selectedGroup || selectedPlayers.length === 0) return
 
 		// Cancel any ongoing request
 		if (abortControllerRef.current) {
@@ -45,8 +46,8 @@ export default function DropPlayerPage() {
 		void (async () => {
 			try {
 				// Step 1: Drop players
-				const slotIds: number[] = state.selectedGroup.slots
-					.filter((slot) => state.selectedPlayers.some((p) => p.id === slot.player.id))
+				const slotIds: number[] = selectedGroup.slots
+					.filter((slot) => selectedPlayers.some((p) => p.id === slot.player.id))
 					.map((slot) => slot.id)
 
 				const dropResponse = await fetch(
@@ -66,7 +67,9 @@ export default function DropPlayerPage() {
 
 				// Step 2: Process refunds (if any fees selected)
 				if (state.selectedFees.length > 0) {
-					const refundRequests = translateRefundRequests(state)
+					// compute refundRequests from the captured snapshot to avoid stale-narrowing
+					const snapshotState = { ...state, selectedGroup, selectedPlayers, selectedFees }
+					const refundRequests = translateRefundRequests(snapshotState)
 
 					const refundResponse = await fetch("/api/registration/refund", {
 						method: "POST",
