@@ -65,7 +65,7 @@ export function getInitialState(): AddPlayerState {
 	}
 }
 
-function generateAdminRegistration(
+export function generateAdminRegistration(
 	state: Omit<AddPlayerState, "adminRegistration"> & { registrationId: number | null },
 ): AdminRegistration {
 	// null until we can register
@@ -97,7 +97,7 @@ function generateAdminRegistration(
 		const selectedSlotIds = state.selectedSlotGroup.slots.map((s) => s.id)
 		slots = selectedSlotIds.map((slotId, index) => {
 			const player = state.selectedPlayers[index]
-			const feeIds = player ? feesMap.get(player.id) : []
+			const feeIds = player ? (feesMap.get(player.id) ?? []) : []
 			return {
 				registrationId: state.registrationId ?? 0,
 				slotId,

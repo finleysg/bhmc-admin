@@ -11,7 +11,10 @@ export class StripeService {
 		if (!secretKey) {
 			throw new Error("STRIPE_SECRET_KEY environment variable is required")
 		}
-		const apiVersion = this.configService.get<string>("STRIPE_API_VERSION", "2024-12-18.acacia") as Stripe.LatestApiVersion
+		const apiVersion = this.configService.get<string>(
+			"STRIPE_API_VERSION",
+			"2024-12-18.acacia",
+		) as Stripe.LatestApiVersion
 		this.stripe = new Stripe(secretKey, { apiVersion })
 	}
 

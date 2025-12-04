@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useReducer } from "react"
 
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 import { AdminRegistrationOptions } from "@/components/admin-registration-options"
 import { EventFeePicker } from "@/app/events/[eventId]/players/components/event-fee-picker"
@@ -22,6 +22,7 @@ export default function AddPlayerPage() {
 	const { data: session, isPending } = useSession()
 	const signedIn = !!session?.user
 	const { eventId } = useParams<{ eventId: string }>()
+	const router = useRouter()
 
 	const [state, dispatch] = useReducer(reducer, getInitialState())
 
@@ -233,7 +234,7 @@ export default function AddPlayerPage() {
 									</button>
 									<button
 										className="btn btn-neutral"
-										// onClick={TODO}
+										onClick={() => router.push(`/events/${eventId}/players`)}
 									>
 										Player Menu
 									</button>
