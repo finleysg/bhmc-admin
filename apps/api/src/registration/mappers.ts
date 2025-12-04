@@ -8,7 +8,9 @@ import {
 
 import { mapToCourseModel, mapToHoleModel } from "../courses/mappers"
 import {
+	PaymentModel,
 	PlayerModel,
+	RefundModel,
 	RegistrationFeeModel,
 	RegistrationModel,
 	RegistrationSlotModel,
@@ -16,7 +18,10 @@ import {
 import { mapToEventFeeModel, mapToFeeTypeModel, toEventFee } from "../events/mappers"
 
 /**
- * Maps database entity to PlayerModel
+ * Create a PlayerModel from a database row.
+ *
+ * @param entity - The database row (object) containing player columns
+ * @returns A PlayerModel populated from the provided row (fields include `id`, `firstName`, `lastName`, `email`, `phoneNumber`, `ghin`, `tee`, `birthDate`, `saveLastCard`, `isMember`, `userId`, and `ggId`)
  */
 export function mapToPlayerModel(entity: Record<string, any>): PlayerModel {
 	return {
@@ -32,6 +37,49 @@ export function mapToPlayerModel(entity: Record<string, any>): PlayerModel {
 		isMember: entity.isMember,
 		userId: entity.userId,
 		ggId: entity.ggId,
+	}
+}
+
+/**
+ * Convert a raw database row into a RefundModel.
+ *
+ * @param entity - Raw database row containing refund columns
+ * @returns A RefundModel with fields `id`, `paymentId`, `refundCode`, `refundAmount`, `notes`, `confirmed`, `refundDate`, and `issuerId`
+ */
+export function mapToRefundModel(entity: Record<string, any>): RefundModel {
+	return {
+		id: entity.id,
+		paymentId: entity.paymentId,
+		refundCode: entity.refundCode,
+		refundAmount: entity.refundAmount,
+		notes: entity.notes,
+		confirmed: entity.confirmed,
+		refundDate: entity.refundDate,
+		issuerId: entity.issuerId,
+	}
+}
+
+/**
+ * Map a database row to a PaymentModel.
+ *
+ * @param entity - Source row containing payment fields (e.g., `id`, `paymentCode`, `paymentKey`, `notificationType`, `confirmed`, `eventId`, `userId`, `paymentAmount`, `transactionFee`, `paymentDate`, `confirmDate`)
+ * @returns A PaymentModel populated from the input row; `paymentDetails` and `refunds` are set to `undefined`
+ */
+export function mapToPaymentModel(entity: Record<string, any>): PaymentModel {
+	return {
+		id: entity.id,
+		paymentCode: entity.paymentCode,
+		paymentKey: entity.paymentKey,
+		notificationType: entity.notificationType,
+		confirmed: entity.confirmed,
+		eventId: entity.eventId,
+		userId: entity.userId,
+		paymentAmount: entity.paymentAmount,
+		transactionFee: entity.transactionFee,
+		paymentDate: entity.paymentDate,
+		confirmDate: entity.confirmDate,
+		paymentDetails: undefined,
+		refunds: undefined,
 	}
 }
 

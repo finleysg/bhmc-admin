@@ -2,11 +2,19 @@
 
 Current focus:
 
-- Enhance "Add Player" workflow with proper fee selection and payment calculation
+- Implement drop and refund functionality with Stripe integration for player withdrawals
 - Maintain and enhance testing infrastructure; ensure comprehensive coverage for pure functions and utilities
 - Monitor and update memory bank documentation to reflect recent changes and testing efforts
 
 Recent changes:
+
+- **12/2/2025: Implemented drop and refund support with Stripe integration**
+  - Added Stripe module and service for payment processing and refund handling
+  - Updated registration system to handle player drops and refund calculations
+  - Modified fee calculation utilities for drop scenarios and refund processing
+  - Updated domain types to include RefundRequest functionality
+  - Enhanced player drop UI components with fee handling and refund options
+  - All changes passed formatting, linting, build, and test checks
 
 - **11/30/2025: Added SelectPlayers component, drop reducer, and tests**
   - Created `select-players.tsx` for player selection UI in event player management

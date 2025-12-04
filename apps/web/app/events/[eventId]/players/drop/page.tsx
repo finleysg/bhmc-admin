@@ -9,9 +9,9 @@ import { reducer, initialState } from "./reducer"
 import { PaidFeePicker } from "../components/paid-fee-picker"
 
 /**
- * Display the Drop Player page for a club event, allowing selection of a registration group, selection/removal of player(s) to drop, and picking fees to refund.
+ * Render the Drop Player page for a club event, allowing selection of a registration group, choosing player(s) to drop, and selecting fees to refund.
  *
- * @returns The page's React element
+ * @returns The React element for the Drop Player page
  */
 export default function DropPlayerPage() {
 	const { eventId } = useParams<{ eventId: string }>()
@@ -32,6 +32,7 @@ export default function DropPlayerPage() {
 			try {
 				const response = await fetch(`/api/events/${eventId}`)
 				if (response.ok) {
+					// We only return validated club events to the UI
 					const eventData = (await response.json()) as ValidatedClubEvent
 					dispatch({ type: "SET_EVENT", payload: eventData })
 				} else {
@@ -89,9 +90,7 @@ export default function DropPlayerPage() {
 									group={state.selectedGroup}
 									selectedPlayers={state.selectedPlayers}
 									onSelect={(player) => dispatch({ type: "SELECT_PLAYER", payload: player })}
-									onRemove={(player) => {
-										setTimeout(() => dispatch({ type: "REMOVE_PLAYER", payload: player }), 0)
-									}}
+									onRemove={(player) => dispatch({ type: "REMOVE_PLAYER", payload: player })}
 								/>
 							</div>
 						)}
