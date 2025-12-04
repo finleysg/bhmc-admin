@@ -218,7 +218,7 @@ export default function DropPlayerPage() {
 								<div>
 									<button
 										className="btn btn-success me-2"
-										onClick={() => dispatch({ type: "RESET_STATE" })}
+										onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
 									>
 										Drop More
 									</button>

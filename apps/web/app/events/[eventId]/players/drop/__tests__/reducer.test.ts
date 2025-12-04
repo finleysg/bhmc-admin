@@ -63,6 +63,32 @@ describe("RESET_STATE", () => {
 	})
 })
 
+describe("RESET_SELECTIONS", () => {
+	it("should clear selections but preserve clubEvent and isLoading", () => {
+		const dirtyState: State = {
+			clubEvent: mockClubEvent,
+			selectedGroup: mockRegistration([1]),
+			selectedPlayers: [mockPlayer(1)],
+			selectedFees: [{ slotId: 1, registrationFeeIds: [101] }],
+			error: "err",
+			isLoading: false,
+			dropSuccess: true,
+			isProcessing: true,
+		}
+		const state = reducer(dirtyState, { type: "RESET_SELECTIONS" })
+		// Preserved fields
+		expect(state.clubEvent).toEqual(mockClubEvent)
+		expect(state.isLoading).toBe(false)
+		// Cleared fields
+		expect(state.selectedGroup).toBeUndefined()
+		expect(state.selectedPlayers).toEqual([])
+		expect(state.selectedFees).toEqual([])
+		expect(state.dropSuccess).toBe(false)
+		expect(state.isProcessing).toBe(false)
+		expect(state.error).toBeNull()
+	})
+})
+
 describe("RESET_ERROR", () => {
 	it("should clear error field", () => {
 		const stateWithError: State = { ...initialState, error: "err" }

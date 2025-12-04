@@ -29,6 +29,7 @@ export type Action =
 	| { type: "SET_PROCESSING"; payload: boolean }
 	| { type: "SET_DROP_SUCCESS"; payload: boolean }
 	| { type: "RESET_STATE" }
+	| { type: "RESET_SELECTIONS" }
 	| { type: "RESET_ERROR" }
 
 export function translateRefundRequests(state: State): RefundRequest[] {
@@ -101,6 +102,16 @@ export function reducer(state: State, action: Action): State {
 			return { ...state, dropSuccess: action.payload }
 		case "RESET_STATE":
 			return { ...initialState }
+		case "RESET_SELECTIONS":
+			return {
+				...state,
+				selectedGroup: undefined,
+				selectedPlayers: [],
+				selectedFees: [],
+				dropSuccess: false,
+				isProcessing: false,
+				error: null,
+			}
 		case "RESET_ERROR":
 			return { ...state, error: null }
 		default:
