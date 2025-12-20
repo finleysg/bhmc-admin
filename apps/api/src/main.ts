@@ -1,4 +1,8 @@
-import "dotenv/config"
+import * as dotenv from "dotenv"
+import * as path from "path"
+
+const envFile = process.env.NODE_ENV === "docker" ? ".env.docker" : ".env"
+dotenv.config({ path: path.resolve(__dirname, "..", envFile) })
 
 import { LogLevel } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
