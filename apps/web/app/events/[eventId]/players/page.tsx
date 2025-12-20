@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react"
 
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 
 import ActionCard from "@/components/action-card"
-import { useSession } from "@/lib/auth-client"
+import { useAuth } from "@/lib/auth-context"
 import { ClubEvent } from "@repo/domain/types"
 
 export default function EventManagementPage() {
-	const { data: session, isPending } = useSession()
-	const signedIn = !!session?.user
-	const router = useRouter()
+	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const params = useParams()
 	const eventId = params.eventId as string
 	const [event, setEvent] = useState<ClubEvent | null>(null)
@@ -28,13 +26,6 @@ export default function EventManagementPage() {
 		}
 	}, [signedIn, eventId])
 
-	// Redirect if not authenticated
-	useEffect(() => {
-		if (!signedIn && !isPending) {
-			router.push("/sign-in")
-		}
-	}, [signedIn, isPending, router])
-
 	if (isPending) {
 		return (
 			<div className="flex items-center justify-center p-8">
@@ -43,8 +34,8 @@ export default function EventManagementPage() {
 		)
 	}
 
-	if (!signedIn && !isPending) {
-		return null // Redirecting
+	if (!signedIn) {
+		return null // Middleware will redirect
 	}
 
 	return (

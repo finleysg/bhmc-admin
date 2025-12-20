@@ -1,23 +1,11 @@
 "use client"
 
-import { useEffect } from "react"
-
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 
-import { useSession } from "../../../../../lib/auth-client"
+import { useAuth } from "../../../../../lib/auth-context"
 
 export default function ReplacePlayerPage() {
-	const { data: session, isPending } = useSession()
-	const signedIn = !!session?.user
-	const router = useRouter()
-
-	// Redirect if not authenticated
-	useEffect(() => {
-		if (!signedIn && !isPending) {
-			router.push("/sign-in")
-		}
-	}, [signedIn, isPending, router])
+	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 
 	if (isPending) {
 		return (
@@ -27,8 +15,8 @@ export default function ReplacePlayerPage() {
 		)
 	}
 
-	if (!signedIn && !isPending) {
-		return null // Redirecting
+	if (!signedIn) {
+		return null // Middleware will redirect
 	}
 
 	return (

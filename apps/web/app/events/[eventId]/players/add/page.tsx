@@ -9,7 +9,7 @@ import { EventFeePicker } from "@/app/events/[eventId]/players/components/event-
 import { PlayerSearch } from "@/app/events/[eventId]/players/components/player-search"
 import { ReserveSpot } from "@/app/events/[eventId]/players/components/reserve-spot"
 import { SelectAvailable } from "@/app/events/[eventId]/players/components/select-available"
-import { useSession } from "@/lib/auth-client"
+import { useAuth } from "@/lib/auth-context"
 import type {
 	AvailableSlotGroup,
 	ValidatedClubEvent as ClubEvent,
@@ -19,23 +19,22 @@ import type {
 import { reducer, getInitialState } from "./reducer"
 
 export default function AddPlayerPage() {
-	const { data: session, isPending } = useSession()
-	const signedIn = !!session?.user
+	const { user, isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const { eventId } = useParams<{ eventId: string }>()
 	const router = useRouter()
 
 	const [state, dispatch] = useReducer(reducer, getInitialState())
 
 	useEffect(() => {
-		if (session?.user) {
+		if (user) {
 			dispatch({
 				type: "SET_USER",
 				payload: {
-					signedUpBy: session.user.name || "Admin",
+					signedUpBy: `${user.first_name} ${user.last_name}`.trim() || "Admin",
 				},
 			})
 		}
-	}, [session?.user])
+	}, [user])
 
 	// Fetch event details
 	useEffect(() => {

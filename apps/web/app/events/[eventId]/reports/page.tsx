@@ -1,25 +1,22 @@
 "use client"
 
-import { useEffect } from "react"
+import { useParams } from "next/navigation"
 
-import { useParams, useRouter } from "next/navigation"
-
-import { useSession } from "../../../../lib/auth-client"
+import { useAuth } from "../../../../lib/auth-context"
 import ReportCard from "../../../components/report-card"
 
 export default function EventReportsPage() {
-	const { data: session, isPending } = useSession()
-	const signedIn = !!session?.user
-	const router = useRouter()
+	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const params = useParams()
 	const eventId = params.eventId as string
 
-	// Redirect if not authenticated
-	useEffect(() => {
-		if (!signedIn && !isPending) {
-			router.push("/sign-in")
-		}
-	}, [signedIn, isPending, router])
+	if (!eventId || !Number(eventId)) {
+		return (
+			<div className="flex items-center justify-center p-8">
+				<p>Invalid event ID</p>
+			</div>
+		)
+	}
 
 	if (isPending) {
 		return (
@@ -29,8 +26,8 @@ export default function EventReportsPage() {
 		)
 	}
 
-	if (!signedIn && !isPending) {
-		return null // Redirecting
+	if (!signedIn) {
+		return null // Middleware will redirect
 	}
 
 	const reports = [

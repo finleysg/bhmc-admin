@@ -1,25 +1,15 @@
 import { useEffect, useState } from "react"
 
-import { useRouter } from "next/navigation"
-
-import { useSession } from "./auth-client"
+import { useAuth } from "./auth-context"
 
 export function useAuthenticatedFetch<T>(path: string) {
-	const { data: session, isPending } = useSession()
-	const signedIn = !!session?.user
-	const router = useRouter()
+	const { isAuthenticated, isLoading: isPending } = useAuth()
 	const [data, setData] = useState<T | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
-		if (!signedIn && !isPending) {
-			router.push("/sign-in")
-		}
-	}, [signedIn, isPending, router])
-
-	useEffect(() => {
-		if (!signedIn || isPending) return
+		if (isPending) return
 
 		const fetchData = async () => {
 			try {
@@ -39,7 +29,7 @@ export function useAuthenticatedFetch<T>(path: string) {
 		}
 
 		void fetchData()
-	}, [signedIn, isPending, path])
+	}, [isAuthenticated, isPending, path])
 
 	return { data, loading, error }
 }

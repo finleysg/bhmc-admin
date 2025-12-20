@@ -6,26 +6,18 @@ import { useRouter } from "next/navigation"
 
 import { ClubEvent } from "@repo/domain/types"
 
-import { useSession } from "../../lib/auth-client"
+import { useAuth } from "../../lib/auth-context"
 import CalendarCard from "../components/calendar-card"
 import ResultsCard from "../components/results-card"
 
 export default function EventsPage() {
-	const { data: session, isPending } = useSession()
-	const signedIn = !!session?.user
+	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const router = useRouter()
 
 	const [selectedDate, setSelectedDate] = useState<Date>(new Date())
 	const [isSearching, setIsSearching] = useState(false)
 	const [searchResults, setSearchResults] = useState<ClubEvent[]>([])
 	const [selectedEvent, setSelectedEvent] = useState<ClubEvent | null>(null)
-
-	// Redirect if not authenticated
-	useEffect(() => {
-		if (!signedIn && !isPending) {
-			router.push("/sign-in")
-		}
-	}, [signedIn, isPending, router])
 
 	// Auto-search when date changes
 	useEffect(() => {

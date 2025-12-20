@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
-import { signIn } from "../../lib/auth-client"
+import { useAuth } from "../../lib/auth-context"
 
 export default function SignInPage() {
 	const [email, setEmail] = useState("")
@@ -11,6 +11,7 @@ export default function SignInPage() {
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState("")
 	const router = useRouter()
+	const { login } = useAuth()
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault()
@@ -22,10 +23,10 @@ export default function SignInPage() {
 		setError("")
 
 		try {
-			const result = await signIn(email, password)
+			const result = await login(email, password)
 
-			if (result.error) {
-				setError(result.error.message || "Sign-in failed")
+			if (!result.success) {
+				setError(result.error || "Sign-in failed")
 			} else {
 				// Redirect to dashboard or home page on success
 				router.push("/")

@@ -1,15 +1,4 @@
-import jwt from "jsonwebtoken"
 import { NextRequest, NextResponse } from "next/server"
-
-import auth from "./auth"
-
-interface TokenResponse {
-	token: string
-}
-
-interface DecodedToken {
-	payload: Record<string, unknown>
-}
 
 interface FetchWithAuthOptions {
 	request: NextRequest
@@ -26,8 +15,17 @@ interface FetchSSEWithAuthOptions {
 }
 
 /**
+ * Extracts the Django auth token from cookies.
+ * Django sets an httponly cookie named "access_token".
+ */
+function getAuthToken(request: NextRequest): string | null {
+	const cookie = request.cookies.get("access_token")
+	return cookie?.value || null
+}
+
+/**
  * Centralized utility for making authenticated requests to the backend API.
- * Handles session verification, JWT token generation, and request forwarding.
+ * Forwards the Django auth token to the NestJS backend for validation.
  */
 export async function fetchWithAuth({
 	request,
@@ -38,40 +36,13 @@ export async function fetchWithAuth({
 	filename,
 }: FetchWithAuthOptions): Promise<NextResponse> {
 	try {
-		// Verify session first
-		const session = await auth.api.getSession({
-			headers: request.headers,
-		})
+		const token = getAuthToken(request)
 
-		if (!session) {
+		if (!token) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 		}
 
-		// Get JWT token from Better Auth's /api/auth/token endpoint
-		const tokenResponse = await fetch(`${request.nextUrl.origin}/api/auth/token`, {
-			headers: {
-				cookie: request.headers.get("cookie") || "",
-			},
-		})
-
-		if (!tokenResponse.ok) {
-			return NextResponse.json({ error: "Failed to generate JWT token" }, { status: 500 })
-		}
-
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-		const tokenResponseData: TokenResponse = await tokenResponse.json()
-		const { token: eddsaToken } = tokenResponseData
-
-		// Decode the EdDSA token and re-sign with HS256 for backend compatibility
-		const decoded = jwt.decode(eddsaToken, { complete: true }) as DecodedToken | null
-		if (!decoded || !decoded.payload) {
-			return NextResponse.json({ error: "Failed to decode JWT token" }, { status: 500 })
-		}
-
-		// Re-sign with HS256 using the shared secret
-		const token = jwt.sign(decoded.payload, process.env.BETTER_AUTH_JWT_SECRET || "")
-
-		// Forward the request to the backend API with the JWT token
+		// Forward the request to the backend API with the Django token
 		const apiUrl = process.env.API_URL
 		if (!apiUrl) {
 			return NextResponse.json({ error: "API URL not configured" }, { status: 500 })
@@ -87,7 +58,7 @@ export async function fetchWithAuth({
 		const response = await fetch(backendUrl, {
 			method,
 			headers: {
-				Authorization: `Bearer ${token}`,
+				Authorization: `Token ${token}`,
 				"Content-Type": "application/json",
 			},
 			...(body && { body: JSON.stringify(body) }),
@@ -126,64 +97,18 @@ export async function fetchWithAuth({
 }
 
 /**
- * Generates a backend-compatible JWT token from the current session.
- * Handles EdDSA to HS256 conversion for backend compatibility.
- */
-async function getBackendAuthToken(request: NextRequest): Promise<string | Response> {
-	try {
-		// Verify session first
-		const session = await auth.api.getSession({
-			headers: request.headers,
-		})
-
-		if (!session) {
-			return new Response("Unauthorized", { status: 401 })
-		}
-
-		// Get JWT token from Better Auth's /api/auth/token endpoint
-		const tokenResponse = await fetch(`${request.nextUrl.origin}/api/auth/token`, {
-			headers: {
-				cookie: request.headers.get("cookie") || "",
-			},
-		})
-
-		if (!tokenResponse.ok) {
-			return new Response("Failed to generate JWT token", { status: 500 })
-		}
-
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-		const tokenResponseData: TokenResponse = await tokenResponse.json()
-		const { token: eddsaToken } = tokenResponseData
-
-		// Decode the EdDSA token and re-sign with HS256 for backend compatibility
-		const decoded = jwt.decode(eddsaToken, { complete: true }) as DecodedToken | null
-		if (!decoded || !decoded.payload) {
-			return new Response("Failed to decode JWT token", { status: 500 })
-		}
-
-		// Re-sign with HS256 using the shared secret
-		const token = jwt.sign(decoded.payload, process.env.BETTER_AUTH_JWT_SECRET || "")
-
-		return token
-	} catch (error) {
-		console.error("Error generating backend auth token:", error)
-		return new Response("Internal server error", { status: 500 })
-	}
-}
-
-/**
  * Centralized utility for making authenticated SSE (Server-Sent Events) requests to the backend API.
- * Handles session verification, JWT token generation, and SSE streaming.
+ * Forwards the Django auth token to the NestJS backend for validation.
  */
 export async function fetchSSEWithAuth({
 	request,
 	backendPath,
 }: FetchSSEWithAuthOptions): Promise<Response> {
 	try {
-		// Generate backend-compatible JWT token
-		const tokenResult = await getBackendAuthToken(request)
-		if (tokenResult instanceof Response) {
-			return tokenResult
+		const token = getAuthToken(request)
+
+		if (!token) {
+			return new Response("Unauthorized", { status: 401 })
 		}
 
 		// Connect to backend SSE endpoint
@@ -196,7 +121,7 @@ export async function fetchSSEWithAuth({
 
 		const response = await fetch(backendUrl, {
 			headers: {
-				Authorization: `Bearer ${tokenResult}`,
+				Authorization: `Token ${token}`,
 				Accept: "text/event-stream",
 			},
 		})
