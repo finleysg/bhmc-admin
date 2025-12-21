@@ -1,42 +1,13 @@
-import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator"
-
-export class Player {
-	@IsOptional()
-	@IsNumber()
-	id?: number
-
-	@IsString()
-	firstName!: string
-
-	@IsString()
-	lastName!: string
-
-	@IsString()
-	email!: string
-
-	@IsOptional()
-	@IsString()
+export interface Player {
+	id: number
+	firstName: string
+	lastName: string
+	email: string
 	phoneNumber?: string | null
-
-	@IsOptional()
-	@IsString()
 	ghin?: string | null
-
-	@IsString()
-	tee!: string
-
-	@IsOptional()
-	@IsString()
+	tee: string
 	birthDate?: string | null
-
-	@IsBoolean()
-	isMember!: boolean
-
-	@IsOptional()
-	@IsString()
+	isMember: boolean
 	ggId?: string | null
-
-	@IsOptional()
-	@IsNumber()
 	userId?: number | null
 }

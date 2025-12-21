@@ -1,7 +1,11 @@
 import { Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
-import { ProgressEventDto, ValidatedClubEvent, ValidatedRegisteredPlayer } from "@repo/domain/types"
+import {
+	PlayerProgressEvent,
+	ValidatedClubEvent,
+	ValidatedRegisteredPlayer,
+} from "@repo/domain/types"
 
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
@@ -28,8 +32,10 @@ export class RosterExportService {
 		private readonly playerTransformer: RosterPlayerTransformer,
 	) {}
 
-	getProgressObservable(eventId: number): Subject<ProgressEventDto> | null {
-		return this.progressTracker.getProgressObservable(eventId) as Subject<ProgressEventDto> | null
+	getProgressObservable(eventId: number): Subject<PlayerProgressEvent> | null {
+		return this.progressTracker.getProgressObservable(
+			eventId,
+		) as Subject<PlayerProgressEvent> | null
 	}
 
 	getExportResult(eventId: number): ExportResult | null {
@@ -135,7 +141,7 @@ export class RosterExportService {
 	 * Export roster for an event to Golf Genius.
 	 * Returns the progress Subject immediately, then processes export asynchronously.
 	 */
-	exportEventRoster(eventId: number): Subject<ProgressEventDto> {
+	exportEventRoster(eventId: number): Subject<PlayerProgressEvent> {
 		const result: ExportResult = {
 			eventId,
 			totalPlayers: 0,
@@ -155,7 +161,7 @@ export class RosterExportService {
 			this.progressTracker.errorExport(eventId, errorMessage, result).catch(() => {})
 		})
 
-		return subject as Subject<ProgressEventDto>
+		return subject as Subject<PlayerProgressEvent>
 	}
 
 	/**

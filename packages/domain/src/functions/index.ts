@@ -1,4 +1,5 @@
 export type { AgeResult, AgeValue } from "./player"
+export * from "./course-validation"
 export * from "./player"
 export * from "./registration"
 export * from "./registration-validation"

@@ -1,4 +1,4 @@
-import { AmountDue, EventFee, Player } from "../types"
+import { AmountDue, EventFee, FeeRestrictionChoices, Player } from "../types"
 import { getAge } from "./player"
 
 const SENIOR_AGE = 62
@@ -60,11 +60,11 @@ export function getAmount(eventFee: EventFee, player: Player, eventDate?: Date):
 		return eventFee.amount
 	}
 
-	if (eventFee.overrideRestriction === "Member" && player.isMember) {
+	if (eventFee.overrideRestriction === FeeRestrictionChoices.MEMBERS && player.isMember) {
 		return eventFee.overrideAmount
 	}
 
-	if (eventFee.overrideRestriction === "Seniors") {
+	if (eventFee.overrideRestriction === FeeRestrictionChoices.SENIORS) {
 		const age = getAge(player, new Date(), eventDate)
 		if (+age.eventAge >= SENIOR_AGE) {
 			return eventFee.overrideAmount

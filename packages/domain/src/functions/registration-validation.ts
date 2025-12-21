@@ -1,13 +1,13 @@
 import { RegistrationSlot } from "../types"
-import { RegisteredPlayer } from "../types/register/registered-player"
 import { Registration } from "../types/register/registration"
 import { RegistrationFee } from "../types/register/registration-fee"
-import { ValidatedRegisteredPlayer, ValidatedRegistration } from "../types/register/validated-types"
+import { ValidatedRegistration } from "../types/register/validated-types"
 
 // Helper validation functions
 const hasValidFees = (fees: RegistrationFee[] | undefined): boolean => {
 	return (
 		fees != null &&
+		fees.length > 0 &&
 		fees.every((fee) => fee.id != null) &&
 		fees.every(
 			(fee) =>
@@ -32,7 +32,16 @@ const hasValidSlots = (
 			if (slot.holeId == null || !slot.hole || slot.hole.id == null) {
 				return false
 			}
+		} else {
+			// dummy
+			slot.hole = {
+				id: -1,
+				courseId: -1,
+				holeNumber: -1,
+				par: -1,
+			}
 		}
+
 		if (slot.player != null && !slot.player.id) {
 			return false
 		}
@@ -68,70 +77,20 @@ export function validateRegistration(registration: Registration): ValidatedRegis
 		issues.push("The course information is invalid or missing.")
 	}
 
+	if (!hasCourseDetails) {
+		// dummy
+		registration.course = {
+			id: -1,
+			name: "dummy",
+			numberOfHoles: 0,
+			holes: [],
+		}
+	}
+
 	if (issues.length > 0) {
 		throw new Error(`Validation failed for registration ${registration?.id}: ` + issues.join("\n"))
 	}
 
 	// All validations passed, return narrowed type
 	return registration as ValidatedRegistration
-}
-
-/**
- * Validates that a RegisteredPlayer contains required identifiers and, when the registration includes course details, has course and hole information.
- *
- * The function ensures slot.id, player.id, and registration.id are present. If the registration references a course (registration.courseId), course.id and hole.id are required. If `fees` is provided, it must be a non-empty collection with valid fee entries.
- *
- * @param registeredPlayer - The RegisteredPlayer to validate
- * @returns The input cast as a ValidatedRegisteredPlayer when validation succeeds
- * @throws Error when one or more required fields are missing or invalid; the error message lists the validation issues
- */
-export function validateRegisteredPlayer(
-	registeredPlayer: RegisteredPlayer,
-): ValidatedRegisteredPlayer {
-	const issues: string[] = []
-
-	if (!registeredPlayer) {
-		issues.push("No registered player object provided.")
-	}
-
-	// Validate core required fields
-	if (!registeredPlayer.slot?.id) {
-		issues.push("The slot object is missing.")
-	}
-
-	if (!registeredPlayer.player?.id) {
-		issues.push("The player object is missing.")
-	}
-
-	if (!registeredPlayer.registration?.id) {
-		issues.push("The registration object is missing.")
-	}
-
-	const hasCourseDetails = !!registeredPlayer.registration?.courseId
-
-	// Validate course and hole if details are required (canChoose event)
-	if (hasCourseDetails) {
-		if (!registeredPlayer.course || !registeredPlayer.course?.id) {
-			issues.push("The course information is incomplete.")
-		}
-		if (!registeredPlayer.hole || !registeredPlayer.hole?.id) {
-			issues.push("The starting hole information is incomplete.")
-		}
-	}
-
-	// Validate fees if present (undefined is acceptable, but empty arrays and invalid fees are invalid)
-	if (registeredPlayer.fees != null) {
-		if (registeredPlayer.fees.length === 0 || !hasValidFees(registeredPlayer.fees)) {
-			issues.push("The registration fee collection is incomplete.")
-		}
-	}
-
-	if (issues.length > 0) {
-		throw new Error(
-			`Validation failed for player ${registeredPlayer?.player?.email}: ` + issues.join("\n"),
-		)
-	}
-
-	// All validations passed, return narrowed type
-	return registeredPlayer as ValidatedRegisteredPlayer
 }

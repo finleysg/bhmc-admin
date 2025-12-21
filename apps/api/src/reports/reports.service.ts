@@ -3,17 +3,17 @@ import { and, eq, sql } from "drizzle-orm"
 import { Injectable } from "@nestjs/common"
 import { getAge, getFullName, getPlayerStartName, getPlayerTeamName } from "@repo/domain/functions"
 import {
-	EventReportRowDto,
-	EventResultsReportDto,
-	EventResultsReportRowDto,
-	EventResultsSectionDto,
-	FinanceReportDto,
+	EventReportRow,
+	EventResultsReport,
+	EventResultsReportRow,
+	EventResultsSection,
+	FinanceReportSummary,
 	Hole,
-	PointsReportRowDto,
+	PointsReportRow,
 	ValidatedRegisteredPlayer,
 } from "@repo/domain/types"
 
-import { CoursesRepository } from "../courses"
+import { CoursesRepository, toHole } from "../courses"
 import {
 	DrizzleService,
 	eventFee,
@@ -127,7 +127,10 @@ export class ReportsService {
 		await Promise.all(
 			courseIds.map(async (cid) => {
 				const holes = await this.courses.findHolesByCourseId(cid)
-				holesMap.set(cid, holes ?? [])
+				holesMap.set(
+					cid,
+					holes.map((h) => toHole(h)),
+				)
 			}),
 		)
 
@@ -176,12 +179,12 @@ export class ReportsService {
 		return transformed
 	}
 
-	async getEventReport(eventId: number): Promise<EventReportRowDto[]> {
+	async getEventReport(eventId: number): Promise<EventReportRow[]> {
 		await this.validateEvent(eventId)
 		const registeredPlayers = await this.getPlayers(eventId)
 		const summary = { eventId, total: registeredPlayers.length, slots: registeredPlayers }
 		const rows = summary.slots.map((slot) => {
-			const row: EventReportRowDto = {
+			const row: EventReportRow = {
 				teamId: slot.team,
 				course: slot.course,
 				start: slot.start,
@@ -251,7 +254,7 @@ export class ReportsService {
 		return generateBuffer(workbook)
 	}
 
-	async getPointsReport(eventId: number): Promise<PointsReportRowDto[]> {
+	async getPointsReport(eventId: number): Promise<PointsReportRow[]> {
 		await this.validateEvent(eventId)
 
 		// Get tournament points with tournament and player data
@@ -274,7 +277,7 @@ export class ReportsService {
 			.orderBy(tournament.name, tournamentPoints.position)
 
 		// Map to DTO
-		const rows: PointsReportRowDto[] = results.map((result) => ({
+		const rows: PointsReportRow[] = results.map((result) => ({
 			tournamentName: result.tournamentName,
 			position: result.position,
 			fullName: `${result.firstName} ${result.lastName}`,
@@ -312,7 +315,7 @@ export class ReportsService {
 		return generateBuffer(workbook)
 	}
 
-	async getFinanceReport(eventId: number): Promise<FinanceReportDto> {
+	async getFinanceReport(eventId: number): Promise<FinanceReportSummary> {
 		await this.validateEvent(eventId)
 
 		// Get gross inflows by bucket
@@ -504,14 +507,14 @@ export class ReportsService {
 		})
 	}
 
-	async getEventResultsReport(eventId: number): Promise<EventResultsReportDto> {
+	async getEventResultsReport(eventId: number): Promise<EventResultsReport> {
 		const event = await this.events.getValidatedClubEventById(eventId)
 		if (!event) throw new Error(`ClubEvent ${eventId} not found`) // Should not happen after validateEvent
 
 		// Get all tournaments for the event
 		const tournaments = event.tournaments
 
-		const sections: EventResultsSectionDto[] = []
+		const sections: EventResultsSection[] = []
 
 		// Section 1: Stroke play results
 		const strokeTournaments = tournaments.filter(
@@ -535,7 +538,7 @@ export class ReportsService {
 						.where(eq(tournamentResult.tournamentId, tournament.id))
 						.orderBy(tournamentResult.flight, tournamentResult.position)
 
-					const rows: EventResultsReportRowDto[] = results.map((result) => ({
+					const rows: EventResultsReportRow[] = results.map((result) => ({
 						flight: result.flight || undefined,
 						position: result.position,
 						fullName: `${result.firstName} ${result.lastName}`,
@@ -576,7 +579,7 @@ export class ReportsService {
 						.where(eq(tournamentResult.tournamentId, tournament.id))
 						.orderBy(tournamentResult.summary)
 
-					const rows: EventResultsReportRowDto[] = results.map((result) => ({
+					const rows: EventResultsReportRow[] = results.map((result) => ({
 						details: result.summary || undefined,
 						skinsWon: result.position,
 						fullName: `${result.firstName} ${result.lastName}`,
@@ -600,7 +603,7 @@ export class ReportsService {
 		// Section 3: User scored results
 		const proxyTournaments = tournaments.filter((t) => t.format === "user_scored")
 		if (proxyTournaments.length > 0) {
-			const rows: EventResultsReportRowDto[] = await Promise.all(
+			const rows: EventResultsReportRow[] = await Promise.all(
 				proxyTournaments.map(async (tournament) => {
 					const result = await this.drizzle.db
 						.select({
@@ -662,7 +665,7 @@ export class ReportsService {
 					currentRow++
 
 					// Add column headers based on section type
-					let columns: Array<{ header: string; key: keyof EventResultsReportRowDto; width: number }>
+					let columns: Array<{ header: string; key: keyof EventResultsReportRow; width: number }>
 					if (section.type === "stroke") {
 						columns = [
 							{ header: "Flight", key: "flight", width: 10 },

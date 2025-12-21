@@ -1,6 +1,6 @@
 "use client"
 
-import type { ValidatedEventFee as EventFee, ValidatedPlayer as Player } from "@repo/domain/types"
+import type { ValidatedEventFee as EventFee, Player } from "@repo/domain/types"
 import { formatCurrency, getAmount, getTotalAmountForPlayer } from "@repo/domain/functions"
 
 interface PlayerEventFeePickerProps {

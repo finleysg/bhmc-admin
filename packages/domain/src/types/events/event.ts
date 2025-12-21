@@ -1,158 +1,50 @@
-import { Type as TransformerType } from "class-transformer"
-import {
-	IsArray,
-	IsBoolean,
-	IsDateString,
-	IsNumber,
-	IsOptional,
-	IsString,
-	ValidateNested,
-} from "class-validator"
-
 import { Course } from "../courses/course"
 import { EventFee } from "./event-fee"
 import { Round } from "./round"
 import { Tournament } from "./tournament"
+import type {
+	AgeRestrictionTypeValue,
+	EventTypeValue,
+	RegistrationTypeValue,
+	SkinTypeValue,
+	StartTypeValue,
+} from "./choices"
 
-export class ClubEvent {
-	@IsOptional()
-	@IsNumber()
-	id?: number
-
-	@IsString()
-	eventType!: string
-
-	@IsString()
-	name!: string
-
-	@IsOptional()
-	@IsNumber()
+export interface ClubEvent {
+	id: number
+	eventType: EventTypeValue
+	name: string
 	rounds?: number | null
-
-	@IsString()
-	registrationType!: string
-
-	@IsOptional()
-	@IsString()
-	skinsType?: string | null
-
-	@IsOptional()
-	@IsNumber()
+	registrationType: RegistrationTypeValue
+	skinsType?: SkinTypeValue | null
 	minimumSignupGroupSize?: number | null
-
-	@IsOptional()
-	@IsNumber()
 	maximumSignupGroupSize?: number | null
-
-	@IsOptional()
-	@IsNumber()
 	groupSize?: number | null
-
-	@IsOptional()
-	@IsNumber()
 	totalGroups?: number | null
-
-	@IsOptional()
-	@IsString()
-	startType?: string | null
-
-	@IsBoolean()
-	canChoose!: boolean
-
-	@IsBoolean()
-	ghinRequired!: boolean
-
-	@IsOptional()
-	@IsNumber()
+	startType?: StartTypeValue | null
+	canChoose: boolean
+	ghinRequired: boolean
 	seasonPoints?: number | null
-
-	@IsOptional()
-	@IsString()
 	notes?: string | null
-
-	@IsDateString()
-	startDate!: string
-
-	@IsOptional()
-	@IsString()
+	startDate: string
 	startTime?: string | null
-
-	@IsOptional()
-	@IsDateString()
 	signupStart?: string | null
-
-	@IsOptional()
-	@IsDateString()
 	signupEnd?: string | null
-
-	@IsOptional()
-	@IsDateString()
 	paymentsEnd?: string | null
-
-	@IsOptional()
-	@IsNumber()
 	registrationMaximum?: number | null
-
-	@IsOptional()
-	@IsString()
 	portalUrl?: string | null
-
-	@IsOptional()
-	@IsString()
 	externalUrl?: string | null
-
-	@IsString()
-	status!: string
-
-	@IsNumber()
-	season!: number
-
-	@IsOptional()
-	@IsString()
+	status: string
+	season: number
 	teeTimeSplits?: string | null
-
-	@IsNumber()
-	starterTimeInterval!: number
-
-	@IsNumber()
-	teamSize!: number
-
-	@IsOptional()
-	@IsDateString()
+	starterTimeInterval: number
+	teamSize: number
 	prioritySignupStart?: string | null
-
-	@IsOptional()
-	@IsNumber()
 	ageRestriction?: number | null
-
-	@IsString()
-	ageRestrictionType!: string
-
-	@IsOptional()
-	@IsString()
+	ageRestrictionType: AgeRestrictionTypeValue
 	ggId?: string | null
-
-	@IsOptional()
-	@IsArray()
-	@ValidateNested({ each: true })
-	@TransformerType(() => Course)
 	courses?: Course[]
-
-	@IsOptional()
-	@IsArray()
-	@ValidateNested({ each: true })
-	@TransformerType(() => EventFee)
 	eventFees?: EventFee[]
-
-	@IsOptional()
-	@IsArray()
-	@ValidateNested({ each: true })
-	@TransformerType(() => Round)
 	eventRounds?: Round[]
-
-	@IsOptional()
-	@IsArray()
-	@ValidateNested({ each: true })
-	@TransformerType(() => Tournament)
 	tournaments?: Tournament[]
 }

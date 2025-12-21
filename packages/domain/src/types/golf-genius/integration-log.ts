@@ -18,7 +18,7 @@ export type IntegrationActionName =
 /**
  * DTO for integration log entries (shared between API and web app)
  */
-export interface IntegrationLogDto {
+export interface IntegrationLog {
 	id: number
 	actionName: IntegrationActionName
 	actionDate: string

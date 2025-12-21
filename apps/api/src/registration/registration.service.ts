@@ -3,8 +3,9 @@ import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
 import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import {
 	calculateAmountDue,
+	dummyCourse,
+	dummyHole,
 	getAmount,
-	validateRegisteredPlayer,
 	validateRegistration,
 } from "@repo/domain/functions"
 import {
@@ -15,13 +16,13 @@ import {
 	PlayerMap,
 	PlayerRecord,
 	RefundRequest,
-	RegisteredPlayer,
 	RegistrationSlot,
-	RegistrationStatus,
-	SearchPlayers,
+	RegistrationStatusChoices,
+	PlayerQuery,
 	ValidatedClubEvent,
 	ValidatedRegisteredPlayer,
 	ValidatedRegistration,
+	ValidatedRegistrationFee,
 } from "@repo/domain/types"
 
 import { mapToCourseModel, mapToHoleModel, toCourse, toHole } from "../courses/mappers"
@@ -91,12 +92,12 @@ export class RegistrationService {
 			.where(
 				and(
 					eq(registrationSlot.eventId, eventId),
-					eq(registrationSlot.status, RegistrationStatus.RESERVED),
+					eq(registrationSlot.status, RegistrationStatusChoices.RESERVED),
 					isNotNull(registrationSlot.playerId),
 				),
 			)
 
-		const slotsMap = new Map<number, RegisteredPlayer>()
+		const slotsMap = new Map<number, ValidatedRegisteredPlayer>()
 		const slotIds: number[] = []
 		for (const row of rows) {
 			this.logger.debug(`Processing slot ${row.slot.id} for player ${row.player?.id}`)
@@ -104,12 +105,10 @@ export class RegistrationService {
 			slotIds.push(sid)
 			slotsMap.set(sid, {
 				slot: toRegistrationSlot(mapToRegistrationSlotModel(row.slot)),
-				player: row.player ? toPlayer(mapToPlayerModel(row.player)) : undefined,
-				registration: row.registration
-					? toRegistration(mapToRegistrationModel(row.registration))
-					: undefined,
-				course: row.course ? toCourse(mapToCourseModel(row.course)) : undefined,
-				hole: row.hole ? toHole(mapToHoleModel(row.hole)) : undefined,
+				player: toPlayer(mapToPlayerModel(row.player!)),
+				registration: toRegistration(mapToRegistrationModel(row.registration!)),
+				course: row.course ? toCourse(mapToCourseModel(row.course)) : dummyCourse(),
+				hole: row.hole ? toHole(mapToHoleModel(row.hole)) : dummyHole(),
 				fees: [],
 			})
 		}
@@ -149,15 +148,15 @@ export class RegistrationService {
 			const fee = toRegistrationFee(registrationFee)
 			fee.eventFee = toEventFee(eventFee)
 
-			parent.fees.push(fee)
+			parent.fees.push(fee as ValidatedRegistrationFee)
 		}
 
 		// Requires that all are valid or an error is thrown
-		const results = slotIds.map((id) => validateRegisteredPlayer(slotsMap.get(id)!))
+		const results = slotIds.map((id) => slotsMap.get(id)!)
 		return results
 	}
 
-	async searchPlayers(query: SearchPlayers): Promise<Player[]> {
+	async searchPlayers(query: PlayerQuery): Promise<Player[]> {
 		const { searchText, isMember = true } = query
 		let whereClause: any = undefined
 
@@ -452,7 +451,7 @@ export class RegistrationService {
 				await tx
 					.update(registrationSlot)
 					.set({
-						status: RegistrationStatus.AWAITING_PAYMENT,
+						status: RegistrationStatusChoices.AWAITING_PAYMENT,
 						playerId: slot.playerId,
 						holeId: dto.startingHoleId,
 						startingOrder: dto.startingOrder,
@@ -523,10 +522,11 @@ export class RegistrationService {
 	): Promise<AvailableSlotGroup[]> {
 		const slotModels = await this.repository.findAvailableSlots(eventId, courseId)
 
-		// Group slots by holeId and startingOrder
+		// Group slots by holeId, holeNumber, and startingOrder. We know the repo method
+		// attaches the hole to the slot.
 		const groups = new Map<string, RegistrationSlot[]>()
 		for (const slotModel of slotModels) {
-			const key = `${slotModel.holeId}-${slotModel.startingOrder}`
+			const key = `${slotModel.holeId}-${slotModel.hole?.holeNumber}-${slotModel.startingOrder}`
 			if (!groups.has(key)) {
 				groups.set(key, [])
 			}
@@ -537,9 +537,10 @@ export class RegistrationService {
 		const result: AvailableSlotGroup[] = []
 		for (const [key, slots] of groups) {
 			if (slots.length >= players) {
-				const [holeId, startingOrder] = key.split("-").map(Number)
+				const [holeId, holeNumber, startingOrder] = key.split("-").map(Number)
 				result.push({
 					holeId,
+					holeNumber,
 					startingOrder,
 					slots,
 				})
@@ -567,13 +568,13 @@ export class RegistrationService {
 				.update(registrationSlot)
 				.set({
 					registrationId,
-					status: RegistrationStatus.PENDING,
+					status: RegistrationStatusChoices.PENDING,
 				})
 				.where(
 					and(
 						inArray(registrationSlot.id, slotIds),
 						eq(registrationSlot.eventId, eventId),
-						eq(registrationSlot.status, RegistrationStatus.AVAILABLE),
+						eq(registrationSlot.status, RegistrationStatusChoices.AVAILABLE),
 					),
 				)
 
@@ -617,9 +618,9 @@ export class RegistrationService {
 		if (playerSlots.some((slotRow) => !slotRow.player)) {
 			throw new BadRequestException("Not all slots provided have a player assigned")
 		}
-		if (playerSlots.some((slotRow) => slotRow.status !== RegistrationStatus.RESERVED)) {
+		if (playerSlots.some((slotRow) => slotRow.status !== RegistrationStatusChoices.RESERVED)) {
 			throw new BadRequestException(
-				`Not all slots provided have status ${RegistrationStatus.RESERVED}`,
+				`Not all slots provided have status ${RegistrationStatusChoices.RESERVED}`,
 			)
 		}
 
@@ -667,7 +668,7 @@ export class RegistrationService {
 					.set({
 						registrationId: null,
 						playerId: null,
-						status: RegistrationStatus.AVAILABLE,
+						status: RegistrationStatusChoices.AVAILABLE,
 					})
 					.where(inArray(registrationSlot.id, slotIds))
 			} else {

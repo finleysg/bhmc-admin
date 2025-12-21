@@ -1,12 +1,12 @@
-import { EventResultsReportRowDto } from "./event-results-report-row.dto"
+import { EventResultsReportRow } from "./event-results-report-row"
 
-export type EventResultsSectionDto =
+export type EventResultsSection =
 	| {
 			type: "stroke"
 			header: string
 			subSections: Array<{
 				header: string
-				rows: EventResultsReportRowDto[]
+				rows: EventResultsReportRow[]
 			}>
 	  }
 	| {
@@ -14,11 +14,11 @@ export type EventResultsSectionDto =
 			header: string
 			subSections: Array<{
 				header: string
-				rows: EventResultsReportRowDto[]
+				rows: EventResultsReportRow[]
 			}>
 	  }
 	| {
 			type: "proxies"
 			header: string
-			rows: EventResultsReportRowDto[]
+			rows: EventResultsReportRow[]
 	  }

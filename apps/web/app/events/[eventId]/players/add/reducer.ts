@@ -4,7 +4,7 @@ import type { AdminRegistrationOptionsState } from "@/components/admin-registrat
 import type {
 	AvailableSlotGroup,
 	ValidatedClubEvent as ClubEvent,
-	ValidatedPlayer as Player,
+	Player,
 	AdminRegistration,
 	AdminRegistrationSlot,
 } from "@repo/domain/types"
@@ -99,21 +99,21 @@ export function generateAdminRegistration(
 			const player = state.selectedPlayers[index]
 			const feeIds = player ? (feesMap.get(player.id) ?? []) : []
 			return {
-				registrationId: state.registrationId ?? 0,
-				slotId: slotId ?? 0,
-				playerId: player?.id ?? 0,
+				registrationId: state.registrationId ?? -1,
+				slotId: slotId,
+				playerId: player.id,
 				feeIds,
 			}
 		})
 	}
 
 	return {
-		id: state.registrationId ?? 0,
-		userId: state.selectedPlayers[0].userId ?? 0,
+		id: state.registrationId ?? -1,
+		userId: state.selectedPlayers[0].userId ?? -1,
 		signedUpBy: state.signedUpBy,
 		courseId,
-		startingHoleId: state.selectedSlotGroup?.holeId ?? 0,
-		startingOrder: state.selectedSlotGroup?.startingOrder ?? 0,
+		startingHoleId: state.selectedSlotGroup?.holeId ?? -1,
+		startingOrder: state.selectedSlotGroup?.startingOrder ?? -1,
 		expires: state.registrationOptions.expires,
 		notes: state.registrationOptions.notes,
 		collectPayment: state.registrationOptions.sendPaymentRequest,

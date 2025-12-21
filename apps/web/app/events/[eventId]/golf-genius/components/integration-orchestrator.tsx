@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 
-import { IntegrationActionName, IntegrationLogDto, ValidatedClubEvent } from "@repo/domain/types"
+import { IntegrationActionName, IntegrationLog, ValidatedClubEvent } from "@repo/domain/types"
 
 import IntegrationActionCard from "./integration-action-card"
 
@@ -37,7 +37,7 @@ const PHASES: Phase[] = [
 	},
 ]
 
-function determinePhase(logs: IntegrationLogDto[]): PhaseInfo {
+function determinePhase(logs: IntegrationLog[]): PhaseInfo {
 	// Helper: check if action completed successfully
 	const hasSuccessfulRun = (action: IntegrationActionName) =>
 		logs.some((log) => log.actionName === action && log.isSuccessful)
@@ -90,7 +90,7 @@ function determinePhase(logs: IntegrationLogDto[]): PhaseInfo {
 	}
 }
 
-function getNextImportAction(logs: IntegrationLogDto[]): IntegrationActionName | undefined {
+function getNextImportAction(logs: IntegrationLog[]): IntegrationActionName | undefined {
 	const importOrder: IntegrationActionName[] = ["Import Scores", "Import Points", "Import Results"]
 
 	const hasSuccessfulRun = (action: IntegrationActionName) =>
@@ -111,7 +111,7 @@ interface Props {
 }
 
 export default function IntegrationOrchestrator({ selectedEvent }: Props) {
-	const [logs, setLogs] = useState<IntegrationLogDto[]>([])
+	const [logs, setLogs] = useState<IntegrationLog[]>([])
 	const [isLoadingLogs, setIsLoadingLogs] = useState(true)
 	const [phaseOverride, setPhaseOverride] = useState<1 | 2 | 3 | null>(null)
 
@@ -127,7 +127,7 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 			if (!response.ok) {
 				throw new Error(`Failed to fetch logs: ${response.status}`)
 			}
-			const allLogs = (await response.json()) as IntegrationLogDto[]
+			const allLogs = (await response.json()) as IntegrationLog[]
 			setLogs(allLogs)
 		} catch (error) {
 			console.error("Failed to fetch integration logs:", error)
@@ -246,7 +246,7 @@ function PhasePanel({
 	eventId,
 }: {
 	phase: Phase
-	logs: IntegrationLogDto[]
+	logs: IntegrationLog[]
 	isComplete: boolean
 	onActionComplete: () => void
 	eventId: number

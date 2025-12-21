@@ -1,4 +1,4 @@
-export interface PointsReportRowDto {
+export interface PointsReportRow {
 	tournamentName: string
 	position: number
 	fullName: string

@@ -135,7 +135,7 @@ export function mapToRegistrationFeeModel(entity: Record<string, any>): Registra
 
 export function toPlayer(model: PlayerModel): Player {
 	return {
-		id: model.id,
+		id: model.id!,
 		firstName: model.firstName,
 		lastName: model.lastName,
 		email: model.email,
@@ -151,7 +151,7 @@ export function toPlayer(model: PlayerModel): Player {
 
 export function toRegistration(model: RegistrationModel): Registration {
 	return {
-		id: model.id,
+		id: model.id!,
 		eventId: model.eventId,
 		startingHole: model.startingHole,
 		startingOrder: model.startingOrder,
@@ -186,7 +186,7 @@ export function toRegistrationSlot(model: RegistrationSlotModel): RegistrationSl
 
 export function toRegistrationFee(model: RegistrationFeeModel): RegistrationFee {
 	return {
-		id: model.id,
+		id: model.id!,
 		registrationSlotId: model.registrationSlotId || 0, // Provide default if undefined
 		paymentId: model.paymentId,
 		amount: model.amount,
@@ -281,7 +281,7 @@ export function hydrateSlotsWithPlayerAndHole(
 		if (row.hole) {
 			const holeModel = mapToHoleModel(row.hole)
 			slot.hole = {
-				id: holeModel.id,
+				id: holeModel.id!,
 				holeNumber: holeModel.holeNumber,
 				par: holeModel.par,
 				courseId: holeModel.courseId,

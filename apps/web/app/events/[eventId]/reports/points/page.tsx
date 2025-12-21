@@ -8,7 +8,7 @@ import { Pagination } from "@/components/pagination"
 import { ReportPage } from "@/components/report-page"
 import { useIsMobile } from "@/lib/use-is-mobile"
 import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
-import { PointsReportRowDto } from "@repo/domain/types"
+import { PointsReportRow } from "@repo/domain/types"
 import {
 	ColumnDef,
 	flexRender,
@@ -20,7 +20,7 @@ import {
 	useReactTable,
 } from "@tanstack/react-table"
 
-const PointsTable = ({ data }: { data: PointsReportRowDto[] | null }) => {
+const PointsTable = ({ data }: { data: PointsReportRow[] | null }) => {
 	const isMobile = useIsMobile()
 	const [sorting, setSorting] = useState<SortingState>([
 		{ id: "tournamentName", desc: false },
@@ -31,7 +31,7 @@ const PointsTable = ({ data }: { data: PointsReportRowDto[] | null }) => {
 	const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({})
 
 	// Define columns for TanStack Table
-	const columns: ColumnDef<PointsReportRowDto>[] = [
+	const columns: ColumnDef<PointsReportRow>[] = [
 		{
 			accessorKey: "tournamentName",
 			header: "Tournament Name",
@@ -194,7 +194,7 @@ export default function PointsReportPage() {
 	const eventId = params.eventId as string
 
 	return (
-		<ReportPage<PointsReportRowDto[]>
+		<ReportPage<PointsReportRow[]>
 			title="Points Report"
 			eventId={eventId}
 			fetchPath={`/api/events/${eventId}/reports/points`}

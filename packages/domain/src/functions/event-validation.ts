@@ -6,13 +6,6 @@ import { validateCourses } from "./course-validation"
 const hasValidIdsInEventFees = (fees: ClubEvent["eventFees"]): boolean =>
 	fees != null && fees.every((fee) => fee.id != null && fee.feeType && fee.feeType.id != null)
 
-const hasValidIdsAndGgIdsInRounds = (rounds: ClubEvent["eventRounds"]): boolean =>
-	rounds != null && rounds.every((round) => round.id != null && round.ggId != null)
-
-const hasValidIdsAndGgIdsInTournaments = (tournaments: ClubEvent["tournaments"]): boolean =>
-	tournaments != null &&
-	tournaments.every((tournament) => tournament.id != null && tournament.ggId != null)
-
 /**
  * Validates a ClubEvent ensuring all fields, including GolfGenius-related ones, are present and valid.
  * @param event The ClubEvent to validate
@@ -38,6 +31,8 @@ export function validateClubEvent(
 		if (!hasCourses || !validateCourses(event.courses!)) {
 			issues.push("The course information is incomplete.")
 		}
+	} else {
+		event.courses = [] // ensure we can always iterate courses
 	}
 
 	// Validate that all objects in collections have required ids
@@ -60,15 +55,6 @@ export function validateClubEvent(
 
 	if (requireIntegration && (!event.tournaments || event.tournaments.length === 0)) {
 		issues.push("The event is missing the tournaments from Golf Genius - run Event Sync!")
-	}
-
-	// Validate that all GolfGenius objects have required ids and ggIds
-	if (requireIntegration && !hasValidIdsAndGgIdsInRounds(event.eventRounds)) {
-		issues.push("The rounds from Golf Genius are missing ids - run Event Sync!")
-	}
-
-	if (requireIntegration && !hasValidIdsAndGgIdsInTournaments(event.tournaments)) {
-		issues.push("The tournaments from Golf Genius are missing ids - run Event Sync!")
 	}
 
 	if (issues.length > 0) {

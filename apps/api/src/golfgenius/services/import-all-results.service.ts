@@ -5,8 +5,8 @@ import {
 	PlayerMap,
 	PlayerRecord,
 	PreparedTournamentResult,
-	ProgressEventDto,
-	ProgressTournamentDto,
+	PlayerProgressEvent,
+	TournamentProgressEvent,
 	TournamentData,
 } from "@repo/domain/types"
 
@@ -48,7 +48,7 @@ export class ImportAllResultsService {
 
 	// ============= PUBLIC METHODS =============
 
-	async importAllResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
+	async importAllResultsStream(eventId: number): Promise<Observable<TournamentProgressEvent>> {
 		const clubEvent = await this.eventsService.getValidatedClubEventById(eventId)
 		const tournaments = clubEvent.tournaments.filter((t) => t.name !== "Overall")
 
@@ -61,7 +61,7 @@ export class ImportAllResultsService {
 		const progressObservable = this.progressTracker.startTournamentTracking(
 			eventId,
 			totalTournaments,
-		) as Observable<ProgressTournamentDto>
+		) as Observable<TournamentProgressEvent>
 
 		void (async () => {
 			const result: ImportResult = {
@@ -133,7 +133,9 @@ export class ImportAllResultsService {
 		return progressObservable
 	}
 
-	getProgressObservable(eventId: number): Subject<ProgressEventDto | ProgressTournamentDto> | null {
+	getProgressObservable(
+		eventId: number,
+	): Subject<PlayerProgressEvent | TournamentProgressEvent> | null {
 		return this.progressTracker.getProgressObservable(eventId)
 	}
 

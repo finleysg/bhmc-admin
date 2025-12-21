@@ -1,19 +1,22 @@
-// Type intersections ensuring required fields for validated objects in CompleteClubEvent
-
 import { ValidatedCourse } from "../courses/validated-types"
-// Consolidated ValidatedClubEvent type with all guaranteed fields and sub-object validations
+import { Player } from "../register/player"
+import { PayoutTypeValue, PayoutValue } from "./choices"
 import { ClubEvent } from "./event"
 import { EventFee, FeeType } from "./event-fee"
 import { Round } from "./round"
 import { Tournament } from "./tournament"
+import { TournamentResults } from "./tournament-results"
 
-export type ValidatedFeeType = FeeType & { id: number }
-
-export type ValidatedEventFee = EventFee & { id: number; feeType: ValidatedFeeType }
-
-export type ValidatedRound = Round & { id: number; ggId: string }
-
-export type ValidatedTournament = Tournament & { id: number; ggId: string }
+export type ValidatedEventFee = Omit<EventFee, "feeType"> & { feeType: FeeType }
+export type ValidatedTournamentResults = Omit<
+	TournamentResults,
+	"player" | "payoutType" | "payoutTo"
+> & {
+	player: Player
+	payoutType: PayoutTypeValue
+	payoutTo: PayoutValue
+}
+export type ValidatedTournamentPoints = Omit<TournamentResults, "player"> & { player: Player }
 
 /**
  * A validated variation of ClubEvent where all fields and nested ids are guaranteed to be present.
@@ -21,12 +24,11 @@ export type ValidatedTournament = Tournament & { id: number; ggId: string }
  */
 export type ValidatedClubEvent = Omit<
 	ClubEvent,
-	"id" | "ggId" | "eventRounds" | "tournaments" | "eventFees" | "courses"
+	"ggId" | "eventRounds" | "tournaments" | "eventFees" | "courses"
 > & {
-	id: number
 	ggId: string
-	eventRounds: ValidatedRound[]
-	tournaments: ValidatedTournament[]
+	eventRounds: Round[]
+	tournaments: Tournament[]
 	eventFees: ValidatedEventFee[]
 	courses?: ValidatedCourse[]
 }

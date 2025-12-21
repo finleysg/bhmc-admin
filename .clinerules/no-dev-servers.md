@@ -1,2 +1,0 @@
-DO NOT START DEV SERVERS!!
-DO NOT RUN pnpm dev!!

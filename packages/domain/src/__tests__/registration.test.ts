@@ -4,7 +4,7 @@ import {
 	getGroup,
 	getStart,
 } from "../functions/registration"
-import { ClubEvent, Hole, RegistrationSlot } from "../types"
+import { ClubEvent, Hole, RegistrationSlot, StartTypeChoices } from "../types"
 
 describe("calculateTeeTime", () => {
 	const baseEvent = {
@@ -160,7 +160,7 @@ describe("getStart", () => {
 	it("returns N/A for unknown startType", () => {
 		const event = {
 			canChoose: true,
-			startType: "UNKNOWN",
+			startType: StartTypeChoices.NONE,
 		} as ClubEvent
 		const slot = {} as RegistrationSlot
 		expect(getStart(event, slot, holes)).toBe("N/A")

@@ -4,9 +4,9 @@ import { useParams } from "next/navigation"
 
 import { ReportPage } from "@/components/report-page"
 import { formatCurrency } from "@/lib/use-report"
-import { EventResultsReportDto, EventResultsSectionDto } from "@repo/domain/types"
+import { EventResultsReport, EventResultsSection } from "@repo/domain/types"
 
-const renderSection = (section: EventResultsSectionDto) => {
+const renderSection = (section: EventResultsSection) => {
 	if (section.type === "proxies") {
 		return (
 			<div key={section.type} className="mb-8">
@@ -122,7 +122,7 @@ export default function ResultsReportPage() {
 	const eventId = params.eventId as string
 
 	return (
-		<ReportPage<EventResultsReportDto>
+		<ReportPage<EventResultsReport>
 			title="Event Results Report"
 			eventId={eventId}
 			fetchPath={`/api/events/${eventId}/reports/results`}
