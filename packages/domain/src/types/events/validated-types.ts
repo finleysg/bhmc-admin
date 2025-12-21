@@ -10,7 +10,7 @@ import { TournamentResults } from "./tournament-results"
 export type ValidatedEventFee = Omit<EventFee, "feeType"> & { feeType: FeeType }
 export type ValidatedTournamentResults = Omit<
 	TournamentResults,
-	"player | payoutType | payoutTo"
+	"player" | "payoutType" | "payoutTo"
 > & {
 	player: Player
 	payoutType: PayoutTypeValue
