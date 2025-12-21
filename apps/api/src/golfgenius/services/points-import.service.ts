@@ -6,8 +6,8 @@ import {
 	PlayerMap,
 	PlayerRecord,
 	PreparedTournamentPoints,
-	ProgressEventDto,
-	ProgressTournamentDto,
+	PlayerProgressEvent,
+	TournamentProgressEvent,
 	TournamentData,
 } from "@repo/domain/types"
 
@@ -52,7 +52,7 @@ export class PointsImportService {
 
 	// ============= STREAMING METHODS =============
 
-	async importPointsResultsStream(eventId: number): Promise<Observable<ProgressTournamentDto>> {
+	async importPointsResultsStream(eventId: number): Promise<Observable<TournamentProgressEvent>> {
 		return this.importPointsByFormatStream(
 			eventId,
 			"points",
@@ -61,7 +61,9 @@ export class PointsImportService {
 		)
 	}
 
-	getProgressObservable(eventId: number): Subject<ProgressEventDto | ProgressTournamentDto> | null {
+	getProgressObservable(
+		eventId: number,
+	): Subject<PlayerProgressEvent | TournamentProgressEvent> | null {
 		return this.progressTracker.getProgressObservable(eventId)
 	}
 
@@ -78,7 +80,7 @@ export class PointsImportService {
 			playerMap: PlayerMap,
 			onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 		) => Promise<void>,
-	): Promise<Observable<ProgressTournamentDto>> {
+	): Promise<Observable<TournamentProgressEvent>> {
 		// Query tournaments for the specified format
 		const clubEvent = await this.eventsService.getValidatedClubEventById(eventId)
 		const tournaments = clubEvent.tournaments.filter((t) => t.format === format)
@@ -92,7 +94,7 @@ export class PointsImportService {
 		const progressObservable = this.progressTracker.startTournamentTracking(
 			eventId,
 			totalTournaments,
-		) as Observable<ProgressTournamentDto>
+		) as Observable<TournamentProgressEvent>
 
 		void (async () => {
 			const result: ImportResult = {

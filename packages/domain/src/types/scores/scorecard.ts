@@ -3,9 +3,8 @@ import { IsArray, IsInt, IsOptional, IsString, ValidateNested } from "class-vali
 import { Score } from "./score"
 
 export class Scorecard {
-	@IsOptional()
 	@IsInt()
-	id?: number
+	id!: number
 
 	@IsString()
 	@IsOptional()

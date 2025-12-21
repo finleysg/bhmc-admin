@@ -1,6 +1,6 @@
 import { IsBoolean, IsOptional, IsString } from "class-validator"
 
-export class SearchPlayers {
+export class PlayerQuery {
 	@IsOptional()
 	@IsString()
 	searchText?: string

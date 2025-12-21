@@ -1,6 +1,6 @@
 import {
 	ClubEvent,
-	IntegrationLogDto,
+	IntegrationLog,
 	PreparedTournamentPoints,
 	PreparedTournamentResult,
 	Tournament,
@@ -128,7 +128,7 @@ export function mapMemberExport(member: RosterMemberSyncDto): GgCreateMemberDto 
 /**
  * Map database integration log record to IntegrationLogDto
  */
-export function mapToIntegrationLogDto(log: any): IntegrationLogDto {
+export function mapToIntegrationLog(log: any): IntegrationLog {
 	return {
 		id: log.id,
 		actionName: log.actionName,

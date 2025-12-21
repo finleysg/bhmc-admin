@@ -8,7 +8,7 @@ import { Pagination } from "@/components/pagination"
 import { ReportPage } from "@/components/report-page"
 import { useIsMobile } from "@/lib/use-is-mobile"
 import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
-import { EventReportRowDto } from "@repo/domain/types"
+import { EventReportRow } from "@repo/domain/types"
 import {
 	ColumnDef,
 	flexRender,
@@ -21,7 +21,7 @@ import {
 } from "@tanstack/react-table"
 
 // Fixed columns definition (moved outside component to prevent re-creation)
-const fixedColumnDefs: Record<string, ColumnDef<EventReportRowDto>> = {
+const fixedColumnDefs: Record<string, ColumnDef<EventReportRow>> = {
 	teamId: {
 		accessorKey: "teamId",
 		header: "Team",
@@ -79,7 +79,7 @@ const fixedColumnDefs: Record<string, ColumnDef<EventReportRowDto>> = {
 	},
 }
 
-const EventTable = ({ data }: { data: EventReportRowDto[] | null }) => {
+const EventTable = ({ data }: { data: EventReportRow[] | null }) => {
 	const isMobile = useIsMobile()
 	const [sorting, setSorting] = useState<SortingState>([{ id: "teamId", desc: false }])
 	const [globalFilter, setGlobalFilter] = useState("")
@@ -87,7 +87,7 @@ const EventTable = ({ data }: { data: EventReportRowDto[] | null }) => {
 	const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({})
 
 	// Define columns for TanStack Table
-	const columns: ColumnDef<EventReportRowDto>[] = []
+	const columns: ColumnDef<EventReportRow>[] = []
 
 	// Fixed columns
 	Object.keys(fixedColumnDefs).forEach((key) => {
@@ -218,7 +218,7 @@ export default function EventReportPage() {
 	const eventId = params.eventId as string
 
 	return (
-		<ReportPage<EventReportRowDto[]>
+		<ReportPage<EventReportRow[]>
 			title="Event Report"
 			eventId={eventId}
 			fetchPath={`/api/events/${eventId}/reports/event`}

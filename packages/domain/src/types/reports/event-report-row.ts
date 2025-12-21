@@ -1,4 +1,4 @@
-export interface EventReportRowDto {
+export interface EventReportRow {
 	teamId: string
 	course: string
 	start: string

@@ -4,9 +4,8 @@ import { IsBoolean, IsNumber, IsOptional, ValidateNested } from "class-validator
 import { EventFee } from "../events/event-fee"
 
 export class RegistrationFee {
-	@IsOptional()
 	@IsNumber()
-	id?: number
+	id!: number
 
 	@IsNumber()
 	registrationSlotId!: number

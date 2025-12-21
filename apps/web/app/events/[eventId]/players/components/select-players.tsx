@@ -1,12 +1,12 @@
 "use client"
 
-import type { ValidatedRegistration, ValidatedPlayer } from "@repo/domain/types"
+import type { ValidatedRegistration, Player } from "@repo/domain/types"
 
 export interface SelectPlayersProps {
 	group: ValidatedRegistration
-	selectedPlayers?: ValidatedPlayer[]
-	onSelect: (player: ValidatedPlayer) => void
-	onRemove: (player: ValidatedPlayer) => void
+	selectedPlayers?: Player[]
+	onSelect: (player: Player) => void
+	onRemove: (player: Player) => void
 }
 
 /**
@@ -30,13 +30,11 @@ export function SelectPlayers({
 }: SelectPlayersProps) {
 	// Extract all players from slots
 	const slots = group.slots
-	const players: ValidatedPlayer[] = slots
-		.map((slot) => slot.player)
-		.filter((p): p is ValidatedPlayer => !!p)
+	const players: Player[] = slots.map((slot) => slot.player).filter((p): p is Player => !!p)
 
-	const isSelected = (player: ValidatedPlayer) => selectedPlayers.some((p) => p.id === player.id)
+	const isSelected = (player: Player) => selectedPlayers.some((p) => p.id === player.id)
 
-	const handleChange = (player: ValidatedPlayer, checked: boolean) => {
+	const handleChange = (player: Player, checked: boolean) => {
 		if (checked) {
 			if (!isSelected(player)) {
 				onSelect(player)

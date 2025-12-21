@@ -4,9 +4,8 @@ import { Hole } from "./hole"
 import { Tee } from "./tee"
 
 export class Course {
-	@IsOptional()
 	@IsInt()
-	id?: number
+	id!: number
 
 	@IsString()
 	name!: string

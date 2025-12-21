@@ -1,4 +1,4 @@
-export interface EventResultsReportRowDto {
+export interface EventResultsReportRow {
 	flight?: string
 	position?: number
 	fullName?: string

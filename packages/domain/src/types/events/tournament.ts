@@ -1,9 +1,9 @@
-import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator"
+import { IsBoolean, IsNumber, IsString } from "class-validator"
+import type { TournamentFormatValue } from "./choices"
 
 export class Tournament {
-	@IsOptional()
 	@IsNumber()
-	id?: number
+	id!: number
 
 	@IsNumber()
 	eventId!: number
@@ -15,12 +15,11 @@ export class Tournament {
 	name!: string
 
 	@IsString()
-	format!: string
+	format!: TournamentFormatValue
 
 	@IsBoolean()
 	isNet!: boolean
 
-	@IsOptional()
 	@IsString()
-	ggId?: string
+	ggId!: string
 }

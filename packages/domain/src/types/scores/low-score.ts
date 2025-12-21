@@ -1,23 +1,22 @@
-import { IsBoolean, IsNumber, IsOptional, IsString, MaxLength } from "class-validator"
+import { IsBoolean, IsInt, IsOptional, IsString, MaxLength } from "class-validator"
 
 import { Player } from "../register/player"
 
 export class LowScore {
-	@IsOptional()
-	@IsNumber()
-	id?: number
+	@IsInt()
+	id!: number
 
-	@IsNumber()
+	@IsInt()
 	season!: number
 
 	@IsString()
 	@MaxLength(40)
 	courseName!: string
 
-	@IsNumber()
+	@IsInt()
 	score!: number
 
-	@IsNumber()
+	@IsInt()
 	playerId!: number
 
 	@IsBoolean()

@@ -1,3 +1,4 @@
+import "reflect-metadata"
 import "./global.css"
 
 import type { Metadata } from "next"

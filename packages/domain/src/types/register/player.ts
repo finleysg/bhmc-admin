@@ -1,9 +1,8 @@
 import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator"
 
 export class Player {
-	@IsOptional()
 	@IsNumber()
-	id?: number
+	id!: number
 
 	@IsString()
 	firstName!: string

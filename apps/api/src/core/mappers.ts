@@ -54,7 +54,7 @@ export function mapToChampionModel(entity: Record<string, any>): ChampionModel {
  */
 export function toChampion(model: ChampionModel): Champion {
 	return {
-		id: model.id,
+		id: model.id!,
 		season: model.season,
 		eventName: model.eventName,
 		flight: model.flight,

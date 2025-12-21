@@ -2,9 +2,8 @@ import { Transform } from "class-transformer"
 import { IsArray, IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from "class-validator"
 
 export class Refund {
-	@IsOptional()
 	@IsNumber()
-	id?: number
+	id!: number
 
 	@IsString()
 	refundCode!: string

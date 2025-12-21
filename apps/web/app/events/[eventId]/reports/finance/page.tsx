@@ -6,7 +6,7 @@ import { useParams } from "next/navigation"
 
 import { ReportPage } from "@/components/report-page"
 import { formatCurrency } from "@/lib/use-report"
-import { FinanceReportDto } from "@repo/domain/types"
+import { FinanceReportSummary } from "@repo/domain/types"
 import {
 	ColumnDef,
 	flexRender,
@@ -16,7 +16,7 @@ import {
 	useReactTable,
 } from "@tanstack/react-table"
 
-const FinanceTable = ({ data }: { data: FinanceReportDto | null }) => {
+const FinanceTable = ({ data }: { data: FinanceReportSummary | null }) => {
 	const [sorting, setSorting] = useState<SortingState>([])
 
 	// Prepare table data from the finance report
@@ -139,7 +139,7 @@ export default function FinanceReportPage() {
 	const eventId = params.eventId as string
 
 	return (
-		<ReportPage<FinanceReportDto>
+		<ReportPage<FinanceReportSummary>
 			title="Finance Report"
 			eventId={eventId}
 			fetchPath={`/api/events/${eventId}/reports/finance`}

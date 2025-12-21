@@ -1,4 +1,17 @@
-import { ClubEvent, EventFee, FeeType, Round, Tournament } from "@repo/domain/types"
+import {
+	AgeRestrictionTypeValue,
+	ClubEvent,
+	EventFee,
+	EventTypeValue,
+	FeeRestrictionValue,
+	FeeType,
+	PayoutTypeValue,
+	RegistrationTypeValue,
+	Round,
+	SkinTypeValue,
+	StartTypeValue,
+	Tournament,
+} from "@repo/domain/types"
 
 import { toCourse } from "../courses/mappers"
 import type {
@@ -156,17 +169,17 @@ export function mapToTournamentPointsModel(entity: Record<string, any>): Tournam
  */
 export function toEvent(model: EventModel): ClubEvent {
 	return {
-		id: model.id,
-		eventType: model.eventType,
+		id: model.id!,
+		eventType: model.eventType as EventTypeValue,
 		name: model.name,
 		rounds: model.rounds,
-		registrationType: model.registrationType,
-		skinsType: model.skinsType,
+		registrationType: model.registrationType as RegistrationTypeValue,
+		skinsType: model.skinsType as SkinTypeValue,
 		minimumSignupGroupSize: model.minimumSignupGroupSize,
 		maximumSignupGroupSize: model.maximumSignupGroupSize,
 		groupSize: model.groupSize,
 		totalGroups: model.totalGroups,
-		startType: model.startType,
+		startType: model.startType as StartTypeValue,
 		canChoose: Boolean(model.canChoose),
 		ghinRequired: Boolean(model.ghinRequired),
 		seasonPoints: model.seasonPoints,
@@ -186,7 +199,7 @@ export function toEvent(model: EventModel): ClubEvent {
 		teamSize: model.teamSize,
 		prioritySignupStart: model.prioritySignupStart,
 		ageRestriction: model.ageRestriction,
-		ageRestrictionType: model.ageRestrictionType,
+		ageRestrictionType: model.ageRestrictionType as AgeRestrictionTypeValue,
 		ggId: model.ggId,
 		courses: model.courses?.map(toCourse),
 		eventFees: model.eventFees?.map(toEventFee),
@@ -207,7 +220,7 @@ export function toEventFee(model: EventFeeModel): EventFee {
 		displayOrder: model.displayOrder,
 		feeTypeId: model.feeTypeId,
 		overrideAmount: model.overrideAmount,
-		overrideRestriction: model.overrideRestriction,
+		overrideRestriction: model.overrideRestriction as FeeRestrictionValue,
 		feeType: model.feeType ? toFeeType(model.feeType) : undefined,
 	}
 }
@@ -220,8 +233,8 @@ export function toFeeType(model: FeeTypeModel): FeeType {
 		id: model.id,
 		name: model.name,
 		code: model.code,
-		payout: model.payout,
-		restriction: model.restriction,
+		payout: model.payout as PayoutTypeValue,
+		restriction: model.restriction as FeeRestrictionValue,
 	}
 }
 
@@ -230,7 +243,7 @@ export function toFeeType(model: FeeTypeModel): FeeType {
  */
 export function toRound(model: RoundModel): Round {
 	return {
-		id: model.id,
+		id: model.id!,
 		eventId: model.eventId,
 		roundNumber: model.roundNumber,
 		roundDate: model.roundDate,
@@ -243,7 +256,7 @@ export function toRound(model: RoundModel): Round {
  */
 export function toTournament(model: TournamentModel): Tournament {
 	return {
-		id: model.id,
+		id: model.id!,
 		eventId: model.eventId,
 		roundId: model.roundId,
 		name: model.name,

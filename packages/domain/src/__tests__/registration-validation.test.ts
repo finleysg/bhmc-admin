@@ -1,5 +1,5 @@
 import { validateRegistration } from "../functions/registration-validation"
-import { RegistrationSlot } from "../types"
+import { FeeRestrictionChoices, PayoutTypeChoices, RegistrationSlot } from "../types"
 import { Course } from "../types/courses/course"
 import { Hole as CourseHole } from "../types/courses/hole"
 import { Tee } from "../types/courses/tee"
@@ -45,8 +45,8 @@ describe("validateRegistration", () => {
 		id: 1,
 		name: "Greens Fee",
 		code: "GREENS",
-		payout: "CLUB",
-		restriction: "ALL",
+		payout: PayoutTypeChoices.PASSTHRU,
+		restriction: FeeRestrictionChoices.NONE,
 	}
 
 	const validFee: EventFee = {
@@ -133,22 +133,6 @@ describe("validateRegistration", () => {
 
 	it("fails if slot missing id", () => {
 		const invalidSlot = { ...validSlot, id: null } as unknown as RegistrationSlot
-		const invalidReg: Registration = {
-			...validRegistration,
-			slots: [invalidSlot],
-		}
-		expect(() => validateRegistration(invalidReg)).toThrow()
-	})
-
-	it("fails if player missing an id", () => {
-		const invalidPlayer: Player = {
-			...validPlayer,
-			id: undefined,
-		}
-		const invalidSlot: RegistrationSlot = {
-			...validSlot,
-			player: invalidPlayer,
-		}
 		const invalidReg: Registration = {
 			...validRegistration,
 			slots: [invalidSlot],

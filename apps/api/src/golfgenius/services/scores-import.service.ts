@@ -1,7 +1,7 @@
 import { Observable, Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
-import { ProgressEventDto } from "@repo/domain/types"
+import { PlayerProgressEvent } from "@repo/domain/types"
 
 import { CoursesRepository } from "../../courses"
 import { ScorecardModel, ScoreModel } from "../../database/models"
@@ -299,11 +299,13 @@ export class ScoresImportService {
 		return result
 	}
 
-	getProgressObservable(eventId: number): Subject<ProgressEventDto> | null {
-		return this.progressTracker.getProgressObservable(eventId) as Subject<ProgressEventDto> | null
+	getProgressObservable(eventId: number): Subject<PlayerProgressEvent> | null {
+		return this.progressTracker.getProgressObservable(
+			eventId,
+		) as Subject<PlayerProgressEvent> | null
 	}
 
-	async importScoresForEventStream(eventId: number): Promise<Observable<ProgressEventDto>> {
+	async importScoresForEventStream(eventId: number): Promise<Observable<PlayerProgressEvent>> {
 		const event = await this.events.getValidatedClubEventById(eventId)
 		if (!event) {
 			throw new Error("No event found with an id of " + eventId.toString())
@@ -392,6 +394,6 @@ export class ScoresImportService {
 			}
 		})()
 
-		return progressObservable as Observable<ProgressEventDto>
+		return progressObservable as Observable<PlayerProgressEvent>
 	}
 }

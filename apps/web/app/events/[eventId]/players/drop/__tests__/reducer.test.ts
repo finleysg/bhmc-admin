@@ -2,13 +2,13 @@
 
 import { reducer, initialState, State, Action, translateRefundRequests } from "../reducer"
 import {
-	type ValidatedPlayer,
+	type Player,
 	type ValidatedClubEvent,
 	type ValidatedRegistration,
-	RegistrationStatus,
+	RegistrationStatusChoices,
 } from "@repo/domain/types"
 
-const mockPlayer = (id: number): ValidatedPlayer => ({
+const mockPlayer = (id: number): Player => ({
 	id,
 	firstName: `First${id}`,
 	lastName: `Last${id}`,
@@ -38,7 +38,7 @@ const mockRegistration = (playerIds: Array<number | null>): ValidatedRegistratio
 		registrationId: 1,
 		startingOrder: 1,
 		slot: 0,
-		status: RegistrationStatus.RESERVED,
+		status: RegistrationStatusChoices.RESERVED,
 	})),
 })
 

@@ -13,7 +13,7 @@ import type {
 	AdminRegistration,
 	AvailableSlotGroup,
 	RefundRequest,
-	SearchPlayers,
+	PlayerQuery,
 	ValidatedRegisteredPlayer,
 	ValidatedRegistration,
 } from "@repo/domain/types"
@@ -27,12 +27,12 @@ export class RegistrationController {
 
 	@Get("players")
 	@UseGuards(JwtAuthGuard)
-	async searchPlayers(@Query() query: SearchPlayers) {
-		const dto = {
+	async playerQuery(@Query() query: PlayerQuery) {
+		const obj = {
 			searchText: query.searchText,
 			isMember: query.isMember ?? true,
 		}
-		return this.registrationService.searchPlayers(dto)
+		return this.registrationService.searchPlayers(obj)
 	}
 
 	@Get(":eventId/groups/search")

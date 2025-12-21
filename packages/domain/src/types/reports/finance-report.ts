@@ -1,4 +1,4 @@
-export interface FinanceReportDto {
+export interface FinanceReportSummary {
 	eventId: number
 	// Inflows (Gross Collected)
 	creditCollected: number

@@ -1,9 +1,9 @@
 "use client"
 
-import { ProgressEventDto, ProgressTournamentDto } from "@repo/domain/types"
+import { PlayerProgressEvent, TournamentProgressEvent } from "@repo/domain/types"
 
 interface IntegrationProgressProps {
-	progress: ProgressEventDto | ProgressTournamentDto
+	progress: PlayerProgressEvent | TournamentProgressEvent
 }
 
 export default function IntegrationProgress({ progress }: IntegrationProgressProps) {
@@ -17,12 +17,12 @@ export default function IntegrationProgress({ progress }: IntegrationProgressPro
 	let unit = "items"
 
 	if (isTournamentProgress) {
-		const tournamentProgress = progress //as ProgressTournamentDto
+		const tournamentProgress = progress //as TournamentProgressEvent
 		current = tournamentProgress.processedTournaments
 		total = tournamentProgress.totalTournaments
 		unit = "tournaments"
 	} else if (isPlayerProgress) {
-		const playerProgress = progress //as ProgressEventDto
+		const playerProgress = progress //as PlayerProgressEvent
 		current = playerProgress.processedPlayers
 		total = playerProgress.totalPlayers
 		unit = "players"

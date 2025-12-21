@@ -1,9 +1,8 @@
 import { IsInt, IsOptional, IsString } from "class-validator"
 
 export class Tee {
-	@IsOptional()
 	@IsInt()
-	id?: number
+	id!: number
 
 	@IsInt()
 	courseId!: number

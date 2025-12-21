@@ -1,9 +1,8 @@
-import { IsInt, IsOptional } from "class-validator"
+import { IsInt } from "class-validator"
 
 export class Hole {
-	@IsOptional()
 	@IsInt()
-	id?: number
+	id!: number
 
 	@IsInt()
 	courseId!: number

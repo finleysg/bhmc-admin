@@ -3,14 +3,14 @@
 import type {
 	ValidatedClubEvent,
 	ValidatedRegistration,
-	ValidatedPlayer,
+	Player,
 	RefundRequest,
 } from "@repo/domain/types"
 
 export type State = {
 	clubEvent: ValidatedClubEvent | null
 	selectedGroup: ValidatedRegistration | undefined
-	selectedPlayers: ValidatedPlayer[]
+	selectedPlayers: Player[]
 	selectedFees: { slotId: number; registrationFeeIds: number[] }[]
 	error?: unknown
 	isLoading: boolean
@@ -23,8 +23,8 @@ export type Action =
 	| { type: "SET_GROUP"; payload: ValidatedRegistration }
 	| { type: "SET_ERROR"; payload: unknown }
 	| { type: "SET_LOADING"; payload: boolean }
-	| { type: "SELECT_PLAYER"; payload: ValidatedPlayer }
-	| { type: "REMOVE_PLAYER"; payload: ValidatedPlayer }
+	| { type: "SELECT_PLAYER"; payload: Player }
+	| { type: "REMOVE_PLAYER"; payload: Player }
 	| { type: "SET_FEES"; payload: { slotId: number; registrationFeeIds: number[] }[] }
 	| { type: "SET_PROCESSING"; payload: boolean }
 	| { type: "SET_DROP_SUCCESS"; payload: boolean }
@@ -76,9 +76,7 @@ export function reducer(state: State, action: Action): State {
 			return {
 				...state,
 				selectedGroup: action.payload,
-				selectedPlayers: action.payload.slots
-					.map((s) => s.player)
-					.filter((p): p is ValidatedPlayer => !!p),
+				selectedPlayers: action.payload.slots.map((s) => s.player).filter((p): p is Player => !!p),
 			}
 		case "SET_ERROR":
 			return { ...state, error: action.payload }

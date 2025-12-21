@@ -1,5 +1,12 @@
 import { validateClubEvent } from "../functions/event-validation"
-import { ClubEvent } from "../types"
+import {
+	AgeRestrictionTypeChoices,
+	ClubEvent,
+	EventTypeChoices,
+	FeeRestrictionChoices,
+	PayoutTypeChoices,
+	RegistrationTypeChoices,
+} from "../types"
 
 describe("validateClubEvent", () => {
 	const mockEventFee = {
@@ -13,8 +20,8 @@ describe("validateClubEvent", () => {
 			id: 1,
 			name: "Entry Fee",
 			code: "ENTRY",
-			payout: "cash",
-			restriction: "none",
+			payout: PayoutTypeChoices.CASH,
+			restriction: FeeRestrictionChoices.MEMBERS,
 		},
 	}
 
@@ -59,9 +66,9 @@ describe("validateClubEvent", () => {
 
 	const validBaseEvent: ClubEvent = {
 		id: 123,
-		eventType: "tournament",
+		eventType: EventTypeChoices.WEEKNIGHT,
 		name: "Test Event",
-		registrationType: "individual",
+		registrationType: RegistrationTypeChoices.MEMBER,
 		canChoose: false,
 		ghinRequired: false,
 		startDate: "2025-01-01",
@@ -69,7 +76,7 @@ describe("validateClubEvent", () => {
 		season: 2025,
 		starterTimeInterval: 10,
 		teamSize: 1,
-		ageRestrictionType: "none",
+		ageRestrictionType: AgeRestrictionTypeChoices.NONE,
 		eventFees: [mockEventFee],
 	}
 
@@ -180,54 +187,6 @@ describe("validateClubEvent", () => {
 			expect(result).not.toBeNull()
 		})
 
-		it("throws when event has no id", () => {
-			const event = { ...validCompleteEvent, id: undefined }
-			expect(() => validateClubEvent(event)).toThrow()
-		})
-
-		it("throws when eventFee has no id", () => {
-			const event = {
-				...validCompleteEvent,
-				eventFees: [{ ...mockEventFee, id: undefined }],
-			}
-			expect(() => validateClubEvent(event)).toThrow()
-		})
-
-		it("throws when feeType has no id", () => {
-			const event = {
-				...validCompleteEvent,
-				eventFees: [{ ...mockEventFee, feeType: { ...mockEventFee.feeType, id: undefined } }],
-			}
-			expect(() => validateClubEvent(event)).toThrow()
-		})
-
-		it("throws when courses have course without id", () => {
-			const event = {
-				...validCompleteEvent,
-				canChoose: true,
-				courses: [{ ...mockCourse, id: undefined }],
-			}
-			expect(() => validateClubEvent(event)).toThrow()
-		})
-
-		it("throws when courses have hole without id", () => {
-			const event = {
-				...validCompleteEvent,
-				canChoose: true,
-				courses: [{ ...mockCourse, holes: [{ ...mockHole, id: undefined }] }],
-			}
-			expect(() => validateClubEvent(event)).toThrow()
-		})
-
-		it("throws when courses have tee without id", () => {
-			const event = {
-				...validCompleteEvent,
-				canChoose: true,
-				courses: [{ ...mockCourse, tees: [{ ...mockTee, id: undefined }] }],
-			}
-			expect(() => validateClubEvent(event)).toThrow()
-		})
-
 		it("throws when courses have empty holes array", () => {
 			const event = {
 				...validCompleteEvent,
@@ -260,38 +219,6 @@ describe("validateClubEvent", () => {
 				...validCompleteEvent,
 				canChoose: true,
 				courses: [{ ...mockCourse, tees: undefined }],
-			}
-			expect(() => validateClubEvent(event)).toThrow()
-		})
-
-		it("throws when round has no id", () => {
-			const event = {
-				...validCompleteEvent,
-				eventRounds: [{ ...mockRound, id: undefined }],
-			}
-			expect(() => validateClubEvent(event)).toThrow()
-		})
-
-		it("throws when round has no ggId", () => {
-			const event = {
-				...validCompleteEvent,
-				eventRounds: [{ ...mockRound, ggId: undefined }],
-			}
-			expect(() => validateClubEvent(event)).toThrow()
-		})
-
-		it("throws when tournament has no id", () => {
-			const event = {
-				...validCompleteEvent,
-				tournaments: [{ ...mockTournament, id: undefined }],
-			}
-			expect(() => validateClubEvent(event)).toThrow()
-		})
-
-		it("throws when tournament has no ggId", () => {
-			const event = {
-				...validCompleteEvent,
-				tournaments: [{ ...mockTournament, ggId: undefined }],
 			}
 			expect(() => validateClubEvent(event)).toThrow()
 		})

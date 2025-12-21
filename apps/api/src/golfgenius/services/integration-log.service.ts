@@ -1,18 +1,18 @@
 import { and, eq } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
-import { IntegrationLogDto } from "@repo/domain/types"
+import { IntegrationLog } from "@repo/domain/types"
 
 import { DrizzleService } from "../../database/drizzle.service"
 import { integrationLog } from "../../database/schema/golf-genius.schema"
 import { CreateIntegrationLogDto } from "../dto/internal.dto"
-import { mapToIntegrationLogDto } from "../dto/mappers"
+import { mapToIntegrationLog } from "../dto/mappers"
 
 @Injectable()
 export class IntegrationLogService {
 	constructor(private readonly drizzle: DrizzleService) {}
 
-	async createLogEntry(dto: CreateIntegrationLogDto): Promise<IntegrationLogDto> {
+	async createLogEntry(dto: CreateIntegrationLogDto): Promise<IntegrationLog> {
 		const detailText = dto.details
 			? typeof dto.details === "string"
 				? dto.details
@@ -40,7 +40,7 @@ export class IntegrationLogService {
 		}
 	}
 
-	async getLogsByEventId(eventId: number, actionName?: string): Promise<IntegrationLogDto[]> {
+	async getLogsByEventId(eventId: number, actionName?: string): Promise<IntegrationLog[]> {
 		const conditions = [eq(integrationLog.eventId, eventId)]
 
 		if (actionName) {
@@ -53,10 +53,10 @@ export class IntegrationLogService {
 			.where(and(...conditions))
 			.orderBy(integrationLog.actionDate)
 
-		return logs.map(mapToIntegrationLogDto)
+		return logs.map(mapToIntegrationLog)
 	}
 
-	private async findLogById(id: number): Promise<IntegrationLogDto> {
+	private async findLogById(id: number): Promise<IntegrationLog> {
 		const [log] = await this.drizzle.db
 			.select()
 			.from(integrationLog)
@@ -66,6 +66,6 @@ export class IntegrationLogService {
 			throw new Error(`Integration log with id ${id} not found`)
 		}
 
-		return mapToIntegrationLogDto(log)
+		return mapToIntegrationLog(log)
 	}
 }

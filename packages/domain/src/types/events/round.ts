@@ -1,9 +1,8 @@
-import { IsDateString, IsNumber, IsOptional, IsString } from "class-validator"
+import { IsDateString, IsNumber, IsString } from "class-validator"
 
 export class Round {
-	@IsOptional()
 	@IsNumber()
-	id?: number
+	id!: number
 
 	@IsNumber()
 	eventId!: number
@@ -14,7 +13,6 @@ export class Round {
 	@IsDateString()
 	roundDate!: string
 
-	@IsOptional()
 	@IsString()
-	ggId?: string
+	ggId!: string
 }

@@ -44,7 +44,7 @@ export function mapToTeeModel(entity: Record<string, any>): TeeModel {
  */
 export function toCourse(model: CourseModel): Course {
 	return {
-		id: model.id,
+		id: model.id!,
 		name: model.name,
 		numberOfHoles: model.numberOfHoles,
 		ggId: model.ggId,
@@ -70,7 +70,7 @@ export function toTee(model: TeeModel): Tee {
  */
 export function toHole(model: HoleModel): Hole {
 	return {
-		id: model.id,
+		id: model.id!,
 		holeNumber: model.holeNumber,
 		par: model.par,
 		courseId: model.courseId,

@@ -1,10 +1,10 @@
 import { Transform } from "class-transformer"
 import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from "class-validator"
+import type { NotificationTypeValue } from "./choices"
 
 export class Payment {
-	@IsOptional()
 	@IsNumber()
-	id?: number
+	id!: number
 
 	@IsString()
 	paymentCode!: string
@@ -15,7 +15,7 @@ export class Payment {
 
 	@IsOptional()
 	@IsString()
-	notificationType?: string | null
+	notificationType?: NotificationTypeValue | null
 
 	@IsBoolean()
 	confirmed!: boolean

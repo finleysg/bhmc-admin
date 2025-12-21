@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
 
-import { EventReportRowDto } from "@repo/domain/types"
+import { EventReportRow } from "@repo/domain/types"
 
 import { addDataRows, addFixedColumns, deriveDynamicColumns, styleHeaderRow } from "../excel.utils"
 
@@ -97,7 +97,7 @@ describe("deriveDynamicColumns", () => {
 				totalScore: 85,
 				hole1: 4,
 				hole2: 5,
-			} as unknown as EventReportRowDto,
+			} as unknown as EventReportRow,
 		]
 		const fixedKeys = ["playerName", "totalScore"]
 
@@ -116,7 +116,7 @@ describe("deriveDynamicColumns", () => {
 	})
 
 	it("handles camelCase to space-separated headers", () => {
-		const rows = [{ totalGrossScore: 100 } as unknown as EventReportRowDto]
+		const rows = [{ totalGrossScore: 100 } as unknown as EventReportRow]
 
 		const columns = deriveDynamicColumns(rows, [])
 

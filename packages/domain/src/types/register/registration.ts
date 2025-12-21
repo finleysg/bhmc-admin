@@ -1,12 +1,18 @@
-import { IsDateString, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
+import {
+	IsArray,
+	IsDateString,
+	IsNumber,
+	IsOptional,
+	IsString,
+	ValidateNested,
+} from "class-validator"
 
 import { Course } from "../courses/course"
 import { RegistrationSlot } from "./registration-slot"
 
 export class Registration {
-	@IsOptional()
 	@IsNumber()
-	id?: number
+	id!: number
 
 	@IsNumber()
 	eventId!: number
@@ -47,6 +53,7 @@ export class Registration {
 	createdDate!: string
 
 	@IsOptional()
+	@IsArray()
 	@ValidateNested({ each: true })
 	slots?: RegistrationSlot[]
 }

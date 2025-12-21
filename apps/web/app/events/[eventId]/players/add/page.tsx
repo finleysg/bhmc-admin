@@ -13,7 +13,7 @@ import { useAuth } from "@/lib/auth-context"
 import type {
 	AvailableSlotGroup,
 	ValidatedClubEvent as ClubEvent,
-	ValidatedPlayer as Player,
+	Player,
 } from "@repo/domain/types"
 
 import { reducer, getInitialState } from "./reducer"

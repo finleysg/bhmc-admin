@@ -5,9 +5,9 @@ import { useEffect, useState } from "react"
 import { getActionApiPath, supportsStreaming } from "@/lib/integration-actions"
 import {
 	IntegrationActionName,
-	IntegrationLogDto,
-	ProgressEventDto,
-	ProgressTournamentDto,
+	IntegrationLog,
+	PlayerProgressEvent,
+	TournamentProgressEvent,
 } from "@repo/domain/types"
 
 import IntegrationProgress from "./integration-progress"
@@ -22,7 +22,7 @@ interface ParsedResult {
 interface Props {
 	eventId: number
 	actionName: IntegrationActionName
-	logs: IntegrationLogDto[]
+	logs: IntegrationLog[]
 	enabled: boolean
 	onComplete?: () => void
 }
@@ -34,9 +34,11 @@ export default function IntegrationActionCard({
 	enabled,
 	onComplete,
 }: Props) {
-	const [lastRun, setLastRun] = useState<IntegrationLogDto | null>(null)
+	const [lastRun, setLastRun] = useState<IntegrationLog | null>(null)
 	const [isRunning, setIsRunning] = useState(false)
-	const [progress, setProgress] = useState<ProgressEventDto | ProgressTournamentDto | null>(null)
+	const [progress, setProgress] = useState<PlayerProgressEvent | TournamentProgressEvent | null>(
+		null,
+	)
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
@@ -99,8 +101,8 @@ export default function IntegrationActionCard({
 			eventSource.onmessage = (event) => {
 				try {
 					const progressData = JSON.parse(event.data as string) as
-						| ProgressEventDto
-						| ProgressTournamentDto
+						| PlayerProgressEvent
+						| TournamentProgressEvent
 					setProgress(progressData)
 
 					if (progressData.status === "complete") {

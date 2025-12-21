@@ -13,14 +13,20 @@ import { Course } from "../courses/course"
 import { EventFee } from "./event-fee"
 import { Round } from "./round"
 import { Tournament } from "./tournament"
+import type {
+	AgeRestrictionTypeValue,
+	EventTypeValue,
+	RegistrationTypeValue,
+	SkinTypeValue,
+	StartTypeValue,
+} from "./choices"
 
 export class ClubEvent {
-	@IsOptional()
 	@IsNumber()
-	id?: number
+	id!: number
 
 	@IsString()
-	eventType!: string
+	eventType!: EventTypeValue
 
 	@IsString()
 	name!: string
@@ -30,11 +36,11 @@ export class ClubEvent {
 	rounds?: number | null
 
 	@IsString()
-	registrationType!: string
+	registrationType!: RegistrationTypeValue
 
 	@IsOptional()
 	@IsString()
-	skinsType?: string | null
+	skinsType?: SkinTypeValue | null
 
 	@IsOptional()
 	@IsNumber()
@@ -54,7 +60,7 @@ export class ClubEvent {
 
 	@IsOptional()
 	@IsString()
-	startType?: string | null
+	startType?: StartTypeValue | null
 
 	@IsBoolean()
 	canChoose!: boolean
@@ -126,7 +132,7 @@ export class ClubEvent {
 	ageRestriction?: number | null
 
 	@IsString()
-	ageRestrictionType!: string
+	ageRestrictionType!: AgeRestrictionTypeValue
 
 	@IsOptional()
 	@IsString()

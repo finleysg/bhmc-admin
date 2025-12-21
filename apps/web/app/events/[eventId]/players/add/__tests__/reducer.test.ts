@@ -1,5 +1,14 @@
 import { reducer, getInitialState, generateAdminRegistration } from "../reducer"
-import type { AvailableSlotGroup } from "@repo/domain/types"
+import {
+	AgeRestrictionTypeChoices,
+	EventTypeChoices,
+	FeeRestrictionChoices,
+	PayoutTypeChoices,
+	Player,
+	RegistrationStatusChoices,
+	RegistrationTypeChoices,
+	type AvailableSlotGroup,
+} from "@repo/domain/types"
 import type { AdminRegistrationOptionsState } from "@/components/admin-registration-options"
 
 // reducer.test.ts
@@ -9,8 +18,8 @@ function mockEvent(): import("@repo/domain/types").ValidatedClubEvent {
 		id: 1,
 		ggId: "GG1",
 		name: "Test Event",
-		eventType: "tournament",
-		registrationType: "individual",
+		eventType: EventTypeChoices.WEEKNIGHT,
+		registrationType: RegistrationTypeChoices.MEMBER,
 		ghinRequired: false,
 		startDate: "2025-01-01",
 		canChoose: true,
@@ -38,8 +47,8 @@ function mockEvent(): import("@repo/domain/types").ValidatedClubEvent {
 					id: 1,
 					name: "Entry",
 					code: "ENTRY",
-					payout: "none",
-					restriction: "none",
+					payout: PayoutTypeChoices.CASH,
+					restriction: FeeRestrictionChoices.NONE,
 				},
 			},
 			{
@@ -53,8 +62,8 @@ function mockEvent(): import("@repo/domain/types").ValidatedClubEvent {
 					id: 2,
 					name: "Other",
 					code: "OTHER",
-					payout: "none",
-					restriction: "none",
+					payout: PayoutTypeChoices.CASH,
+					restriction: FeeRestrictionChoices.NONE,
 				},
 			},
 		],
@@ -64,11 +73,11 @@ function mockEvent(): import("@repo/domain/types").ValidatedClubEvent {
 		season: 2025,
 		starterTimeInterval: 10,
 		teamSize: 1,
-		ageRestrictionType: "none",
+		ageRestrictionType: AgeRestrictionTypeChoices.NONE,
 	}
 }
 
-function mockPlayer(id = 1): import("@repo/domain/types").ValidatedPlayer {
+function mockPlayer(id = 1): Player {
 	return {
 		id,
 		userId: id + 100,
@@ -85,6 +94,7 @@ function mockPlayer(id = 1): import("@repo/domain/types").ValidatedPlayer {
 function mockSlotGroup(): AvailableSlotGroup {
 	return {
 		holeId: 100,
+		holeNumber: 1,
 		startingOrder: 1,
 		slots: [
 			{
@@ -93,15 +103,7 @@ function mockSlotGroup(): AvailableSlotGroup {
 				eventId: 1,
 				startingOrder: 1,
 				slot: 1,
-				status: "P",
-			},
-			{
-				id: 302,
-				registrationId: 0,
-				eventId: 1,
-				startingOrder: 2,
-				slot: 2,
-				status: "P",
+				status: RegistrationStatusChoices.PENDING,
 			},
 		],
 	}
@@ -289,7 +291,15 @@ describe("AddPlayer reducer", () => {
 		})
 		it("handles multiple players with different fees", () => {
 			const event = mockEvent()
-			const group = mockSlotGroup()
+			const group: AvailableSlotGroup = {
+				holeId: 100,
+				holeNumber: 1,
+				startingOrder: 1,
+				slots: [
+					{ id: 301, registrationId: 0, eventId: 1, startingOrder: 1, slot: 1, status: RegistrationStatusChoices.PENDING },
+					{ id: 302, registrationId: 0, eventId: 1, startingOrder: 2, slot: 2, status: RegistrationStatusChoices.PENDING },
+				],
+			}
 			const state = {
 				...getInitialState(),
 				event,

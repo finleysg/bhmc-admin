@@ -3,9 +3,8 @@ import { IsBoolean, IsInt, IsOptional, IsString, MaxLength } from "class-validat
 import { Player } from "../register/player"
 
 export class Champion {
-	@IsOptional()
 	@IsInt()
-	id?: number
+	id!: number
 
 	@IsInt()
 	season!: number
