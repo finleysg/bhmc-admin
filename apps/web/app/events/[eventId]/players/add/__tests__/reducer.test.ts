@@ -296,8 +296,22 @@ describe("AddPlayer reducer", () => {
 				holeNumber: 1,
 				startingOrder: 1,
 				slots: [
-					{ id: 301, registrationId: 0, eventId: 1, startingOrder: 1, slot: 1, status: RegistrationStatusChoices.PENDING },
-					{ id: 302, registrationId: 0, eventId: 1, startingOrder: 2, slot: 2, status: RegistrationStatusChoices.PENDING },
+					{
+						id: 301,
+						registrationId: 0,
+						eventId: 1,
+						startingOrder: 1,
+						slot: 1,
+						status: RegistrationStatusChoices.PENDING,
+					},
+					{
+						id: 302,
+						registrationId: 0,
+						eventId: 1,
+						startingOrder: 2,
+						slot: 2,
+						status: RegistrationStatusChoices.PENDING,
+					},
 				],
 			}
 			const state = {

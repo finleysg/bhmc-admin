@@ -1,36 +1,13 @@
-import { Type as TransformerType } from "class-transformer"
-import { IsDateString, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 import { Player } from "../register/player"
 
-export class TournamentPoints {
-	@IsNumber()
-	id!: number
-
-	@IsNumber()
-	tournamentId!: number
-
-	@IsNumber()
-	playerId!: number
-
-	@IsNumber()
-	position!: number
-
-	@IsOptional()
-	@IsNumber()
+export interface TournamentPoints {
+	id: number
+	tournamentId: number
+	playerId: number
+	position: number
 	score?: number
-
-	@IsNumber()
-	points!: number
-
-	@IsOptional()
-	@IsString()
+	points: number
 	details?: string
-
-	@IsDateString()
-	createDate!: string
-
-	@ValidateNested()
-	@TransformerType(() => Player)
-	@IsOptional()
+	createDate: string
 	player?: Player
 }

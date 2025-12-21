@@ -5,13 +5,17 @@ import {
 	EventTypeValue,
 	FeeRestrictionValue,
 	FeeType,
-	PayoutTypeValue,
+	type PayoutTypeValue,
+	type PayoutValue,
 	RegistrationTypeValue,
 	Round,
 	SkinTypeValue,
 	StartTypeValue,
 	Tournament,
+	TournamentResults,
 } from "@repo/domain/types"
+
+import { toPlayer } from "../registration/mappers"
 
 import { toCourse } from "../courses/mappers"
 import type {
@@ -263,5 +267,24 @@ export function toTournament(model: TournamentModel): Tournament {
 		format: model.format,
 		isNet: Boolean(model.isNet),
 		ggId: model.ggId,
+	}
+}
+
+/**
+ * Maps TournamentResultModel to TournamentResults domain class
+ */
+export function toTournamentResults(model: TournamentResultModel): TournamentResults {
+	return {
+		id: model.id!,
+		tournamentId: model.tournamentId,
+		flight: model.flight,
+		playerId: model.playerId,
+		teamId: model.teamId,
+		position: model.position,
+		score: model.score,
+		amount: parseFloat(model.amount),
+		payoutType: model.payoutType as PayoutTypeValue,
+		payoutTo: model.payoutTo as PayoutValue,
+		player: model.player ? toPlayer(model.player) : undefined,
 	}
 }

@@ -1,25 +1,23 @@
-import { plainToInstance } from "class-transformer"
 import { and, eq, inArray } from "drizzle-orm"
 
 import { BadRequestException, Injectable } from "@nestjs/common"
 import { validateClubEvent } from "@repo/domain/functions"
 import {
-	ClubEvent,
 	PreparedTournamentPoints,
 	PreparedTournamentResult,
+	TournamentResults,
 	ValidatedClubEvent,
 } from "@repo/domain/types"
 
 import { CoursesRepository } from "../courses"
 import { DrizzleService, player, toDbString, tournamentResult } from "../database"
-import { TournamentResultModel } from "../database/models"
 import {
 	mapPreparedPointsToTournamentPointsModel,
 	mapPreparedResultsToTournamentResultModel,
 } from "../golfgenius/dto/mappers"
 import { mapToPlayerModel } from "../registration/mappers"
 import { EventsRepository } from "./events.repository"
-import { mapToTournamentResultModel, toEvent } from "./mappers"
+import { mapToTournamentResultModel, toEvent, toTournamentResults } from "./mappers"
 
 @Injectable()
 export class EventsService {
@@ -45,10 +43,7 @@ export class EventsService {
 		clubEvent.eventRounds = await this.repository.findRoundsByEventId(eventId)
 		clubEvent.tournaments = await this.repository.findTournamentsByEventId(eventId)
 
-		return plainToInstance(
-			ClubEvent,
-			validateClubEvent(toEvent(clubEvent), requireIntegration),
-		) as ValidatedClubEvent
+		return validateClubEvent(toEvent(clubEvent), requireIntegration)
 	}
 
 	async exists(eventId: number): Promise<boolean> {
@@ -63,7 +58,7 @@ export class EventsService {
 		await this.repository.updateEvent(id, event)
 	}
 
-	async findTournamentWinners(tournamentId: number): Promise<TournamentResultModel[]> {
+	async findTournamentWinners(tournamentId: number): Promise<TournamentResults[]> {
 		const results = await this.drizzle.db
 			.select({
 				result: tournamentResult,
@@ -75,9 +70,9 @@ export class EventsService {
 			.orderBy(tournamentResult.flight)
 
 		return results.map((row) => {
-			const winner = mapToTournamentResultModel(row.result)
-			winner.player = mapToPlayerModel(row.player)
-			return winner
+			const model = mapToTournamentResultModel(row.result)
+			model.player = mapToPlayerModel(row.player)
+			return toTournamentResults(model)
 		})
 	}
 

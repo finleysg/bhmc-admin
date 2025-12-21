@@ -1,15 +1,5 @@
-import { IsBoolean, IsOptional, IsString } from "class-validator"
-
-export class PlayerQuery {
-	@IsOptional()
-	@IsString()
+export interface PlayerQuery {
 	searchText?: string
-
-	@IsOptional()
-	@IsBoolean()
 	isMember?: boolean
-
-	@IsOptional()
-	@IsBoolean()
 	includeGroup?: boolean
 }

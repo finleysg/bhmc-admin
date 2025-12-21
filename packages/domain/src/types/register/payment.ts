@@ -1,58 +1,21 @@
-import { Transform } from "class-transformer"
-import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from "class-validator"
 import type { NotificationTypeValue } from "./choices"
 
-export class Payment {
-	@IsNumber()
-	id!: number
-
-	@IsString()
-	paymentCode!: string
-
-	@IsOptional()
-	@IsString()
+export interface Payment {
+	id: number
+	paymentCode: string
 	paymentKey?: string | null
-
-	@IsOptional()
-	@IsString()
 	notificationType?: NotificationTypeValue | null
-
-	@IsBoolean()
-	confirmed!: boolean
-
-	@IsNumber()
-	eventId!: number
-
-	@IsNumber()
-	userId!: number
-
-	@IsNumber()
-	@Transform(({ value }: { value: unknown }) =>
-		typeof value === "string" ? parseFloat(value) : value,
-	)
-	paymentAmount!: number
-
-	@IsNumber()
-	@Transform(({ value }: { value: unknown }) =>
-		typeof value === "string" ? parseFloat(value) : value,
-	)
-	transactionFee!: number
-
-	@IsDateString()
-	paymentDate!: string
-
-	@IsOptional()
-	@IsDateString()
+	confirmed: boolean
+	eventId: number
+	userId: number
+	paymentAmount: number
+	transactionFee: number
+	paymentDate: string
 	confirmDate?: string | null
 }
 
-export class AmountDue {
-	@IsNumber()
-	subtotal!: number
-
-	@IsNumber()
-	transactionFee!: number
-
-	@IsNumber()
-	total!: number
+export interface AmountDue {
+	subtotal: number
+	transactionFee: number
+	total: number
 }

@@ -1,18 +1,7 @@
-import { IsBoolean, IsInt } from "class-validator"
-
-export class Score {
-	@IsInt()
-	id!: number
-
-	@IsInt()
-	scoreCardId!: number
-
-	@IsInt()
-	score!: number
-
-	@IsBoolean()
-	isNet!: boolean
-
-	@IsInt()
-	holeId!: number
+export interface Score {
+	id: number
+	scoreCardId: number
+	score: number
+	isNet: boolean
+	holeId: number
 }

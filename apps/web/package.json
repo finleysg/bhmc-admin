@@ -34,7 +34,6 @@
 	},
 	"dependencies": {
 		"@headlessui/react": "^2.2.9",
-		"reflect-metadata": "^0.2.2",
 		"@heroicons/react": "^2.2.0",
 		"@repo/domain": "workspace:*",
 		"@tanstack/react-table": "^8.21.3",
