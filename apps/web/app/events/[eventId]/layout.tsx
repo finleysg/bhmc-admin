@@ -4,12 +4,11 @@ import { useEffect, useState } from "react"
 
 import { useParams, useRouter } from "next/navigation"
 
-import { useSession } from "@/lib/auth-client"
+import { useAuth } from "@/lib/auth-context"
 import { ClubEvent } from "@repo/domain/types"
 
 export default function EventLayout({ children }: { children: React.ReactNode }) {
-	const { data: session, isPending } = useSession()
-	const signedIn = !!session?.user
+	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const router = useRouter()
 	const params = useParams()
 	const eventId = params.eventId as string
@@ -17,13 +16,6 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 	const [event, setEvent] = useState<ClubEvent | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
-
-	useEffect(() => {
-		if (!signedIn && !isPending) {
-			router.push("/sign-in")
-			return
-		}
-	}, [signedIn, isPending, router])
 
 	useEffect(() => {
 		if (!signedIn || !eventId) return

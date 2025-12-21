@@ -1,11 +1,10 @@
 "use client"
 
-import { useSession } from "../lib/auth-client"
+import { useAuth } from "../lib/auth-context"
 import ActionCard from "./components/action-card"
 
 export default function Home() {
-	const { data: session } = useSession()
-	const signedIn = !!session?.user
+	const { isAuthenticated: signedIn } = useAuth()
 
 	return (
 		<main className="min-h-screen flex justify-center p-8">

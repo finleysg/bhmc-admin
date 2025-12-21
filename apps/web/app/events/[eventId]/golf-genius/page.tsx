@@ -4,28 +4,20 @@ import { useEffect, useState } from "react"
 
 import { useParams, useRouter } from "next/navigation"
 
-import { useSession } from "@/lib/auth-client"
-import { ClubEvent } from "@repo/domain/types"
+import { useAuth } from "@/lib/auth-context"
+import { ValidatedClubEvent } from "@repo/domain/types"
 
 import IntegrationOrchestrator from "./components/integration-orchestrator"
 
 export default function GolfGeniusIntegrationPage() {
-	const { data: session, isPending } = useSession()
-	const signedIn = !!session?.user
+	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const router = useRouter()
 	const params = useParams()
 	const eventId = params.eventId as string
 
-	const [event, setEvent] = useState<ClubEvent | null>(null)
+	const [event, setEvent] = useState<ValidatedClubEvent | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
-
-	// Redirect if not authenticated
-	useEffect(() => {
-		if (!signedIn && !isPending) {
-			router.push("/sign-in")
-		}
-	}, [signedIn, isPending, router])
 
 	// Fetch event data
 	useEffect(() => {
@@ -37,7 +29,7 @@ export default function GolfGeniusIntegrationPage() {
 				if (!response.ok) {
 					throw new Error(`Failed to fetch event: ${response.status}`)
 				}
-				const eventData = (await response.json()) as ClubEvent
+				const eventData = (await response.json()) as ValidatedClubEvent
 				setEvent(eventData)
 			} catch (err) {
 				console.error("Error fetching event:", err)
@@ -58,8 +50,8 @@ export default function GolfGeniusIntegrationPage() {
 		)
 	}
 
-	if (!signedIn && !isPending) {
-		return null // Redirecting
+	if (!signedIn) {
+		return null // Middleware will redirect
 	}
 
 	if (error || !event) {

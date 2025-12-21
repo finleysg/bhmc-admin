@@ -145,7 +145,7 @@ describe("AddPlayer reducer", () => {
 			const group = mockSlotGroup()
 			state = reducer(state, {
 				type: "SELECT_SLOTS",
-				payload: { slotIds: group.slots.map((s) => s.id), group },
+				payload: { slotIds: group.slots.map((s) => s.id ?? 0), group },
 			})
 			expect(state.canSelectFees).toBe(true)
 		})
@@ -162,7 +162,7 @@ describe("AddPlayer reducer", () => {
 			const group = mockSlotGroup()
 			state = reducer(state, {
 				type: "SELECT_SLOTS",
-				payload: { slotIds: group.slots.map((s) => s.id), group },
+				payload: { slotIds: group.slots.map((s) => s.id ?? -1), group },
 			})
 			const fees = [{ playerId: 1, eventFeeId: event.eventFees[0].id }]
 			state = reducer(state, { type: "SET_FEES", payload: fees })
@@ -175,7 +175,7 @@ describe("AddPlayer reducer", () => {
 			const group = mockSlotGroup()
 			state = reducer(state, {
 				type: "SELECT_SLOTS",
-				payload: { slotIds: group.slots.map((s) => s.id), group },
+				payload: { slotIds: group.slots.map((s) => s.id ?? -1), group },
 			})
 			const fees = [{ playerId: 1, eventFeeId: event.eventFees[0].id }]
 			state = reducer(state, { type: "SET_FEES", payload: fees })
@@ -189,7 +189,7 @@ describe("AddPlayer reducer", () => {
 			const group = mockSlotGroup()
 			state = reducer(state, {
 				type: "SELECT_SLOTS",
-				payload: { slotIds: group.slots.map((s) => s.id), group },
+				payload: { slotIds: group.slots.map((s) => s.id ?? -1), group },
 			})
 			const fees = [{ playerId: 1, eventFeeId: event.eventFees[0].id }]
 			state = reducer(state, { type: "SET_FEES", payload: fees })
@@ -224,7 +224,7 @@ describe("AddPlayer reducer", () => {
 				selectedFees: [{ playerId: 1, eventFeeId: event.eventFees[0].id }],
 			}
 			const reg = generateAdminRegistration(state)
-			expect(reg.courseId).toBe(event.courses[0].id)
+			expect(reg?.courseId).toBe(event.courses?.[0].id)
 		})
 		it("handles event without canChoose (courseId = null)", () => {
 			const event = { ...mockEvent(), canChoose: false }
@@ -239,7 +239,7 @@ describe("AddPlayer reducer", () => {
 				selectedFees: [{ playerId: 1, eventFeeId: event.eventFees[0].id }],
 			}
 			const reg = generateAdminRegistration(state)
-			expect(reg.courseId).toBeNull()
+			expect(reg?.courseId).toBeNull()
 		})
 		it("maps selectedFees to slots correctly", () => {
 			const event = mockEvent()
@@ -254,7 +254,7 @@ describe("AddPlayer reducer", () => {
 				selectedFees: [{ playerId: 1, eventFeeId: event.eventFees[0].id }],
 			}
 			const reg = generateAdminRegistration(state)
-			expect(reg.slots[0].feeIds).toContain(event.eventFees[0].id)
+			expect(reg?.slots[0].feeIds).toContain(event.eventFees[0].id)
 		})
 		it("builds slots array with correct structure", () => {
 			const event = mockEvent()
@@ -269,8 +269,8 @@ describe("AddPlayer reducer", () => {
 				selectedFees: [{ playerId: 1, eventFeeId: event.eventFees[0].id }],
 			}
 			const reg = generateAdminRegistration(state)
-			expect(reg.slots.length).toBe(group.slots.length)
-			expect(reg.slots[0].slotId).toBe(group.slots[0].id)
+			expect(reg?.slots.length).toBe(group.slots.length)
+			expect(reg?.slots[0].slotId).toBe(group.slots[0].id)
 		})
 		it("handles players with no fees", () => {
 			const event = mockEvent()
@@ -285,7 +285,7 @@ describe("AddPlayer reducer", () => {
 				selectedFees: [],
 			}
 			const reg = generateAdminRegistration(state)
-			expect(reg.slots[0].feeIds).toEqual([])
+			expect(reg?.slots[0].feeIds).toEqual([])
 		})
 		it("handles multiple players with different fees", () => {
 			const event = mockEvent()
@@ -303,8 +303,8 @@ describe("AddPlayer reducer", () => {
 				],
 			}
 			const reg = generateAdminRegistration(state)
-			expect(reg.slots[0].feeIds).toContain(event.eventFees[0].id)
-			expect(reg.slots[1].feeIds).toContain(event.eventFees[1].id)
+			expect(reg?.slots[0].feeIds).toContain(event.eventFees[0].id)
+			expect(reg?.slots[1].feeIds).toContain(event.eventFees[1].id)
 		})
 		it("uses signedUpBy from state", () => {
 			const event = mockEvent()
@@ -320,7 +320,7 @@ describe("AddPlayer reducer", () => {
 				selectedFees: [{ playerId: 1, eventFeeId: event.eventFees[0].id }],
 			}
 			const reg = generateAdminRegistration(state)
-			expect(reg.signedUpBy).toBe("admin")
+			expect(reg?.signedUpBy).toBe("admin")
 		})
 		it("uses registrationOptions correctly", () => {
 			const event = mockEvent()
@@ -337,9 +337,9 @@ describe("AddPlayer reducer", () => {
 				selectedFees: [{ playerId: 1, eventFeeId: event.eventFees[0].id }],
 			}
 			const reg = generateAdminRegistration(state)
-			expect(reg.expires).toBe(options.expires)
-			expect(reg.notes).toBe(options.notes)
-			expect(reg.collectPayment).toBe(options.sendPaymentRequest)
+			expect(reg?.expires).toBe(options.expires)
+			expect(reg?.notes).toBe(options.notes)
+			expect(reg?.collectPayment).toBe(options.sendPaymentRequest)
 		})
 		it("handles selectedSlotGroup with multiple slots", () => {
 			const event = mockEvent()
@@ -357,7 +357,7 @@ describe("AddPlayer reducer", () => {
 				],
 			}
 			const reg = generateAdminRegistration(state)
-			expect(reg.slots.length).toBe(group.slots.length)
+			expect(reg?.slots.length).toBe(group.slots.length)
 		})
 	})
 
@@ -409,7 +409,7 @@ describe("AddPlayer reducer", () => {
 			state = reducer(state, { type: "ADD_PLAYER", payload: player })
 			state = reducer(state, {
 				type: "SELECT_SLOTS",
-				payload: { slotIds: group.slots.map((s) => s.id), group },
+				payload: { slotIds: group.slots.map((s) => s.id ?? -1), group },
 			})
 			state = reducer(state, {
 				type: "SET_FEES",
@@ -431,7 +431,7 @@ describe("AddPlayer reducer", () => {
 			state = reducer(state, { type: "ADD_PLAYER", payload: player })
 			state = reducer(state, {
 				type: "SELECT_SLOTS",
-				payload: { slotIds: group.slots.map((s) => s.id), group },
+				payload: { slotIds: group.slots.map((s) => s.id ?? -1), group },
 			})
 			state = reducer(state, {
 				type: "SET_FEES",
@@ -462,7 +462,7 @@ describe("AddPlayer reducer", () => {
 			state = reducer(state, { type: "ADD_PLAYER", payload: player })
 			state = reducer(state, {
 				type: "SELECT_SLOTS",
-				payload: { slotIds: group.slots.map((s) => s.id), group },
+				payload: { slotIds: group.slots.map((s) => s.id ?? -1), group },
 			})
 			state = reducer(state, { type: "SET_REGISTRATION_ID", payload: 123 })
 			state = reducer(state, { type: "SELECT_SLOTS", payload: { slotIds: [], group: undefined } })
@@ -476,12 +476,12 @@ describe("AddPlayer reducer", () => {
 			state = reducer(state, { type: "ADD_PLAYER", payload: player })
 			state = reducer(state, {
 				type: "SELECT_SLOTS",
-				payload: { slotIds: group.slots.map((s) => s.id), group },
+				payload: { slotIds: group.slots.map((s) => s.id ?? -1), group },
 			})
 			const fees = [{ playerId: player.id, eventFeeId: event.eventFees[0].id }]
 			state = reducer(state, { type: "SET_FEES", payload: fees })
 			state = reducer(state, { type: "SET_REGISTRATION_ID", payload: 123 })
-			expect(state.adminRegistration.slots[0].feeIds).toContain(event.eventFees[0].id)
+			expect(state.adminRegistration?.slots[0].feeIds).toContain(event.eventFees[0].id)
 		})
 	})
 
@@ -525,7 +525,7 @@ describe("AddPlayer reducer", () => {
 		const group = mockSlotGroup()
 		state = reducer(state, {
 			type: "SELECT_SLOTS",
-			payload: { slotIds: group.slots.map((s) => s.id), group },
+			payload: { slotIds: group.slots.map((s) => s.id ?? -1), group },
 		})
 		expect(state.selectedSlotGroup).toEqual(group)
 	})
@@ -538,7 +538,7 @@ describe("AddPlayer reducer", () => {
 		state = reducer(state, { type: "ADD_PLAYER", payload: player })
 		state = reducer(state, {
 			type: "SELECT_SLOTS",
-			payload: { slotIds: group.slots.map((s) => s.id), group },
+			payload: { slotIds: group.slots.map((s) => s.id ?? -1), group },
 		})
 		const fees = [{ playerId: player.id, eventFeeId: event.eventFees[0].id }]
 		state = reducer(state, { type: "SET_FEES", payload: fees })
@@ -553,7 +553,7 @@ describe("AddPlayer reducer", () => {
 		state = reducer(state, { type: "ADD_PLAYER", payload: player })
 		state = reducer(state, {
 			type: "SELECT_SLOTS",
-			payload: { slotIds: group.slots.map((s) => s.id), group },
+			payload: { slotIds: group.slots.map((s) => s.id ?? -1), group },
 		})
 		state = reducer(state, {
 			type: "SET_FEES",
@@ -562,7 +562,7 @@ describe("AddPlayer reducer", () => {
 		state = reducer(state, { type: "SET_REGISTRATION_ID", payload: 555 })
 		expect(state.registrationId).toBe(555)
 		expect(state.canCompleteRegistration).toBe(true)
-		expect(state.adminRegistration.slots.every((slot) => slot.registrationId === 555)).toBe(true)
+		expect(state.adminRegistration?.slots.every((slot) => slot.registrationId === 555)).toBe(true)
 	})
 
 	it("handles SET_REGISTRATION_OPTIONS", () => {

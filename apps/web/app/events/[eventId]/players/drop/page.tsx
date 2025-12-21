@@ -51,7 +51,7 @@ export default function DropPlayerPage() {
 					.map((slot) => slot.id)
 
 				const dropResponse = await fetch(
-					`/api/registration/drop-players?registrationId=${state.selectedGroup.id}`,
+					`/api/registration/drop-players?registrationId=${state.selectedGroup?.id}`,
 					{
 						method: "POST",
 						headers: { "Content-Type": "application/json" },
@@ -232,7 +232,7 @@ export default function DropPlayerPage() {
 							</div>
 						)}
 
-						{state.error && (
+						{state.error !== undefined && (
 							<div className="mb-6">
 								<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
 								<div className="alert alert-error text-xs mb-2">

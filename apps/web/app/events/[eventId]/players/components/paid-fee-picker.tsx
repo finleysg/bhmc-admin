@@ -44,8 +44,10 @@ export function PaidFeePicker({ clubEvent, slots, onChange }: PaidFeePickerProps
 		// Each playerFeesList item corresponds to the slot with the same player.
 		return playerFeesList.map((pf) => {
 			return {
-				slotId: slots.find((s) => s.player.id === pf.playerId).id,
-				registrationFeeIds: pf.fees.filter((f) => f.isSelected).map((f) => f.registrationFeeId),
+				slotId: slots.find((s) => s.player.id === pf.playerId)?.id ?? 0,
+				registrationFeeIds: pf.fees
+					.filter((f) => f.isSelected)
+					.map((f) => f.registrationFeeId ?? 0),
 			}
 		})
 	}

@@ -48,3 +48,6 @@ export type { SearchPlayers } from "./register/search-players"
 export type { Payment } from "./register/payment"
 export type { Refund, RefundRequest } from "./register/refund"
 export type * from "./register/validated-types"
+
+export type { DjangoUser } from "./auth/auth"
+export type { DjangoUserResponse } from "./auth/auth"

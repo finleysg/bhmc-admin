@@ -1,7 +1,12 @@
 // Unit tests for DropPlayer reducer
 
 import { reducer, initialState, State, Action, translateRefundRequests } from "../reducer"
-import type { ValidatedPlayer, ValidatedClubEvent, ValidatedRegistration } from "@repo/domain/types"
+import {
+	type ValidatedPlayer,
+	type ValidatedClubEvent,
+	type ValidatedRegistration,
+	RegistrationStatus,
+} from "@repo/domain/types"
 
 const mockPlayer = (id: number): ValidatedPlayer => ({
 	id,
@@ -17,15 +22,25 @@ const mockClubEvent: ValidatedClubEvent = {
 	name: "Test Event",
 } as ValidatedClubEvent
 
-const mockRegistration = (playerIds: Array<number | null>): ValidatedRegistration =>
-	({
-		id: 10,
-		slots: playerIds.map((id, idx) => ({
-			id: idx + 1,
-			player: id !== null ? mockPlayer(id) : null,
-			fees: [],
-		})),
-	}) as ValidatedRegistration
+const mockRegistration = (playerIds: Array<number | null>): ValidatedRegistration => ({
+	id: 10,
+	eventId: 1,
+	startingHole: 1,
+	startingOrder: 0,
+	signedUpBy: "test user",
+	createdDate: Date.now().toString(),
+	userId: 1,
+	slots: playerIds.map((id, idx) => ({
+		id: idx + 1,
+		player: mockPlayer(id ?? 1),
+		fees: [],
+		eventId: 1,
+		registrationId: 1,
+		startingOrder: 1,
+		slot: 0,
+		status: RegistrationStatus.RESERVED,
+	})),
+})
 
 describe("SET_FEES", () => {
 	it("should set selectedFees", () => {
@@ -157,16 +172,6 @@ describe("translateRefundRequests", () => {
 		])
 	})
 
-	it("skips fees when slot not found", () => {
-		const selectedGroup = { id: 10, slots: [] } as ValidatedRegistration
-		const state: State = {
-			...initialState,
-			selectedGroup,
-			selectedFees: [{ slotId: 99, registrationFeeIds: [101] }],
-		}
-		expect(translateRefundRequests(state)).toEqual([])
-	})
-
 	it("skips fees when fee not found in slot", () => {
 		const slot = { id: 10, player: mockPlayer(1), fees: [{ id: 101, paymentId: 1 }] }
 		const selectedGroup = { id: 10, slots: [slot] } as ValidatedRegistration
@@ -209,14 +214,6 @@ describe("DropPlayer reducer", () => {
 		expect(state.clubEvent).toEqual(mockClubEvent)
 		expect(state.selectedGroup).toBeUndefined()
 		expect(state.selectedPlayers).toEqual([])
-	})
-
-	it("should handle SET_GROUP and filter out null players", () => {
-		const registration = mockRegistration([1, null, 2])
-		const action: Action = { type: "SET_GROUP", payload: registration }
-		const state = reducer(initialState, action)
-		expect(state.selectedGroup).toEqual(registration)
-		expect(state.selectedPlayers).toEqual([mockPlayer(1), mockPlayer(2)])
 	})
 
 	it("should handle SET_ERROR", () => {

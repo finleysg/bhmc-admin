@@ -9,7 +9,7 @@ import { EventFeePicker } from "@/app/events/[eventId]/players/components/event-
 import { PlayerSearch } from "@/app/events/[eventId]/players/components/player-search"
 import { ReserveSpot } from "@/app/events/[eventId]/players/components/reserve-spot"
 import { SelectAvailable } from "@/app/events/[eventId]/players/components/select-available"
-import { useSession } from "@/lib/auth-client"
+import { useAuth } from "@/lib/auth-context"
 import type {
 	AvailableSlotGroup,
 	ValidatedClubEvent as ClubEvent,
@@ -19,23 +19,22 @@ import type {
 import { reducer, getInitialState } from "./reducer"
 
 export default function AddPlayerPage() {
-	const { data: session, isPending } = useSession()
-	const signedIn = !!session?.user
+	const { user, isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const { eventId } = useParams<{ eventId: string }>()
 	const router = useRouter()
 
 	const [state, dispatch] = useReducer(reducer, getInitialState())
 
 	useEffect(() => {
-		if (session?.user) {
+		if (user) {
 			dispatch({
 				type: "SET_USER",
 				payload: {
-					signedUpBy: session.user.name || "Admin",
+					signedUpBy: `${user.firstName} ${user.lastName}`.trim() || "Admin",
 				},
 			})
 		}
-	}, [session?.user])
+	}, [user])
 
 	// Fetch event details
 	useEffect(() => {
@@ -149,12 +148,12 @@ export default function AddPlayerPage() {
 							/>
 						</div>
 
-						{state.canSelectGroup && (
+						{state.canSelectGroup && state.event && (
 							<div className="mb-6">
 								<h4 className="font-semibold mb-2">Find an Open Spot</h4>
 								<SelectAvailable
 									players={state.selectedPlayers.length}
-									courses={state.event?.courses || []}
+									courses={state.event?.courses ?? []}
 									clubEvent={state.event}
 									onError={handleError}
 									onSlotSelect={handleSlotSelect}
@@ -180,7 +179,7 @@ export default function AddPlayerPage() {
 								<h4 className="font-semibold mb-2">Hold This Spot</h4>{" "}
 								<ReserveSpot
 									eventId={eventId}
-									selectedSlotIds={state.selectedSlotGroup?.slots.map((s) => s.id) ?? []}
+									selectedSlotIds={state.selectedSlotGroup?.slots.map((s) => s.id ?? 0) ?? []}
 									onReserved={handleReserved}
 									onError={handleError}
 									disabled={false}
