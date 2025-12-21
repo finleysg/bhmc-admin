@@ -12,7 +12,7 @@ export type State = {
 	selectedGroup: ValidatedRegistration | undefined
 	selectedPlayers: ValidatedPlayer[]
 	selectedFees: { slotId: number; registrationFeeIds: number[] }[]
-	error: unknown
+	error?: unknown
 	isLoading: boolean
 	dropSuccess: boolean
 	isProcessing: boolean

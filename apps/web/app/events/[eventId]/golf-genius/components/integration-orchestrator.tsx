@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 
-import { ClubEvent, IntegrationActionName, IntegrationLogDto } from "@repo/domain/types"
+import { IntegrationActionName, IntegrationLogDto, ValidatedClubEvent } from "@repo/domain/types"
 
 import IntegrationActionCard from "./integration-action-card"
 
@@ -107,7 +107,7 @@ function getNextImportAction(logs: IntegrationLogDto[]): IntegrationActionName |
 }
 
 interface Props {
-	selectedEvent: ClubEvent
+	selectedEvent: ValidatedClubEvent
 }
 
 export default function IntegrationOrchestrator({ selectedEvent }: Props) {

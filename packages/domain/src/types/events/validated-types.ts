@@ -21,8 +21,9 @@ export type ValidatedTournament = Tournament & { id: number; ggId: string }
  */
 export type ValidatedClubEvent = Omit<
 	ClubEvent,
-	"ggId" | "eventRounds" | "tournaments" | "eventFees" | "courses"
+	"id" | "ggId" | "eventRounds" | "tournaments" | "eventFees" | "courses"
 > & {
+	id: number
 	ggId: string
 	eventRounds: ValidatedRound[]
 	tournaments: ValidatedTournament[]

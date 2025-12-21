@@ -67,7 +67,7 @@ export function getInitialState(): AddPlayerState {
 
 export function generateAdminRegistration(
 	state: Omit<AddPlayerState, "adminRegistration"> & { registrationId: number | null },
-): AdminRegistration {
+): AdminRegistration | null {
 	// null until we can register
 	if (!state.canCompleteRegistration) {
 		return null
@@ -76,8 +76,8 @@ export function generateAdminRegistration(
 	// Derive courseId from selectedSlotGroup and event
 	let courseId: number | null = null
 	if (state.event?.canChoose) {
-		for (const course of state.event.courses) {
-			if (course.holes?.some((h) => h.id === state.selectedSlotGroup.holeId)) {
+		for (const course of state.event.courses ?? []) {
+			if (course.holes?.some((h) => h.id === state.selectedSlotGroup?.holeId)) {
 				courseId = course.id
 				break
 			}
@@ -100,8 +100,8 @@ export function generateAdminRegistration(
 			const feeIds = player ? (feesMap.get(player.id) ?? []) : []
 			return {
 				registrationId: state.registrationId ?? 0,
-				slotId,
-				playerId: player?.id || 0,
+				slotId: slotId ?? 0,
+				playerId: player?.id ?? 0,
 				feeIds,
 			}
 		})
@@ -109,7 +109,7 @@ export function generateAdminRegistration(
 
 	return {
 		id: state.registrationId ?? 0,
-		userId: state.selectedPlayers[0].userId,
+		userId: state.selectedPlayers[0].userId ?? 0,
 		signedUpBy: state.signedUpBy,
 		courseId,
 		startingHoleId: state.selectedSlotGroup?.holeId ?? 0,
@@ -137,7 +137,7 @@ export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 			const nextState = {
 				...state,
 				selectedPlayers: newPlayers,
-				canSelectGroup: newPlayers.length > 0 && state.event?.canChoose,
+				canSelectGroup: (newPlayers.length > 0 && state.event?.canChoose) ?? false,
 				canSelectFees:
 					newPlayers.length > 0 &&
 					(state.event?.canChoose ? state.selectedSlotGroup !== null : true),
@@ -159,7 +159,7 @@ export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 			const nextState = {
 				...state,
 				selectedPlayers: newPlayers,
-				canSelectGroup: newPlayers.length > 0 && state.event?.canChoose,
+				canSelectGroup: (newPlayers.length > 0 && state.event?.canChoose) ?? false,
 				canSelectFees:
 					newPlayers.length > 0 &&
 					(state.event?.canChoose ? state.selectedSlotGroup !== null : true),

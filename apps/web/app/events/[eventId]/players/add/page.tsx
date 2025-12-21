@@ -30,7 +30,7 @@ export default function AddPlayerPage() {
 			dispatch({
 				type: "SET_USER",
 				payload: {
-					signedUpBy: `${user.first_name} ${user.last_name}`.trim() || "Admin",
+					signedUpBy: `${user.firstName} ${user.lastName}`.trim() || "Admin",
 				},
 			})
 		}
@@ -148,12 +148,12 @@ export default function AddPlayerPage() {
 							/>
 						</div>
 
-						{state.canSelectGroup && (
+						{state.canSelectGroup && state.event && (
 							<div className="mb-6">
 								<h4 className="font-semibold mb-2">Find an Open Spot</h4>
 								<SelectAvailable
 									players={state.selectedPlayers.length}
-									courses={state.event?.courses || []}
+									courses={state.event?.courses ?? []}
 									clubEvent={state.event}
 									onError={handleError}
 									onSlotSelect={handleSlotSelect}
@@ -179,7 +179,7 @@ export default function AddPlayerPage() {
 								<h4 className="font-semibold mb-2">Hold This Spot</h4>{" "}
 								<ReserveSpot
 									eventId={eventId}
-									selectedSlotIds={state.selectedSlotGroup?.slots.map((s) => s.id) ?? []}
+									selectedSlotIds={state.selectedSlotGroup?.slots.map((s) => s.id ?? 0) ?? []}
 									onReserved={handleReserved}
 									onError={handleError}
 									disabled={false}

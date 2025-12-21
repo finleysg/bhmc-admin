@@ -61,7 +61,7 @@ export async function fetchWithAuth({
 				Authorization: `Token ${token}`,
 				"Content-Type": "application/json",
 			},
-			...(body && { body: JSON.stringify(body) }),
+			...(body ? { body: JSON.stringify(body) } : {}),
 		})
 
 		if (!response.ok) {
