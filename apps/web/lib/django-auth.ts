@@ -6,16 +6,8 @@
  * automatically includes them in subsequent requests.
  */
 
-export interface DjangoUser {
-	id: number
-	email: string
-	first_name: string
-	last_name: string
-	is_active: boolean
-	is_staff: boolean
-	ghin: string | null
-	birth_date: string | null
-}
+import { transformDjangoUser } from "@repo/domain/functions"
+import { DjangoUser, DjangoUserResponse } from "@repo/domain/types"
 
 interface LoginError {
 	non_field_errors?: string[]
@@ -101,8 +93,11 @@ export async function getCurrentUser(): Promise<DjangoUser | null> {
 			return null
 		}
 
-		const user = (await response.json()) as DjangoUser
-		return user
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		const user = await response.json()
+		const djangoUser = user as DjangoUserResponse
+
+		return transformDjangoUser(djangoUser)
 	} catch (error) {
 		console.error("Get current user error:", error)
 		return null

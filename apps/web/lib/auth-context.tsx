@@ -2,12 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
-import {
-	DjangoUser,
-	getCurrentUser,
-	login as djangoLogin,
-	logout as djangoLogout,
-} from "./django-auth"
+import { getCurrentUser, login as djangoLogin, logout as djangoLogout } from "./django-auth"
+import { DjangoUser } from "@repo/domain/types"
 
 interface AuthContextType {
 	user: DjangoUser | null

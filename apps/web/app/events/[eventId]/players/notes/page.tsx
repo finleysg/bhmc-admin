@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 
-import { useAuth } from "../../../../../lib/auth-context"
+import { useAuth } from "@/lib/auth-context"
 
 export default function NotesPlayerPage() {
 	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()

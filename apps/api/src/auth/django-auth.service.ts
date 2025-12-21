@@ -1,42 +1,8 @@
 import axios from "axios"
 
 import { Injectable, Logger } from "@nestjs/common"
-
-interface DjangoUserResponse {
-	id: number
-	email: string
-	first_name: string
-	last_name: string
-	is_active: boolean
-	is_staff: boolean
-	ghin: string | null
-	birth_date: string | null
-}
-
-export interface DjangoUser {
-	id: number
-	email: string
-	firstName: string
-	lastName: string
-	isActive: boolean
-	isStaff: boolean
-	ghin: string | null
-	birthDate: string | null
-}
-
-// Helper function to transform API response
-function transformDjangoUser(response: DjangoUserResponse): DjangoUser {
-	return {
-		id: response.id,
-		email: response.email,
-		firstName: response.first_name,
-		lastName: response.last_name,
-		isActive: response.is_active,
-		isStaff: response.is_staff,
-		ghin: response.ghin,
-		birthDate: response.birth_date,
-	}
-}
+import { DjangoUser, DjangoUserResponse } from "@repo/domain/types"
+import { transformDjangoUser } from "@repo/domain/functions"
 
 @Injectable()
 export class DjangoAuthService {
