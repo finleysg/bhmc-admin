@@ -77,7 +77,7 @@ export const TournamentFormatChoices = {
 	QUOTA: "Quota",
 	USER_SCORED: "UserScored",
 	OTHER: "Other",
-}
+} as const
 
 export type FeeRestrictionValue = (typeof FeeRestrictionChoices)[keyof typeof FeeRestrictionChoices]
 export type EventTypeValue = (typeof EventTypeChoices)[keyof typeof EventTypeChoices]

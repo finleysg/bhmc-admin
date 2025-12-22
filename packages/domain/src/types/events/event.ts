@@ -4,6 +4,7 @@ import { Round } from "./round"
 import { Tournament } from "./tournament"
 import type {
 	AgeRestrictionTypeValue,
+	EventStatusValue,
 	EventTypeValue,
 	RegistrationTypeValue,
 	SkinTypeValue,
@@ -34,7 +35,7 @@ export interface ClubEvent {
 	registrationMaximum?: number | null
 	portalUrl?: string | null
 	externalUrl?: string | null
-	status: string
+	status: EventStatusValue
 	season: number
 	teeTimeSplits?: string | null
 	starterTimeInterval: number

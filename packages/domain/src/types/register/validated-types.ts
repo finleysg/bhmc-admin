@@ -4,6 +4,7 @@ import { Course } from "../courses"
 import { Hole } from "../courses/hole"
 import { ValidatedCourse } from "../courses/validated-types"
 import { ValidatedEventFee } from "../events/validated-types"
+import { Payment } from "./payment"
 import { Player } from "./player"
 import { Registration } from "./registration"
 import { RegistrationFee } from "./registration-fee"
@@ -13,7 +14,7 @@ export type ValidatedRegistrationFee = Omit<RegistrationFee, "eventFee"> & {
 	eventFee: ValidatedEventFee
 }
 
-export type ValidatedRegistrationSlot = Omit<RegistrationSlot, "player | hole | fees"> & {
+export type ValidatedRegistrationSlot = Omit<RegistrationSlot, "player" | "hole" | "fees"> & {
 	player: Player
 	hole: Hole
 	fees: ValidatedRegistrationFee[]
@@ -41,4 +42,8 @@ export type ValidatedRegisteredPlayer = {
 	course: Course
 	hole: Hole
 	fees: ValidatedRegistrationFee[]
+}
+
+export type ValidatedPayment = Payment & {
+	paymentDetails: ValidatedRegistrationFee[]
 }

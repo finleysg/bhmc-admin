@@ -2,6 +2,7 @@ import {
 	AgeRestrictionTypeValue,
 	ClubEvent,
 	EventFee,
+	EventStatusValue,
 	EventTypeValue,
 	FeeRestrictionValue,
 	FeeType,
@@ -12,6 +13,7 @@ import {
 	SkinTypeValue,
 	StartTypeValue,
 	Tournament,
+	TournamentFormatValue,
 	TournamentResults,
 } from "@repo/domain/types"
 
@@ -196,7 +198,7 @@ export function toEvent(model: EventModel): ClubEvent {
 		registrationMaximum: model.registrationMaximum,
 		portalUrl: model.portalUrl,
 		externalUrl: model.externalUrl,
-		status: model.status,
+		status: model.status as EventStatusValue,
 		season: model.season,
 		teeTimeSplits: model.teeTimeSplits,
 		starterTimeInterval: model.starterTimeInterval,
@@ -264,7 +266,7 @@ export function toTournament(model: TournamentModel): Tournament {
 		eventId: model.eventId,
 		roundId: model.roundId,
 		name: model.name,
-		format: model.format,
+		format: model.format as TournamentFormatValue,
 		isNet: Boolean(model.isNet),
 		ggId: model.ggId,
 	}

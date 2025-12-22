@@ -10,6 +10,7 @@ import {
 	FinanceReportSummary,
 	Hole,
 	PointsReportRow,
+	TournamentFormatChoices,
 	ValidatedRegisteredPlayer,
 } from "@repo/domain/types"
 
@@ -518,7 +519,7 @@ export class ReportsService {
 
 		// Section 1: Stroke play results
 		const strokeTournaments = tournaments.filter(
-			(t) => t.format === "stroke" && t.name !== "Overall",
+			(t) => t.format === TournamentFormatChoices.STROKE && t.name !== "Overall",
 		)
 		if (strokeTournaments.length > 0) {
 			const subSections = await Promise.all(
@@ -562,7 +563,7 @@ export class ReportsService {
 		}
 
 		// Section 2: Skins results
-		const skinsTournaments = tournaments.filter((t) => t.format === "skins")
+		const skinsTournaments = tournaments.filter((t) => t.format === TournamentFormatChoices.SKINS)
 		if (skinsTournaments.length > 0) {
 			const subSections = await Promise.all(
 				skinsTournaments.map(async (tournament) => {
@@ -601,7 +602,9 @@ export class ReportsService {
 		}
 
 		// Section 3: User scored results
-		const proxyTournaments = tournaments.filter((t) => t.format === "user_scored")
+		const proxyTournaments = tournaments.filter(
+			(t) => t.format === TournamentFormatChoices.USER_SCORED,
+		)
 		if (proxyTournaments.length > 0) {
 			const rows: EventResultsReportRow[] = await Promise.all(
 				proxyTournaments.map(async (tournament) => {
