@@ -1,11 +1,14 @@
 import { ClubEvent, RegistrationTypeChoices } from "../types"
-import { format, isDate, isValid, isWithinInterval } from "date-fns"
+import { format, isValid, isWithinInterval } from "date-fns"
 
 const isoDayFormat = (dt: string) => {
-	if (dt && isDate(dt) && isValid(dt)) {
-		return format(dt, "yyyy-MM-dd")
-	}
-	return "--"
+	if (dt) {
+		const date = new Date(dt)
+		if (isValid(date)) {
+			return format(date, "yyyy-MM-dd")
+		}
+ 	}
+ 	return "--"
 }
 
 export function eventUrl(event: ClubEvent): string {
@@ -40,8 +43,8 @@ export function paymentsAreOpen(event: ClubEvent, now: Date = new Date()) {
 		return false
 	}
 	return isWithinInterval(now, {
-		start: event.prioritySignupStart ?? event.signupStart,
-		end: event.paymentsEnd,
+		start: new Date(event.prioritySignupStart ?? event.signupStart),
+		end: new Date(event.paymentsEnd),
 	})
 }
 
@@ -60,8 +63,8 @@ export function registrationIsOpen(event: ClubEvent, now: Date = new Date()) {
 	}
 
 	return isWithinInterval(now, {
-		start: event.signupStart,
-		end: event.signupEnd,
+		start: new Date(event.signupStart),
+		end: new Date(event.signupEnd),
 	})
 }
 
@@ -81,7 +84,7 @@ export function priorityRegistrationIsOpen(event: ClubEvent, now: Date = new Dat
 	}
 
 	return isWithinInterval(now, {
-		start: event.prioritySignupStart,
-		end: event.signupStart,
+		start: new Date(event.prioritySignupStart),
+		end: new Date(event.signupStart),
 	})
 }
