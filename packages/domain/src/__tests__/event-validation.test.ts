@@ -2,10 +2,12 @@ import { validateClubEvent } from "../functions/event-validation"
 import {
 	AgeRestrictionTypeChoices,
 	ClubEvent,
+	EventStatusChoices,
 	EventTypeChoices,
 	FeeRestrictionChoices,
 	PayoutTypeChoices,
 	RegistrationTypeChoices,
+	TournamentFormatChoices,
 } from "../types"
 
 describe("validateClubEvent", () => {
@@ -38,7 +40,7 @@ describe("validateClubEvent", () => {
 		eventId: 1,
 		roundId: 1,
 		name: "Championship",
-		format: "stroke",
+		format: TournamentFormatChoices.STROKE,
 		isNet: false,
 		ggId: "tourn123",
 	}
@@ -72,7 +74,7 @@ describe("validateClubEvent", () => {
 		canChoose: false,
 		ghinRequired: false,
 		startDate: "2025-01-01",
-		status: "active",
+		status: EventStatusChoices.SCHEDULED,
 		season: 2025,
 		starterTimeInterval: 10,
 		teamSize: 1,
