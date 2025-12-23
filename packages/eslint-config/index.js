@@ -22,8 +22,8 @@ export default [
 			"no-unused-vars": "off",
 			"@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
 			"@typescript-eslint/no-explicit-any": "error",
-			"@typescript-eslint/no-unsafe-assignment": "off",
-			"@typescript-eslint/no-unsafe-call": "off",
+			// "@typescript-eslint/no-unsafe-assignment": "off",
+			// "@typescript-eslint/no-unsafe-call": "off",
 			// "import/order": ["error", { alphabetize: { order: "asc" } }],
 
 			// TypeScript recommended
@@ -38,7 +38,7 @@ export default [
 	},
 	{
 		// Override for mapper files - allow any types when mapping database types to domain models
-		files: ["**/mappers.ts", "**/mappers/**/*.ts", "**/*.service.ts"],
+		files: ["**/drizzle.service.ts"],
 		rules: {
 			"@typescript-eslint/no-explicit-any": "off",
 			"@typescript-eslint/no-unsafe-assignment": "off",

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common"
 
-import { CoreRepository, mapTournamentWinnerToChampion } from "../../core"
+import { CoreRepository, mapTournamentWinnerToChampionInsert } from "../../core"
 import { EventsService } from "../../events"
 
 // Internal DTO for import result
@@ -47,7 +47,7 @@ export class ImportChampionsService {
 				// Find first place winners from local tournament results
 				const winners = await this.eventsService.findTournamentWinners(localTournament.id)
 				for (const winner of winners) {
-					const champion = mapTournamentWinnerToChampion(
+					const champion = mapTournamentWinnerToChampionInsert(
 						winner,
 						localTournament.isNet,
 						eventId,

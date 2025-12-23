@@ -6,256 +6,108 @@ import {
 	RegistrationStatusValue,
 } from "@repo/domain/types"
 
-import { mapToCourseModel, mapToHoleModel } from "../courses/mappers"
-import {
-	PaymentModel,
-	PlayerModel,
-	RefundModel,
-	RegistrationFeeModel,
-	RegistrationModel,
-	RegistrationSlotModel,
-} from "../database/models"
-import { mapToEventFeeModel, mapToFeeTypeModel, toEventFee } from "../events/mappers"
+import { toHole } from "../courses/mappers"
+import type {
+	CourseRow,
+	EventFeeRow,
+	FeeTypeRow,
+	HoleRow,
+	PaymentRow,
+	PlayerRow,
+	RefundRow,
+	RegistrationFeeRow,
+	RegistrationRow,
+	RegistrationSlotRow,
+} from "../database"
+import { toEventFeeWithType } from "../events/mappers"
 
 /**
- * Create a PlayerModel from a database row.
- *
- * @param entity - The database row (object) containing player columns
- * @returns A PlayerModel populated from the provided row (fields include `id`, `firstName`, `lastName`, `email`, `phoneNumber`, `ghin`, `tee`, `birthDate`, `saveLastCard`, `isMember`, `userId`, and `ggId`)
+ * Maps PlayerRow to Player domain type
  */
-export function mapToPlayerModel(entity: Record<string, any>): PlayerModel {
+export function toPlayer(row: PlayerRow): Player {
 	return {
-		id: entity.id,
-		firstName: entity.firstName,
-		lastName: entity.lastName,
-		email: entity.email,
-		phoneNumber: entity.phoneNumber,
-		ghin: entity.ghin,
-		tee: entity.tee,
-		birthDate: entity.birthDate,
-		saveLastCard: entity.saveLastCard,
-		isMember: entity.isMember,
-		userId: entity.userId,
-		ggId: entity.ggId,
-	}
-}
-
-/**
- * Creates a refund model from a database row.
- *
- * @param entity - Raw database row containing refund columns
- * @returns A RefundModel with `id`, `paymentId`, `refundCode`, `refundAmount`, `notes`, `confirmed`, `refundDate`, and `issuerId`
- */
-export function mapToRefundModel(entity: Record<string, any>): RefundModel {
-	return {
-		id: entity.id,
-		paymentId: entity.paymentId,
-		refundCode: entity.refundCode,
-		refundAmount: entity.refundAmount,
-		notes: entity.notes,
-		confirmed: entity.confirmed,
-		refundDate: entity.refundDate,
-		issuerId: entity.issuerId,
+		id: row.id,
+		firstName: row.firstName,
+		lastName: row.lastName,
+		email: row.email,
+		phoneNumber: row.phoneNumber ?? undefined,
+		ghin: row.ghin ?? undefined,
+		tee: row.tee,
+		birthDate: row.birthDate ?? undefined,
+		isMember: Boolean(row.isMember),
+		ggId: row.ggId ?? undefined,
+		userId: row.userId ?? undefined,
 	}
 }
 
 /**
- * Map a database row to a PaymentModel.
- *
- * @param entity - Source row containing payment fields (e.g., `id`, `paymentCode`, `paymentKey`, `notificationType`, `confirmed`, `eventId`, `userId`, `paymentAmount`, `transactionFee`, `paymentDate`, `confirmDate`)
- * @returns A PaymentModel populated from the input row; `paymentDetails` and `refunds` are set to `undefined`
+ * Maps RegistrationRow to Registration domain type
  */
-export function mapToPaymentModel(entity: Record<string, any>): PaymentModel {
+export function toRegistration(row: RegistrationRow): Registration {
 	return {
-		id: entity.id,
-		paymentCode: entity.paymentCode,
-		paymentKey: entity.paymentKey,
-		notificationType: entity.notificationType,
-		confirmed: entity.confirmed,
-		eventId: entity.eventId,
-		userId: entity.userId,
-		paymentAmount: entity.paymentAmount,
-		transactionFee: entity.transactionFee,
-		paymentDate: entity.paymentDate,
-		confirmDate: entity.confirmDate,
-		paymentDetails: undefined,
-		refunds: undefined,
+		id: row.id,
+		eventId: row.eventId,
+		startingHole: row.startingHole,
+		startingOrder: row.startingOrder,
+		notes: row.notes ?? undefined,
+		courseId: row.courseId ?? undefined,
+		course: undefined,
+		signedUpBy: row.signedUpBy ?? "",
+		userId: row.userId ?? 0,
+		expires: row.expires ?? undefined,
+		ggId: row.ggId ?? undefined,
+		createdDate: row.createdDate,
+		slots: [],
 	}
 }
 
 /**
- * Maps database entity to RegistrationSlotModel
+ * Maps RegistrationSlotRow to RegistrationSlot domain type
  */
-export function mapToRegistrationSlotModel(entity: Record<string, any>): RegistrationSlotModel {
+export function toRegistrationSlot(row: RegistrationSlotRow): RegistrationSlot {
 	return {
-		id: entity.id,
-		startingOrder: entity.startingOrder,
-		slot: entity.slot,
-		status: entity.status,
-		eventId: entity.eventId,
-		holeId: entity.holeId,
-		playerId: entity.playerId,
-		registrationId: entity.registrationId,
-		ggId: entity.ggId,
+		id: row.id,
+		registrationId: row.registrationId ?? 0,
+		eventId: row.eventId,
+		startingOrder: row.startingOrder,
+		slot: row.slot,
+		status: row.status as RegistrationStatusValue,
+		holeId: row.holeId ?? undefined,
+		hole: undefined,
+		playerId: row.playerId ?? undefined,
+		player: undefined,
+		ggId: row.ggId ?? undefined,
+		fees: [],
 	}
 }
 
 /**
- * Maps database entity to RegistrationModel
+ * Maps RegistrationFeeRow to RegistrationFee domain type
  */
-export function mapToRegistrationModel(entity: Record<string, any>): RegistrationModel {
+export function toRegistrationFee(row: RegistrationFeeRow): RegistrationFee {
 	return {
-		id: entity.id,
-		expires: entity.expires,
-		startingHole: entity.startingHole,
-		startingOrder: entity.startingOrder,
-		notes: entity.notes,
-		courseId: entity.courseId,
-		eventId: entity.eventId,
-		signedUpBy: entity.signedUpBy,
-		userId: entity.userId,
-		createdDate: entity.createdDate,
-		ggId: entity.ggId,
+		id: row.id,
+		registrationSlotId: row.registrationSlotId ?? 0,
+		paymentId: row.paymentId,
+		amount: parseFloat(row.amount),
+		isPaid: Boolean(row.isPaid),
+		eventFeeId: row.eventFeeId,
+		eventFee: undefined,
 	}
 }
 
 /**
- * Maps database entity to RegistrationFeeModel
+ * Maps RegistrationFeeRow with EventFeeRow and FeeTypeRow to RegistrationFee with nested eventFee
  */
-export function mapToRegistrationFeeModel(entity: Record<string, any>): RegistrationFeeModel {
+export function toRegistrationFeeWithEventFee(row: {
+	fee: RegistrationFeeRow
+	eventFee: EventFeeRow
+	feeType: FeeTypeRow
+}): RegistrationFee {
 	return {
-		id: entity.id,
-		isPaid: entity.isPaid,
-		eventFeeId: entity.eventFeeId,
-		paymentId: entity.paymentId,
-		registrationSlotId: entity.registrationSlotId,
-		amount: entity.amount,
+		...toRegistrationFee(row.fee),
+		eventFee: toEventFeeWithType({ eventFee: row.eventFee, feeType: row.feeType }),
 	}
-}
-
-export function toPlayer(model: PlayerModel): Player {
-	return {
-		id: model.id!,
-		firstName: model.firstName,
-		lastName: model.lastName,
-		email: model.email,
-		phoneNumber: model.phoneNumber,
-		ghin: model.ghin,
-		tee: model.tee,
-		birthDate: model.birthDate,
-		isMember: Boolean(model.isMember),
-		ggId: model.ggId,
-		userId: model.userId,
-	}
-}
-
-export function toRegistration(model: RegistrationModel): Registration {
-	return {
-		id: model.id!,
-		eventId: model.eventId,
-		startingHole: model.startingHole,
-		startingOrder: model.startingOrder,
-		notes: model.notes,
-		courseId: model.courseId,
-		course: undefined, // Not populated in current model structure
-		signedUpBy: model.signedUpBy || "",
-		userId: model.userId || 0,
-		expires: model.expires,
-		ggId: model.ggId,
-		createdDate: model.createdDate,
-		slots: [], // Not populated in current model structure
-	}
-}
-
-export function toRegistrationSlot(model: RegistrationSlotModel): RegistrationSlot {
-	return {
-		id: model.id,
-		registrationId: model.registrationId || 0,
-		eventId: model.eventId,
-		startingOrder: model.startingOrder,
-		slot: model.slot,
-		status: model.status as RegistrationStatusValue,
-		holeId: model.holeId,
-		hole: undefined, // Not populated in current model structure
-		playerId: model.playerId,
-		player: undefined, // Not populated in current model structure
-		ggId: model.ggId,
-		fees: [], // Not populated in current model structure
-	}
-}
-
-export function toRegistrationFee(model: RegistrationFeeModel): RegistrationFee {
-	return {
-		id: model.id!,
-		registrationSlotId: model.registrationSlotId || 0, // Provide default if undefined
-		paymentId: model.paymentId,
-		amount: model.amount,
-		isPaid: Boolean(model.isPaid),
-		eventFeeId: model.eventFeeId,
-		eventFee: undefined, // Not populated in current model structure
-	}
-}
-
-/**
- * Maps joined query result to RegistrationModel with optional course.
- * Used by repository to return strongly-typed models from joined queries.
- */
-export function mapToRegistrationWithCourse(row: {
-	registration: Record<string, unknown>
-	course: Record<string, unknown> | null
-}): RegistrationModel {
-	const model = mapToRegistrationModel(row.registration)
-	if (row.course) {
-		model.course = mapToCourseModel(row.course)
-	}
-	return model
-}
-
-/**
- * Maps joined query results to RegistrationSlotModel array with optional player and hole.
- * Used by repository to return strongly-typed models from joined queries.
- */
-export function mapToSlotsWithPlayerAndHole(
-	rows: Array<{
-		slot: Record<string, unknown>
-		player: Record<string, unknown> | null
-		hole: Record<string, unknown> | null
-	}>,
-): RegistrationSlotModel[] {
-	return rows.map((row) => {
-		const model = mapToRegistrationSlotModel(row.slot)
-		if (row.player) {
-			model.player = mapToPlayerModel(row.player)
-		}
-		if (row.hole) {
-			model.hole = mapToHoleModel(row.hole)
-		}
-		return model
-	})
-}
-
-/**
- * Maps joined query results to RegistrationFeeModel array with optional eventFee.
- * Used by repository to return strongly-typed models from joined queries.
- */
-export function mapToFeesWithEventFeeAndFeeType(
-	rows: Array<{
-		fee: Record<string, unknown>
-		eventFee: Record<string, unknown> | null
-		feeType: Record<string, unknown> | null
-	}>,
-): RegistrationFeeModel[] {
-	return rows.map((row) => {
-		const model = mapToRegistrationFeeModel(row.fee)
-		if (row.eventFee) {
-			const eventFeeModel = mapToEventFeeModel(row.eventFee)
-			if (row.feeType) {
-				eventFeeModel.feeType = mapToFeeTypeModel(row.feeType)
-			}
-			model.eventFee = eventFeeModel
-		}
-		return model
-	})
 }
 
 /**
@@ -264,56 +116,39 @@ export function mapToFeesWithEventFeeAndFeeType(
  */
 export function hydrateSlotsWithPlayerAndHole(
 	slotRows: Array<{
-		slot: Record<string, unknown>
-		player: Record<string, unknown> | null
-		hole: Record<string, unknown> | null
+		slot: RegistrationSlotRow
+		player: PlayerRow | null
+		hole: HoleRow | null
 	}>,
 ): RegistrationSlot[] {
 	return slotRows.map((row) => {
-		const slot = toRegistrationSlot(mapToRegistrationSlotModel(row.slot))
+		const slot = toRegistrationSlot(row.slot)
 
-		// Set nested player if present
 		if (row.player) {
-			slot.player = toPlayer(mapToPlayerModel(row.player))
+			slot.player = toPlayer(row.player)
 		}
 
-		// Set nested hole if present
 		if (row.hole) {
-			const holeModel = mapToHoleModel(row.hole)
-			slot.hole = {
-				id: holeModel.id!,
-				holeNumber: holeModel.holeNumber,
-				par: holeModel.par,
-				courseId: holeModel.courseId,
-			}
+			slot.hole = toHole(row.hole)
 		}
 
-		// Initialize fees array
 		slot.fees = []
-
 		return slot
 	})
 }
 
 /**
  * Attach registration fees to their corresponding RegistrationSlot objects.
- *
- * Mutates the provided `slots` array in place by locating the slot for each entry in `feeRows`
- * and appending a mapped RegistrationFee (with its EventFee and FeeType) when `eventFee` and
- * `feeType` are present and the row contains a valid `registrationSlotId`.
- *
- * @param slots - Pre-hydrated RegistrationSlot objects whose `fees` arrays will be populated
- * @param feeRows - Joined query rows containing `fee`, and optionally `eventFee` and `feeType`; rows without `eventFee`, `feeType`, or a valid `registrationSlotId` are ignored
+ * Mutates the provided `slots` array in place.
  */
 export function attachFeesToSlots(
 	slots: RegistrationSlot[],
 	feeRows: Array<{
-		fee: Record<string, unknown>
-		eventFee: Record<string, unknown> | null
-		feeType: Record<string, unknown> | null
+		fee: RegistrationFeeRow
+		eventFee: EventFeeRow | null
+		feeType: FeeTypeRow | null
 	}>,
 ): void {
-	// Create map for efficient slot lookup
 	const slotMap = new Map<number, RegistrationSlot>()
 	for (const slot of slots) {
 		if (slot.id) {
@@ -321,35 +156,47 @@ export function attachFeesToSlots(
 		}
 	}
 
-	// Process each fee row
 	for (const frow of feeRows) {
-		const slotId = frow.fee.registrationSlotId as number | undefined
+		const slotId = frow.fee.registrationSlotId
 		if (!slotId) continue
 
 		const slot = slotMap.get(slotId)
 		if (!slot) continue
 
-		// Map eventFee with feeType - both are guaranteed to exist at this point
 		if (!frow.eventFee || !frow.feeType) continue
 
-		const eventFeeModel = mapToEventFeeModel(frow.eventFee)
-		eventFeeModel.feeType = mapToFeeTypeModel(frow.feeType)
-
-		// Map registrationFee
-		const registrationFeeModel = mapToRegistrationFeeModel({
-			id: frow.fee.id,
-			isPaid: frow.fee.isPaid,
-			eventFeeId: frow.fee.eventFeeId,
-			paymentId: frow.fee.paymentId,
-			registrationSlotId: slotId,
-			amount: frow.fee.amount,
+		const fee = toRegistrationFeeWithEventFee({
+			fee: frow.fee,
+			eventFee: frow.eventFee,
+			feeType: frow.feeType,
 		})
 
-		// Transform to domain and set eventFee
-		const fee = toRegistrationFee(registrationFeeModel)
-		fee.eventFee = toEventFee(eventFeeModel)
-
-		// Attach to slot
 		slot.fees!.push(fee)
 	}
+}
+
+// =============================================================================
+// Row type aliases for joined query results
+// =============================================================================
+
+export type RegistrationWithCourseRow = {
+	registration: RegistrationRow
+	course: CourseRow | null
+}
+
+export type SlotWithPlayerAndHoleRow = {
+	slot: RegistrationSlotRow
+	player: PlayerRow | null
+	hole: HoleRow | null
+}
+
+export type FeeWithEventFeeRow = {
+	fee: RegistrationFeeRow
+	eventFee: EventFeeRow | null
+	feeType: FeeTypeRow | null
+}
+
+export type PaymentWithRefundsRow = {
+	payment: PaymentRow
+	refunds: RefundRow[]
 }

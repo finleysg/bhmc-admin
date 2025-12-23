@@ -1,19 +1,19 @@
 import { eq } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
+import { Course, Hole, Tee } from "@repo/domain/types"
 
-import { course, DrizzleService, eventCourses, hole, tee } from "../database"
-import { CourseModel, HoleModel, TeeModel } from "../database/models"
-import { mapToCourseModel, mapToHoleModel, mapToTeeModel } from "./mappers"
+import { course, DrizzleService, eventCourses, hole, tee, type CourseRow, type HoleRow, type TeeRow } from "../database"
+import { toCourse, toCourseWithCompositions, toHole, toTee } from "./mappers"
 
 @Injectable()
 export class CoursesRepository {
 	constructor(private drizzle: DrizzleService) {}
 
 	// Courses
-	async findCourseByGgId(gg_id: string): Promise<CourseModel | null> {
+	async findCourseByGgId(gg_id: string): Promise<Course | null> {
 		const [c] = await this.drizzle.db.select().from(course).where(eq(course.ggId, gg_id)).limit(1)
-		return c ? mapToCourseModel(c) : null
+		return c ? toCourse(c) : null
 	}
 
 	async findCoursesByEventId({
@@ -24,7 +24,7 @@ export class CoursesRepository {
 		eventId: number
 		includeHoles?: boolean
 		includeTees?: boolean
-	}): Promise<CourseModel[]> {
+	}): Promise<Course[]> {
 		const courseData = await this.drizzle.db
 			.select({
 				course: course,
@@ -33,39 +33,57 @@ export class CoursesRepository {
 			.leftJoin(course, eq(eventCourses.courseId, course.id))
 			.where(eq(eventCourses.eventId, eventId))
 
-		const courses = courseData
-			.filter((c) => c.course !== null)
-			.map((c) => mapToCourseModel(c.course!))
+		const courseRows = courseData
+			.filter((c): c is { course: CourseRow } => c.course !== null)
+			.map((c) => c.course)
 
-		if (includeHoles) {
-			for (const course of courses) {
-				course.holes = await this.findHolesByCourseId(course.id!)
+		const results: Course[] = []
+
+		for (const courseRow of courseRows) {
+			let holes: Hole[] = []
+			let tees: Tee[] = []
+
+			if (includeHoles) {
+				holes = await this.findHolesByCourseId(courseRow.id)
 			}
+
+			if (includeTees) {
+				tees = await this.findTeesByCourseId(courseRow.id)
+			}
+
+			results.push(toCourseWithCompositions(courseRow, { holes, tees }))
 		}
 
-		if (includeTees) {
-			for (const course of courses) {
-				course.tees = await this.findTeesByCourseId(course.id!)
-			}
-		}
-
-		return courses
+		return results
 	}
 
 	// Holes
-	async findHolesByCourseId(courseId: number): Promise<HoleModel[]> {
+	async findHolesByCourseId(courseId: number): Promise<Hole[]> {
 		const holes = await this.drizzle.db.select().from(hole).where(eq(hole.courseId, courseId))
-		return holes.map(mapToHoleModel)
+		return holes.map(toHole)
+	}
+
+	async findHoleRowsByCourseId(courseId: number): Promise<HoleRow[]> {
+		return this.drizzle.db.select().from(hole).where(eq(hole.courseId, courseId))
 	}
 
 	// Tees
-	async findTeesByCourseId(courseId: number): Promise<TeeModel[]> {
+	async findTeesByCourseId(courseId: number): Promise<Tee[]> {
 		const tees = await this.drizzle.db.select().from(tee).where(eq(tee.courseId, courseId))
-		return tees.map(mapToTeeModel)
+		return tees.map(toTee)
 	}
 
-	async findTeeByGgId(ggId: string): Promise<TeeModel | null> {
+	async findTeeRowsByCourseId(courseId: number): Promise<TeeRow[]> {
+		return this.drizzle.db.select().from(tee).where(eq(tee.courseId, courseId))
+	}
+
+	async findTeeByGgId(ggId: string): Promise<Tee | null> {
 		const [t] = await this.drizzle.db.select().from(tee).where(eq(tee.ggId, ggId)).limit(1)
-		return t ? mapToTeeModel(t) : null
+		return t ? toTee(t) : null
+	}
+
+	async findTeeRowByGgId(ggId: string): Promise<TeeRow | null> {
+		const [t] = await this.drizzle.db.select().from(tee).where(eq(tee.ggId, ggId)).limit(1)
+		return t ?? null
 	}
 }

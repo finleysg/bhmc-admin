@@ -1,18 +1,17 @@
 import { and, eq } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
-import { IntegrationLog } from "@repo/domain/types"
 
-import { DrizzleService } from "../../database/drizzle.service"
-import { integrationLog } from "../../database/schema/golf-genius.schema"
-import { CreateIntegrationLogDto } from "../dto/internal.dto"
-import { mapToIntegrationLog } from "../dto/mappers"
+import { DrizzleService } from "../database/drizzle.service"
+import { integrationLog } from "../database/schema/golf-genius.schema"
+import { CreateIntegrationLogDto } from "./dto/internal.dto"
+import { IntegrationLogRow } from "../database"
 
 @Injectable()
-export class IntegrationLogService {
+export class IntegrationLogRepository {
 	constructor(private readonly drizzle: DrizzleService) {}
 
-	async createLogEntry(dto: CreateIntegrationLogDto): Promise<IntegrationLog> {
+	async createLogEntry(dto: CreateIntegrationLogDto): Promise<IntegrationLogRow> {
 		const detailText = dto.details
 			? typeof dto.details === "string"
 				? dto.details
@@ -26,21 +25,17 @@ export class IntegrationLogService {
 				details: detailText,
 				eventId: dto.eventId,
 				isSuccessful: dto.isSuccessful ? 1 : 0,
-			} as any)
+			})
 
 			return this.findLogById(Number(result.insertId))
 		} catch (error) {
+			// TODO: real logging
 			console.error("Full database error:", error)
-			if (error instanceof Error) {
-				console.error("Error message:", error.message)
-				console.error("Error code:", (error as any).code)
-				console.error("Error sqlMessage:", (error as any).sqlMessage)
-			}
 			throw error
 		}
 	}
 
-	async getLogsByEventId(eventId: number, actionName?: string): Promise<IntegrationLog[]> {
+	async getLogsByEventId(eventId: number, actionName?: string): Promise<IntegrationLogRow[]> {
 		const conditions = [eq(integrationLog.eventId, eventId)]
 
 		if (actionName) {
@@ -53,10 +48,10 @@ export class IntegrationLogService {
 			.where(and(...conditions))
 			.orderBy(integrationLog.actionDate)
 
-		return logs.map(mapToIntegrationLog)
+		return logs
 	}
 
-	private async findLogById(id: number): Promise<IntegrationLog> {
+	private async findLogById(id: number): Promise<IntegrationLogRow> {
 		const [log] = await this.drizzle.db
 			.select()
 			.from(integrationLog)
@@ -66,6 +61,6 @@ export class IntegrationLogService {
 			throw new Error(`Integration log with id ${id} not found`)
 		}
 
-		return mapToIntegrationLog(log)
+		return log
 	}
 }

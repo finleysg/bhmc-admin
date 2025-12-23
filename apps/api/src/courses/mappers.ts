@@ -1,78 +1,58 @@
-// Domain mapper from Model to Domain
 import { Course, Hole, Tee } from "@repo/domain/types"
 
-import { CourseModel, HoleModel, TeeModel } from "../database/models"
+import type { CourseRow, HoleRow, TeeRow } from "../database"
 
 /**
- * Maps database entity to Course
+ * Maps CourseRow to Course domain type
  */
-export function mapToCourseModel(entity: Record<string, any>): CourseModel {
+export function toCourse(row: CourseRow): Course {
 	return {
-		id: entity.id,
-		name: entity.name,
-		numberOfHoles: entity.numberOfHoles,
-		ggId: entity.ggId,
+		id: row.id,
+		name: row.name,
+		numberOfHoles: row.numberOfHoles,
+		ggId: row.ggId ?? undefined,
+		tees: [],
+		holes: [],
 	}
 }
 
 /**
- * Maps database entity to Hole
+ * Maps CourseRow with loaded compositions to Course
  */
-export function mapToHoleModel(entity: Record<string, any>): HoleModel {
+export function toCourseWithCompositions(
+	row: CourseRow,
+	compositions: {
+		tees?: Tee[]
+		holes?: Hole[]
+	},
+): Course {
 	return {
-		id: entity.id,
-		holeNumber: entity.holeNumber,
-		par: entity.par,
-		courseId: entity.courseId,
+		...toCourse(row),
+		tees: compositions.tees ?? [],
+		holes: compositions.holes ?? [],
 	}
 }
 
 /**
- * Maps database entity to Tee
+ * Maps TeeRow to Tee domain type
  */
-export function mapToTeeModel(entity: Record<string, any>): TeeModel {
+export function toTee(row: TeeRow): Tee {
 	return {
-		id: entity.id,
-		name: entity.name,
-		ggId: entity.ggId,
-		courseId: entity.courseId,
+		id: row.id,
+		name: row.name,
+		ggId: row.ggId ?? undefined,
+		courseId: row.courseId,
 	}
 }
 
 /**
- * Maps CourseModel to Course domain class
+ * Maps HoleRow to Hole domain type
  */
-export function toCourse(model: CourseModel): Course {
+export function toHole(row: HoleRow): Hole {
 	return {
-		id: model.id!,
-		name: model.name,
-		numberOfHoles: model.numberOfHoles,
-		ggId: model.ggId,
-		tees: model.tees?.map(toTee) || [], // Map tees if present
-		holes: model.holes?.map(toHole) || [], // Map holes if present
-	}
-}
-
-/**
- * Maps TeeModel to Tee domain class
- */
-export function toTee(model: TeeModel): Tee {
-	return {
-		id: model.id,
-		name: model.name,
-		ggId: model.ggId,
-		courseId: model.courseId,
-	}
-}
-
-/**
- * Maps HoleModel to Hole domain class
- */
-export function toHole(model: HoleModel): Hole {
-	return {
-		id: model.id!,
-		holeNumber: model.holeNumber,
-		par: model.par,
-		courseId: model.courseId,
+		id: row.id,
+		holeNumber: row.holeNumber,
+		par: row.par,
+		courseId: row.courseId,
 	}
 }

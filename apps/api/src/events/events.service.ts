@@ -12,12 +12,12 @@ import {
 import { CoursesRepository } from "../courses"
 import { DrizzleService, player, toDbString, tournamentResult } from "../database"
 import {
-	mapPreparedPointsToTournamentPointsModel,
-	mapPreparedResultsToTournamentResultModel,
+	mapPreparedPointsToTournamentPointsInsert,
+	mapPreparedResultsToTournamentResultInsert,
 } from "../golfgenius/dto/mappers"
-import { mapToPlayerModel } from "../registration/mappers"
+import { toPlayer } from "../registration/mappers"
 import { EventsRepository } from "./events.repository"
-import { mapToTournamentResultModel, toEvent, toTournamentResults } from "./mappers"
+import { toEventWithCompositions, toEventFeeWithType, toRound, toTournament, toTournamentResults } from "./mappers"
 
 @Injectable()
 export class EventsService {
@@ -31,19 +31,26 @@ export class EventsService {
 		eventId: number,
 		requireIntegration: boolean | undefined = true,
 	): Promise<ValidatedClubEvent> {
-		const clubEvent = await this.repository.findEventById(eventId)
-		if (!clubEvent) throw new BadRequestException(`Event with id ${eventId} does not exist.`)
+		const eventRow = await this.repository.findEventById(eventId)
+		if (!eventRow) throw new BadRequestException(`Event with id ${eventId} does not exist.`)
 
-		clubEvent.courses = await this.courses.findCoursesByEventId({
+		const courseRows = await this.courses.findCoursesByEventId({
 			eventId: eventId,
 			includeHoles: true,
 			includeTees: true,
 		})
-		clubEvent.eventFees = await this.repository.listEventFeesByEvent(eventId)
-		clubEvent.eventRounds = await this.repository.findRoundsByEventId(eventId)
-		clubEvent.tournaments = await this.repository.findTournamentsByEventId(eventId)
+		const eventFeeRows = await this.repository.listEventFeesByEvent(eventId)
+		const roundRows = await this.repository.findRoundsByEventId(eventId)
+		const tournamentRows = await this.repository.findTournamentsByEventId(eventId)
 
-		return validateClubEvent(toEvent(clubEvent), requireIntegration)
+		const clubEvent = toEventWithCompositions(eventRow, {
+			courses: courseRows,
+			eventFees: eventFeeRows.map(toEventFeeWithType),
+			eventRounds: roundRows.map(toRound),
+			tournaments: tournamentRows.map(toTournament),
+		})
+
+		return validateClubEvent(clubEvent, requireIntegration)
 	}
 
 	async exists(eventId: number): Promise<boolean> {
@@ -51,11 +58,7 @@ export class EventsService {
 	}
 
 	async syncEventToGolfGenius(id: number, ggId: string, portalUrl: string) {
-		const event = await this.repository.findEventById(id)
-		event.ggId = ggId
-		event.portalUrl = portalUrl
-
-		await this.repository.updateEvent(id, event)
+		await this.repository.updateEvent(id, { ggId, portalUrl })
 	}
 
 	async findTournamentWinners(tournamentId: number): Promise<TournamentResults[]> {
@@ -69,24 +72,16 @@ export class EventsService {
 			.where(and(eq(tournamentResult.tournamentId, tournamentId), eq(tournamentResult.position, 1)))
 			.orderBy(tournamentResult.flight)
 
-		return results.map((row) => {
-			const model = mapToTournamentResultModel(row.result)
-			model.player = mapToPlayerModel(row.player)
-			return toTournamentResults(model)
-		})
+		return results.map((row) => toTournamentResults(row.result, toPlayer(row.player)))
 	}
 
-	/**
-	 * Close an event by confirming all tournament result payouts.
-	 * Updates payoutStatus to "Confirmed" and payoutDate to current timestamp.
-	 */
 	async closeEvent(eventId: number) {
 		const tournaments = await this.repository.findTournamentsByEventId(eventId)
 		if (tournaments.length === 0) {
 			throw new Error("Cannot close event: No tournaments found")
 		}
 
-		const tournamentIds = tournaments.map((t) => t.id!)
+		const tournamentIds = tournaments.map((t) => t.id)
 		const now = toDbString(new Date())
 
 		await this.drizzle.db
@@ -110,14 +105,14 @@ export class EventsService {
 
 	async insertTournamentResults(preparedRecords: PreparedTournamentResult[]): Promise<void> {
 		const records = preparedRecords.map((record) =>
-			mapPreparedResultsToTournamentResultModel(record),
+			mapPreparedResultsToTournamentResultInsert(record),
 		)
 		await this.repository.insertTournamentResults(records)
 	}
 
 	async insertTournamentPoints(preparedRecords: PreparedTournamentPoints[]): Promise<void> {
 		const records = preparedRecords.map((record) =>
-			mapPreparedPointsToTournamentPointsModel(record),
+			mapPreparedPointsToTournamentPointsInsert(record),
 		)
 		await this.repository.insertTournamentPoints(records)
 	}
