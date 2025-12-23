@@ -7,8 +7,8 @@ const isoDayFormat = (dt: string) => {
 		if (isValid(date)) {
 			return format(date, "yyyy-MM-dd")
 		}
- 	}
- 	return "--"
+	}
+	return "--"
 }
 
 export function eventUrl(event: ClubEvent): string {

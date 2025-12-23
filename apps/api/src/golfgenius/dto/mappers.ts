@@ -7,14 +7,8 @@ import {
 } from "@repo/domain/types"
 
 import type { TournamentPointsInsert, TournamentResultInsert } from "../../database"
-import {
-	GgCreateMemberDto,
-	GgEventDto,
-	GgMemberDto,
-	GgRoundDto,
-	GgSeasonDto,
-	GgTournamentDto,
-} from "./golf-genius.dto"
+import type { GgEvent, GgMember, GgRound, GgSeason, GgTournament } from "../api-data"
+import { GgCreateMemberDto } from "./golf-genius.dto"
 import {
 	EventDto,
 	MasterRosterItemDto,
@@ -28,14 +22,14 @@ import {
 /**
  * Map raw API master roster item -> MasterRosterItemDto
  */
-export function mapMasterRosterItem(member: GgMemberDto): MasterRosterItemDto {
+export function mapMasterRosterItem(member: GgMember): MasterRosterItemDto {
 	return {
 		member: {
-			memberCardId: member?.member_card_id,
-			handicapNetworkId: member?.handicap?.handicap_network_id,
-			email: member?.email,
-			firstName: member?.first_name,
-			lastName: member?.last_name,
+			memberCardId: member.member_card_id,
+			handicapNetworkId: member.handicap.handicap_network_id,
+			email: member.email,
+			firstName: member.first_name,
+			lastName: member.last_name,
 		},
 	}
 }
@@ -43,27 +37,27 @@ export function mapMasterRosterItem(member: GgMemberDto): MasterRosterItemDto {
 /**
  * Map roster member object from API -> RosterMemberDto
  */
-export function mapRosterMember(member: GgMemberDto): RosterMemberDto {
+export function mapRosterMember(member: GgMember): RosterMemberDto {
 	return {
 		id: member.id,
 		firstName: member.first_name,
 		lastName: member.last_name,
-		email: member.email ?? undefined,
-		ghin: member.handicap?.handicap_network_id,
-		externalId: member.external_id,
+		email: member.email,
+		ghin: member.handicap.handicap_network_id,
+		externalId: member.external_id ?? undefined,
 	}
 }
 
-export function mapSeason(season: GgSeasonDto): SeasonDto {
+export function mapSeason(season: GgSeason): SeasonDto {
 	return {
 		id: season.id,
 		name: season.name,
-		current: Boolean(season.current),
-		archived: Boolean(season.archived),
+		current: season.current,
+		archived: season.archived,
 	}
 }
 
-export function mapEvent(event: GgEventDto): EventDto {
+export function mapEvent(event: GgEvent): EventDto {
 	return {
 		id: event.id,
 		name: event.name,
@@ -74,7 +68,7 @@ export function mapEvent(event: GgEventDto): EventDto {
 	}
 }
 
-export function mapRound(round: GgRoundDto): RoundDto {
+export function mapRound(round: GgRound): RoundDto {
 	return {
 		id: round.id,
 		index: round.index,
@@ -83,13 +77,7 @@ export function mapRound(round: GgRoundDto): RoundDto {
 	}
 }
 
-export function mapTournament(tournament: GgTournamentDto): TournamentDto {
-	if (!tournament.id || !tournament.name) {
-		throw new Error(
-			`Tournament missing required fields: id=${tournament.id}, name=${tournament.name}`,
-		)
-	}
-
+export function mapTournament(tournament: GgTournament): TournamentDto {
 	let scoreFormat = tournament.score_format
 
 	if (scoreFormat === "stroke") {
@@ -100,14 +88,13 @@ export function mapTournament(tournament: GgTournamentDto): TournamentDto {
 		} else if (tournament.score_scope === "pos_player") {
 			scoreFormat = "stroke"
 		}
-		// If score_scope is missing or any other value, keep as "stroke"
 	}
 
 	return {
 		id: tournament.id,
 		name: tournament.name,
-		scoreFormat: scoreFormat ?? "",
-		handicapFormat: tournament.handicap_format ?? "",
+		scoreFormat: scoreFormat,
+		handicapFormat: tournament.handicap_format,
 	}
 }
 
@@ -123,7 +110,6 @@ export function mapMemberExport(member: RosterMemberSyncDto): GgCreateMemberDto 
 		custom_fields: member.customFields,
 	}
 }
-
 
 /**
  * TODO: this belongs to the events module

@@ -17,7 +17,13 @@ import {
 } from "../golfgenius/dto/mappers"
 import { toPlayer } from "../registration/mappers"
 import { EventsRepository } from "./events.repository"
-import { toEventWithCompositions, toEventFeeWithType, toRound, toTournament, toTournamentResults } from "./mappers"
+import {
+	toEventWithCompositions,
+	toEventFeeWithType,
+	toRound,
+	toTournament,
+	toTournamentResults,
+} from "./mappers"
 
 @Injectable()
 export class EventsService {

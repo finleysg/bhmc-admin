@@ -57,11 +57,7 @@ export class CoreRepository {
 	}
 
 	async findLowScoreById(id: number): Promise<LowScore> {
-		const [row] = await this.drizzle.db
-			.select()
-			.from(lowScore)
-			.where(eq(lowScore.id, id))
-			.limit(1)
+		const [row] = await this.drizzle.db.select().from(lowScore).where(eq(lowScore.id, id)).limit(1)
 		if (!row) {
 			throw new Error(`No low score found for id ${id}.`)
 		}
@@ -102,11 +98,7 @@ export class CoreRepository {
 	}
 
 	async findChampionById(id: number): Promise<Champion> {
-		const [row] = await this.drizzle.db
-			.select()
-			.from(champion)
-			.where(eq(champion.id, id))
-			.limit(1)
+		const [row] = await this.drizzle.db.select().from(champion).where(eq(champion.id, id)).limit(1)
 		if (!row) {
 			throw new Error(`No champion found for id ${id}.`)
 		}

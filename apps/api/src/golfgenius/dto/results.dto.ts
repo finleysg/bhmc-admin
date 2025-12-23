@@ -23,6 +23,15 @@ export interface ImportResult {
 	errors: ImportError[]
 }
 
+export interface ImportResultSummary {
+	tournamentId: number
+	tournamentName: string
+	eventName: string
+	resultsImported: number
+	skippedBlinds?: number
+	errors: string[]
+}
+
 export type OperationResult = ExportResult | ImportResult
 
 export interface UnmatchedPlayer {

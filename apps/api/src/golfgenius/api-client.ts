@@ -1,13 +1,26 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosInstance } from "axios"
+import { type ZodSchema } from "zod"
 
 import { Injectable, Logger } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 
+import {
+	GgEventsResponseSchema,
+	GgMembersResponseSchema,
+	GgMemberWrapperSchema,
+	GgRoundsResponseSchema,
+	GgSeasonsResponseSchema,
+	GgTeesheetResponseSchema,
+	GgTournamentResultWrapperSchema,
+	GgTournamentsResponseSchema,
+	type GgTeesheetResponse,
+	unwrapEvents,
+	unwrapMembers,
+	unwrapRounds,
+	unwrapSeasons,
+	unwrapTournaments,
+} from "./api-data"
+import { GolfGeniusTournamentResults } from "./dto/tournament-results.dto"
 import {
 	EventDto,
 	MasterRosterItemDto,
@@ -26,13 +39,12 @@ import {
 	mapSeason,
 	mapTournament,
 } from "./dto/mappers"
-import { GolfGeniusTournamentResults } from "./dto/tournament-results.dto"
-import { ApiError, AuthError, RateLimitError } from "./errors"
+import { ApiError, AuthError, RateLimitError, ValidationError } from "./errors"
 
 interface RequestOptions {
-	params?: Record<string, any>
-	data?: any
-	json?: any
+	params?: Record<string, string>
+	data?: unknown
+	json?: unknown
 }
 
 @Injectable()
@@ -60,11 +72,26 @@ export class ApiClient {
 		})
 	}
 
+	// Overload: with schema returns validated type
+	private async request<T>(
+		method: "get" | "post" | "put" | "delete",
+		endpoint: string,
+		options: RequestOptions,
+		schema: ZodSchema<T>,
+	): Promise<T>
+	// Overload: without schema returns unknown
 	private async request(
 		method: "get" | "post" | "put" | "delete",
 		endpoint: string,
+		options?: RequestOptions,
+	): Promise<unknown>
+	// Implementation
+	private async request<T>(
+		method: "get" | "post" | "put" | "delete",
+		endpoint: string,
 		options: RequestOptions = {},
-	): Promise<any> {
+		schema?: ZodSchema<T>,
+	): Promise<T | unknown> {
 		let url = endpoint
 		if (endpoint.includes("{api_key}")) {
 			url = endpoint.replace("{api_key}", this.apiKey)
@@ -118,6 +145,18 @@ export class ApiClient {
 					)
 				}
 
+				// Validate response with schema if provided
+				if (schema) {
+					const result = schema.safeParse(res.data)
+					if (!result.success) {
+						throw new ValidationError(
+							`Response validation failed: ${result.error.message}`,
+							result.error,
+							res.data,
+						)
+					}
+					return result.data
+				}
 				return res.data
 			} catch (err) {
 				lastError = err
@@ -143,28 +182,21 @@ export class ApiClient {
 		throw lastError ?? new ApiError("Request failed after all retries")
 	}
 
-	// Returns mapped master roster items
 	async getMasterRoster(page?: number, photo = false): Promise<MasterRosterItemDto[]> {
-		const params: any = {}
-		if (page != null) params.page = page
+		const params: Record<string, string> = {}
+		if (page != null) params.page = String(page)
 		if (photo) params.photo = "true"
 		const endpoint = `/api_v2/${this.apiKey}/master_roster`
-		const res = await this.request("get", endpoint, { params })
-		if (!res) return []
-		if (Array.isArray(res)) {
-			return res.map(mapMasterRosterItem)
-		}
-		return []
+		const response = await this.request("get", endpoint, { params }, GgMembersResponseSchema)
+		return unwrapMembers(response).map(mapMasterRosterItem)
 	}
 
-	// Get a single member by email; return mapped member or null if not found
 	async getMasterRosterMember(email: string): Promise<MasterRosterItemDto | null> {
 		const endpoint = `/api_v2/${this.apiKey}/master_roster_member/${encodeURIComponent(email)}`
 		try {
-			const res = await this.request("get", endpoint)
-			if (!res) return null
-			return mapMasterRosterItem(res)
-		} catch (err: any) {
+			const response = await this.request("get", endpoint, {}, GgMemberWrapperSchema)
+			return mapMasterRosterItem(response.member)
+		} catch (err: unknown) {
 			if (err instanceof ApiError && err.status === 404) return null
 			throw err
 		}
@@ -172,16 +204,79 @@ export class ApiClient {
 
 	async getSeasons(): Promise<SeasonDto[]> {
 		const endpoint = `/api_v2/${this.apiKey}/seasons`
-		const res = await this.request("get", endpoint)
-		if (!res) return []
-		if (Array.isArray(res)) {
-			// Unwrap the "season" property from each item
-			return res.map((item) => mapSeason(item.season || item))
+		const response = await this.request("get", endpoint, {}, GgSeasonsResponseSchema)
+		return unwrapSeasons(response).map(mapSeason)
+	}
+
+	async getEvents(seasonId?: string, categoryId?: string): Promise<EventDto[]> {
+		const params: Record<string, string> = {}
+		if (seasonId) params.season = seasonId
+		if (categoryId) params.category = categoryId
+		const endpoint = `/api_v2/${this.apiKey}/events`
+		const response = await this.request("get", endpoint, { params }, GgEventsResponseSchema)
+		return unwrapEvents(response).map(mapEvent)
+	}
+
+	async getEventRounds(eventId: string): Promise<RoundDto[]> {
+		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds`
+		const response = await this.request("get", endpoint, {}, GgRoundsResponseSchema)
+		return unwrapRounds(response).map(mapRound)
+	}
+
+	async getRoundTournaments(eventId: string, roundId: string): Promise<TournamentDto[]> {
+		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments`
+		const response = await this.request("get", endpoint, {}, GgTournamentsResponseSchema)
+		return unwrapTournaments(response).map(mapTournament)
+	}
+
+	async getEventRoster(eventId: string, photo = false): Promise<RosterMemberDto[]> {
+		const members: RosterMemberDto[] = []
+		let page = 1
+		while (true) {
+			const params: Record<string, string> = { page: String(page) }
+			if (photo) params.photo = "true"
+			const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/roster`
+			const response = await this.request("get", endpoint, { params }, GgMembersResponseSchema)
+			const unwrapped = unwrapMembers(response)
+			members.push(...unwrapped.map(mapRosterMember))
+			if (response.length < 100) break
+			page += 1
 		}
-		if (res && res.seasons) {
-			return (res.seasons as any[]).map((item) => mapSeason(item.season || item))
-		}
-		return []
+		return members
+	}
+
+	async getRoundTeeSheet(
+		eventId: string,
+		roundId: string,
+		includeAllCustomFields = false,
+	): Promise<GgTeesheetResponse> {
+		const params: Record<string, string> = {}
+		if (includeAllCustomFields) params.include_all_custom_fields = "true"
+		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tee_sheet`
+		return this.request("get", endpoint, { params }, GgTeesheetResponseSchema)
+	}
+
+	async getTournamentResults(
+		eventId: string,
+		roundId: string,
+		tournamentId: string,
+	): Promise<GolfGeniusTournamentResults> {
+		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments/${tournamentId}.json`
+		const response = await this.request("get", endpoint, {}, GgTournamentResultWrapperSchema)
+		// Cast validated response to the legacy type for compatibility with existing processing code
+		return response as unknown as GolfGeniusTournamentResults
+	}
+
+	async createMemberRegistration(eventId: string, member: RosterMemberSyncDto) {
+		const memberData = mapMemberExport(member)
+		const endpoint = `/api_v2/events/${eventId}/members`
+		return this.request("post", endpoint, { json: memberData })
+	}
+
+	async updateMemberRegistration(eventId: string, memberId: string, member: RosterMemberSyncDto) {
+		const memberData = mapMemberExport(member)
+		const endpoint = `/api_v2/events/${eventId}/members/${memberId}`
+		return this.request("put", endpoint, { json: memberData })
 	}
 
 	/**
@@ -301,98 +396,5 @@ export class ApiClient {
 		throw new ApiError(
 			`Multiple Golf Genius events found on ${targetDate} and no confident name match`,
 		)
-	}
-
-	async getEvents(seasonId?: string, categoryId?: string): Promise<EventDto[]> {
-		const params: any = {}
-		if (seasonId) params.season = seasonId
-		if (categoryId) params.category = categoryId
-		const endpoint = `/api_v2/${this.apiKey}/events`
-		const res = await this.request("get", endpoint, { params })
-		if (!res) return []
-		if (Array.isArray(res)) {
-			// Unwrap the "event" property from each item
-			return res.map((item) => mapEvent(item.event || item))
-		}
-		if (res && res.events) {
-			return (res.events as any[]).map((item) => mapEvent(item.event || item))
-		}
-		return []
-	}
-
-	async getEventRounds(eventId: string): Promise<RoundDto[]> {
-		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds`
-		const res = await this.request("get", endpoint)
-		if (!res) return []
-		if (Array.isArray(res)) {
-			// Unwrap the "round" property from each item
-			return res.map((item) => mapRound(item.round || item))
-		}
-		if (res && res.rounds) {
-			return (res.rounds as any[]).map((item) => mapRound(item.round || item))
-		}
-		return []
-	}
-
-	async getRoundTournaments(eventId: string, roundId: string): Promise<TournamentDto[]> {
-		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments`
-		const res = await this.request("get", endpoint)
-		if (!res) return []
-		if (Array.isArray(res)) {
-			// Unwrap the "event" property from each item (Golf Genius wraps tournaments in "event")
-			return res.map((item) => mapTournament(item.event || item))
-		}
-		if (res && res.tournaments) {
-			return (res.tournaments as any[]).map((item) => mapTournament(item.event || item))
-		}
-		return []
-	}
-
-	async getEventRoster(eventId: string, photo = false): Promise<RosterMemberDto[]> {
-		const members: RosterMemberDto[] = []
-		let page = 1
-		while (true) {
-			const params: any = { page }
-			if (photo) params.photo = "true"
-			const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/roster`
-			const res = await this.request("get", endpoint, { params })
-			if (!res) break
-			if (Array.isArray(res)) {
-				for (const item of res) {
-					members.push(mapRosterMember(item.member || item))
-				}
-			} else break
-			if (res.length < 100) break
-			page += 1
-		}
-		return members
-	}
-
-	async createMemberRegistration(eventId: string, member: RosterMemberSyncDto) {
-		const memberData = mapMemberExport(member)
-		const endpoint = `/api_v2/events/${eventId}/members`
-		return this.request("post", endpoint, { json: memberData })
-	}
-
-	async updateMemberRegistration(eventId: string, memberId: string, member: RosterMemberSyncDto) {
-		const memberData = mapMemberExport(member)
-		const endpoint = `/api_v2/events/${eventId}/members/${memberId}`
-		return this.request("put", endpoint, { json: memberData })
-	}
-
-	async getRoundTeeSheet(eventId: string, roundId: string, includeAllCustomFields = false) {
-		const params: any = {}
-		if (includeAllCustomFields) params.include_all_custom_fields = "true"
-		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tee_sheet`
-		return this.request("get", endpoint, { params })
-	}
-
-	async getTournamentResults(
-		eventId: string,
-		roundId: string,
-		tournamentId: string,
-	): Promise<GolfGeniusTournamentResults> {
-		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments/${tournamentId}.json`
-		return this.request("get", endpoint)
 	}
 }

@@ -2,7 +2,16 @@ import { and, eq } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 
-import { DrizzleService, eventScore, eventScorecard, ScorecardInsert, ScorecardRow, ScorecardWithScores, ScoreInsert, ScoreRow } from "../database"
+import {
+	DrizzleService,
+	eventScore,
+	eventScorecard,
+	ScorecardInsert,
+	ScorecardRow,
+	ScorecardWithScores,
+	ScoreInsert,
+	ScoreRow,
+} from "../database"
 // import {
 // 	scorecardInsertSchema,
 // 	ScorecardModel,
@@ -80,10 +89,7 @@ export class ScoresRepository {
 			)
 
 		// Group by scorecard to build nested structure
-		const grouped: Map<
-			number,
-			{ scorecard: ScorecardRow; scores: ScoreRow[] }
-		> = new Map()
+		const grouped: Map<number, { scorecard: ScorecardRow; scores: ScoreRow[] }> = new Map()
 		results.forEach((r) => {
 			const scorecardId = r.scorecard.id
 			if (!grouped.has(scorecardId)) {

@@ -1,9 +1,20 @@
+import type { ZodError } from "zod"
+
 export class GolfGeniusError extends Error {
 	name = "GolfGeniusError"
 	details?: unknown
 	constructor(message: string, details?: unknown) {
 		super(message)
 		this.details = details
+	}
+}
+
+export class ValidationError extends GolfGeniusError {
+	name = "ValidationError"
+	zodError?: ZodError
+	constructor(message: string, zodError?: ZodError, details?: unknown) {
+		super(message, details)
+		this.zodError = zodError
 	}
 }
 

@@ -3,7 +3,16 @@ import { eq } from "drizzle-orm"
 import { Injectable } from "@nestjs/common"
 import { Course, Hole, Tee } from "@repo/domain/types"
 
-import { course, DrizzleService, eventCourses, hole, tee, type CourseRow, type HoleRow, type TeeRow } from "../database"
+import {
+	course,
+	DrizzleService,
+	eventCourses,
+	hole,
+	tee,
+	type CourseRow,
+	type HoleRow,
+	type TeeRow,
+} from "../database"
 import { toCourse, toCourseWithCompositions, toHole, toTee } from "./mappers"
 
 @Injectable()

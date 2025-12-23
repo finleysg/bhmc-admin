@@ -15,10 +15,10 @@ import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import { toTournamentData } from "../dto/mappers"
+import { ImportResultSummary } from "../dto/results.dto"
 import {
 	GGAggregate,
 	GolfGeniusTournamentResults,
-	ImportResultSummary,
 	ProxyTournamentAggregate,
 	QuotaTournamentAggregate,
 	SkinsTournamentAggregate,

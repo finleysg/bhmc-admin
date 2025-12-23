@@ -139,19 +139,3 @@ export interface GGIndividualResult {
 		}
 	}
 }
-
-// Service response DTOs
-export interface ImportResultSummary {
-	tournamentId: number
-	tournamentName: string
-	eventName: string
-	resultsImported: number
-	skippedBlinds?: number
-	errors: string[]
-}
-
-export interface ImportResult {
-	tournament: string
-	resultsImported: number
-	errors: string[]
-}
