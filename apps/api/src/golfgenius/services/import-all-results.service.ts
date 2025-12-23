@@ -18,6 +18,7 @@ import { toTournamentData } from "../dto/mappers"
 import { ImportResultSummary } from "../dto/results.dto"
 import {
 	GGAggregate,
+	GGScope,
 	GolfGeniusTournamentResults,
 	ProxyTournamentAggregate,
 	QuotaTournamentAggregate,
@@ -267,9 +268,9 @@ export class ImportAllResultsService {
 		playerMap: PlayerMap,
 		parser: {
 			validateResponse: (ggResults: GolfGeniusTournamentResults) => string | null
-			extractScopes: (ggResults: GolfGeniusTournamentResults) => any[]
-			extractFlightName: (scope: any) => string
-			extractAggregates: (scope: any) => GGAggregate[]
+			extractScopes: (ggResults: GolfGeniusTournamentResults) => GGScope[]
+			extractFlightName: (scope: GGScope) => string
+			extractAggregates: (scope: GGScope) => GGAggregate[]
 		},
 		prepareRecord: (
 			tournamentData: TournamentData,
@@ -300,7 +301,7 @@ export class ImportAllResultsService {
 			// Process each player result
 			for (const aggregate of aggregates) {
 				let success = false
-				let playerName = (aggregate as any).name || "Unknown Player"
+				const playerName = aggregate.name || "Unknown Player"
 
 				try {
 					const preparedRecord = prepareRecord(

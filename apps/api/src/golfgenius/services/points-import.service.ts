@@ -18,6 +18,7 @@ import { ImportResult } from "../dto"
 import { toTournamentData } from "../dto/mappers"
 import {
 	GGAggregate,
+	GGScope,
 	GolfGeniusTournamentResults,
 	PointsTournamentAggregate,
 } from "../dto/tournament-results.dto"
@@ -287,7 +288,7 @@ export class PointsImportService {
 	private async fetchGGResults(
 		tournamentData: TournamentData,
 		result: PointsImportSummary,
-	): Promise<any> {
+	): Promise<GolfGeniusTournamentResults | null> {
 		try {
 			if (!tournamentData.eventGgId) {
 				result.errors.push("Tournament event GG ID is missing")
@@ -312,9 +313,9 @@ export class PointsImportService {
 		playerMap: PlayerMap,
 		parser: {
 			validateResponse: (ggResults: GolfGeniusTournamentResults) => string | null
-			extractScopes: (ggResults: GolfGeniusTournamentResults) => any[]
-			extractFlightName: (scope: any) => string
-			extractAggregates: (scope: any) => GGAggregate[]
+			extractScopes: (ggResults: GolfGeniusTournamentResults) => GGScope[]
+			extractFlightName: (scope: GGScope) => string
+			extractAggregates: (scope: GGScope) => GGAggregate[]
 		},
 		prepareRecord: (
 			tournamentData: TournamentData,
@@ -345,7 +346,7 @@ export class PointsImportService {
 			// Process each player result
 			for (const aggregate of aggregates) {
 				let success = false
-				let playerName = (aggregate as any).name || "Unknown Player"
+				const playerName = aggregate.name || "Unknown Player"
 
 				try {
 					const preparedRecord = prepareRecord(

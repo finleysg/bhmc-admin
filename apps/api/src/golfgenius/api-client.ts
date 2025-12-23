@@ -91,7 +91,7 @@ export class ApiClient {
 		endpoint: string,
 		options: RequestOptions = {},
 		schema?: ZodSchema<T>,
-	): Promise<T | unknown> {
+	): Promise<T> {
 		let url = endpoint
 		if (endpoint.includes("{api_key}")) {
 			url = endpoint.replace("{api_key}", this.apiKey)
@@ -106,7 +106,7 @@ export class ApiClient {
 			headers["Content-Type"] = "application/json"
 		}
 
-		let lastError: any = null
+		let lastError: unknown = null
 
 		for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
 			try {
@@ -120,7 +120,7 @@ export class ApiClient {
 
 				if (res.status === 429) {
 					// Rate limited
-					const retryAfter = res.headers["retry-after"]
+					const retryAfter = res.headers["retry-after"] as string | undefined
 					const ra = retryAfter ? Math.min(parseInt(retryAfter, 10), this.retryDelayMax) : 0
 					const delay = Math.min(this.retryDelayBase * 2 ** attempt, this.retryDelayMax)
 					const wait = Math.max(delay, ra * 1000)
@@ -179,7 +179,10 @@ export class ApiClient {
 		}
 
 		// Should never be reached
-		throw lastError ?? new ApiError("Request failed after all retries")
+		if (lastError instanceof Error) {
+			throw lastError
+		}
+		throw new ApiError("Request failed after all retries")
 	}
 
 	async getMasterRoster(page?: number, photo = false): Promise<MasterRosterItemDto[]> {
@@ -332,7 +335,7 @@ export class ApiClient {
 		if (!sa || !sb) return 0
 		const la = sa.length
 		const lb = sb.length
-		const dp: number[][] = Array.from({ length: la + 1 }, () => new Array(lb + 1).fill(0))
+		const dp: number[][] = Array.from({ length: la + 1 }, () => new Array<number>(lb + 1).fill(0))
 		for (let i = 0; i <= la; i++) dp[i][0] = i
 		for (let j = 0; j <= lb; j++) dp[0][j] = j
 		for (let i = 1; i <= la; i++) {

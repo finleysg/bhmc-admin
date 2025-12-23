@@ -4,7 +4,7 @@ import { Injectable, Logger } from "@nestjs/common"
 import { PlayerProgressEvent } from "@repo/domain/types"
 
 import { CoursesRepository } from "../../courses"
-import { ScorecardRow, ScoreInsert, ScoreRow } from "../../database"
+import { ScorecardRow, ScoreInsert } from "../../database"
 import { EventsService } from "../../events"
 import { RegistrationRepository } from "../../registration"
 import { ScoresRepository } from "../../scores"
@@ -99,7 +99,7 @@ export class ScoresImportService {
 						teeId,
 						results,
 					)
-					await this.createOrUpdateScores(scorecard.id!, player, courseId)
+					await this.createOrUpdateScores(scorecard.id, player, courseId)
 
 					// Emit progress for successfully processed player
 					if (onPlayerProcessed) {
@@ -139,7 +139,7 @@ export class ScoresImportService {
 				parseInt(playerData.handicap_network_id),
 			)
 			this.logger.verbose("Found player " + JSON.stringify(player))
-			if (player) return player.id!
+			if (player) return player.id
 		}
 
 		if (playerData.player_roster_id) {
@@ -166,7 +166,7 @@ export class ScoresImportService {
 		const tee = await this.courses.findTeeByGgId(teeGgId)
 		if (!tee) throw new Error(`Tee not found: ${teeGgId}`)
 
-		return { courseId: course.id!, teeId: tee.id }
+		return { courseId: course.id, teeId: tee.id }
 	}
 
 	private async createOrUpdateScorecard(
@@ -183,7 +183,7 @@ export class ScoresImportService {
 
 		if (existing) {
 			results.scorecards.updated++
-			return await this.scoresService.updateScorecard(existing.id!, {
+			return await this.scoresService.updateScorecard(existing.id, {
 				eventId,
 				playerId,
 				handicapIndex: handicapIndex?.toString(),
@@ -225,7 +225,7 @@ export class ScoresImportService {
 			// Prepare gross score
 			allScores.push({
 				scorecardId: scoreCardId,
-				holeId: hole.id!,
+				holeId: hole.id,
 				score: grossScore,
 				isNet: 0,
 			})
@@ -236,7 +236,7 @@ export class ScoresImportService {
 
 			allScores.push({
 				scorecardId: scoreCardId,
-				holeId: hole.id!,
+				holeId: hole.id,
 				score: netScore,
 				isNet: 1,
 			})

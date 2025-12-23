@@ -16,8 +16,7 @@ import {
 	ValidatedRegistration,
 } from "@repo/domain/types"
 import * as nodemailer from "nodemailer"
-// @ts-ignore - no types available for this module
-import mailgunTransport = require("nodemailer-mailgun-transport")
+import mailgunTransport from "nodemailer-mailgun-transport"
 import type { ReactElement } from "react"
 
 import { RegistrationConfirmationEmail, WelcomeEmail } from "./templates"
@@ -73,7 +72,7 @@ export class MailService {
 				html,
 			}
 
-			const info = await this.transporter.sendMail(mailOptions)
+			const info = (await this.transporter.sendMail(mailOptions)) as { messageId: string }
 			this.logger.log(`Email sent successfully: ${info.messageId}`)
 		} catch (error) {
 			this.logger.error(
