@@ -11,40 +11,28 @@ import {
 	tournament,
 	tournamentPoints,
 	tournamentResult,
+	type EventRow,
+	type EventFeeRow,
+	type FeeTypeRow,
+	type RoundRow,
+	type TournamentRow,
+	type TournamentPointsInsert,
+	type TournamentResultInsert,
+	type RoundInsert,
+	type TournamentInsert,
 } from "../database"
-import {
-	EventFeeModel,
-	EventModel,
-	eventUpdateSchema,
-	roundInsertSchema,
-	RoundModel,
-	tournamentInsertSchema,
-	TournamentModel,
-	tournamentPointsInsertSchema,
-	TournamentPointsModel,
-	tournamentResultInsertSchema,
-	TournamentResultModel,
-} from "../database/models"
-import {
-	mapToEventFeeModel,
-	mapToEventModel,
-	mapToFeeTypeModel,
-	mapToRoundModel,
-	mapToTournamentModel,
-} from "./mappers"
 
 @Injectable()
 export class EventsRepository {
 	constructor(private drizzle: DrizzleService) {}
 
 	// events_event
-	async findEventById(eventId: number): Promise<EventModel> {
+	async findEventById(eventId: number): Promise<EventRow> {
 		const [evt] = await this.drizzle.db.select().from(event).where(eq(event.id, eventId)).limit(1)
 		if (!evt) {
 			throw new Error(`No event found with id ${eventId}`)
 		}
-
-		return mapToEventModel(evt)
+		return evt
 	}
 
 	async existsById(eventId: number): Promise<boolean> {
@@ -55,59 +43,49 @@ export class EventsRepository {
 		return result[0].count > 0
 	}
 
-	async findEventsByDate(date: string): Promise<EventModel[]> {
-		const results = await this.drizzle.db.select().from(event).where(eq(event.startDate, date))
-		return results.map(mapToEventModel)
+	async findEventsByDate(date: string): Promise<EventRow[]> {
+		return this.drizzle.db.select().from(event).where(eq(event.startDate, date))
 	}
 
-	async updateEvent(id: number, data: EventModel) {
-		const entity = eventUpdateSchema.parse(data)
-		await this.drizzle.db.update(event).set(entity).where(eq(event.id, id))
+	async updateEvent(id: number, data: Partial<EventRow>) {
+		await this.drizzle.db.update(event).set(data).where(eq(event.id, id))
 		return this.findEventById(id)
 	}
 
 	// events_event_fees
-	async listEventFeesByEvent(id: number): Promise<EventFeeModel[]> {
-		const results = await this.drizzle.db
+	async listEventFeesByEvent(id: number): Promise<{ eventFee: EventFeeRow; feeType: FeeTypeRow }[]> {
+		return this.drizzle.db
 			.select({ eventFee: eventFee, feeType: feeType })
 			.from(eventFee)
 			.innerJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
 			.where(eq(eventFee.eventId, id))
-
-		return results.map((r) => {
-			const fee = mapToEventFeeModel(r.eventFee)
-			fee.feeType = mapToFeeTypeModel(r.feeType)
-			return fee
-		})
 	}
 
 	// events_round
-	async createRound(data: RoundModel) {
-		const entity = roundInsertSchema.parse(data)
-		const [result] = await this.drizzle.db.insert(round).values(entity)
+	async createRound(data: RoundInsert): Promise<RoundRow> {
+		const [result] = await this.drizzle.db.insert(round).values(data)
 		return this.findRoundById(Number(result.insertId))
 	}
 
-	async findRoundById(id: number): Promise<RoundModel> {
+	async findRoundById(id: number): Promise<RoundRow> {
 		const [rnd] = await this.drizzle.db.select().from(round).where(eq(round.id, id)).limit(1)
 		if (!rnd) {
 			throw new Error(`No round found with id ${id}`)
 		}
-		return mapToRoundModel(rnd)
+		return rnd
 	}
 
-	async findRoundsByEventId(event_id: number): Promise<RoundModel[]> {
-		const results = await this.drizzle.db.select().from(round).where(eq(round.eventId, event_id))
-		return results.map(mapToRoundModel)
+	async findRoundsByEventId(eventId: number): Promise<RoundRow[]> {
+		return this.drizzle.db.select().from(round).where(eq(round.eventId, eventId))
 	}
 
-	async createTournament(data: TournamentModel) {
-		const entity = tournamentInsertSchema.parse(data)
-		const [result] = await this.drizzle.db.insert(tournament).values(entity)
+	// events_tournament
+	async createTournament(data: TournamentInsert): Promise<TournamentRow> {
+		const [result] = await this.drizzle.db.insert(tournament).values(data)
 		return this.findTournamentById(Number(result.insertId))
 	}
 
-	async findTournamentById(id: number): Promise<TournamentModel> {
+	async findTournamentById(id: number): Promise<TournamentRow> {
 		const [tourney] = await this.drizzle.db
 			.select()
 			.from(tournament)
@@ -116,74 +94,46 @@ export class EventsRepository {
 		if (!tourney) {
 			throw new Error(`No tournament found with id ${id}`)
 		}
-		return mapToTournamentModel(tourney)
+		return tourney
 	}
 
-	async findTournamentsByEventId(eventId: number): Promise<TournamentModel[]> {
-		const results = await this.drizzle.db
-			.select()
-			.from(tournament)
-			.where(eq(tournament.eventId, eventId))
-		return results.map(mapToTournamentModel)
+	async findTournamentsByEventId(eventId: number): Promise<TournamentRow[]> {
+		return this.drizzle.db.select().from(tournament).where(eq(tournament.eventId, eventId))
 	}
 
-	/**
-	 * Bulk delete all tournaments for an event.
-	 * Returns the number of rows deleted when available.
-	 */
-	async deleteTournamentsByEventId(eventId: number) {
+	async deleteTournamentsByEventId(eventId: number): Promise<number> {
 		const res = await this.drizzle.db.delete(tournament).where(eq(tournament.eventId, eventId))
 		const r = res as unknown as { affectedRows?: number; affected_rows?: number }
 		return r.affectedRows ?? r.affected_rows ?? 0
 	}
 
-	/**
-	 * Bulk delete all rounds for an event.
-	 * Returns the number of rows deleted when available.
-	 */
-	async deleteRoundsByEventId(eventId: number) {
+	async deleteRoundsByEventId(eventId: number): Promise<number> {
 		const res = await this.drizzle.db.delete(round).where(eq(round.eventId, eventId))
 		const r = res as unknown as { affectedRows?: number; affected_rows?: number }
 		return r.affectedRows ?? r.affected_rows ?? 0
 	}
 
-	/**
-	 * Delete existing tournament results and points for a tournament.
-	 * Used during Golf Genius result imports to ensure idempotent operations.
-	 */
 	async deleteTournamentResults(tournamentId: number): Promise<void> {
 		await this.drizzle.db
 			.delete(tournamentResult)
 			.where(eq(tournamentResult.tournamentId, tournamentId))
 	}
 
-	/**
-	 * Delete existing tournament points for a tournament.
-	 * Used during Golf Genius points imports to ensure idempotent operations.
-	 */
 	async deleteTournamentPoints(tournamentId: number): Promise<void> {
 		await this.drizzle.db
 			.delete(tournamentPoints)
 			.where(eq(tournamentPoints.tournamentId, tournamentId))
 	}
 
-	/**
-	 * Batch insert tournament points.
-	 */
-	async insertTournamentPoints(points: TournamentPointsModel[]): Promise<void> {
+	async insertTournamentPoints(points: TournamentPointsInsert[]): Promise<void> {
 		if (points.length > 0) {
-			const data = points.map((p) => tournamentPointsInsertSchema.parse(p))
-			await this.drizzle.db.insert(tournamentPoints).values(data)
+			await this.drizzle.db.insert(tournamentPoints).values(points)
 		}
 	}
 
-	/**
-	 * Batch insert tournament results.
-	 */
-	async insertTournamentResults(results: TournamentResultModel[]): Promise<void> {
+	async insertTournamentResults(results: TournamentResultInsert[]): Promise<void> {
 		if (results.length > 0) {
-			const data = results.map((r) => tournamentResultInsertSchema.parse(r))
-			await this.drizzle.db.insert(tournamentResult).values(data)
+			await this.drizzle.db.insert(tournamentResult).values(results)
 		}
 	}
 }

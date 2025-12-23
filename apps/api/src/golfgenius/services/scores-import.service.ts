@@ -4,7 +4,7 @@ import { Injectable, Logger } from "@nestjs/common"
 import { PlayerProgressEvent } from "@repo/domain/types"
 
 import { CoursesRepository } from "../../courses"
-import { ScorecardModel, ScoreModel } from "../../database/models"
+import { ScorecardRow, ScoreInsert, ScoreRow } from "../../database"
 import { EventsService } from "../../events"
 import { RegistrationRepository } from "../../registration"
 import { ScoresRepository } from "../../scores"
@@ -190,7 +190,7 @@ export class ScoresImportService {
 				courseHandicap: courseHandicap ?? 0,
 				courseId,
 				teeId,
-			} as ScorecardModel)
+			} as ScorecardRow)
 		} else {
 			results.scorecards.created++
 			return await this.scoresService.createScorecard({
@@ -213,7 +213,7 @@ export class ScoresImportService {
 		await this.scoresService.deleteScoresByScorecard(scoreCardId)
 
 		const holes = await this.courses.findHolesByCourseId(courseId)
-		const allScores: ScoreModel[] = []
+		const allScores: ScoreInsert[] = []
 
 		for (let i = 0; i < playerData.score_array.length; i++) {
 			const grossScore = playerData.score_array[i]

@@ -1,83 +1,65 @@
-import { Champion, LowScore, TournamentResults } from "@repo/domain/types"
+import { Champion, LowScore, Player, TournamentResults } from "@repo/domain/types"
 
-import { ChampionModel, LowScoreModel } from "../database/models"
+import type { ChampionInsert, ChampionRow, LowScoreRow, PlayerRow } from "../database"
 import { toPlayer } from "../registration/mappers"
 
 /**
- * Maps database entity to LowScoreModel
+ * Maps LowScoreRow to LowScore domain type
  */
-export function mapToLowScoreModel(entity: Record<string, any>): LowScoreModel {
+export function toLowScore(row: LowScoreRow, player?: Player): LowScore {
 	return {
-		id: entity.id,
-		season: entity.season,
-		courseName: entity.course_name,
-		score: entity.score,
-		playerId: entity.player_id,
-		isNet: entity.is_net,
+		id: row.id,
+		season: row.season,
+		courseName: row.courseName,
+		score: row.score,
+		playerId: row.playerId,
+		isNet: Boolean(row.isNet),
+		player,
 	}
 }
 
 /**
- * Maps LowScoreModel to LowScore domain class
+ * Maps LowScoreRow with PlayerRow to LowScore with nested player
  */
-export function toLowScore(model: LowScoreModel): LowScore {
-	return {
-		id: model.id,
-		season: model.season,
-		courseName: model.courseName,
-		score: model.score,
-		playerId: model.playerId,
-		isNet: Boolean(model.isNet),
-		player: model.player ? toPlayer(model.player) : undefined,
-	} as LowScore
+export function toLowScoreWithPlayer(row: { lowScore: LowScoreRow; player: PlayerRow }): LowScore {
+	return toLowScore(row.lowScore, toPlayer(row.player))
 }
 
 /**
- * Maps database entity to ChampionModel
+ * Maps ChampionRow to Champion domain type
  */
-export function mapToChampionModel(entity: Record<string, any>): ChampionModel {
+export function toChampion(row: ChampionRow, player?: Player): Champion {
 	return {
-		id: entity.id,
-		season: entity.season,
-		eventName: entity.eventName,
-		flight: entity.flight,
-		score: entity.score,
-		playerId: entity.playerId,
-		isNet: entity.isNet,
-		eventId: entity.eventId,
-		teamId: entity.teamId,
+		id: row.id,
+		season: row.season,
+		eventName: row.eventName,
+		flight: row.flight,
+		score: row.score,
+		playerId: row.playerId,
+		isNet: Boolean(row.isNet),
+		eventId: row.eventId ?? undefined,
+		teamId: row.teamId ?? undefined,
+		player,
 	}
 }
 
 /**
- * Maps ChampionModel to Champion domain class
+ * Maps ChampionRow with PlayerRow to Champion with nested player
  */
-export function toChampion(model: ChampionModel): Champion {
-	return {
-		id: model.id!,
-		season: model.season,
-		eventName: model.eventName,
-		flight: model.flight,
-		score: model.score,
-		playerId: model.playerId,
-		isNet: Boolean(model.isNet),
-		eventId: model.eventId,
-		teamId: model.teamId,
-		player: model.player ? toPlayer(model.player) : undefined,
-	}
+export function toChampionWithPlayer(row: { champion: ChampionRow; player: PlayerRow }): Champion {
+	return toChampion(row.champion, toPlayer(row.player))
 }
 
 /**
- * Maps tournament winner result (with player data) to ChampionModel
+ * Maps tournament winner result to ChampionInsert for database insertion
  */
-export function mapTournamentWinnerToChampion(
+export function mapTournamentWinnerToChampionInsert(
 	winner: TournamentResults,
 	isNet: boolean,
 	eventId: number,
 	eventSeason: number,
 	eventName: string,
-): ChampionModel {
-	// Validate required fields for champion mapping
+): ChampionInsert {
 	if (!winner) {
 		throw new Error(`Winner result is null or undefined`)
 	}

@@ -2,64 +2,59 @@ import { and, eq } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 
-import { DrizzleService, eventScore, eventScorecard } from "../database"
-import {
-	scorecardInsertSchema,
-	ScorecardModel,
-	scorecardUpdateSchema,
-	scoreInsertSchema,
-	ScoreModel,
-} from "../database/models"
-import { mapToScorecardModel, mapToScoreModel } from "./mappers"
+import { DrizzleService, eventScore, eventScorecard, ScorecardInsert, ScorecardRow, ScorecardWithScores, ScoreInsert, ScoreRow } from "../database"
+// import {
+// 	scorecardInsertSchema,
+// 	ScorecardModel,
+// 	scorecardUpdateSchema,
+// 	scoreInsertSchema,
+// 	ScoreModel,
+// } from "../database/models"
 
 @Injectable()
 export class ScoresRepository {
 	constructor(private drizzle: DrizzleService) {}
 
-	async createScorecard(scorecard: ScorecardModel) {
-		const data = scorecardInsertSchema.parse(scorecard)
+	async createScorecard(data: ScorecardInsert): Promise<ScorecardRow> {
 		const [result] = await this.drizzle.db.insert(eventScorecard).values(data)
 		return this.findScorecardById(result.insertId)
 	}
 
-	async findScorecardById(id: number) {
+	async findScorecardById(id: number): Promise<ScorecardRow> {
 		const [scorecard] = await this.drizzle.db
 			.select()
 			.from(eventScorecard)
 			.where(eq(eventScorecard.id, id))
 			.limit(1)
 		if (scorecard) {
-			return mapToScorecardModel(scorecard)
+			return scorecard
 		}
 		throw new Error(`No scorecard found for id ${id}.`)
 	}
 
-	async findScorecard(eventId: number, playerId: number) {
+	async findScorecard(eventId: number, playerId: number): Promise<ScorecardRow | null> {
 		const [scorecard] = await this.drizzle.db
 			.select()
 			.from(eventScorecard)
 			.where(and(eq(eventScorecard.eventId, eventId), eq(eventScorecard.playerId, playerId)))
 			.limit(1)
 		if (scorecard) {
-			return mapToScorecardModel(scorecard)
+			return scorecard
 		}
 		return null
 	}
 
-	async updateScorecard(id: number, scorecard: ScorecardModel) {
-		const data = scorecardUpdateSchema.parse(scorecard)
+	async updateScorecard(id: number, data: Partial<ScorecardRow>) {
 		await this.drizzle.db.update(eventScorecard).set(data).where(eq(eventScorecard.id, id))
 		return this.findScorecardById(id)
 	}
 
-	async deleteScoresByScorecard(scorecardId: number) {
+	async deleteScoresByScorecard(scorecardId: number): Promise<void> {
 		await this.drizzle.db.delete(eventScore).where(eq(eventScore.scorecardId, scorecardId))
 	}
 
-	async batchCreateScores(scores: ScoreModel[]) {
-		if (scores.length === 0) return
-
-		const data = scores.map((s) => scoreInsertSchema.parse(s))
+	async batchCreateScores(data: ScoreInsert[]): Promise<void> {
+		if (data.length === 0) return
 		await this.drizzle.db.insert(eventScore).values(data)
 	}
 
@@ -67,7 +62,7 @@ export class ScoresRepository {
 		eventId: number,
 		courseId: number,
 		isNet: boolean,
-	): Promise<ScorecardModel[]> {
+	): Promise<ScorecardWithScores[]> {
 		const isNetValue = isNet ? 1 : 0
 		const results = await this.drizzle.db
 			.select({
@@ -87,7 +82,7 @@ export class ScoresRepository {
 		// Group by scorecard to build nested structure
 		const grouped: Map<
 			number,
-			{ scorecard: Record<string, unknown>; scores: Record<string, unknown>[] }
+			{ scorecard: ScorecardRow; scores: ScoreRow[] }
 		> = new Map()
 		results.forEach((r) => {
 			const scorecardId = r.scorecard.id
@@ -97,13 +92,9 @@ export class ScoresRepository {
 			grouped.get(scorecardId)!.scores.push(r.score)
 		})
 
-		const scorecards: ScorecardModel[] = []
-		for (const { scorecard, scores } of grouped.values()) {
-			const model = mapToScorecardModel(scorecard)
-			model.scores = scores.map((s) => mapToScoreModel({ ...s, playerId: scorecard.playerId }))
-			scorecards.push(model)
-		}
-
-		return scorecards
+		return Array.from(grouped.values()).map(({ scorecard, scores }) => ({
+			...scorecard,
+			scores,
+		}))
 	}
 }

@@ -7,7 +7,7 @@ import {
 	TournamentProgressEvent,
 } from "@repo/domain/types"
 
-import { IntegrationLogService } from "./integration-log.service"
+import { IntegrationLogRepository } from "../integration-log.repository"
 import {
 	DEFAULT_TRACKER_CONFIG,
 	ExportResult,
@@ -28,7 +28,7 @@ export class ProgressTracker {
 	private readonly config: TrackerConfig
 
 	constructor(
-		private readonly integrationLog: IntegrationLogService,
+		private readonly integrationLog: IntegrationLogRepository,
 		@Optional() config?: Partial<TrackerConfig>,
 	) {
 		this.config = { ...DEFAULT_TRACKER_CONFIG, ...config }

@@ -1,4 +1,5 @@
 export * from "./schema"
 export * from "./relations"
 export * from "./utils"
+export * from "./types"
 export { DrizzleService } from "./drizzle.service"

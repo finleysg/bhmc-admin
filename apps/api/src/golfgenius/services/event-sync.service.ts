@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common"
 
-import { TournamentModel } from "../../database/models"
+import { TournamentRow } from "../../database"
 import { EventsRepository } from "../../events"
 import { ApiClient } from "../api-client"
 
@@ -102,7 +102,7 @@ export class EventSyncService {
 					ggId: gt.id,
 					eventId: localEventId,
 					roundId: localRoundId,
-				} as TournamentModel)
+				} as TournamentRow)
 				if (created && created.id) summary.tournamentsCreated += 1
 			}
 		}
