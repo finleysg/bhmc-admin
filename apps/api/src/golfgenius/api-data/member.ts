@@ -51,3 +51,17 @@ export type GgHandicap = z.infer<typeof GgHandicapSchema>
 export type GgMember = z.infer<typeof GgMemberSchema>
 export type GgMemberWrapper = z.infer<typeof GgMemberWrapperSchema>
 export type GgMembersResponse = z.infer<typeof GgMembersResponseSchema>
+
+/**
+ * Payload for syncing our member data to Golf Genius
+ */
+export interface GgMemberSyncData {
+	external_id: string | number
+	last_name: string
+	first_name: string
+	email: string
+	gender: string // always "M" for us
+	handicap_network_id?: string | null // ghin
+	rounds: string[] // array of round ids
+	custom_fields: Record<string, string | null>
+}

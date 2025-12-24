@@ -34,7 +34,7 @@ export class EventSyncService {
 		let localEventId: number
 		const localEvent = await this.events.findEventById(eventId)
 		if (!localEvent) throw new Error(`Local event not found: ${eventId}`)
-		localEventId = localEvent.id!
+		localEventId = localEvent.id
 
 		// 2) Find matching GG event
 		const ggEvent = await this.apiClient.findMatchingEventByStartDate(
@@ -43,7 +43,7 @@ export class EventSyncService {
 		)
 		if (!ggEvent || !ggEvent.id) throw new Error("Matched Golf Genius event missing id")
 
-		const ggEventId = ggEvent.id.toString()
+		const ggEventId = ggEvent.id
 
 		// 3) Delete existing tournaments and rounds by event id (bulk deletes to respect FK)
 		// First delete child records (results & points) for each tournament to avoid FK constraint errors.
@@ -94,10 +94,10 @@ export class EventSyncService {
 			}
 			const ggTournaments = await this.apiClient.getRoundTournaments(ggEventId, String(gr.id))
 			for (const gt of ggTournaments) {
-				const isNet = (gt.handicapFormat ?? "").toString().toLowerCase().includes("net")
+				const isNet = gt.handicap_format.toLowerCase().includes("net")
 				const created = await this.events.createTournament({
 					name: gt.name ?? undefined,
-					format: gt.scoreFormat ?? undefined,
+					format: gt.score_format ?? undefined,
 					isNet: isNet ? 1 : 0,
 					ggId: gt.id,
 					eventId: localEventId,

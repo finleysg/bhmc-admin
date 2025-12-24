@@ -10,8 +10,8 @@ import { RegistrationRepository } from "../../registration"
 import { ScoresRepository } from "../../scores"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
-import { GgTeeSheetPlayerDto } from "../dto/golf-genius.dto"
 import { ProgressTracker } from "./progress-tracker"
+import { GgPlayer } from "../api-data"
 
 interface ImportScoresResult {
 	scorecards: {
@@ -66,14 +66,14 @@ export class ScoresImportService {
 		roundGgId: string,
 		onPlayerProcessed?: (playerCount: number) => void,
 	): Promise<ImportScoresResult> {
-		const teeSheet = await this.apiClient.getRoundTeeSheet(eventGgId.toString(), roundGgId)
+		const pairingGroups = await this.apiClient.getRoundTeeSheet(eventGgId.toString(), roundGgId)
 		const results: ImportScoresResult = {
 			scorecards: { created: 0, updated: 0, skipped: 0 },
 			errors: [],
 		}
 
-		for (const pairing of teeSheet) {
-			for (const player of pairing.pairing_group.players) {
+		for (const pairing of pairingGroups) {
+			for (const player of pairing.players) {
 				try {
 					const playerId = await this.identifyPlayer(player)
 					if (!playerId) {
@@ -123,7 +123,7 @@ export class ScoresImportService {
 		return results
 	}
 
-	private async identifyPlayer(playerData: GgTeeSheetPlayerDto): Promise<number | null> {
+	private async identifyPlayer(playerData: GgPlayer): Promise<number | null> {
 		if (playerData.external_id) {
 			this.logger.debug(`Searching for player by slot id: ${playerData.external_id}`)
 			const slot = await this.registration.findRegistrationSlotById(
@@ -155,7 +155,7 @@ export class ScoresImportService {
 	}
 
 	private async lookupCourseAndTee(
-		playerData: GgTeeSheetPlayerDto,
+		playerData: GgPlayer,
 	): Promise<{ courseId: number; teeId: number }> {
 		const teeGgId = playerData.tee.id
 		const courseGgId = playerData.tee.course_id
@@ -172,7 +172,7 @@ export class ScoresImportService {
 	private async createOrUpdateScorecard(
 		eventId: number,
 		playerId: number,
-		playerData: GgTeeSheetPlayerDto,
+		playerData: GgPlayer,
 		courseId: number,
 		teeId: number,
 		results: ImportScoresResult,
@@ -206,7 +206,7 @@ export class ScoresImportService {
 
 	private async createOrUpdateScores(
 		scoreCardId: number,
-		playerData: GgTeeSheetPlayerDto,
+		playerData: GgPlayer,
 		courseId: number,
 	): Promise<void> {
 		// Delete all existing scores for this scorecard first
@@ -315,9 +315,9 @@ export class ScoresImportService {
 		let totalPlayers = 0
 		for (const round of event.eventRounds) {
 			try {
-				const teeSheet = await this.apiClient.getRoundTeeSheet(event.ggId, round.ggId)
-				for (const pairing of teeSheet) {
-					totalPlayers += pairing.pairing_group.players.length
+				const groups = await this.apiClient.getRoundTeeSheet(event.ggId, round.ggId)
+				for (const group of groups) {
+					totalPlayers += group.players.length
 				}
 			} catch {
 				// Continue counting, we'll handle errors during actual processing

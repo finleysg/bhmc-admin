@@ -4,8 +4,8 @@ import { Player } from "@repo/domain/types"
 import { RegistrationRepository, RegistrationService } from "../../registration"
 import { ApiClient } from "../api-client"
 import { MemberSyncResult } from "../dto"
-import { MasterRosterItemDto } from "../dto/internal.dto"
 import { ApiError, AuthError, RateLimitError } from "../errors"
+import { GgMember } from "../api-data"
 
 @Injectable()
 export class MemberSyncService {
@@ -31,13 +31,12 @@ export class MemberSyncService {
 		const map: Record<string, string> = {}
 		let page = 1
 		while (true) {
-			const res = await this.apiClient.getMasterRoster(page)
-			if (!res || !Array.isArray(res)) break
-			for (const item of res) {
-				const member = item.member
+			const members = await this.apiClient.getMasterRoster(page)
+			if (!members || !Array.isArray(members)) break
+			for (const member of members) {
 				if (member) {
-					const hn = member.handicapNetworkId ?? null
-					const mc = member.memberCardId
+					const hn = member.handicap.handicap_network_id ?? null
+					const mc = member.member_card_id ?? null
 					if (hn && mc) {
 						const key = this.normalizeGhin(hn)
 						if (key) {
@@ -46,7 +45,7 @@ export class MemberSyncService {
 					}
 				}
 			}
-			if (res.length < 100) break
+			if (members.length < 100) break
 			page += 1
 		}
 		return map
@@ -143,7 +142,7 @@ export class MemberSyncService {
 		}
 
 		// Fetch master roster member from GG
-		let member: MasterRosterItemDto | null = null
+		let member: GgMember | null = null
 		try {
 			member = await this.apiClient.getMasterRosterMember(player.email)
 		} catch (err: unknown) {
@@ -165,8 +164,8 @@ export class MemberSyncService {
 		}
 
 		// Determine member_card_id and handicap network id from fetched member (support domain & raw shapes)
-		const memberCardId = member.member?.memberCardId ?? null
-		const hn = member?.member?.handicapNetworkId ?? null
+		const memberCardId = member.member_card_id ?? null
+		const hn = member.handicap.handicap_network_id ?? null
 
 		if (!memberCardId && !hn) {
 			res.message = `Master roster member for ${player.email} missing member_card_id and handicap_network_id`

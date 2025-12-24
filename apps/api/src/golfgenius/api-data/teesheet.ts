@@ -1,15 +1,6 @@
 import { z } from "zod"
 
-// Hole data schema (par, yardage, handicap arrays)
-export const GgHoleDataSchema = z
-	.object({
-		par: z.array(z.number().nullable()),
-		yardage: z.array(z.number().nullable()),
-		handicap: z.array(z.number().nullable()),
-	})
-	.catchall(z.unknown())
-
-export type GgHoleData = z.infer<typeof GgHoleDataSchema>
+import { GgHoleDataSchema } from "./course"
 
 // Tee schema for teesheet (includes course_id)
 export const GgTeesheetTeeSchema = z

@@ -15,24 +15,24 @@ import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import { toTournamentData } from "../dto/mappers"
-import { ImportResultSummary } from "../dto/results.dto"
+import { ImportResultSummary } from "../dto/integration-results"
 import {
-	GGAggregate,
-	GGScope,
-	GolfGeniusTournamentResults,
+	GgAggregate,
+	GgScope,
+	GgTournamentResult,
 	ProxyTournamentAggregate,
 	QuotaTournamentAggregate,
 	SkinsTournamentAggregate,
 	StrokeTournamentAggregate,
-} from "../dto/tournament-results.dto"
+} from "../api-data"
 import { ProgressTracker } from "./progress-tracker"
 import {
 	ProxyResultParser,
 	QuotaResultParser,
 	SkinsResultParser,
 	StrokePlayResultParser,
+	TeamResultParser,
 } from "./result-parsers"
-import { TeamResultParser } from "./team-result-parser"
 import { parsePurseAmount } from "./utils"
 import { toDbString } from "../../database"
 
@@ -145,7 +145,7 @@ export class ImportAllResultsService {
 	): (
 		tournamentData: TournamentData,
 		result: ImportResultSummary,
-		ggResults: GolfGeniusTournamentResults,
+		ggResults: GgTournamentResult,
 		playerMap: PlayerMap,
 		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 	) => Promise<void> {
@@ -175,7 +175,7 @@ export class ImportAllResultsService {
 		processor: (
 			tournamentData: TournamentData,
 			result: ImportResultSummary,
-			ggResults: GolfGeniusTournamentResults,
+			ggResults: GgTournamentResult,
 			playerMap: PlayerMap,
 			onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 		) => Promise<void>,
@@ -226,7 +226,7 @@ export class ImportAllResultsService {
 	private async fetchGGResults(
 		tournamentData: TournamentData,
 		result: ImportResultSummary,
-	): Promise<GolfGeniusTournamentResults | null> {
+	): Promise<GgTournamentResult | null> {
 		try {
 			if (!tournamentData.eventGgId) {
 				result.errors.push("Tournament event GG ID is missing")
@@ -261,16 +261,16 @@ export class ImportAllResultsService {
 		return player
 	}
 
-	private async processResults<T extends GGAggregate>(
+	private async processResults<T extends GgAggregate>(
 		tournamentData: TournamentData,
 		result: ImportResultSummary,
-		ggResults: GolfGeniusTournamentResults,
+		ggResults: GgTournamentResult,
 		playerMap: PlayerMap,
 		parser: {
-			validateResponse: (ggResults: GolfGeniusTournamentResults) => string | null
-			extractScopes: (ggResults: GolfGeniusTournamentResults) => GGScope[]
-			extractFlightName: (scope: GGScope) => string
-			extractAggregates: (scope: GGScope) => GGAggregate[]
+			validateResponse: (ggResults: GgTournamentResult) => string | null
+			extractScopes: (ggResults: GgTournamentResult) => GgScope[]
+			extractFlightName: (scope: GgScope) => string
+			extractAggregates: (scope: GgScope) => GgAggregate[]
 		},
 		prepareRecord: (
 			tournamentData: TournamentData,
@@ -346,7 +346,7 @@ export class ImportAllResultsService {
 	private async processSkinsResults(
 		tournamentData: TournamentData,
 		result: ImportResultSummary,
-		ggResults: GolfGeniusTournamentResults,
+		ggResults: GgTournamentResult,
 		playerMap: PlayerMap,
 		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 	): Promise<void> {
@@ -364,7 +364,7 @@ export class ImportAllResultsService {
 	private async processProxyResults(
 		tournamentData: TournamentData,
 		result: ImportResultSummary,
-		ggResults: GolfGeniusTournamentResults,
+		ggResults: GgTournamentResult,
 		playerMap: PlayerMap,
 		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 	): Promise<void> {
@@ -382,7 +382,7 @@ export class ImportAllResultsService {
 	private async processStrokeResults(
 		tournamentData: TournamentData,
 		result: ImportResultSummary,
-		ggResults: GolfGeniusTournamentResults,
+		ggResults: GgTournamentResult,
 		playerMap: PlayerMap,
 		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 	): Promise<void> {
@@ -400,7 +400,7 @@ export class ImportAllResultsService {
 	private async processQuotaResults(
 		tournamentData: TournamentData,
 		result: ImportResultSummary,
-		ggResults: GolfGeniusTournamentResults,
+		ggResults: GgTournamentResult,
 		playerMap: PlayerMap,
 		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 	): Promise<void> {
@@ -418,11 +418,11 @@ export class ImportAllResultsService {
 	private async processTeamResults(
 		tournamentData: TournamentData,
 		result: ImportResultSummary,
-		ggResults: GolfGeniusTournamentResults,
+		ggResults: GgTournamentResult,
 		playerMap: PlayerMap,
 		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 	): Promise<void> {
-		return this.processResults<GGAggregate>(
+		return this.processResults<GgAggregate>(
 			tournamentData,
 			result,
 			ggResults,
@@ -446,7 +446,7 @@ export class ImportAllResultsService {
 		}
 
 		// Extract member cards and get first member card
-		const memberCards = ProxyResultParser.extractMemberCards(aggregate as GGAggregate)
+		const memberCards = ProxyResultParser.extractMemberCards(aggregate as GgAggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return null
@@ -454,7 +454,7 @@ export class ImportAllResultsService {
 		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
-		const playerData = ProxyResultParser.parsePlayerData(aggregate as GGAggregate, memberCards[0])
+		const playerData = ProxyResultParser.parsePlayerData(aggregate as GgAggregate, memberCards[0])
 
 		// Resolve player using pre-fetched player map
 		const player = this.resolvePlayerFromMap(memberId, playerMap, result)
@@ -501,7 +501,7 @@ export class ImportAllResultsService {
 		playerMap: PlayerMap,
 	): PreparedTournamentResult | null {
 		// Extract member cards and get first member card
-		const memberCards = SkinsResultParser.extractMemberCards(aggregate as GGAggregate)
+		const memberCards = SkinsResultParser.extractMemberCards(aggregate as GgAggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return null
@@ -559,7 +559,7 @@ export class ImportAllResultsService {
 		playerMap: PlayerMap,
 	): PreparedTournamentResult | null {
 		// Extract member cards and get first member card
-		const memberCards = StrokePlayResultParser.extractMemberCards(aggregate as GGAggregate)
+		const memberCards = StrokePlayResultParser.extractMemberCards(aggregate as GgAggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return null
@@ -568,7 +568,7 @@ export class ImportAllResultsService {
 
 		// Parse player data using parser
 		const playerData = StrokePlayResultParser.parsePlayerData(
-			aggregate as GGAggregate,
+			aggregate as GgAggregate,
 			memberCards[0],
 		)
 
@@ -629,7 +629,7 @@ export class ImportAllResultsService {
 		playerMap: PlayerMap,
 	): PreparedTournamentResult | null {
 		// Extract member cards and get first member card
-		const memberCards = QuotaResultParser.extractMemberCards(aggregate as GGAggregate)
+		const memberCards = QuotaResultParser.extractMemberCards(aggregate as GgAggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return null
@@ -637,7 +637,7 @@ export class ImportAllResultsService {
 		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
-		const playerData = QuotaResultParser.parsePlayerData(aggregate as GGAggregate, memberCards[0])
+		const playerData = QuotaResultParser.parsePlayerData(aggregate as GgAggregate, memberCards[0])
 
 		// Resolve player using pre-fetched player map
 		const player = this.resolvePlayerFromMap(memberId, playerMap, result)
@@ -701,7 +701,7 @@ export class ImportAllResultsService {
 
 	private prepareTeamPlayerResult(
 		tournamentData: TournamentData,
-		aggregate: GGAggregate,
+		aggregate: GgAggregate,
 		flightName: string,
 		result: ImportResultSummary,
 		playerMap: PlayerMap,

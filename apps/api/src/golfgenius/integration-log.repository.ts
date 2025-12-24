@@ -4,14 +4,13 @@ import { Injectable } from "@nestjs/common"
 
 import { DrizzleService } from "../database/drizzle.service"
 import { integrationLog } from "../database/schema/golf-genius.schema"
-import { CreateIntegrationLogDto } from "./dto/internal.dto"
-import { IntegrationLogRow } from "../database"
+import { IntegrationLogInsert, IntegrationLogRow } from "../database"
 
 @Injectable()
 export class IntegrationLogRepository {
 	constructor(private readonly drizzle: DrizzleService) {}
 
-	async createLogEntry(dto: CreateIntegrationLogDto): Promise<IntegrationLogRow> {
+	async createLogEntry(dto: IntegrationLogInsert): Promise<IntegrationLogRow> {
 		const detailText = dto.details
 			? typeof dto.details === "string"
 				? dto.details
