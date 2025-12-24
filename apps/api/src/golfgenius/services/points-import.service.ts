@@ -14,16 +14,11 @@ import {
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
-import { ImportResult } from "../dto"
-import { toTournamentData } from "../dto/mappers"
-import {
-	GGAggregate,
-	GolfGeniusTournamentResults,
-	PointsTournamentAggregate,
-} from "../dto/tournament-results.dto"
+import { ImportResult, toTournamentData } from "../dto"
 import { ProgressTracker } from "./progress-tracker"
 import { PointsResultParser } from "./result-parsers"
 import { toDbString } from "../../database"
+import { GgAggregate, GgScope, GgTournamentResult, PointsTournamentAggregate } from "../api-data"
 
 export interface PointsImportSummary {
 	tournamentId: number
@@ -76,7 +71,7 @@ export class PointsImportService {
 		processor: (
 			tournamentData: TournamentData,
 			result: PointsImportSummary,
-			ggResults: GolfGeniusTournamentResults,
+			ggResults: GgTournamentResult,
 			playerMap: PlayerMap,
 			onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 		) => Promise<void>,
@@ -177,7 +172,7 @@ export class PointsImportService {
 		processor: (
 			tournamentData: TournamentData,
 			result: PointsImportSummary,
-			ggResults: GolfGeniusTournamentResults,
+			ggResults: GgTournamentResult,
 			playerMap: PlayerMap,
 		) => Promise<void>,
 	): Promise<PointsImportSummary[]> {
@@ -222,7 +217,7 @@ export class PointsImportService {
 		processor: (
 			tournamentData: TournamentData,
 			result: PointsImportSummary,
-			ggResults: GolfGeniusTournamentResults,
+			ggResults: GgTournamentResult,
 			playerMap: PlayerMap,
 			onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 		) => Promise<void>,
@@ -287,7 +282,7 @@ export class PointsImportService {
 	private async fetchGGResults(
 		tournamentData: TournamentData,
 		result: PointsImportSummary,
-	): Promise<any> {
+	): Promise<GgTournamentResult | null> {
 		try {
 			if (!tournamentData.eventGgId) {
 				result.errors.push("Tournament event GG ID is missing")
@@ -305,16 +300,16 @@ export class PointsImportService {
 		}
 	}
 
-	private async processResults<T extends GGAggregate>(
+	private async processResults<T extends GgAggregate>(
 		tournamentData: TournamentData,
 		result: PointsImportSummary,
-		ggResults: GolfGeniusTournamentResults,
+		ggResults: GgTournamentResult,
 		playerMap: PlayerMap,
 		parser: {
-			validateResponse: (ggResults: GolfGeniusTournamentResults) => string | null
-			extractScopes: (ggResults: GolfGeniusTournamentResults) => any[]
-			extractFlightName: (scope: any) => string
-			extractAggregates: (scope: any) => GGAggregate[]
+			validateResponse: (ggResults: GgTournamentResult) => string | null
+			extractScopes: (ggResults: GgTournamentResult) => GgScope[]
+			extractFlightName: (scope: GgScope) => string
+			extractAggregates: (scope: GgScope) => GgAggregate[]
 		},
 		prepareRecord: (
 			tournamentData: TournamentData,
@@ -345,7 +340,7 @@ export class PointsImportService {
 			// Process each player result
 			for (const aggregate of aggregates) {
 				let success = false
-				let playerName = (aggregate as any).name || "Unknown Player"
+				const playerName = aggregate.name || "Unknown Player"
 
 				try {
 					const preparedRecord = prepareRecord(
@@ -385,7 +380,7 @@ export class PointsImportService {
 	private async processPointsResults(
 		tournamentData: TournamentData,
 		result: PointsImportSummary,
-		ggResults: GolfGeniusTournamentResults,
+		ggResults: GgTournamentResult,
 		playerMap: PlayerMap,
 		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 	): Promise<void> {
@@ -408,7 +403,7 @@ export class PointsImportService {
 		playerMap: PlayerMap,
 	): PreparedTournamentPoints | null {
 		// Extract member cards and get first member card
-		const memberCards = PointsResultParser.extractMemberCards(aggregate as GGAggregate)
+		const memberCards = PointsResultParser.extractMemberCards(aggregate as GgAggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return null

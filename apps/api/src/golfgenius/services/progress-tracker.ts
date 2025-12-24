@@ -14,7 +14,7 @@ import {
 	ImportResult,
 	OperationResult,
 	TrackerConfig,
-} from "./progress-tracker.types"
+} from "../dto"
 
 @Injectable()
 export class ProgressTracker {
@@ -135,10 +135,10 @@ export class ProgressTracker {
 		await this.integrationLog
 			.createLogEntry({
 				actionName: "Export Roster",
-				actionDate: new Date().toISOString(),
+				actionDate: new Date(),
 				details: JSON.stringify(result, null, 2),
 				eventId,
-				isSuccessful: true,
+				isSuccessful: 1,
 			})
 			.catch((error: unknown) => {
 				this.logger.error("Failed to log successful roster export", {
@@ -176,7 +176,7 @@ export class ProgressTracker {
 		await this.integrationLog
 			.createLogEntry({
 				actionName: "Export Roster",
-				actionDate: new Date().toISOString(),
+				actionDate: new Date(),
 				details: JSON.stringify(
 					{
 						error,
@@ -186,7 +186,7 @@ export class ProgressTracker {
 					2,
 				),
 				eventId,
-				isSuccessful: false,
+				isSuccessful: 0,
 			})
 			.catch((logError: unknown) => {
 				this.logger.error("Failed to log failed roster export", {
@@ -223,10 +223,10 @@ export class ProgressTracker {
 		await this.integrationLog
 			.createLogEntry({
 				actionName: actionName as IntegrationActionName,
-				actionDate: new Date().toISOString(),
+				actionDate: new Date(),
 				details: JSON.stringify(result, null, 2),
 				eventId,
-				isSuccessful: true,
+				isSuccessful: 1,
 			})
 			.catch((error: unknown) => {
 				this.logger.error(`Failed to log successful ${actionName}`, {
@@ -273,7 +273,7 @@ export class ProgressTracker {
 		await this.integrationLog
 			.createLogEntry({
 				actionName,
-				actionDate: new Date().toISOString(),
+				actionDate: new Date(),
 				details: JSON.stringify(
 					{
 						error,
@@ -283,7 +283,7 @@ export class ProgressTracker {
 					2,
 				),
 				eventId,
-				isSuccessful: false,
+				isSuccessful: 0,
 			})
 			.catch((logError: unknown) => {
 				this.logger.error(`Failed to log failed ${actionName}`, {

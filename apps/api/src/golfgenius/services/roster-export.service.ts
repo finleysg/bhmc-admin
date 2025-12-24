@@ -10,10 +10,10 @@ import {
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
 import { ApiClient } from "../api-client"
-import { ExportError, ExportResult, TransformationContext } from "../dto"
-import { RosterMemberDto } from "../dto/internal.dto"
+import { ExportError, ExportResult } from "../dto"
 import { ProgressTracker } from "./progress-tracker"
-import { RosterPlayerTransformer } from "./roster-player-transformer"
+import { RosterPlayerTransformer, TransformationContext } from "./roster-player-transformer"
+import { GgMember } from "../api-data"
 
 interface GgMemberResponse {
 	member_id_str?: string
@@ -59,8 +59,8 @@ export class RosterExportService {
 		clubEvent: ValidatedClubEvent,
 		registeredPlayer: ValidatedRegisteredPlayer,
 		registeredPlayersGroup: ValidatedRegisteredPlayer[],
-		rosterByGhin: Map<string, RosterMemberDto>,
-		rosterBySlotId: Map<number, RosterMemberDto>,
+		rosterByGhin: Map<string, GgMember>,
+		rosterBySlotId: Map<number, GgMember>,
 	): Promise<{
 		success: boolean
 		action: "created" | "skipped" | "updated" | "error"
@@ -80,7 +80,7 @@ export class RosterExportService {
 			const member = this.playerTransformer.transformToGgMember(registeredPlayer, context)
 
 			// Idempotency: match by slot id first, fallback to ghin
-			let existing: RosterMemberDto | null | undefined
+			let existing: GgMember | null | undefined
 			existing = rosterBySlotId.get(registeredPlayer.slot.id)
 
 			if (!existing) {
@@ -93,7 +93,7 @@ export class RosterExportService {
 			if (!existing) {
 				this.logger.debug(`CREATE: Did not find player: ${registeredPlayer.player.email}`)
 				const res = await this.apiClient.createMemberRegistration(clubEvent.ggId, member)
-				const memberId = this.extractMemberId(res)
+				const memberId = res.id
 				if (memberId) {
 					await this.registration.updateRegistrationSlotGgId(
 						registeredPlayer.slot.id,
@@ -173,7 +173,7 @@ export class RosterExportService {
 			const event = await this.events.getValidatedClubEventById(eventId)
 
 			// 2. Get existing roster from GG for idempotency
-			let existingRoster: RosterMemberDto[] = []
+			let existingRoster: GgMember[] = []
 			try {
 				existingRoster = await this.apiClient.getEventRoster(event.ggId)
 			} catch (err: unknown) {
@@ -181,13 +181,13 @@ export class RosterExportService {
 				existingRoster = []
 			}
 
-			const rosterByGhin = new Map<string, RosterMemberDto>()
-			const rosterBySlotId = new Map<number, RosterMemberDto>()
+			const rosterByGhin = new Map<string, GgMember>()
+			const rosterBySlotId = new Map<number, GgMember>()
 			for (const mem of existingRoster) {
-				const rawGhin = mem.ghin ?? null
+				const rawGhin = mem.handicap.handicap_network_id ?? null
 				const normalized = this.normalizeGhin(rawGhin)
 				if (normalized) rosterByGhin.set(normalized, mem)
-				if (mem.externalId) rosterBySlotId.set(+mem.externalId, mem)
+				if (mem.external_id) rosterBySlotId.set(+mem.external_id, mem)
 			}
 
 			// 3. Get all registered players

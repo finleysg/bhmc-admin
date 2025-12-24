@@ -1,8 +1,18 @@
 /**
  * Result types for Golf Genius integration operations
  */
+export interface ExportError {
+	slotId?: number
+	playerId?: number
+	email?: string
+	error: string
+}
 
-import { ExportError, ImportError } from "./errors.dto"
+export interface ImportError {
+	itemId?: string
+	itemName?: string
+	error: string
+}
 
 export interface ExportResult {
 	eventId: number
@@ -23,6 +33,15 @@ export interface ImportResult {
 	errors: ImportError[]
 }
 
+export interface ImportResultSummary {
+	tournamentId: number
+	tournamentName: string
+	eventName: string
+	resultsImported: number
+	skippedBlinds?: number
+	errors: string[]
+}
+
 export type OperationResult = ExportResult | ImportResult
 
 export interface UnmatchedPlayer {
@@ -36,15 +55,6 @@ export interface MemberSyncResult {
 	updated_players: number
 	errors: ImportError[]
 	unmatched: UnmatchedPlayer[]
-}
-
-export interface ImportEventScoresResult {
-	eventId: number
-	totalScores: number
-	created: number
-	updated: number
-	skipped: number
-	errors: ImportError[]
 }
 
 export interface TrackerConfig {

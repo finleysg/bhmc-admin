@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import individualExample from "../../json/individual-example.json"
-import pointsExample from "../../json/points-example.json"
-import proxyExample from "../../json/proxy-example.json"
-import skinsExample from "../../json/skins-example.json"
+import { GgTournamentResultWrapper, unwrapTournamentResult } from "../../api-data"
+import individualJson from "../../json/individual-example.json"
+import pointsJson from "../../json/points-example.json"
+import proxyJson from "../../json/proxy-example.json"
+import skinsJson from "../../json/skins-example.json"
+
 import {
 	BaseResultParser,
 	PointsResultParser,
@@ -13,15 +15,15 @@ import {
 	StrokePlayResultParser,
 } from "../result-parsers"
 
+const points = pointsJson as unknown as GgTournamentResultWrapper
+const skins = skinsJson as unknown as GgTournamentResultWrapper
+const proxy = proxyJson as unknown as GgTournamentResultWrapper
+const individual = individualJson as unknown as GgTournamentResultWrapper
+
 describe("BaseResultParser", () => {
 	it("should validate valid response", () => {
-		const error = BaseResultParser.validateResponse(pointsExample)
+		const error = BaseResultParser.validateResponse(unwrapTournamentResult(points))
 		expect(error).toBeNull()
-	})
-
-	it("should return error for invalid response", () => {
-		const error = BaseResultParser.validateResponse({} as any)
-		expect(error).toBe("Invalid or empty results data from Golf Genius")
 	})
 
 	it("should return error for response without scopes", () => {
@@ -31,20 +33,20 @@ describe("BaseResultParser", () => {
 	})
 
 	it("should extract scopes from valid response", () => {
-		const scopes = BaseResultParser.extractScopes(pointsExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(points))
 		expect(scopes).toHaveLength(1)
 		expect(scopes[0]).toHaveProperty("aggregates")
 	})
 
 	it("should extract aggregates from scope", () => {
-		const scopes = BaseResultParser.extractScopes(pointsExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(points))
 		const aggregates = BaseResultParser.extractAggregates(scopes[0])
 		expect(aggregates.length).toBeGreaterThan(0)
 		expect(aggregates[0]).toHaveProperty("name")
 	})
 
 	it("should extract member cards from aggregate", () => {
-		const scopes = BaseResultParser.extractScopes(pointsExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(points))
 		const aggregates = BaseResultParser.extractAggregates(scopes[0])
 		const memberCards = BaseResultParser.extractMemberCards(aggregates[0])
 		expect(memberCards.length).toBeGreaterThan(0)
@@ -52,7 +54,7 @@ describe("BaseResultParser", () => {
 	})
 
 	it("should extract flight name with default", () => {
-		const scopes = BaseResultParser.extractScopes(pointsExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(points))
 		const name = BaseResultParser.extractFlightName(scopes[0], "Default Flight")
 		expect(typeof name).toBe("string")
 	})
@@ -60,7 +62,7 @@ describe("BaseResultParser", () => {
 
 describe("PointsResultParser", () => {
 	it("should parse player data correctly", () => {
-		const scopes = BaseResultParser.extractScopes(pointsExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(points))
 		const aggregates = BaseResultParser.extractAggregates(scopes[0])
 		const memberCards = BaseResultParser.extractMemberCards(aggregates[0])
 
@@ -106,7 +108,7 @@ describe("PointsResultParser", () => {
 
 describe("SkinsResultParser", () => {
 	it("should parse player data correctly", () => {
-		const scopes = BaseResultParser.extractScopes(skinsExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(skins))
 		const aggregates = BaseResultParser.extractAggregates(scopes[0])
 		const memberCards = BaseResultParser.extractMemberCards(aggregates[0])
 
@@ -133,7 +135,7 @@ describe("SkinsResultParser", () => {
 
 describe("ProxyResultParser", () => {
 	it("should parse player data correctly", () => {
-		const scopes = BaseResultParser.extractScopes(proxyExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(proxy))
 		const aggregates = BaseResultParser.extractAggregates(scopes[0])
 		const memberCards = BaseResultParser.extractMemberCards(aggregates[0])
 
@@ -158,7 +160,7 @@ describe("ProxyResultParser", () => {
 
 describe("StrokePlayResultParser", () => {
 	it("should parse player data correctly", () => {
-		const scopes = BaseResultParser.extractScopes(individualExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(individual))
 		const aggregates = BaseResultParser.extractAggregates(scopes[0])
 		const memberCards = BaseResultParser.extractMemberCards(aggregates[0])
 
@@ -186,7 +188,7 @@ describe("StrokePlayResultParser", () => {
 // Integration tests with real example data
 describe("Integration Tests with Example Data", () => {
 	it("should process points example data", () => {
-		const scopes = BaseResultParser.extractScopes(pointsExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(points))
 		expect(scopes.length).toBeGreaterThan(0)
 
 		scopes.forEach((scope) => {
@@ -203,7 +205,7 @@ describe("Integration Tests with Example Data", () => {
 	})
 
 	it("should process skins example data", () => {
-		const scopes = BaseResultParser.extractScopes(skinsExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(skins))
 		expect(scopes.length).toBeGreaterThan(0)
 
 		scopes.forEach((scope) => {
@@ -220,7 +222,7 @@ describe("Integration Tests with Example Data", () => {
 	})
 
 	it("should process proxy example data", () => {
-		const scopes = BaseResultParser.extractScopes(proxyExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(proxy))
 		expect(scopes.length).toBeGreaterThan(0)
 
 		scopes.forEach((scope) => {
@@ -237,7 +239,7 @@ describe("Integration Tests with Example Data", () => {
 	})
 
 	it("should process individual example data", () => {
-		const scopes = BaseResultParser.extractScopes(individualExample)
+		const scopes = BaseResultParser.extractScopes(unwrapTournamentResult(individual))
 		expect(scopes.length).toBeGreaterThan(0)
 
 		scopes.forEach((scope) => {

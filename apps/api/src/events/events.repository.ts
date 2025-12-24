@@ -53,7 +53,9 @@ export class EventsRepository {
 	}
 
 	// events_event_fees
-	async listEventFeesByEvent(id: number): Promise<{ eventFee: EventFeeRow; feeType: FeeTypeRow }[]> {
+	async listEventFeesByEvent(
+		id: number,
+	): Promise<{ eventFee: EventFeeRow; feeType: FeeTypeRow }[]> {
 		return this.drizzle.db
 			.select({ eventFee: eventFee, feeType: feeType })
 			.from(eventFee)

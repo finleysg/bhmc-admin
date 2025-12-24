@@ -41,10 +41,10 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 				from(
 					this.integrationLogService.createLogEntry({
 						actionName,
-						actionDate: new Date().toISOString(),
+						actionDate: new Date(),
 						details: JSON.stringify(logResult, null, 2),
 						eventId,
-						isSuccessful: true,
+						isSuccessful: 1,
 					}),
 				).subscribe()
 			}),
@@ -59,10 +59,10 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 				from(
 					this.integrationLogService.createLogEntry({
 						actionName,
-						actionDate: new Date().toISOString(),
+						actionDate: new Date(),
 						details: JSON.stringify(errorDetails, null, 2),
 						eventId,
-						isSuccessful: false,
+						isSuccessful: 0,
 					}),
 				).subscribe()
 

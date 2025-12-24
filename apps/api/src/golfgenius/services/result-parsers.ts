@@ -1,37 +1,32 @@
-import {
-	GGAggregate,
-	GGMemberCard,
-	GGScope,
-	GolfGeniusTournamentResults,
-} from "../dto/tournament-results.dto"
+import { GgAggregate, GgMemberCard, GgScope, GgTournamentResult } from "../api-data"
 
 /**
  * Base parser with common validation and extraction logic
  */
 export class BaseResultParser {
-	static validateResponse(ggResults: GolfGeniusTournamentResults): string | null {
-		if (!ggResults?.event) {
+	static validateResponse(ggResults: GgTournamentResult): string | null {
+		if (!ggResults) {
 			return "Invalid or empty results data from Golf Genius"
 		}
-		if (!ggResults.event.scopes) {
+		if (!ggResults.scopes) {
 			return "No scopes found in results data"
 		}
 		return null
 	}
 
-	static extractScopes(ggResults: GolfGeniusTournamentResults): GGScope[] {
-		return ggResults.event.scopes || []
+	static extractScopes(ggResults: GgTournamentResult): GgScope[] {
+		return ggResults.scopes || []
 	}
 
-	static extractAggregates(scope: GGScope): GGAggregate[] {
+	static extractAggregates(scope: GgScope): GgAggregate[] {
 		return scope.aggregates || []
 	}
 
-	static extractMemberCards(aggregate: GGAggregate): GGMemberCard[] {
+	static extractMemberCards(aggregate: GgAggregate): GgMemberCard[] {
 		return aggregate.member_cards || []
 	}
 
-	static extractFlightName(scope: GGScope, defaultValue = ""): string {
+	static extractFlightName(scope: GgScope, defaultValue = ""): string {
 		return scope.name || defaultValue
 	}
 }
@@ -41,8 +36,14 @@ export class BaseResultParser {
  */
 export class PointsResultParser extends BaseResultParser {
 	static parsePlayerData<
-		T extends { rank?: string; points?: string; position?: string; total?: string; name?: string },
-	>(aggregate: T, memberCard: GGMemberCard) {
+		T extends {
+			rank?: string | null
+			points?: string | null
+			position?: string | null
+			total?: string | null
+			name?: string | null
+		},
+	>(aggregate: T, memberCard: GgMemberCard) {
 		return {
 			rank: aggregate.rank || "",
 			points: aggregate.points || "",
@@ -91,8 +92,13 @@ export class PointsResultParser extends BaseResultParser {
  */
 export class SkinsResultParser extends BaseResultParser {
 	static parsePlayerData<
-		T extends { purse?: string; total?: string; details?: string; name?: string },
-	>(aggregate: T, memberCard: GGMemberCard) {
+		T extends {
+			purse?: string | null
+			total?: string | null
+			details?: string | null
+			name?: string | null
+		},
+	>(aggregate: T, memberCard: GgMemberCard) {
 		return {
 			purse: aggregate.purse || "$0.00",
 			total: aggregate.total || "",
@@ -108,10 +114,9 @@ export class SkinsResultParser extends BaseResultParser {
  * Parser for proxy/user-scored tournament results (saves to events_tournamentresult)
  */
 export class ProxyResultParser extends BaseResultParser {
-	static parsePlayerData<T extends { purse?: string; rank?: string; name?: string }>(
-		aggregate: T,
-		memberCard: GGMemberCard,
-	) {
+	static parsePlayerData<
+		T extends { purse?: string | null; rank?: string | null; name?: string | null },
+	>(aggregate: T, memberCard: GgMemberCard) {
 		return {
 			purse: aggregate.purse || "$0.00",
 			rank: aggregate.rank || "",
@@ -127,8 +132,13 @@ export class ProxyResultParser extends BaseResultParser {
  */
 export class StrokePlayResultParser extends BaseResultParser {
 	static parsePlayerData<
-		T extends { purse?: string; position?: string; total?: string; name?: string },
-	>(aggregate: T, memberCard: GGMemberCard) {
+		T extends {
+			purse?: string | null
+			position?: string | null
+			total?: string | null
+			name?: string | null
+		},
+	>(aggregate: T, memberCard: GgMemberCard) {
 		return {
 			purse: aggregate.purse || "$0.00",
 			position: aggregate.position || "",
@@ -145,8 +155,14 @@ export class StrokePlayResultParser extends BaseResultParser {
  */
 export class QuotaResultParser extends BaseResultParser {
 	static parsePlayerData<
-		T extends { purse?: string; position?: string; total?: string; score?: string; name?: string },
-	>(aggregate: T, memberCard: GGMemberCard) {
+		T extends {
+			purse?: string | null
+			position?: string | null
+			total?: string | null
+			score?: string | null
+			name?: string | null
+		},
+	>(aggregate: T, memberCard: GgMemberCard) {
 		return {
 			purse: aggregate.purse || "$0.00",
 			position: aggregate.position || "",
@@ -155,6 +171,56 @@ export class QuotaResultParser extends BaseResultParser {
 			memberId: memberCard.member_id_str,
 			memberCardId: memberCard.member_card_id_str,
 			playerName: aggregate.name || "Unknown",
+		}
+	}
+}
+
+export class TeamResultParser {
+	static validateResponse(ggResults: GgTournamentResult): string | null {
+		if (!ggResults.scopes?.length) {
+			return "Invalid response: No scopes found"
+		}
+		// Check for team indicators (e.g., first aggregate has multiple members or individual_results)
+		const firstScope = ggResults.scopes[0]
+		if (!firstScope.aggregates?.length) {
+			return "Invalid response: No aggregates found"
+		}
+		const firstAggregate = firstScope.aggregates[0]
+		if (firstAggregate.member_ids?.length <= 1 && !firstAggregate.individual_results) {
+			return "Response does not appear to be team format"
+		}
+		return null
+	}
+
+	static extractScopes(ggResults: GgTournamentResult): GgScope[] {
+		return ggResults.scopes || []
+	}
+
+	static extractFlightName(scope: GgScope): string {
+		return scope.name || "Not flighted"
+	}
+
+	static extractAggregates(scope: GgScope): GgAggregate[] {
+		return scope.aggregates || []
+	}
+
+	static extractMemberCards(aggregate: GgAggregate): GgMemberCard[] {
+		return aggregate.member_cards || []
+	}
+
+	// Parse per-player data from individual_results (team-specific)
+	static parseTeamPlayerData(
+		aggregate: GgAggregate,
+		memberId: string,
+	): { name: string; total: number | null; purse: string } | null {
+		const indiv = aggregate.individual_results?.find((ir) => ir.member_id_str === memberId)
+		if (!indiv) {
+			return null
+		}
+		return {
+			name: indiv.name,
+			total: indiv.totals?.net_scores?.total || null,
+			purse: aggregate.purse || "", // Team purse applies per player
 		}
 	}
 }

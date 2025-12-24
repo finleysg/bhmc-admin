@@ -1,10 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common"
+import { Player } from "@repo/domain/types"
 
 import { RegistrationRepository, RegistrationService } from "../../registration"
 import { ApiClient } from "../api-client"
 import { MemberSyncResult } from "../dto"
-import { MasterRosterItemDto } from "../dto/internal.dto"
 import { ApiError, AuthError, RateLimitError } from "../errors"
+import { GgMember } from "../api-data"
 
 @Injectable()
 export class MemberSyncService {
@@ -30,21 +31,21 @@ export class MemberSyncService {
 		const map: Record<string, string> = {}
 		let page = 1
 		while (true) {
-			const res = await this.apiClient.getMasterRoster(page)
-			if (!res || !Array.isArray(res)) break
-			for (const item of res) {
-				// Support either mapped domain objects or raw API shapes
-				const memberObj: any = item?.member ?? item
-				const hn = memberObj?.handicapNetworkId ?? memberObj?.handicap?.handicap_network_id ?? null
-				const mc = memberObj?.memberCardId ?? memberObj?.member_card_id ?? null
-				if (hn && mc) {
-					const key = this.normalizeGhin(hn)
-					if (key) {
-						map[key] = String(mc)
+			const members = await this.apiClient.getMasterRoster(page)
+			if (!members || !Array.isArray(members)) break
+			for (const member of members) {
+				if (member) {
+					const hn = member.handicap.handicap_network_id ?? null
+					const mc = member.member_card_id ?? null
+					if (hn && mc) {
+						const key = this.normalizeGhin(hn)
+						if (key) {
+							map[key] = mc
+						}
 					}
 				}
 			}
-			if (res.length < 100) break
+			if (members.length < 100) break
 			page += 1
 		}
 		return map
@@ -67,7 +68,7 @@ export class MemberSyncService {
 		let rosterMap: Record<string, string> = {}
 		try {
 			rosterMap = await this.buildMasterRosterMap()
-		} catch (err: any) {
+		} catch (err: unknown) {
 			if (err instanceof RateLimitError) {
 				const msg = `Rate limited while loading master roster: retryAfter=${err.retryAfter}`
 				this.logger.error(msg, { details: err.details })
@@ -116,7 +117,7 @@ export class MemberSyncService {
 				}
 
 				// Update gg_id
-				await this.registration.updatePlayerGgId(player.id!, memberCardId)
+				await this.registration.updatePlayerGgId(player.id, memberCardId)
 				result.updated_players += 1
 			} catch (err) {
 				const name = `${player.firstName ?? ""} ${player.lastName ?? ""}`.trim()
@@ -131,7 +132,7 @@ export class MemberSyncService {
 
 	// Sync a single player by id using master roster member lookup
 	async syncPlayer(playerId: number) {
-		const res: { updated?: boolean; message: string; player?: any } = { message: "" }
+		const res: { updated?: boolean; message: string; player?: Player } = { message: "" }
 
 		// Find local player by id
 		const player = await this.repository.findPlayerById(playerId)
@@ -141,10 +142,10 @@ export class MemberSyncService {
 		}
 
 		// Fetch master roster member from GG
-		let member: MasterRosterItemDto | null = null
+		let member: GgMember | null = null
 		try {
 			member = await this.apiClient.getMasterRosterMember(player.email)
-		} catch (err: any) {
+		} catch (err: unknown) {
 			if (err instanceof RateLimitError) {
 				const msg = `Rate limited fetching master roster member for ${player.email}`
 				this.logger.error(msg, { retryAfter: err.retryAfter })
@@ -152,7 +153,7 @@ export class MemberSyncService {
 				return res
 			}
 			const msg = `Failed to fetch master roster member for ${player.email}: ${String(err)}`
-			this.logger.error(msg, { details: err?.details ?? err })
+			this.logger.error(msg)
 			res.message = msg
 			return res
 		}
@@ -163,8 +164,8 @@ export class MemberSyncService {
 		}
 
 		// Determine member_card_id and handicap network id from fetched member (support domain & raw shapes)
-		const memberCardId = member.member?.memberCardId ?? null
-		const hn = member?.member?.handicapNetworkId ?? null
+		const memberCardId = member.member_card_id ?? null
+		const hn = member.handicap.handicap_network_id ?? null
 
 		if (!memberCardId && !hn) {
 			res.message = `Master roster member for ${player.email} missing member_card_id and handicap_network_id`
@@ -187,7 +188,7 @@ export class MemberSyncService {
 				return res
 			}
 
-			const updated = await this.registration.updatePlayerGgId(player.id!, String(ggIdToSet))
+			const updated = await this.registration.updatePlayerGgId(player.id, String(ggIdToSet))
 			res.updated = true
 			res.message = `Updated gg_id for ${player.email}`
 			res.player = updated

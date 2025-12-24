@@ -2,7 +2,13 @@ import { and, eq, inArray, or, like } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 
-import { Player, Registration, RegistrationFee, RegistrationSlot, RegistrationStatusChoices } from "@repo/domain/types"
+import {
+	Player,
+	Registration,
+	RegistrationFee,
+	RegistrationSlot,
+	RegistrationStatusChoices,
+} from "@repo/domain/types"
 
 import {
 	course,
@@ -78,10 +84,7 @@ export class RegistrationRepository {
 		slotId: number,
 		data: Partial<RegistrationSlotInsert>,
 	): Promise<RegistrationSlot> {
-		await this.drizzle.db
-			.update(registrationSlot)
-			.set(data)
-			.where(eq(registrationSlot.id, slotId))
+		await this.drizzle.db.update(registrationSlot).set(data).where(eq(registrationSlot.id, slotId))
 
 		return this.findRegistrationSlotById(slotId)
 	}
@@ -253,7 +256,9 @@ export class RegistrationRepository {
 		return {
 			payment: results[0].payment,
 			details: results
-				.filter((r): r is { payment: PaymentRow; details: RegistrationFeeRow } => r.details !== null)
+				.filter(
+					(r): r is { payment: PaymentRow; details: RegistrationFeeRow } => r.details !== null,
+				)
 				.map((r) => r.details),
 		}
 	}

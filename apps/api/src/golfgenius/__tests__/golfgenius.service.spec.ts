@@ -87,7 +87,7 @@ describe("ApiClient - domain helpers", () => {
 		})
 
 		it("returns the single matching event by date", async () => {
-			const ev = { id: "e1", startDate: "2025-06-10", name: "Summer Classic" }
+			const ev = { id: "e1", start_date: "2025-06-10", name: "Summer Classic" }
 			jest.spyOn(svc, "getCurrentSeasonForYear").mockResolvedValueOnce(yearSeason as any)
 			jest.spyOn(svc, "getEvents").mockResolvedValueOnce([ev] as any)
 			const res = await svc.findMatchingEventByStartDate("2025-06-10")
@@ -95,8 +95,8 @@ describe("ApiClient - domain helpers", () => {
 		})
 
 		it("prefers exact name match when multiple events same date", async () => {
-			const ev1 = { id: "a", startDate: "2025-07-01", name: "City Open" }
-			const ev2 = { id: "b", startDate: "2025-07-01", name: "City Charity" }
+			const ev1 = { id: "a", start_date: "2025-07-01", name: "City Open" }
+			const ev2 = { id: "b", start_date: "2025-07-01", name: "City Charity" }
 			jest.spyOn(svc, "getCurrentSeasonForYear").mockResolvedValueOnce(yearSeason as any)
 			jest.spyOn(svc, "getEvents").mockResolvedValueOnce([ev1, ev2] as any)
 			const res = await svc.findMatchingEventByStartDate("2025-07-01", "City Charity")
@@ -104,8 +104,8 @@ describe("ApiClient - domain helpers", () => {
 		})
 
 		it("picks best fuzzy match when confident", async () => {
-			const ev1 = { id: "a", startDate: "2025-08-01", name: "Annual Championship" }
-			const ev2 = { id: "b", startDate: "2025-08-01", name: "Championship Points" }
+			const ev1 = { id: "a", start_date: "2025-08-01", name: "Annual Championship" }
+			const ev2 = { id: "b", start_date: "2025-08-01", name: "Championship Points" }
 			jest.spyOn(svc, "getCurrentSeasonForYear").mockResolvedValueOnce(yearSeason as any)
 			jest.spyOn(svc, "getEvents").mockResolvedValueOnce([ev1, ev2] as any)
 			const res = await svc.findMatchingEventByStartDate("2025-08-01", "Championship")

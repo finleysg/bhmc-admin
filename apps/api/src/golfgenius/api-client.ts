@@ -1,38 +1,42 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosInstance } from "axios"
+import { type ZodSchema } from "zod"
 
 import { Injectable, Logger } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 
 import {
-	EventDto,
-	MasterRosterItemDto,
-	RosterMemberDto,
-	RosterMemberSyncDto,
-	RoundDto,
-	SeasonDto,
-	TournamentDto,
-} from "./dto/internal.dto"
-import {
-	mapEvent,
-	mapMasterRosterItem,
-	mapMemberExport,
-	mapRosterMember,
-	mapRound,
-	mapSeason,
-	mapTournament,
-} from "./dto/mappers"
-import { GolfGeniusTournamentResults } from "./dto/tournament-results.dto"
-import { ApiError, AuthError, RateLimitError } from "./errors"
+	GgEventsResponseSchema,
+	GgMembersResponseSchema,
+	GgMemberWrapperSchema,
+	GgRoundsResponseSchema,
+	GgSeasonsResponseSchema,
+	GgTeesheetResponseSchema,
+	GgTournamentResultWrapperSchema,
+	GgTournamentsResponseSchema,
+	unwrapEvents,
+	unwrapMembers,
+	unwrapRounds,
+	unwrapSeasons,
+	unwrapTournaments,
+	GgRound,
+	GgEvent,
+	GgTournament,
+	GgMember,
+	GgTournamentResult,
+	unwrapTournamentResult,
+	GgPairingGroup,
+	unwrapPairingGroups,
+	GgSeason,
+	GgMemberSyncData,
+	GgMemberSchema,
+} from "./api-data"
+
+import { ApiError, AuthError, RateLimitError, ValidationError } from "./errors"
 
 interface RequestOptions {
-	params?: Record<string, any>
-	data?: any
-	json?: any
+	params?: Record<string, string>
+	data?: unknown
+	json?: unknown
 }
 
 @Injectable()
@@ -60,11 +64,26 @@ export class ApiClient {
 		})
 	}
 
+	// Overload: with schema returns validated type
+	private async request<T>(
+		method: "get" | "post" | "put" | "delete",
+		endpoint: string,
+		options: RequestOptions,
+		schema: ZodSchema<T>,
+	): Promise<T>
+	// Overload: without schema returns unknown
 	private async request(
 		method: "get" | "post" | "put" | "delete",
 		endpoint: string,
+		options?: RequestOptions,
+	): Promise<unknown>
+	// Implementation
+	private async request<T>(
+		method: "get" | "post" | "put" | "delete",
+		endpoint: string,
 		options: RequestOptions = {},
-	): Promise<any> {
+		schema?: ZodSchema<T>,
+	): Promise<T> {
 		let url = endpoint
 		if (endpoint.includes("{api_key}")) {
 			url = endpoint.replace("{api_key}", this.apiKey)
@@ -79,7 +98,7 @@ export class ApiClient {
 			headers["Content-Type"] = "application/json"
 		}
 
-		let lastError: any = null
+		let lastError: unknown = null
 
 		for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
 			try {
@@ -93,7 +112,7 @@ export class ApiClient {
 
 				if (res.status === 429) {
 					// Rate limited
-					const retryAfter = res.headers["retry-after"]
+					const retryAfter = res.headers["retry-after"] as string | undefined
 					const ra = retryAfter ? Math.min(parseInt(retryAfter, 10), this.retryDelayMax) : 0
 					const delay = Math.min(this.retryDelayBase * 2 ** attempt, this.retryDelayMax)
 					const wait = Math.max(delay, ra * 1000)
@@ -118,6 +137,18 @@ export class ApiClient {
 					)
 				}
 
+				// Validate response with schema if provided
+				if (schema) {
+					const result = schema.safeParse(res.data)
+					if (!result.success) {
+						throw new ValidationError(
+							`Response validation failed: ${result.error.message}`,
+							result.error,
+							res.data,
+						)
+					}
+					return result.data
+				}
 				return res.data
 			} catch (err) {
 				lastError = err
@@ -140,48 +171,107 @@ export class ApiClient {
 		}
 
 		// Should never be reached
-		throw lastError ?? new ApiError("Request failed after all retries")
+		if (lastError instanceof Error) {
+			throw lastError
+		}
+		throw new ApiError("Request failed after all retries")
 	}
 
-	// Returns mapped master roster items
-	async getMasterRoster(page?: number, photo = false): Promise<MasterRosterItemDto[]> {
-		const params: any = {}
-		if (page != null) params.page = page
+	async getMasterRoster(page?: number, photo = false): Promise<GgMember[]> {
+		const params: Record<string, string> = {}
+		if (page != null) params.page = String(page)
 		if (photo) params.photo = "true"
 		const endpoint = `/api_v2/${this.apiKey}/master_roster`
-		const res = await this.request("get", endpoint, { params })
-		if (!res) return []
-		if (Array.isArray(res)) {
-			return res.map(mapMasterRosterItem)
-		}
-		return []
+		const response = await this.request("get", endpoint, { params }, GgMembersResponseSchema)
+		return unwrapMembers(response)
 	}
 
-	// Get a single member by email; return mapped member or null if not found
-	async getMasterRosterMember(email: string): Promise<MasterRosterItemDto | null> {
+	async getMasterRosterMember(email: string): Promise<GgMember | null> {
 		const endpoint = `/api_v2/${this.apiKey}/master_roster_member/${encodeURIComponent(email)}`
 		try {
-			const res = await this.request("get", endpoint)
-			if (!res) return null
-			return mapMasterRosterItem(res)
-		} catch (err: any) {
+			const response = await this.request("get", endpoint, {}, GgMemberWrapperSchema)
+			return response.member
+		} catch (err: unknown) {
 			if (err instanceof ApiError && err.status === 404) return null
 			throw err
 		}
 	}
 
-	async getSeasons(): Promise<SeasonDto[]> {
+	async getSeasons(): Promise<GgSeason[]> {
 		const endpoint = `/api_v2/${this.apiKey}/seasons`
-		const res = await this.request("get", endpoint)
-		if (!res) return []
-		if (Array.isArray(res)) {
-			// Unwrap the "season" property from each item
-			return res.map((item) => mapSeason(item.season || item))
+		const response = await this.request("get", endpoint, {}, GgSeasonsResponseSchema)
+		return unwrapSeasons(response)
+	}
+
+	async getEvents(seasonId?: string, categoryId?: string): Promise<GgEvent[]> {
+		const params: Record<string, string> = {}
+		if (seasonId) params.season = seasonId
+		if (categoryId) params.category = categoryId
+		const endpoint = `/api_v2/${this.apiKey}/events`
+		const response = await this.request("get", endpoint, { params }, GgEventsResponseSchema)
+		return unwrapEvents(response)
+	}
+
+	async getEventRounds(eventId: string): Promise<GgRound[]> {
+		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds`
+		const response = await this.request("get", endpoint, {}, GgRoundsResponseSchema)
+		return unwrapRounds(response)
+	}
+
+	async getRoundTournaments(eventId: string, roundId: string): Promise<GgTournament[]> {
+		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments`
+		const response = await this.request("get", endpoint, {}, GgTournamentsResponseSchema)
+		return unwrapTournaments(response)
+	}
+
+	async getEventRoster(eventId: string, photo = false): Promise<GgMember[]> {
+		const members: GgMember[] = []
+		let page = 1
+		while (true) {
+			const params: Record<string, string> = { page: String(page) }
+			if (photo) params.photo = "true"
+			const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/roster`
+			const response = await this.request("get", endpoint, { params }, GgMembersResponseSchema)
+			const unwrapped = unwrapMembers(response)
+			members.push(...unwrapped)
+			if (response.length < 100) break
+			page += 1
 		}
-		if (res && res.seasons) {
-			return (res.seasons as any[]).map((item) => mapSeason(item.season || item))
-		}
-		return []
+		return members
+	}
+
+	async getRoundTeeSheet(
+		eventId: string,
+		roundId: string,
+		includeAllCustomFields = false,
+	): Promise<GgPairingGroup[]> {
+		const params: Record<string, string> = {}
+		if (includeAllCustomFields) params.include_all_custom_fields = "true"
+		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tee_sheet`
+		const response = await this.request("get", endpoint, { params }, GgTeesheetResponseSchema)
+		return unwrapPairingGroups(response)
+	}
+
+	async getTournamentResults(
+		eventId: string,
+		roundId: string,
+		tournamentId: string,
+	): Promise<GgTournamentResult> {
+		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments/${tournamentId}.json`
+		const response = await this.request("get", endpoint, {}, GgTournamentResultWrapperSchema)
+		return unwrapTournamentResult(response)
+	}
+
+	async createMemberRegistration(eventId: string, member: GgMemberSyncData): Promise<GgMember> {
+		const endpoint = `/api_v2/events/${eventId}/members`
+		const mem = await this.request("post", endpoint, { json: member })
+		return GgMemberSchema.parse(mem)
+	}
+
+	async updateMemberRegistration(eventId: string, memberId: string, member: GgMemberSyncData): Promise<GgMember> {
+		const endpoint = `/api_v2/events/${eventId}/members/${memberId}`
+		const mem = await this.request("put", endpoint, { json: member })
+		return GgMemberSchema.parse(mem)
 	}
 
 	/**
@@ -192,7 +282,7 @@ export class ApiClient {
 	 * - Otherwise, if a current-flagged season exists and its name equals the year, use it
 	 * - Otherwise throw (we require an explicit season for the current year)
 	 */
-	async getCurrentSeasonForYear(): Promise<SeasonDto> {
+	async getCurrentSeasonForYear(): Promise<GgSeason> {
 		const seasons = await this.getSeasons()
 		const year = new Date().getFullYear().toString()
 
@@ -237,7 +327,7 @@ export class ApiClient {
 		if (!sa || !sb) return 0
 		const la = sa.length
 		const lb = sb.length
-		const dp: number[][] = Array.from({ length: la + 1 }, () => new Array(lb + 1).fill(0))
+		const dp: number[][] = Array.from({ length: la + 1 }, () => new Array<number>(lb + 1).fill(0))
 		for (let i = 0; i <= la; i++) dp[i][0] = i
 		for (let j = 0; j <= lb; j++) dp[0][j] = j
 		for (let i = 1; i <= la; i++) {
@@ -258,13 +348,13 @@ export class ApiClient {
 	 * - if multiple matches on date, attempts a simple name similarity fuzzy match
 	 * - throws if not confident in a unique match
 	 */
-	async findMatchingEventByStartDate(startDate: string, name?: string): Promise<EventDto> {
+	async findMatchingEventByStartDate(startDate: string, name?: string): Promise<GgEvent> {
 		const season = await this.getCurrentSeasonForYear()
 		const categoryId = this.configService.get<string>("golfGenius.categoryId")
 		const events = await this.getEvents(season.id?.toString(), categoryId)
 
 		const targetDate = this.normalizeDateOnly(startDate)
-		const dateMatches = events.filter((e) => this.normalizeDateOnly(e.startDate) === targetDate)
+		const dateMatches = events.filter((e) => this.normalizeDateOnly(e.start_date) === targetDate)
 
 		if (dateMatches.length === 0) {
 			throw new ApiError(`No Golf Genius events found matching start date ${targetDate}`)
@@ -301,98 +391,5 @@ export class ApiClient {
 		throw new ApiError(
 			`Multiple Golf Genius events found on ${targetDate} and no confident name match`,
 		)
-	}
-
-	async getEvents(seasonId?: string, categoryId?: string): Promise<EventDto[]> {
-		const params: any = {}
-		if (seasonId) params.season = seasonId
-		if (categoryId) params.category = categoryId
-		const endpoint = `/api_v2/${this.apiKey}/events`
-		const res = await this.request("get", endpoint, { params })
-		if (!res) return []
-		if (Array.isArray(res)) {
-			// Unwrap the "event" property from each item
-			return res.map((item) => mapEvent(item.event || item))
-		}
-		if (res && res.events) {
-			return (res.events as any[]).map((item) => mapEvent(item.event || item))
-		}
-		return []
-	}
-
-	async getEventRounds(eventId: string): Promise<RoundDto[]> {
-		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds`
-		const res = await this.request("get", endpoint)
-		if (!res) return []
-		if (Array.isArray(res)) {
-			// Unwrap the "round" property from each item
-			return res.map((item) => mapRound(item.round || item))
-		}
-		if (res && res.rounds) {
-			return (res.rounds as any[]).map((item) => mapRound(item.round || item))
-		}
-		return []
-	}
-
-	async getRoundTournaments(eventId: string, roundId: string): Promise<TournamentDto[]> {
-		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments`
-		const res = await this.request("get", endpoint)
-		if (!res) return []
-		if (Array.isArray(res)) {
-			// Unwrap the "event" property from each item (Golf Genius wraps tournaments in "event")
-			return res.map((item) => mapTournament(item.event || item))
-		}
-		if (res && res.tournaments) {
-			return (res.tournaments as any[]).map((item) => mapTournament(item.event || item))
-		}
-		return []
-	}
-
-	async getEventRoster(eventId: string, photo = false): Promise<RosterMemberDto[]> {
-		const members: RosterMemberDto[] = []
-		let page = 1
-		while (true) {
-			const params: any = { page }
-			if (photo) params.photo = "true"
-			const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/roster`
-			const res = await this.request("get", endpoint, { params })
-			if (!res) break
-			if (Array.isArray(res)) {
-				for (const item of res) {
-					members.push(mapRosterMember(item.member || item))
-				}
-			} else break
-			if (res.length < 100) break
-			page += 1
-		}
-		return members
-	}
-
-	async createMemberRegistration(eventId: string, member: RosterMemberSyncDto) {
-		const memberData = mapMemberExport(member)
-		const endpoint = `/api_v2/events/${eventId}/members`
-		return this.request("post", endpoint, { json: memberData })
-	}
-
-	async updateMemberRegistration(eventId: string, memberId: string, member: RosterMemberSyncDto) {
-		const memberData = mapMemberExport(member)
-		const endpoint = `/api_v2/events/${eventId}/members/${memberId}`
-		return this.request("put", endpoint, { json: memberData })
-	}
-
-	async getRoundTeeSheet(eventId: string, roundId: string, includeAllCustomFields = false) {
-		const params: any = {}
-		if (includeAllCustomFields) params.include_all_custom_fields = "true"
-		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tee_sheet`
-		return this.request("get", endpoint, { params })
-	}
-
-	async getTournamentResults(
-		eventId: string,
-		roundId: string,
-		tournamentId: string,
-	): Promise<GolfGeniusTournamentResults> {
-		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments/${tournamentId}.json`
-		return this.request("get", endpoint)
 	}
 }

@@ -7,126 +7,9 @@ import {
 } from "@repo/domain/types"
 
 import type { TournamentPointsInsert, TournamentResultInsert } from "../../database"
-import {
-	GgCreateMemberDto,
-	GgEventDto,
-	GgMemberDto,
-	GgRoundDto,
-	GgSeasonDto,
-	GgTournamentDto,
-} from "./golf-genius.dto"
-import {
-	EventDto,
-	MasterRosterItemDto,
-	RosterMemberDto,
-	RosterMemberSyncDto,
-	RoundDto,
-	SeasonDto,
-	TournamentDto,
-} from "./internal.dto"
 
 /**
- * Map raw API master roster item -> MasterRosterItemDto
- */
-export function mapMasterRosterItem(member: GgMemberDto): MasterRosterItemDto {
-	return {
-		member: {
-			memberCardId: member?.member_card_id,
-			handicapNetworkId: member?.handicap?.handicap_network_id,
-			email: member?.email,
-			firstName: member?.first_name,
-			lastName: member?.last_name,
-		},
-	}
-}
-
-/**
- * Map roster member object from API -> RosterMemberDto
- */
-export function mapRosterMember(member: GgMemberDto): RosterMemberDto {
-	return {
-		id: member.id,
-		firstName: member.first_name,
-		lastName: member.last_name,
-		email: member.email ?? undefined,
-		ghin: member.handicap?.handicap_network_id,
-		externalId: member.external_id,
-	}
-}
-
-export function mapSeason(season: GgSeasonDto): SeasonDto {
-	return {
-		id: season.id,
-		name: season.name,
-		current: Boolean(season.current),
-		archived: Boolean(season.archived),
-	}
-}
-
-export function mapEvent(event: GgEventDto): EventDto {
-	return {
-		id: event.id,
-		name: event.name,
-		ggid: event.ggid,
-		startDate: event.start_date,
-		endDate: event.end_date,
-		website: event.website,
-	}
-}
-
-export function mapRound(round: GgRoundDto): RoundDto {
-	return {
-		id: round.id,
-		index: round.index,
-		date: round.date,
-		eventId: round.event_id,
-	}
-}
-
-export function mapTournament(tournament: GgTournamentDto): TournamentDto {
-	if (!tournament.id || !tournament.name) {
-		throw new Error(
-			`Tournament missing required fields: id=${tournament.id}, name=${tournament.name}`,
-		)
-	}
-
-	let scoreFormat = tournament.score_format
-
-	if (scoreFormat === "stroke") {
-		if (tournament.name.toLowerCase().includes("points")) {
-			scoreFormat = "points"
-		} else if (tournament.score_scope === "pos_group") {
-			scoreFormat = "team"
-		} else if (tournament.score_scope === "pos_player") {
-			scoreFormat = "stroke"
-		}
-		// If score_scope is missing or any other value, keep as "stroke"
-	}
-
-	return {
-		id: tournament.id,
-		name: tournament.name,
-		scoreFormat: scoreFormat ?? "",
-		handicapFormat: tournament.handicap_format ?? "",
-	}
-}
-
-export function mapMemberExport(member: RosterMemberSyncDto): GgCreateMemberDto {
-	return {
-		external_id: member.externalId.toString(),
-		last_name: member.lastName,
-		first_name: member.firstName,
-		email: member.email,
-		gender: "M",
-		handicap_network_id: member.handicapNetworkId,
-		rounds: member.rounds,
-		custom_fields: member.customFields,
-	}
-}
-
-
-/**
- * TODO: this belongs to the events module
+ * TODO: this belongs to the events module?
  * Maps PreparedTournamentResult to TournamentResultInsert for database insertion.
  */
 export function mapPreparedResultsToTournamentResultInsert(
@@ -151,7 +34,7 @@ export function mapPreparedResultsToTournamentResultInsert(
 }
 
 /**
- * TODO: this belongs to the events module
+ * TODO: this belongs to the events module?
  * Maps PreparedTournamentPoints to TournamentPointsInsert for database insertion.
  */
 export function mapPreparedPointsToTournamentPointsInsert(
