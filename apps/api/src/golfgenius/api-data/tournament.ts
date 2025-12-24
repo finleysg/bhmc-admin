@@ -24,16 +24,15 @@ import { z } from "zod"
 
 // Schema for a single tournament object
 // Validates only the specified fields; all other properties are allowed but not validated
-export const GgTournamentSchema = z
-	.object({
-		id: z.string(),
-		name: z.string(),
-		score_format: z.string(),
-		handicap_format: z.string(),
-		score_scope: z.string(),
-		result_scope: z.string(),
-		score_aggregation: z.string(),
-	})
+export const GgTournamentSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	score_format: z.string(),
+	handicap_format: z.string(),
+	score_scope: z.string(),
+	result_scope: z.string(),
+	score_aggregation: z.string(),
+})
 
 // Schema for the wrapped tournament object (as returned by the API)
 // Note: The API wraps tournaments in an "event" property

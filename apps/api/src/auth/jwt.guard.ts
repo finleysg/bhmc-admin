@@ -22,8 +22,8 @@ export class JwtAuthGuard implements CanActivate {
 	async canActivate(context: ExecutionContext): Promise<boolean> {
 		const req = context.switchToHttp().getRequest<Request>()
 
-		// Skip authentication for health endpoints
-		if (req.url === "/health" || req.url === "/health/db") {
+		// Skip authentication for public endpoints
+		if (req.url === "/health" || req.url === "/health/db" || req.url === "/stripe/webhook") {
 			return true
 		}
 

@@ -22,17 +22,16 @@ import { z } from "zod"
 
 // Schema for a single event object
 // Validates only the specified fields; all other properties are allowed but not validated
-export const GgEventSchema = z
-	.object({
-		id: z.string(),
-		ggid: z.string(),
-		name: z.string(),
-		start_date: z.string(),
-		end_date: z.string(),
-		type: z.string(),
-		website: z.string().optional(),
-		description: z.string().optional(),
-	})
+export const GgEventSchema = z.object({
+	id: z.string(),
+	ggid: z.string(),
+	name: z.string(),
+	start_date: z.string(),
+	end_date: z.string(),
+	type: z.string(),
+	website: z.string().optional(),
+	description: z.string().optional(),
+})
 
 // Schema for the wrapped event object (as returned by the API)
 export const GgEventWrapperSchema = z.object({

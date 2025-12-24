@@ -21,15 +21,14 @@ import { z } from "zod"
 
 // Schema for a single round object
 // Validates only the specified fields; all other properties are allowed but not validated
-export const GgRoundSchema = z
-	.object({
-		id: z.string(),
-		index: z.number(),
-		event_id: z.string(),
-		name: z.string(),
-		date: z.string(),
-		status: z.string(),
-	})
+export const GgRoundSchema = z.object({
+	id: z.string(),
+	index: z.number(),
+	event_id: z.string(),
+	name: z.string(),
+	date: z.string(),
+	status: z.string(),
+})
 
 // Schema for the wrapped round object (as returned by the API)
 export const GgRoundWrapperSchema = z.object({

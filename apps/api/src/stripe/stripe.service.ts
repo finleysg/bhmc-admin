@@ -5,6 +5,7 @@ import Stripe from "stripe"
 @Injectable()
 export class StripeService {
 	private stripe: Stripe
+	private webhookSecret: string
 
 	constructor(private configService: ConfigService) {
 		const secretKey = this.configService.get<string>("STRIPE_SECRET_KEY")
@@ -16,6 +17,11 @@ export class StripeService {
 			"2024-12-18.acacia",
 		) as Stripe.LatestApiVersion
 		this.stripe = new Stripe(secretKey, { apiVersion })
+		this.webhookSecret = this.configService.getOrThrow<string>("STRIPE_WEBHOOK_SECRET")
+	}
+
+	constructWebhookEvent(payload: Buffer, signature: string): Stripe.Event {
+		return this.stripe.webhooks.constructEvent(payload, signature, this.webhookSecret)
 	}
 
 	/**
