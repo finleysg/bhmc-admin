@@ -30,7 +30,6 @@ export const GgRoundSchema = z
 		date: z.string(),
 		status: z.string(),
 	})
-	.catchall(z.unknown())
 
 // Schema for the wrapped round object (as returned by the API)
 export const GgRoundWrapperSchema = z.object({

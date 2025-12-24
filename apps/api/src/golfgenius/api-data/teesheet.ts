@@ -11,7 +11,6 @@ export const GgTeesheetTeeSchema = z
 		id: z.string(),
 		course_id: z.string(),
 	})
-	.catchall(z.unknown())
 
 export type GgTeesheetTee = z.infer<typeof GgTeesheetTeeSchema>
 
@@ -35,7 +34,6 @@ export const GgPlayerSchema = z
 		handicap_dots_by_hole: z.array(z.number()),
 		tee: GgTeesheetTeeSchema,
 	})
-	.catchall(z.unknown())
 
 export type GgPlayer = z.infer<typeof GgPlayerSchema>
 
@@ -49,7 +47,6 @@ export const GgPairingGroupSchema = z
 		foursome_ggid: z.string(),
 		players: z.array(GgPlayerSchema),
 	})
-	.catchall(z.unknown())
 
 export type GgPairingGroup = z.infer<typeof GgPairingGroupSchema>
 

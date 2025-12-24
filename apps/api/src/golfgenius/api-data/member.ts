@@ -11,7 +11,6 @@ export const GgHandicapSchema = z
 		handicap_index: z.string(),
 		nine_hole_handicap_index: z.string(),
 	})
-	.catchall(z.unknown())
 
 /**
  * Schema for Golf Genius member data
@@ -31,7 +30,6 @@ export const GgMemberSchema = z
 		handicap: GgHandicapSchema,
 		custom_fields: z.record(z.string(), z.unknown()), // Catchall collection for dynamic custom fields
 	})
-	.catchall(z.unknown())
 
 /**
  * Schema for Golf Genius member API response wrapper

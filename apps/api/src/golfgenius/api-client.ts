@@ -28,6 +28,7 @@ import {
 	unwrapPairingGroups,
 	GgSeason,
 	GgMemberSyncData,
+	GgMemberSchema,
 } from "./api-data"
 
 import { ApiError, AuthError, RateLimitError, ValidationError } from "./errors"
@@ -261,14 +262,16 @@ export class ApiClient {
 		return unwrapTournamentResult(response)
 	}
 
-	async createMemberRegistration(eventId: string, member: GgMemberSyncData) {
+	async createMemberRegistration(eventId: string, member: GgMemberSyncData): Promise<GgMember> {
 		const endpoint = `/api_v2/events/${eventId}/members`
-		return this.request("post", endpoint, { json: member })
+		const mem = await this.request("post", endpoint, { json: member })
+		return GgMemberSchema.parse(mem)
 	}
 
-	async updateMemberRegistration(eventId: string, memberId: string, member: GgMemberSyncData) {
+	async updateMemberRegistration(eventId: string, memberId: string, member: GgMemberSyncData): Promise<GgMember> {
 		const endpoint = `/api_v2/events/${eventId}/members/${memberId}`
-		return this.request("put", endpoint, { json: member })
+		const mem = await this.request("put", endpoint, { json: member })
+		return GgMemberSchema.parse(mem)
 	}
 
 	/**

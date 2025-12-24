@@ -33,7 +33,6 @@ export const GgEventSchema = z
 		website: z.string().optional(),
 		description: z.string().optional(),
 	})
-	.catchall(z.unknown())
 
 // Schema for the wrapped event object (as returned by the API)
 export const GgEventWrapperSchema = z.object({

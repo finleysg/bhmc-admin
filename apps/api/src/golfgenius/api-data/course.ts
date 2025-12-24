@@ -11,7 +11,6 @@ export const GgHoleDataSchema = z
 		yardage: z.array(z.number().nullable()),
 		handicap: z.array(z.number().nullable()),
 	})
-	.catchall(z.unknown())
 
 /**
  * Schema for Golf Genius tee data
@@ -25,7 +24,6 @@ export const GgTeeSchema = z
 		abbreviation: z.string(),
 		hole_data: GgHoleDataSchema,
 	})
-	.catchall(z.unknown())
 
 /**
  * Schema for Golf Genius course data
@@ -39,7 +37,6 @@ export const GgCourseSchema = z
 		abbreviation: z.string(),
 		tees: z.array(GgTeeSchema),
 	})
-	.catchall(z.unknown())
 
 /**
  * Schema for Golf Genius courses API response

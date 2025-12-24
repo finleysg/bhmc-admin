@@ -34,7 +34,6 @@ export const GgTournamentSchema = z
 		result_scope: z.string(),
 		score_aggregation: z.string(),
 	})
-	.catchall(z.unknown())
 
 // Schema for the wrapped tournament object (as returned by the API)
 // Note: The API wraps tournaments in an "event" property
