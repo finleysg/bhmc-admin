@@ -25,6 +25,7 @@ async function bootstrap() {
 	}
 	const app = await NestFactory.create(AppModule, {
 		logger: enabledLevels.length > 0 ? enabledLevels : false,
+		rawBody: true,
 	})
 	const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001
 	const webOrigin = process.env.WEB_ORIGIN || "http://localhost:3000"

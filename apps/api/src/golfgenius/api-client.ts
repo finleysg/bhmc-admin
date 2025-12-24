@@ -268,7 +268,11 @@ export class ApiClient {
 		return GgMemberSchema.parse(mem)
 	}
 
-	async updateMemberRegistration(eventId: string, memberId: string, member: GgMemberSyncData): Promise<GgMember> {
+	async updateMemberRegistration(
+		eventId: string,
+		memberId: string,
+		member: GgMemberSyncData,
+	): Promise<GgMember> {
 		const endpoint = `/api_v2/events/${eventId}/members/${memberId}`
 		const mem = await this.request("put", endpoint, { json: member })
 		return GgMemberSchema.parse(mem)

@@ -5,31 +5,29 @@ import { z } from "zod"
  * Contains handicap network information and index values
  * Uses catchall to allow additional unvalidated properties
  */
-export const GgHandicapSchema = z
-	.object({
-		handicap_network_id: z.string(),
-		handicap_index: z.string(),
-		nine_hole_handicap_index: z.string(),
-	})
+export const GgHandicapSchema = z.object({
+	handicap_network_id: z.string(),
+	handicap_index: z.string(),
+	nine_hole_handicap_index: z.string(),
+})
 
 /**
  * Schema for Golf Genius member data
  * Contains participant/registration information for an event
  * Uses catchall to allow additional unvalidated properties
  */
-export const GgMemberSchema = z
-	.object({
-		id: z.string(),
-		name: z.string(),
-		email: z.string(),
-		last_name: z.string(),
-		first_name: z.string(),
-		event_id: z.string(),
-		member_card_id: z.string(),
-		external_id: z.string().nullable(),
-		handicap: GgHandicapSchema,
-		custom_fields: z.record(z.string(), z.unknown()), // Catchall collection for dynamic custom fields
-	})
+export const GgMemberSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	email: z.string(),
+	last_name: z.string(),
+	first_name: z.string(),
+	event_id: z.string(),
+	member_card_id: z.string(),
+	external_id: z.string().nullable(),
+	handicap: GgHandicapSchema,
+	custom_fields: z.record(z.string(), z.unknown()), // Catchall collection for dynamic custom fields
+})
 
 /**
  * Schema for Golf Genius member API response wrapper
