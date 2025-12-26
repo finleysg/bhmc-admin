@@ -14,6 +14,7 @@ import {
 	authUser,
 	DrizzleService,
 	payment,
+	refund,
 	registrationFee,
 	registrationSlot,
 	toDbString,
@@ -109,14 +110,174 @@ export class StripeWebhookService {
 		// TODO: Notify admin or update payment status
 	}
 
-	handleRefundCreated(refundEvent: Stripe.Refund): void {
-		this.logger.log(`Refund created: ${refundEvent.id}`)
-		// TODO: Update refund record status
+	async handleRefundCreated(refundEvent: Stripe.Refund): Promise<void> {
+		const refundId = refundEvent.id
+		const paymentIntentId =
+			typeof refundEvent.payment_intent === "string"
+				? refundEvent.payment_intent
+				: refundEvent.payment_intent?.id
+		const reason = refundEvent.reason ?? "requested_by_customer"
+		const amount = refundEvent.amount / 100 // cents to dollars
+
+		this.logger.log(`Processing refund.created: ${refundId} for payment ${paymentIntentId}`)
+
+		if (!paymentIntentId) {
+			this.logger.error(`Refund ${refundId} has no payment_intent`)
+			return
+		}
+
+		// Find payment by paymentCode
+		const [paymentRecord] = await this.drizzle.db
+			.select()
+			.from(payment)
+			.where(eq(payment.paymentCode, paymentIntentId))
+			.limit(1)
+
+		if (!paymentRecord) {
+			this.logger.error(`Refund created but no payment found for ${paymentIntentId}`)
+			return
+		}
+
+		// Check if refund already exists (idempotency)
+		const [existingRefund] = await this.drizzle.db
+			.select()
+			.from(refund)
+			.where(eq(refund.refundCode, refundId))
+			.limit(1)
+
+		if (existingRefund) {
+			this.logger.log(`Refund ${refundId} already exists, skipping creation`)
+			return
+		}
+
+		// Get or create system user for issuer
+		const systemUserId = await this.getOrCreateSystemUser()
+
+		// Create refund record
+		const now = toDbString(new Date())
+		await this.drizzle.db.insert(refund).values({
+			refundCode: refundId,
+			refundAmount: amount.toFixed(2),
+			notes: reason,
+			confirmed: 0,
+			refundDate: now,
+			issuerId: systemUserId,
+			paymentId: paymentRecord.id,
+		})
+
+		this.logger.log(`Refund record created: ${refundId}`)
+
+		// Send refund notification email
+		await this.sendRefundNotificationEmail(
+			paymentRecord.userId,
+			paymentRecord.eventId,
+			amount,
+			refundId,
+		)
 	}
 
-	handleRefundUpdated(refundEvent: Stripe.Refund): void {
-		this.logger.log(`Refund updated: ${refundEvent.id}, status: ${String(refundEvent.status)}`)
-		// TODO: Update confirmed status based on refund.status
+	async handleRefundUpdated(refundEvent: Stripe.Refund): Promise<void> {
+		const refundId = refundEvent.id
+		this.logger.log(`Processing refund.updated: ${refundId}, status: ${String(refundEvent.status)}`)
+
+		// Only process if status is succeeded
+		if (refundEvent.status !== "succeeded") {
+			this.logger.log(`Refund ${refundId} status is ${String(refundEvent.status)}, not confirming`)
+			return
+		}
+
+		// Find refund by refundCode
+		const [refundRecord] = await this.drizzle.db
+			.select()
+			.from(refund)
+			.where(eq(refund.refundCode, refundId))
+			.limit(1)
+
+		if (!refundRecord) {
+			// Race condition: updated event arrived before created handler finished
+			this.logger.warn(`Refund ${refundId} not found - created handler may not have finished`)
+			return
+		}
+
+		// Already confirmed? Skip
+		if (refundRecord.confirmed) {
+			this.logger.log(`Refund ${refundId} already confirmed, skipping`)
+			return
+		}
+
+		// Update refund: confirmed = true
+		await this.drizzle.db.update(refund).set({ confirmed: 1 }).where(eq(refund.id, refundRecord.id))
+
+		this.logger.log(`Refund ${refundId} confirmed`)
+	}
+
+	private async getOrCreateSystemUser(): Promise<number> {
+		const systemUsername = "stripe_system"
+
+		const [existingUser] = await this.drizzle.db
+			.select()
+			.from(authUser)
+			.where(eq(authUser.username, systemUsername))
+			.limit(1)
+
+		if (existingUser) {
+			return existingUser.id
+		}
+
+		// Create system user
+		const now = toDbString(new Date())
+		const [result] = await this.drizzle.db.insert(authUser).values({
+			username: systemUsername,
+			email: "stripe@system.local",
+			password: "",
+			firstName: "Stripe",
+			lastName: "System",
+			isActive: 0,
+			isStaff: 0,
+			isSuperuser: 0,
+			dateJoined: now,
+		})
+
+		return Number(result.insertId)
+	}
+
+	private async sendRefundNotificationEmail(
+		userId: number,
+		eventId: number,
+		refundAmount: number,
+		refundCode: string,
+	): Promise<void> {
+		try {
+			// Get user
+			const [userRow] = await this.drizzle.db
+				.select()
+				.from(authUser)
+				.where(eq(authUser.id, userId))
+				.limit(1)
+
+			if (!userRow) {
+				this.logger.warn(`User ${userId} not found for refund notification`)
+				return
+			}
+
+			// Get event
+			const event = await this.eventsService.getValidatedClubEventById(eventId, false)
+
+			const userName = `${userRow.firstName} ${userRow.lastName}`
+			await this.mailService.sendRefundNotification(
+				userRow.email,
+				userName,
+				event,
+				refundAmount,
+				refundCode,
+			)
+
+			this.logger.log(`Refund notification email sent for ${refundCode}`)
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error)
+			this.logger.error(`Failed to send refund notification email: ${message}`)
+			// Don't throw - email failure shouldn't fail the webhook
+		}
 	}
 
 	private async sendConfirmationEmail(
