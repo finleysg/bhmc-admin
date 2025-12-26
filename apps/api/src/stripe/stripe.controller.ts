@@ -51,10 +51,10 @@ export class StripeController {
 				this.webhookService.handlePaymentIntentFailed(event.data.object)
 				break
 			case "refund.created":
-				this.webhookService.handleRefundCreated(event.data.object)
+				await this.webhookService.handleRefundCreated(event.data.object)
 				break
 			case "refund.updated":
-				this.webhookService.handleRefundUpdated(event.data.object)
+				await this.webhookService.handleRefundUpdated(event.data.object)
 				break
 			default:
 				this.logger.log(`Unhandled event type: ${event.type}`)

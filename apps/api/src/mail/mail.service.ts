@@ -19,7 +19,7 @@ import * as nodemailer from "nodemailer"
 import mailgunTransport from "nodemailer-mailgun-transport"
 import type { ReactElement } from "react"
 
-import { RegistrationConfirmationEmail, WelcomeEmail } from "./templates"
+import { RefundNotificationEmail, RegistrationConfirmationEmail, WelcomeEmail } from "./templates"
 
 export interface SendEmailOptions {
 	to: string | string[]
@@ -155,5 +155,36 @@ export class MailService {
 				template: RegistrationConfirmationEmail(emailProps),
 			})
 		}
+	}
+
+	async sendRefundNotification(
+		email: string,
+		userName: string,
+		event: ClubEvent,
+		refundAmount: number,
+		refundCode: string,
+	): Promise<void> {
+		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
+		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
+
+		const eventDate = new Date(event.startDate).toLocaleDateString("en-US", {
+			weekday: "long",
+			month: "long",
+			day: "numeric",
+			year: "numeric",
+		})
+
+		await this.sendEmail({
+			to: email,
+			subject: `Refund Notification: ${event.name}`,
+			template: RefundNotificationEmail({
+				userName,
+				eventName: event.name,
+				eventUrl,
+				eventDate,
+				totalRefund: formatCurrency(refundAmount),
+				refundConfirmationCode: refundCode,
+			}),
+		})
 	}
 }
