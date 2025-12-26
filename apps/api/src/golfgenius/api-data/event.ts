@@ -28,9 +28,9 @@ export const GgEventSchema = z.object({
 	name: z.string(),
 	start_date: z.string(),
 	end_date: z.string(),
-	type: z.string(),
-	website: z.string().optional(),
-	description: z.string().optional(),
+	type: z.string().nullable(),
+	website: z.string().nullable(),
+	description: z.string().nullable(),
 })
 
 // Schema for the wrapped event object (as returned by the API)

@@ -31,7 +31,7 @@ export const GgTournamentSchema = z.object({
 	handicap_format: z.string(),
 	score_scope: z.string(),
 	result_scope: z.string(),
-	score_aggregation: z.string(),
+	score_aggregation: z.string().nullable(),
 })
 
 // Schema for the wrapped tournament object (as returned by the API)

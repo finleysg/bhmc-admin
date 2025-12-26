@@ -4,8 +4,6 @@ import { RegistrationSlot } from "./registration-slot"
 export interface Registration {
 	id: number
 	eventId: number
-	startingHole: number
-	startingOrder: number
 	notes?: string | null
 	courseId?: number | null
 	course?: Course

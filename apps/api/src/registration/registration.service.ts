@@ -321,8 +321,6 @@ export class RegistrationService {
 					signedUpBy: dto.signedUpBy,
 					notes: dto.notes,
 					courseId: dto.courseId,
-					startingHole: 1,
-					startingOrder: 0,
 					expires: toDbString(expires),
 				})
 				.where(eq(registration.id, registrationId))
@@ -431,8 +429,6 @@ export class RegistrationService {
 		return await this.drizzle.db.transaction(async (tx) => {
 			const [registrationResult] = await tx.insert(registration).values({
 				eventId,
-				startingHole: 1,
-				startingOrder: 0,
 				createdDate: toDbString(new Date()),
 			})
 			const registrationId = Number(registrationResult.insertId)

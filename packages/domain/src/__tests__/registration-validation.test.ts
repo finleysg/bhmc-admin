@@ -85,8 +85,6 @@ describe("validateRegistration", () => {
 	const validRegistration: Registration = {
 		id: 1,
 		eventId: 1,
-		startingHole: 1,
-		startingOrder: 0,
 		signedUpBy: "user@example.com",
 		userId: 1,
 		createdDate: "2023-01-01T00:00:00Z",

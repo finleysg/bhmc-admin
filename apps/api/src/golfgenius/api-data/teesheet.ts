@@ -19,7 +19,7 @@ export const GgPlayerSchema = z.object({
 	last_name: z.string(),
 	first_name: z.string(),
 	position: z.number(),
-	member_card_id: z.string(),
+	member_card_id: z.string().nullable(),
 	player_roster_id: z.string(),
 	handicap_network_id: z.string(),
 	player_round_id: z.string(),

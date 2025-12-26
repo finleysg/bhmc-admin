@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { getPlayerStartName, getPlayerTeamName } from "@repo/domain/functions"
 import { Course, ValidatedClubEvent, ValidatedRegisteredPlayer } from "@repo/domain/types"
-import { GgMemberSyncData } from "../api-data"
+import { GgRegistrationData } from "../api-data"
 
 export interface TransformationContext {
 	event: ValidatedClubEvent
@@ -19,7 +19,7 @@ export class RosterPlayerTransformer {
 	transformToGgMember(
 		registeredPlayer: ValidatedRegisteredPlayer,
 		context: TransformationContext,
-	): GgMemberSyncData {
+	): GgRegistrationData {
 		const customFields = this.buildCustomFields(registeredPlayer, context)
 		const roundsGgIds = context.event.eventRounds.map((r) => r.ggId.toString())
 

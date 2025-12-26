@@ -93,7 +93,7 @@ export class RosterExportService {
 			if (!existing) {
 				this.logger.debug(`CREATE: Did not find player: ${registeredPlayer.player.email}`)
 				const res = await this.apiClient.createMemberRegistration(clubEvent.ggId, member)
-				const memberId = res.id
+				const memberId = res.member_id_str
 				if (memberId) {
 					await this.registration.updateRegistrationSlotGgId(
 						registeredPlayer.slot.id,
