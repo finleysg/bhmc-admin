@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common"
 
+import { CoursesRepository } from "../../courses/courses.repository"
 import { TournamentRow } from "../../database"
 import { EventsRepository } from "../../events"
 import { ApiClient } from "../api-client"
@@ -10,6 +11,12 @@ interface EventSyncSummary {
 	tournamentsCreated: number
 }
 
+interface CourseSyncSummary {
+	coursesUpdated: number
+	teesUpdated: number
+	holesUpdated: number
+}
+
 @Injectable()
 export class EventSyncService {
 	private readonly logger = new Logger(EventSyncService.name)
@@ -17,6 +24,7 @@ export class EventSyncService {
 	constructor(
 		private readonly apiClient: ApiClient,
 		private readonly events: EventsRepository,
+		private readonly courses: CoursesRepository,
 	) {}
 
 	/**
@@ -104,6 +112,73 @@ export class EventSyncService {
 					roundId: localRoundId,
 				} as TournamentRow)
 				if (created && created.id) summary.tournamentsCreated += 1
+			}
+		}
+
+		return summary
+	}
+
+	/**
+	 * Synchronize course, tee, and hole data from Golf Genius.
+	 * Returns a summary of updated records.
+	 */
+	async syncCourses(eventId: number): Promise<CourseSyncSummary> {
+		const summary: CourseSyncSummary = {
+			coursesUpdated: 0,
+			teesUpdated: 0,
+			holesUpdated: 0,
+		}
+
+		// Load event to get ggId
+		const localEvent = await this.events.findEventById(eventId)
+		if (!localEvent) throw new Error(`Local event not found: ${eventId}`)
+		if (!localEvent.ggId) throw new Error(`Event ${eventId} has no ggId - run syncEvent first`)
+
+		// Get courses for this event
+		const localCourses = await this.courses.findCoursesByEventId({ eventId })
+		if (localCourses.length === 0) {
+			this.logger.warn(`No courses found for event ${eventId}`)
+			return summary
+		}
+
+		// Fetch GG courses
+		const ggCourses = await this.apiClient.getEventCourses(localEvent.ggId)
+
+		for (const ggCourse of ggCourses) {
+			// Find matching local course by case-insensitive name
+			const localCourse = localCourses.find(
+				(c) => c.name.toLowerCase() === ggCourse.name.toLowerCase(),
+			)
+			if (!localCourse) {
+				this.logger.warn(`No local course matches GG course "${ggCourse.name}"`)
+				continue
+			}
+
+			// Update course ggId
+			await this.courses.updateCourseGgId(localCourse.id, ggCourse.id)
+			summary.coursesUpdated += 1
+
+			// Sync tees
+			for (const ggTee of ggCourse.tees) {
+				await this.courses.upsertTee(localCourse.id, ggTee.name, ggTee.id)
+				summary.teesUpdated += 1
+			}
+
+			// Find White tee for hole par values
+			const whiteTee = ggCourse.tees.find((t) => t.name.toLowerCase() === "white")
+			if (!whiteTee) {
+				this.logger.warn(`No "White" tee found for course "${ggCourse.name}" - skipping holes`)
+				continue
+			}
+
+			// Sync holes using White tee's par values
+			const parValues = whiteTee.hole_data.par
+			for (let i = 0; i < parValues.length; i++) {
+				const par = parValues[i]
+				if (par !== null) {
+					await this.courses.upsertHole(localCourse.id, i + 1, par)
+					summary.holesUpdated += 1
+				}
 			}
 		}
 

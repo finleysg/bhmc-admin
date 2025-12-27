@@ -13,11 +13,13 @@ import {
 	GgTeesheetResponseSchema,
 	GgTournamentResultWrapperSchema,
 	GgTournamentsResponseSchema,
+	GgCoursesResponseSchema,
 	unwrapEvents,
 	unwrapMembers,
 	unwrapRounds,
 	unwrapSeasons,
 	unwrapTournaments,
+	unwrapCourses,
 	GgRound,
 	GgEvent,
 	GgTournament,
@@ -28,9 +30,9 @@ import {
 	unwrapPairingGroups,
 	GgSeason,
 	GgRegistrationData,
-	GgMemberSchema,
 	GgRegistration,
 	GgRegistrationSchema,
+	GgCourse,
 } from "./api-data"
 
 import { ApiError, AuthError, RateLimitError, ValidationError } from "./errors"
@@ -223,6 +225,12 @@ export class ApiClient {
 		return unwrapRounds(response)
 	}
 
+	async getEventCourses(eventId: string): Promise<GgCourse[]> {
+		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/courses`
+		const response = await this.request("get", endpoint, {}, GgCoursesResponseSchema)
+		return unwrapCourses(response)
+	}
+
 	async getRoundTournaments(eventId: string, roundId: string): Promise<GgTournament[]> {
 		const endpoint = `/api_v2/${this.apiKey}/events/${eventId}/rounds/${roundId}/tournaments`
 		const response = await this.request("get", endpoint, {}, GgTournamentsResponseSchema)
@@ -267,7 +275,10 @@ export class ApiClient {
 		return unwrapTournamentResult(response)
 	}
 
-	async createMemberRegistration(eventId: string, member: GgRegistrationData): Promise<GgRegistration> {
+	async createMemberRegistration(
+		eventId: string,
+		member: GgRegistrationData,
+	): Promise<GgRegistration> {
 		const endpoint = `/api_v2/events/${eventId}/members`
 		const mem = await this.request("post", endpoint, { json: member })
 		return GgRegistrationSchema.parse(mem)
