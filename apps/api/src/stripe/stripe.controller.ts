@@ -22,7 +22,7 @@ export class StripeController {
 		private readonly webhookService: StripeWebhookService,
 	) {}
 
-	@Post("webhook")
+	@Post("webhook/clover")
 	@HttpCode(HttpStatus.OK)
 	async handleWebhook(
 		@Headers("stripe-signature") signature: string,

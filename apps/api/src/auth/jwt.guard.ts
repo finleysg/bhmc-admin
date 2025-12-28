@@ -23,7 +23,11 @@ export class JwtAuthGuard implements CanActivate {
 		const req = context.switchToHttp().getRequest<Request>()
 
 		// Skip authentication for public endpoints
-		if (req.url === "/health" || req.url === "/health/db" || req.url === "/stripe/webhook") {
+		if (
+			req.url === "/health" ||
+			req.url === "/health/db" ||
+			req.url.startsWith("/stripe/webhook")
+		) {
 			return true
 		}
 

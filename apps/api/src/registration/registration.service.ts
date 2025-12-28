@@ -27,6 +27,7 @@ import {
 
 import { toCourse, toHole } from "../courses/mappers"
 import {
+	authUser,
 	course,
 	DrizzleService,
 	eventFee,
@@ -41,6 +42,7 @@ import {
 	toDbString,
 } from "../database"
 import { EventsService } from "../events"
+import { MailService } from "../mail/mail.service"
 import { StripeService } from "../stripe/stripe.service"
 import {
 	attachFeesToSlots,
@@ -68,6 +70,7 @@ export class RegistrationService {
 		private drizzle: DrizzleService,
 		private repository: RegistrationRepository,
 		private readonly events: EventsService,
+		private readonly mailService: MailService,
 		private readonly stripeService: StripeService,
 	) {}
 
@@ -360,7 +363,69 @@ export class RegistrationService {
 			}
 		})
 
+		// Send notification emails (non-blocking)
+		this.sendAdminRegistrationEmails(
+			eventRecord,
+			registrationId,
+			paymentId,
+			dto.userId,
+			dto.collectPayment,
+		).catch((error) => {
+			this.logger.error(`Failed to send admin registration emails: ${error}`)
+		})
+
 		return paymentId
+	}
+
+	private async sendAdminRegistrationEmails(
+		event: ValidatedClubEvent,
+		registrationId: number,
+		paymentId: number,
+		paymentUserId: number,
+		collectPayment: boolean,
+	): Promise<void> {
+		// Get payment user's email
+		const [userRow] = await this.drizzle.db
+			.select()
+			.from(authUser)
+			.where(eq(authUser.id, paymentUserId))
+			.limit(1)
+
+		if (!userRow) {
+			this.logger.warn(`User ${paymentUserId} not found for admin registration notification`)
+			return
+		}
+
+		// Build validated registration
+		const regWithCourse = await this.repository.findRegistrationWithCourse(registrationId)
+		if (!regWithCourse) {
+			this.logger.warn(`Registration ${registrationId} not found`)
+			return
+		}
+
+		const result = toRegistration(regWithCourse.registration)
+		if (regWithCourse.course) {
+			result.course = toCourse(regWithCourse.course)
+		}
+
+		const slotRows = await this.repository.findSlotsWithPlayerAndHole(registrationId)
+		const slots = hydrateSlotsWithPlayerAndHole(slotRows)
+
+		const slotIds = slots.filter((s) => s.id !== undefined).map((s) => s.id)
+		const feeRows = await this.repository.findFeesWithEventFeeAndFeeType(slotIds)
+		attachFeesToSlots(slots, feeRows)
+
+		result.slots = slots
+
+		const validatedReg = validateRegistration(result)
+
+		await this.mailService.sendAdminRegistrationNotification(
+			event,
+			validatedReg,
+			paymentId,
+			userRow.email,
+			collectPayment,
+		)
 	}
 
 	async convertSlots(

@@ -19,7 +19,12 @@ import * as nodemailer from "nodemailer"
 import mailgunTransport from "nodemailer-mailgun-transport"
 import type { ReactElement } from "react"
 
-import { RefundNotificationEmail, RegistrationConfirmationEmail, WelcomeEmail } from "./templates"
+import {
+	AdminRegistrationNotificationEmail,
+	RefundNotificationEmail,
+	RegistrationConfirmationEmail,
+	WelcomeEmail,
+} from "./templates"
 
 export interface SendEmailOptions {
 	to: string | string[]
@@ -186,5 +191,82 @@ export class MailService {
 				refundConfirmationCode: refundCode,
 			}),
 		})
+	}
+
+	async sendAdminRegistrationNotification(
+		event: ClubEvent,
+		registration: ValidatedRegistration,
+		paymentId: number,
+		paymentUserEmail: string,
+		collectPayment: boolean,
+	): Promise<void> {
+		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
+		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
+		const paymentUrl = `${websiteUrl}/registration/${registration.id}/payment/${paymentId}`
+
+		const eventHoleOrStart = getStart(event, registration.slots[0], registration.course.holes)
+
+		const players = registration.slots.map((slot) => ({
+			name: `${slot.player.firstName} ${slot.player.lastName}`,
+			email: slot.player.email,
+			fees: slot.fees.map((fee) => ({
+				description: fee.eventFee.feeType.name,
+				amount: formatCurrency(fee.amount),
+			})),
+		}))
+
+		const requiredFees = registration.slots.reduce(
+			(sum, slot) =>
+				sum + slot.fees.filter((f) => f.eventFee.isRequired).reduce((s, f) => s + f.amount, 0),
+			0,
+		)
+		const optionalFees = registration.slots.reduce(
+			(sum, slot) =>
+				sum + slot.fees.filter((f) => !f.eventFee.isRequired).reduce((s, f) => s + f.amount, 0),
+			0,
+		)
+		const totalFees = requiredFees + optionalFees
+		const transactionFee = totalFees * 0.03
+
+		const emailProps = {
+			eventName: event.name,
+			eventUrl,
+			eventDate: new Date(event.startDate).toLocaleDateString("en-US", {
+				weekday: "long",
+				month: "long",
+				day: "numeric",
+				year: "numeric",
+			}),
+			eventHoleOrStart,
+			requiredFees: formatCurrency(requiredFees),
+			optionalFees: formatCurrency(optionalFees),
+			transactionFees: formatCurrency(transactionFee),
+			totalFees: formatCurrency(totalFees + transactionFee),
+			players,
+		}
+
+		// Send to each player individually
+		for (const slot of registration.slots) {
+			const recipientEmail = slot.player.email
+			const recipientName = slot.player.firstName
+			const isPaymentPlayer = recipientEmail === paymentUserEmail
+
+			try {
+				await this.sendEmail({
+					to: recipientEmail,
+					subject: `Event Registration: ${event.name}`,
+					template: AdminRegistrationNotificationEmail({
+						...emailProps,
+						recipientName,
+						paymentUrl: isPaymentPlayer && collectPayment ? paymentUrl : undefined,
+					}),
+				})
+			} catch (error) {
+				this.logger.error(
+					`Failed to send admin registration email to ${recipientEmail}: ${error instanceof Error ? error.message : "Unknown error"}`,
+				)
+				// Continue sending to other players
+			}
+		}
 	}
 }
