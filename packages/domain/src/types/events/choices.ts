@@ -71,12 +71,13 @@ export const PayoutStatusChoices = {
 } as const
 
 export const TournamentFormatChoices = {
-	SKINS: "Skins",
-	STROKE: "Stroke",
-	TEAM: "Team",
-	QUOTA: "Quota",
-	USER_SCORED: "UserScored",
-	OTHER: "Other",
+	SKINS: "skins",
+	STABLEFORD: "stableford",
+	STROKE: "stroke",
+	TEAM: "team",
+	QUOTA: "quota",
+	USER_SCORED: "user_scored",
+	OTHER: "other",
 } as const
 
 export type FeeRestrictionValue = (typeof FeeRestrictionChoices)[keyof typeof FeeRestrictionChoices]

@@ -103,9 +103,10 @@ export class EventSyncService {
 			const ggTournaments = await this.apiClient.getRoundTournaments(ggEventId, String(gr.id))
 			for (const gt of ggTournaments) {
 				const isNet = gt.handicap_format.toLowerCase().includes("net")
+				const isPoints = gt.name.toLowerCase().includes("points")
 				const created = await this.events.createTournament({
 					name: gt.name ?? undefined,
-					format: gt.score_format ?? undefined,
+					format: isPoints ? "points" : gt.score_format.toLowerCase(),
 					isNet: isNet ? 1 : 0,
 					ggId: gt.id,
 					eventId: localEventId,

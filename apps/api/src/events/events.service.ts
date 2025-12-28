@@ -1,6 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm"
 
-import { BadRequestException, Injectable } from "@nestjs/common"
+import { BadRequestException, Injectable, Logger } from "@nestjs/common"
 import { validateClubEvent } from "@repo/domain/functions"
 import {
 	PreparedTournamentPoints,
@@ -27,6 +27,8 @@ import {
 
 @Injectable()
 export class EventsService {
+	private readonly logger = new Logger(EventsService.name)
+
 	constructor(
 		private drizzle: DrizzleService,
 		private readonly repository: EventsRepository,
@@ -48,6 +50,7 @@ export class EventsService {
 		const eventFeeRows = await this.repository.listEventFeesByEvent(eventId)
 		const roundRows = await this.repository.findRoundsByEventId(eventId)
 		const tournamentRows = await this.repository.findTournamentsByEventId(eventId)
+		this.logger.log(`Found ${tournamentRows.length} tournaments for event ${eventId}`)
 
 		const clubEvent = toEventWithCompositions(eventRow, {
 			courses: courseRows,
@@ -110,10 +113,18 @@ export class EventsService {
 	}
 
 	async insertTournamentResults(preparedRecords: PreparedTournamentResult[]): Promise<void> {
-		const records = preparedRecords.map((record) =>
-			mapPreparedResultsToTournamentResultInsert(record),
-		)
+		const records = preparedRecords.map((record) => {
+			record.summary = this.truncateField(record.summary, 120, "summary")
+			record.details = this.truncateField(record.details, 120, "details")
+			return mapPreparedResultsToTournamentResultInsert(record)
+		})
 		await this.repository.insertTournamentResults(records)
+	}
+
+	private truncateField(value: string | null, maxLen: number, field: string): string | null {
+		if (!value || value.length <= maxLen) return value
+		this.logger.warn(`Truncating ${field} from ${value.length} to ${maxLen} chars`)
+		return value.substring(0, maxLen)
 	}
 
 	async insertTournamentPoints(preparedRecords: PreparedTournamentPoints[]): Promise<void> {

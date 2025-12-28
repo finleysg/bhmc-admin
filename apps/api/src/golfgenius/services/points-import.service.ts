@@ -247,6 +247,9 @@ export class PointsImportService {
 			// Fetch results from Golf Genius
 			const ggResults = await this.fetchGGResults(tournamentData, result)
 			if (!ggResults) {
+				this.logger.warn("Inconceivable! No results returned from Golf Genius", {
+					tournamentId: tournamentData.id,
+				})
 				return result
 			}
 
@@ -416,12 +419,17 @@ export class PointsImportService {
 		// Resolve player using pre-fetched player map
 		const player = this.resolvePlayerFromMap(memberId, playerMap, result)
 		if (!player) {
+			this.logger.warn("No player found for member ID", { memberId })
 			return null
 		}
 
 		// Parse points - skip if no points awarded
-		const points = parseInt(playerData.points || "0", 10)
+		const points = Math.round(parseFloat(playerData.points || "0"))
 		if (points <= 0) {
+			this.logger.log("No points awarded to player, skipping", {
+				playerId: player.id,
+				playerData: JSON.stringify(playerData),
+			})
 			return null // Skip players who didn't earn points
 		}
 
@@ -439,7 +447,12 @@ export class PointsImportService {
 		let score: number | null = null
 		try {
 			score = totalStr && totalStr.trim() !== "" ? parseInt(totalStr, 10) : null
-		} catch {
+		} catch (e: unknown) {
+			this.logger.warn("Failed to parse score for player", {
+				playerId: player.id,
+				totalStr,
+				error: String(e),
+			})
 			score = null
 		}
 

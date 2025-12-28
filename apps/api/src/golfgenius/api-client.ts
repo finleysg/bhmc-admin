@@ -145,6 +145,9 @@ export class ApiClient {
 
 				// Validate response with schema if provided
 				if (schema) {
+					this.logger.debug(
+						`Validating response for ${method.toUpperCase()} ${url}: ${JSON.stringify(res.data)}`,
+					)
 					const result = schema.safeParse(res.data)
 					if (!result.success) {
 						throw new ValidationError(
