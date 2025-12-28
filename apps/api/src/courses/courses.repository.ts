@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 import { Course, Hole, Tee } from "@repo/domain/types"
@@ -94,5 +94,38 @@ export class CoursesRepository {
 	async findTeeRowByGgId(ggId: string): Promise<TeeRow | null> {
 		const [t] = await this.drizzle.db.select().from(tee).where(eq(tee.ggId, ggId)).limit(1)
 		return t ?? null
+	}
+
+	// Update methods
+	async updateCourseGgId(courseId: number, ggId: string): Promise<void> {
+		await this.drizzle.db.update(course).set({ ggId }).where(eq(course.id, courseId))
+	}
+
+	async upsertTee(courseId: number, name: string, ggId: string): Promise<void> {
+		const [existing] = await this.drizzle.db
+			.select()
+			.from(tee)
+			.where(and(eq(tee.courseId, courseId), eq(tee.name, name)))
+			.limit(1)
+
+		if (existing) {
+			await this.drizzle.db.update(tee).set({ ggId }).where(eq(tee.id, existing.id))
+		} else {
+			await this.drizzle.db.insert(tee).values({ courseId, name, ggId })
+		}
+	}
+
+	async upsertHole(courseId: number, holeNumber: number, par: number): Promise<void> {
+		const [existing] = await this.drizzle.db
+			.select()
+			.from(hole)
+			.where(and(eq(hole.courseId, courseId), eq(hole.holeNumber, holeNumber)))
+			.limit(1)
+
+		if (existing) {
+			await this.drizzle.db.update(hole).set({ par }).where(eq(hole.id, existing.id))
+		} else {
+			await this.drizzle.db.insert(hole).values({ courseId, holeNumber, par })
+		}
 	}
 }

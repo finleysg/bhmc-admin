@@ -58,7 +58,9 @@ export class GolfgeniusController {
 	@UseInterceptors(LogIntegrationInterceptor)
 	async syncEvent(@Param("id") id: string) {
 		const eid = parseInt(id, 10)
-		return this.eventSync.syncEvent(eid)
+		const eventSummary = await this.eventSync.syncEvent(eid)
+		const courseSummary = await this.eventSync.syncCourses(eid)
+		return { ...eventSummary, ...courseSummary }
 	}
 
 	@Post("events/:eventId/close-event")

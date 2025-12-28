@@ -11,6 +11,7 @@ import {
 	Hole,
 	PointsReportRow,
 	TournamentFormatChoices,
+	TournamentFormatValue,
 	ValidatedRegisteredPlayer,
 } from "@repo/domain/types"
 
@@ -517,13 +518,19 @@ export class ReportsService {
 
 		const sections: EventResultsSection[] = []
 
-		// Section 1: Stroke play results
-		const strokeTournaments = tournaments.filter(
-			(t) => t.format === TournamentFormatChoices.STROKE && t.name !== "Overall",
+		// Section 1: Scoring tournament results (stroke, stableford, quota, team)
+		const scoringFormats: TournamentFormatValue[] = [
+			TournamentFormatChoices.STROKE,
+			TournamentFormatChoices.STABLEFORD,
+			TournamentFormatChoices.QUOTA,
+			TournamentFormatChoices.TEAM,
+		]
+		const scoringTournaments = tournaments.filter(
+			(t) => scoringFormats.includes(t.format) && t.name.toLowerCase() !== "overall",
 		)
-		if (strokeTournaments.length > 0) {
+		if (scoringTournaments.length > 0) {
 			const subSections = await Promise.all(
-				strokeTournaments.map(async (tournament) => {
+				scoringTournaments.map(async (tournament) => {
 					const results = await this.drizzle.db
 						.select({
 							flight: tournamentResult.flight,

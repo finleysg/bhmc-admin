@@ -158,6 +158,7 @@ export class ImportAllResultsService {
 				return this.processStrokeResults.bind(this)
 			case "team":
 				return this.processTeamResults.bind(this)
+			case "stableford":
 			case "quota":
 				return this.processQuotaResults.bind(this)
 			default:
@@ -392,7 +393,7 @@ export class ImportAllResultsService {
 			ggResults,
 			playerMap,
 			StrokePlayResultParser,
-			this.prepareStrokePlayerResult.bind(this),
+			this.prepareStrokePlayerResultDynamic.bind(this),
 			onPlayerProcessed,
 		)
 	}
@@ -410,7 +411,7 @@ export class ImportAllResultsService {
 			ggResults,
 			playerMap,
 			QuotaResultParser,
-			this.prepareQuotaPlayerResult.bind(this),
+			this.prepareQuotaPlayerResultDynamic.bind(this),
 			onPlayerProcessed,
 		)
 	}
@@ -532,6 +533,8 @@ export class ImportAllResultsService {
 		// Score is not relevant for skins tournaments
 		const score: number | null = null
 
+		this.logger.debug(`Skins player data: ${JSON.stringify(playerData)}`)
+
 		// Return prepared data instead of inserting
 		return {
 			tournamentId: tournamentData.id,
@@ -549,6 +552,25 @@ export class ImportAllResultsService {
 			payoutType: "Cash",
 			teamId: null,
 		}
+	}
+
+	private prepareStrokePlayerResultDynamic(
+		tournamentData: TournamentData,
+		aggregate: StrokeTournamentAggregate,
+		flightName: string,
+		result: ImportResultSummary,
+		playerMap: PlayerMap,
+	): PreparedTournamentResult | PreparedTournamentResult[] | null {
+		// Check if this is a team result (multiple member_cards or individual_results)
+		if (aggregate.member_cards?.length > 1 || aggregate.individual_results?.length) {
+			return this.prepareTeamPlayerResult(tournamentData, aggregate, flightName, result, playerMap)
+		}
+		// Skip empty aggregates silently (no member_cards)
+		if (!aggregate.member_cards?.length) {
+			return null
+		}
+		// Otherwise use individual stroke processing
+		return this.prepareStrokePlayerResult(tournamentData, aggregate, flightName, result, playerMap)
 	}
 
 	private prepareStrokePlayerResult(
@@ -697,6 +719,129 @@ export class ImportAllResultsService {
 			payoutType: "Credit",
 			teamId: null,
 		}
+	}
+
+	private prepareQuotaPlayerResultDynamic(
+		tournamentData: TournamentData,
+		aggregate: QuotaTournamentAggregate,
+		flightName: string,
+		result: ImportResultSummary,
+		playerMap: PlayerMap,
+	): PreparedTournamentResult | PreparedTournamentResult[] | null {
+		// Check if this is a team result (multiple member_cards or individual_results)
+		if (aggregate.member_cards?.length > 1 || aggregate.individual_results?.length) {
+			return this.prepareTeamQuotaPlayerResult(
+				tournamentData,
+				aggregate,
+				flightName,
+				result,
+				playerMap,
+			)
+		}
+		// Skip empty aggregates silently (no member_cards)
+		if (!aggregate.member_cards?.length) {
+			return null
+		}
+		// Otherwise use individual quota processing
+		return this.prepareQuotaPlayerResult(tournamentData, aggregate, flightName, result, playerMap)
+	}
+
+	private prepareTeamQuotaPlayerResult(
+		tournamentData: TournamentData,
+		aggregate: QuotaTournamentAggregate,
+		flightName: string,
+		result: ImportResultSummary,
+		playerMap: PlayerMap,
+	): PreparedTournamentResult[] | null {
+		// Parse team name to extract blind player names
+		const blindNames = new Set<string>()
+		const teamName = aggregate.name || "Unknown Team"
+		const entries = teamName.split("+").map((e) => e.trim())
+
+		for (const entry of entries) {
+			if (entry.startsWith("Bl[")) {
+				const match = entry.match(/Bl\[(.*?)\]/)
+				if (match) {
+					blindNames.add(match[1].toLowerCase())
+				}
+			}
+		}
+
+		// Get player member IDs from either individual_results or member_cards
+		const memberIds = aggregate.individual_results?.length
+			? aggregate.individual_results.map((ir) => ir.member_id_str)
+			: aggregate.member_cards?.map((mc) => mc.member_id_str) || []
+		const preparedRecords: PreparedTournamentResult[] = []
+
+		// Parse quota-style fields from aggregate (shared by all team members)
+		const position = parseInt(aggregate.position || "0", 10) || 0
+
+		// Parse score from aggregate.total (the quota result like +2, -1)
+		let score: number | null = null
+		try {
+			score =
+				aggregate.total && aggregate.total.trim() !== "" ? parseInt(aggregate.total, 10) : null
+		} catch {
+			score = null
+		}
+
+		// Parse summary from aggregate.stableford or aggregate.score
+		let summary: string | null = null
+		if (aggregate.stableford && aggregate.stableford.trim() !== "") {
+			summary = `Stableford score: ${aggregate.stableford}`
+		} else if (aggregate.score && aggregate.score.trim() !== "") {
+			summary = `Quota score: ${aggregate.score}`
+		}
+
+		// Parse purse amount (full purse per player)
+		const amount = parsePurseAmount(aggregate.purse)
+		if (amount === null) {
+			return null
+		}
+
+		for (const memberId of memberIds) {
+			// Resolve player
+			const player = this.resolvePlayerFromMap(memberId, playerMap, result)
+			if (!player) {
+				continue
+			}
+
+			// Check if this player is a blind draw
+			const playerFullName = `${player.firstName} ${player.lastName}`.toLowerCase()
+			if (blindNames.has(playerFullName)) {
+				result.skippedBlinds = (result.skippedBlinds || 0) + 1
+				this.logger.log(
+					`Skipping blind player: ${player.firstName} ${player.lastName} (team: ${teamName})`,
+				)
+				continue
+			}
+
+			// Prepare record
+			const record: PreparedTournamentResult = {
+				tournamentId: tournamentData.id,
+				playerId: player.id,
+				flight: flightName || null,
+				position,
+				score,
+				amount: amount.toFixed(2),
+				details: teamName,
+				summary,
+				createDate: toDbString(new Date()),
+				payoutDate: toDbString(new Date()),
+				payoutStatus: "Pending",
+				payoutTo: "Team",
+				payoutType: "Credit",
+				teamId: aggregate.id_str,
+			}
+
+			preparedRecords.push(record)
+		}
+
+		if (preparedRecords.length === 0) {
+			return null
+		}
+
+		return preparedRecords
 	}
 
 	private prepareTeamPlayerResult(

@@ -24,8 +24,6 @@ export type ValidatedRegistrationSlot = Omit<RegistrationSlot, "player" | "hole"
  * A validated variation of Registration where all core fields and nested ids are guaranteed to be present.
  */
 export type ValidatedRegistration = Omit<Registration, "slots" | "course"> & {
-	startingHoleNumber: number
-	startingOrder: number
 	slots: ValidatedRegistrationSlot[]
 	course: ValidatedCourse
 }

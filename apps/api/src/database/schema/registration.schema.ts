@@ -109,8 +109,6 @@ export const registration = mysqlTable(
 	{
 		id: int().autoincrement().notNull(),
 		expires: datetime({ mode: "string", fsp: 6 }),
-		startingHole: int("starting_hole").notNull(),
-		startingOrder: int("starting_order").notNull(),
 		notes: longtext(),
 		courseId: int("course_id").references(() => course.id),
 		eventId: int("event_id")

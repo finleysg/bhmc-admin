@@ -184,7 +184,7 @@ export const tournamentResult = mysqlTable(
 		payoutStatus: varchar("payout_status", { length: 10 }),
 		payoutTo: varchar("payout_to", { length: 10 }),
 		payoutType: varchar("payout_type", { length: 10 }),
-		summary: varchar({ length: 40 }),
+		summary: varchar({ length: 120 }),
 	},
 	(table) => [
 		primaryKey({ columns: [table.id], name: "events_tournamentresult_id" }),

@@ -93,7 +93,7 @@ export class RosterExportService {
 			if (!existing) {
 				this.logger.debug(`CREATE: Did not find player: ${registeredPlayer.player.email}`)
 				const res = await this.apiClient.createMemberRegistration(clubEvent.ggId, member)
-				const memberId = res.id
+				const memberId = res.member_id_str
 				if (memberId) {
 					await this.registration.updateRegistrationSlotGgId(
 						registeredPlayer.slot.id,
@@ -105,7 +105,18 @@ export class RosterExportService {
 				this.logger.debug(
 					`UPDATE: Player ${registeredPlayer.player.email} has already been exported.`,
 				)
-				await this.apiClient.updateMemberRegistration(clubEvent.ggId, existing.id, member)
+				const res = await this.apiClient.updateMemberRegistration(
+					clubEvent.ggId,
+					existing.id,
+					member,
+				)
+				const memberId = res.member_id_str
+				if (memberId) {
+					await this.registration.updateRegistrationSlotGgId(
+						registeredPlayer.slot.id,
+						String(memberId),
+					)
+				}
 				return { success: true, action: "updated" }
 			}
 		} catch (err: unknown) {

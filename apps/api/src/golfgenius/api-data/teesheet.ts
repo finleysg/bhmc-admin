@@ -19,7 +19,7 @@ export const GgPlayerSchema = z.object({
 	last_name: z.string(),
 	first_name: z.string(),
 	position: z.number(),
-	member_card_id: z.string(),
+	member_card_id: z.string().nullable(),
 	player_roster_id: z.string(),
 	handicap_network_id: z.string(),
 	player_round_id: z.string(),
@@ -38,7 +38,7 @@ export type GgPlayer = z.infer<typeof GgPlayerSchema>
 // Pairing group schema with tee time and players
 export const GgPairingGroupSchema = z.object({
 	id: z.string(),
-	hole: z.number(),
+	hole: z.coerce.string(),
 	tee_time: z.string(),
 	date: z.string(),
 	foursome_ggid: z.string(),

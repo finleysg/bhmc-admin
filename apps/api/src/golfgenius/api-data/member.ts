@@ -1,6 +1,24 @@
 import { z } from "zod"
 
 /**
+ * Schema for Golf Genius member data returned from the Create or
+ * Update Member API endpoints. Ignores the rounds array.
+ * Uses catchall to allow the custom fields returned by the API.
+ */
+export const GgRegistrationSchema = z.object({
+	member_id: z.number(),
+	member_id_str: z.string(),
+	external_id: z.string(),
+	last_name: z.string(),
+	first_name: z.string().nullable(),
+	email: z.string().nullable(),
+	gender: z.string().nullable(),
+	handicap_index: z.string().nullable(),
+	handicap_network_id: z.string().nullable(),
+	custom_fields: z.record(z.string(), z.unknown()), // Catchall collection for dynamic custom fields
+})
+
+/**
  * Schema for Golf Genius handicap data
  * Contains handicap network information and index values
  * Uses catchall to allow additional unvalidated properties
@@ -47,11 +65,12 @@ export type GgHandicap = z.infer<typeof GgHandicapSchema>
 export type GgMember = z.infer<typeof GgMemberSchema>
 export type GgMemberWrapper = z.infer<typeof GgMemberWrapperSchema>
 export type GgMembersResponse = z.infer<typeof GgMembersResponseSchema>
+export type GgRegistration = z.infer<typeof GgRegistrationSchema>
 
 /**
  * Payload for syncing our member data to Golf Genius
  */
-export interface GgMemberSyncData {
+export interface GgRegistrationData {
 	external_id: string | number
 	last_name: string
 	first_name: string

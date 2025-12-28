@@ -47,8 +47,6 @@ export function toRegistration(row: RegistrationRow): Registration {
 	return {
 		id: row.id,
 		eventId: row.eventId,
-		startingHole: row.startingHole,
-		startingOrder: row.startingOrder,
 		notes: row.notes ?? undefined,
 		courseId: row.courseId ?? undefined,
 		course: undefined,
