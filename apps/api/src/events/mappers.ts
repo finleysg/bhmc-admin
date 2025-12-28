@@ -64,6 +64,7 @@ export function toEvent(row: EventRow): ClubEvent {
 		starterTimeInterval: row.starterTimeInterval,
 		teamSize: row.teamSize,
 		prioritySignupStart: row.prioritySignupStart,
+		signupWaves: row.signupWaves,
 		ageRestriction: row.ageRestriction,
 		ageRestrictionType: row.ageRestrictionType as AgeRestrictionTypeValue,
 		ggId: row.ggId,
