@@ -1,4 +1,5 @@
 // Public services
+export { RegistrationFlowService } from "./registration-flow.service"
 export { RegistrationRepository } from "./registration.repository"
 export { RegistrationService } from "./registration.service"
 export * from "./mappers"

@@ -1,7 +1,7 @@
 /**
  * Request model for creating a Stripe PaymentIntent.
  */
-export interface CreatePaymentIntent {
-	eventId: number
-	registrationId: number
+export class CreatePaymentIntent {
+	eventId!: number
+	registrationId!: number
 }
