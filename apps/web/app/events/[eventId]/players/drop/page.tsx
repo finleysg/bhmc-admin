@@ -4,7 +4,7 @@ import { useReducer, useEffect, useMemo, useRef, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { GroupSearch } from "../components/group-search"
 import SelectPlayers from "../components/select-players"
-import type { ValidatedClubEvent } from "@repo/domain/types"
+import type { CompleteClubEvent } from "@repo/domain/types"
 import { reducer, initialState, translateRefundRequests } from "./reducer"
 import { PaidFeePicker } from "../components/paid-fee-picker"
 
@@ -118,7 +118,7 @@ export default function DropPlayerPage() {
 				const response = await fetch(`/api/events/${eventId}`)
 				if (response.ok) {
 					// We only return validated club events to the UI
-					const eventData = (await response.json()) as ValidatedClubEvent
+					const eventData = (await response.json()) as CompleteClubEvent
 					dispatch({ type: "SET_EVENT", payload: eventData })
 				} else {
 					dispatch({ type: "SET_ERROR", payload: "Failed to fetch event" })

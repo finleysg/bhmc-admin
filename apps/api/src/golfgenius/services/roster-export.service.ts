@@ -1,11 +1,7 @@
 import { Subject } from "rxjs"
 
 import { Injectable, Logger } from "@nestjs/common"
-import {
-	PlayerProgressEvent,
-	ValidatedClubEvent,
-	ValidatedRegisteredPlayer,
-} from "@repo/domain/types"
+import { PlayerProgressEvent, CompleteClubEvent, RegisteredPlayer } from "@repo/domain/types"
 
 import { EventsService } from "../../events/events.service"
 import { RegistrationService } from "../../registration/registration.service"
@@ -56,9 +52,9 @@ export class RosterExportService {
 	 * Process a single player registration slot and return the result
 	 */
 	private async processSinglePlayer(
-		clubEvent: ValidatedClubEvent,
-		registeredPlayer: ValidatedRegisteredPlayer,
-		registeredPlayersGroup: ValidatedRegisteredPlayer[],
+		clubEvent: CompleteClubEvent,
+		registeredPlayer: RegisteredPlayer,
+		registeredPlayersGroup: RegisteredPlayer[],
 		rosterByGhin: Map<string, GgMember>,
 		rosterBySlotId: Map<number, GgMember>,
 	): Promise<{
@@ -181,7 +177,7 @@ export class RosterExportService {
 	private async processExportAsync(eventId: number, result: ExportResult) {
 		try {
 			// 1. Retrieve this club event
-			const event = await this.events.getValidatedClubEventById(eventId)
+			const event = await this.events.getCompleteClubEventById(eventId)
 
 			// 2. Get existing roster from GG for idempotency
 			let existingRoster: GgMember[] = []

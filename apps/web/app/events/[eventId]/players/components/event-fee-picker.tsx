@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 
 import { calculateAmountDue, formatCurrency, getAmount } from "@repo/domain/functions"
-import type { ValidatedEventFee as EventFee, Player } from "@repo/domain/types"
+import type { EventFeeWithType as EventFee, Player } from "@repo/domain/types"
 
 import { PlayerEventFeePicker } from "./player-event-fee-picker"
 

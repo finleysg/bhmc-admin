@@ -1,5 +1,5 @@
 import type { PlayerFees } from "@/types/event-fee"
-import type { ValidatedEventFee, ValidatedRegistrationSlot } from "@repo/domain/types"
+import type { EventFeeWithType, CompleteRegistrationSlot } from "@repo/domain/types"
 
 /**
  * Convert validated registration slots and event fee definitions into per-player fee summaries.
@@ -9,8 +9,8 @@ import type { ValidatedEventFee, ValidatedRegistrationSlot } from "@repo/domain/
  * @returns An array of PlayerFees where each element contains a player's id, name, mapped fees (with selection, amount, and registration association) and a subtotal of selected fees
  */
 export function convertSlotsToPlayerFees(
-	slots: ValidatedRegistrationSlot[],
-	eventFees: ValidatedEventFee[],
+	slots: CompleteRegistrationSlot[],
+	eventFees: EventFeeWithType[],
 ): PlayerFees[] {
 	const playerFees: PlayerFees[] = []
 

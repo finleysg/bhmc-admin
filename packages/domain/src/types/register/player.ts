@@ -10,4 +10,5 @@ export interface Player {
 	isMember: boolean
 	ggId?: string | null
 	userId?: number | null
+	stripeCustomerId?: string | null
 }

@@ -2,30 +2,30 @@
 
 import { Course } from "../courses"
 import { Hole } from "../courses/hole"
-import { ValidatedCourse } from "../courses/validated-types"
-import { ValidatedEventFee } from "../events/validated-types"
+import { CompleteCourse } from "../courses/validated-types"
+import { EventFeeWithType } from "../events/validated-types"
 import { Payment } from "./payment"
 import { Player } from "./player"
 import { Registration } from "./registration"
 import { RegistrationFee } from "./registration-fee"
 import { RegistrationSlot } from "./registration-slot"
 
-export type ValidatedRegistrationFee = Omit<RegistrationFee, "eventFee"> & {
-	eventFee: ValidatedEventFee
+export type CompleteRegistrationFee = Omit<RegistrationFee, "eventFee"> & {
+	eventFee: EventFeeWithType
 }
 
-export type ValidatedRegistrationSlot = Omit<RegistrationSlot, "player" | "hole" | "fees"> & {
+export type CompleteRegistrationSlot = Omit<RegistrationSlot, "player" | "hole" | "fees"> & {
 	player: Player
 	hole: Hole
-	fees: ValidatedRegistrationFee[]
+	fees: CompleteRegistrationFee[]
 }
 
 /**
  * A validated variation of Registration where all core fields and nested ids are guaranteed to be present.
  */
-export type ValidatedRegistration = Omit<Registration, "slots" | "course"> & {
-	slots: ValidatedRegistrationSlot[]
-	course: ValidatedCourse
+export type CompleteRegistration = Omit<Registration, "slots" | "course"> & {
+	slots: CompleteRegistrationSlot[]
+	course: CompleteCourse
 }
 
 /**
@@ -33,15 +33,15 @@ export type ValidatedRegistration = Omit<Registration, "slots" | "course"> & {
  * course is optional (enforced at runtime based on hasCourseDetails).
  * Used when validateRegisteredPlayer passes full validation.
  */
-export type ValidatedRegisteredPlayer = {
+export type RegisteredPlayer = {
 	player: Player
 	registration: Registration
 	slot: RegistrationSlot
 	course: Course
 	hole: Hole
-	fees: ValidatedRegistrationFee[]
+	fees: CompleteRegistrationFee[]
 }
 
-export type ValidatedPayment = Payment & {
-	paymentDetails: ValidatedRegistrationFee[]
+export type PaymentWithDetails = Payment & {
+	paymentDetails: CompleteRegistrationFee[]
 }

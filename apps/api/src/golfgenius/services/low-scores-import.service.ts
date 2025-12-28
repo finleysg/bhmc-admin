@@ -13,7 +13,7 @@ export class LowScoresImportService {
 	) {}
 
 	async importLowScores(eventId: number): Promise<Record<string, number>> {
-		const event = await this.events.getValidatedClubEventById(eventId)
+		const event = await this.events.getCompleteClubEventById(eventId)
 		const season = event.season
 		const counters: Record<string, number> = {}
 

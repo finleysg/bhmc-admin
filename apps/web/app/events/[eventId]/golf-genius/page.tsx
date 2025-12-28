@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
 import { useAuth } from "@/lib/auth-context"
-import { ValidatedClubEvent } from "@repo/domain/types"
+import { CompleteClubEvent } from "@repo/domain/types"
 
 import IntegrationOrchestrator from "./components/integration-orchestrator"
 
@@ -15,7 +15,7 @@ export default function GolfGeniusIntegrationPage() {
 	const params = useParams()
 	const eventId = params.eventId as string
 
-	const [event, setEvent] = useState<ValidatedClubEvent | null>(null)
+	const [event, setEvent] = useState<CompleteClubEvent | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 
@@ -29,7 +29,7 @@ export default function GolfGeniusIntegrationPage() {
 				if (!response.ok) {
 					throw new Error(`Failed to fetch event: ${response.status}`)
 				}
-				const eventData = (await response.json()) as ValidatedClubEvent
+				const eventData = (await response.json()) as CompleteClubEvent
 				setEvent(eventData)
 			} catch (err) {
 				console.error("Error fetching event:", err)

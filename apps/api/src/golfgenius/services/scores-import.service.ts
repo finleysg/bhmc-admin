@@ -256,7 +256,7 @@ export class ScoresImportService {
 	}
 
 	async importScoresForEvent(eventId: number): Promise<ImportEventScoresResult> {
-		const event = await this.events.getValidatedClubEventById(eventId)
+		const event = await this.events.getCompleteClubEventById(eventId)
 		if (!event) {
 			throw new Error("No event found with an id of " + eventId.toString())
 		}
@@ -306,7 +306,7 @@ export class ScoresImportService {
 	}
 
 	async importScoresForEventStream(eventId: number): Promise<Observable<PlayerProgressEvent>> {
-		const event = await this.events.getValidatedClubEventById(eventId)
+		const event = await this.events.getCompleteClubEventById(eventId)
 		if (!event) {
 			throw new Error("No event found with an id of " + eventId.toString())
 		}

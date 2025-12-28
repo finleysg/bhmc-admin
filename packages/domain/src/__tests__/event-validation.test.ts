@@ -91,12 +91,12 @@ describe("validateClubEvent", () => {
 	}
 
 	describe("event validation", () => {
-		it("returns ValidatedClubEvent for fully valid event", () => {
+		it("returns CompleteClubEvent for fully valid event", () => {
 			const result = validateClubEvent(validCompleteEvent)
 			expect(result).toBeDefined()
 			expect(result).not.toBeNull()
 			if (!result) throw new Error("Result should not be null")
-			expect("ggId" in result && result.ggId).toBe("12345") // Type guard for ValidatedClubEvent
+			expect("ggId" in result && result.ggId).toBe("12345") // Type guard for CompleteClubEvent
 			expect(result.eventRounds).toHaveLength(1)
 			expect(result.tournaments).toHaveLength(1)
 		})
@@ -167,7 +167,7 @@ describe("validateClubEvent", () => {
 			expect(() => validateClubEvent(event)).toThrow()
 		})
 
-		it("returns ValidatedClubEvent when canChoose=true and has courses", () => {
+		it("returns CompleteClubEvent when canChoose=true and has courses", () => {
 			const event = {
 				...validCompleteEvent,
 				canChoose: true,
@@ -178,7 +178,7 @@ describe("validateClubEvent", () => {
 			expect(result).not.toBeNull()
 		})
 
-		it("returns ValidatedClubEvent when canChoose=false regardless of courses", () => {
+		it("returns CompleteClubEvent when canChoose=false regardless of courses", () => {
 			const event = {
 				...validCompleteEvent,
 				canChoose: false,

@@ -1,4 +1,6 @@
 import {
+	NotificationTypeValue,
+	Payment,
 	Player,
 	Registration,
 	RegistrationFee,
@@ -37,6 +39,7 @@ export function toPlayer(row: PlayerRow): Player {
 		isMember: Boolean(row.isMember),
 		ggId: row.ggId ?? undefined,
 		userId: row.userId ?? undefined,
+		stripeCustomerId: row.stripeCustomerId ?? undefined,
 	}
 }
 
@@ -76,6 +79,25 @@ export function toRegistrationSlot(row: RegistrationSlotRow): RegistrationSlot {
 		player: undefined,
 		ggId: row.ggId ?? undefined,
 		fees: [],
+	}
+}
+
+/**
+ * Maps PaymentRow to Payment domain type
+ */
+export function toPayment(row: PaymentRow): Payment {
+	return {
+		id: row.id,
+		paymentCode: row.paymentCode,
+		paymentKey: row.paymentKey ?? null,
+		notificationType: (row.notificationType as NotificationTypeValue) ?? null,
+		confirmed: Boolean(row.confirmed),
+		eventId: row.eventId,
+		userId: row.userId,
+		paymentAmount: parseFloat(row.paymentAmount),
+		transactionFee: parseFloat(row.transactionFee),
+		paymentDate: row.paymentDate ?? "",
+		confirmDate: row.confirmDate ?? null,
 	}
 }
 

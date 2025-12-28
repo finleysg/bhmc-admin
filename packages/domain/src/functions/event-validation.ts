@@ -1,5 +1,5 @@
 import { ClubEvent } from "../types"
-import { ValidatedClubEvent } from "../types/events/validated-types"
+import { CompleteClubEvent } from "../types/events/validated-types"
 import { validateCourses } from "./course-validation"
 
 // Helper validation functions
@@ -9,13 +9,13 @@ const hasValidIdsInEventFees = (fees: ClubEvent["eventFees"]): boolean =>
 /**
  * Validates a ClubEvent ensuring all fields, including GolfGenius-related ones, are present and valid.
  * @param event The ClubEvent to validate
- * @returns ValidatedClubEvent if validation passes, throws Error otherwise
+ * @returns CompleteClubEvent if validation passes, throws Error otherwise
  * @throws Error with concatenated validation issues if validation fails
  */
 export function validateClubEvent(
 	event: ClubEvent,
 	requireIntegration: boolean | undefined = true,
-): ValidatedClubEvent {
+): CompleteClubEvent {
 	const issues: string[] = []
 	const hasValidFees =
 		event.eventFees &&
@@ -62,5 +62,5 @@ export function validateClubEvent(
 	}
 
 	// All validations passed, return narrowed type
-	return event as ValidatedClubEvent
+	return event as CompleteClubEvent
 }

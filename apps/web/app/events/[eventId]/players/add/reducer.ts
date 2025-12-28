@@ -3,7 +3,7 @@
 import type { AdminRegistrationOptionsState } from "@/components/admin-registration-options"
 import type {
 	AvailableSlotGroup,
-	ValidatedClubEvent as ClubEvent,
+	CompleteClubEvent as ClubEvent,
 	Player,
 	AdminRegistration,
 	AdminRegistrationSlot,

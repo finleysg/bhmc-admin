@@ -1,9 +1,9 @@
 "use client"
 
-import type { ValidatedRegistration, Player } from "@repo/domain/types"
+import type { CompleteRegistration, Player } from "@repo/domain/types"
 
 export interface SelectPlayersProps {
-	group: ValidatedRegistration
+	group: CompleteRegistration
 	selectedPlayers?: Player[]
 	onSelect: (player: Player) => void
 	onRemove: (player: Player) => void

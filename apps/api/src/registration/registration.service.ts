@@ -19,10 +19,10 @@ import {
 	RegistrationSlot,
 	RegistrationStatusChoices,
 	PlayerQuery,
-	ValidatedClubEvent,
-	ValidatedRegisteredPlayer,
-	ValidatedRegistration,
-	ValidatedRegistrationFee,
+	CompleteClubEvent,
+	RegisteredPlayer,
+	CompleteRegistration,
+	CompleteRegistrationFee,
 } from "@repo/domain/types"
 
 import { toCourse, toHole } from "../courses/mappers"
@@ -74,7 +74,7 @@ export class RegistrationService {
 		private readonly stripeService: StripeService,
 	) {}
 
-	async getRegisteredPlayers(eventId: number): Promise<ValidatedRegisteredPlayer[]> {
+	async getRegisteredPlayers(eventId: number): Promise<RegisteredPlayer[]> {
 		const rows = await this.drizzle.db
 			.select({
 				slot: registrationSlot,
@@ -96,7 +96,7 @@ export class RegistrationService {
 				),
 			)
 
-		const slotsMap = new Map<number, ValidatedRegisteredPlayer>()
+		const slotsMap = new Map<number, RegisteredPlayer>()
 		const slotIds: number[] = []
 		for (const row of rows) {
 			this.logger.debug(`Processing slot ${row.slot.id} for player ${row.player?.id}`)
@@ -140,7 +140,7 @@ export class RegistrationService {
 				feeType: frow.feeType,
 			})
 
-			parent.fees.push(fee as ValidatedRegistrationFee)
+			parent.fees.push(fee as CompleteRegistrationFee)
 		}
 
 		const results = slotIds.map((id) => slotsMap.get(id)!)
@@ -167,7 +167,7 @@ export class RegistrationService {
 		return results.map(toPlayer)
 	}
 
-	async findGroup(eventId: number, playerId: number): Promise<ValidatedRegistration> {
+	async findGroup(eventId: number, playerId: number): Promise<CompleteRegistration> {
 		const registrationId = await this.repository.findRegistrationIdByEventAndPlayer(
 			eventId,
 			playerId,
@@ -209,7 +209,7 @@ export class RegistrationService {
 		}
 	}
 
-	async findGroups(eventId: number, searchText: string): Promise<ValidatedRegistration[]> {
+	async findGroups(eventId: number, searchText: string): Promise<CompleteRegistration[]> {
 		this.logger.log(`Searching groups for event ${eventId} with text "${searchText}"`)
 
 		const registrationIds = await this.repository.findRegistrationIdsByEventAndPlayerName(
@@ -218,7 +218,7 @@ export class RegistrationService {
 		)
 		this.logger.log(`Found ${registrationIds.length} matching registration IDs`)
 
-		const results: ValidatedRegistration[] = []
+		const results: CompleteRegistration[] = []
 		for (const registrationId of registrationIds) {
 			const regWithCourse = await this.repository.findRegistrationWithCourse(registrationId)
 			if (!regWithCourse) continue
@@ -304,7 +304,7 @@ export class RegistrationService {
 			throw new NotFoundException(`Registration ${registrationId} not found`)
 		}
 
-		const eventRecord = await this.events.getValidatedClubEventById(eventId, false)
+		const eventRecord = await this.events.getCompleteClubEventById(eventId, false)
 		if (!eventRecord) {
 			throw new BadRequestException("event id not found")
 		}
@@ -378,7 +378,7 @@ export class RegistrationService {
 	}
 
 	private async sendAdminRegistrationEmails(
-		event: ValidatedClubEvent,
+		event: CompleteClubEvent,
 		registrationId: number,
 		paymentId: number,
 		paymentUserId: number,
@@ -429,7 +429,7 @@ export class RegistrationService {
 	}
 
 	async convertSlots(
-		eventRecord: ValidatedClubEvent,
+		eventRecord: CompleteClubEvent,
 		slots: AdminRegistrationSlot[],
 	): Promise<AdminRegistrationSlotWithAmount[]> {
 		const startDate = new Date(eventRecord.startDate)
@@ -552,7 +552,7 @@ export class RegistrationService {
 			throw new NotFoundException(`Registration ${registrationId} not found`)
 		}
 
-		const eventRecord = await this.events.getValidatedClubEventById(
+		const eventRecord = await this.events.getCompleteClubEventById(
 			registrationRecord.eventId,
 			false,
 		)

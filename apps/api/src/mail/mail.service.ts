@@ -12,8 +12,8 @@ import {
 	ClubEvent,
 	DjangoUser,
 	Player,
-	ValidatedPayment,
-	ValidatedRegistration,
+	PaymentWithDetails,
+	CompleteRegistration,
 } from "@repo/domain/types"
 import * as nodemailer from "nodemailer"
 import mailgunTransport from "nodemailer-mailgun-transport"
@@ -101,8 +101,8 @@ export class MailService {
 	async sendRegistrationConfirmation(
 		user: DjangoUser,
 		event: ClubEvent,
-		registration: ValidatedRegistration,
-		payment: ValidatedPayment,
+		registration: CompleteRegistration,
+		payment: PaymentWithDetails,
 	): Promise<void> {
 		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
 		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
@@ -195,7 +195,7 @@ export class MailService {
 
 	async sendAdminRegistrationNotification(
 		event: ClubEvent,
-		registration: ValidatedRegistration,
+		registration: CompleteRegistration,
 		paymentId: number,
 		paymentUserEmail: string,
 		collectPayment: boolean,

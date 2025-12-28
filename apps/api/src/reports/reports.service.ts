@@ -12,7 +12,7 @@ import {
 	PointsReportRow,
 	TournamentFormatChoices,
 	TournamentFormatValue,
-	ValidatedRegisteredPlayer,
+	RegisteredPlayer,
 } from "@repo/domain/types"
 
 import { CoursesRepository, toHole } from "../courses"
@@ -98,7 +98,7 @@ export class ReportsService {
 	}
 
 	async getPlayers(eventId: number): Promise<EventPlayerSlot[]> {
-		const event = await this.events.getValidatedClubEventById(eventId)
+		const event = await this.events.getCompleteClubEventById(eventId)
 		if (!event) {
 			throw new Error("Event not found")
 		}
@@ -107,7 +107,7 @@ export class ReportsService {
 		if (!registeredPlayers || registeredPlayers.length === 0) return []
 
 		// Build registration groups (registrationId => SlotWithRelations[])
-		const regGroups = new Map<number, ValidatedRegisteredPlayer[]>()
+		const regGroups = new Map<number, RegisteredPlayer[]>()
 		for (const s of registeredPlayers) {
 			const regId = s.registration?.id ?? null
 			if (regId === null) continue
@@ -142,7 +142,7 @@ export class ReportsService {
 
 			// Get derived column values
 			const playerGroup = (regGroups.get(registration.id) ?? []).map(
-				(x: ValidatedRegisteredPlayer) => x.slot,
+				(x: RegisteredPlayer) => x.slot,
 			)
 			const startValue = getPlayerStartName(event, registeredPlayer)
 			const team = getPlayerTeamName(event, registeredPlayer, playerGroup)
@@ -510,7 +510,7 @@ export class ReportsService {
 	}
 
 	async getEventResultsReport(eventId: number): Promise<EventResultsReport> {
-		const event = await this.events.getValidatedClubEventById(eventId)
+		const event = await this.events.getCompleteClubEventById(eventId)
 		if (!event) throw new Error(`ClubEvent ${eventId} not found`) // Should not happen after validateEvent
 
 		// Get all tournaments for the event

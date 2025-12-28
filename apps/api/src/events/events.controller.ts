@@ -36,6 +36,6 @@ export class EventsController {
 	@UseInterceptors(ClassSerializerInterceptor)
 	@Get(":eventId")
 	async getEventById(@Param("eventId", ParseIntPipe) eventId: number): Promise<ClubEvent> {
-		return await this.service.getValidatedClubEventById(eventId, false)
+		return await this.service.getCompleteClubEventById(eventId, false)
 	}
 }

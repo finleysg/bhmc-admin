@@ -77,7 +77,7 @@ export class PointsImportService {
 		) => Promise<void>,
 	): Promise<Observable<TournamentProgressEvent>> {
 		// Query tournaments for the specified format
-		const clubEvent = await this.eventsService.getValidatedClubEventById(eventId)
+		const clubEvent = await this.eventsService.getCompleteClubEventById(eventId)
 		const tournaments = clubEvent.tournaments.filter((t) => t.format === format)
 
 		if (tournaments.length === 0) {
@@ -176,7 +176,7 @@ export class PointsImportService {
 			playerMap: PlayerMap,
 		) => Promise<void>,
 	): Promise<PointsImportSummary[]> {
-		const clubEvent = await this.eventsService.getValidatedClubEventById(eventId)
+		const clubEvent = await this.eventsService.getCompleteClubEventById(eventId)
 		const tournaments = clubEvent.tournaments.filter((t) => t.format === format)
 
 		if (tournaments.length === 0) {

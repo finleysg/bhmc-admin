@@ -1,7 +1,7 @@
 import { RegistrationSlot } from "../types"
 import { Registration } from "../types/register/registration"
 import { RegistrationFee } from "../types/register/registration-fee"
-import { ValidatedRegistration } from "../types/register/validated-types"
+import { CompleteRegistration } from "../types/register/validated-types"
 
 // Helper validation functions
 const hasValidFees = (fees: RegistrationFee[] | undefined): boolean => {
@@ -56,10 +56,10 @@ const hasValidSlots = (
  * Validate a Registration's required fields and nested data.
  *
  * @param registration - The Registration to validate
- * @returns The validated registration as a `ValidatedRegistration`
+ * @returns The validated registration as a `CompleteRegistration`
  * @throws Error - If validation fails; the error message begins with the registration id (when available) and lists all validation issues on separate lines.
  */
-export function validateRegistration(registration: Registration): ValidatedRegistration {
+export function validateRegistration(registration: Registration): CompleteRegistration {
 	const issues: string[] = []
 
 	if (!registration?.id) {
@@ -92,5 +92,5 @@ export function validateRegistration(registration: Registration): ValidatedRegis
 	}
 
 	// All validations passed, return narrowed type
-	return registration as ValidatedRegistration
+	return registration as CompleteRegistration
 }

@@ -1,11 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { getPlayerStartName, getPlayerTeamName } from "@repo/domain/functions"
-import { Course, ValidatedClubEvent, ValidatedRegisteredPlayer } from "@repo/domain/types"
+import { Course, CompleteClubEvent, RegisteredPlayer } from "@repo/domain/types"
 import { GgRegistrationData } from "../api-data"
 
 export interface TransformationContext {
-	event: ValidatedClubEvent
-	group: ValidatedRegisteredPlayer[]
+	event: CompleteClubEvent
+	group: RegisteredPlayer[]
 	course?: Course
 }
 
@@ -17,7 +17,7 @@ export class RosterPlayerTransformer {
 	 * Transform a player registration into a Golf Genius member sync DTO
 	 */
 	transformToGgMember(
-		registeredPlayer: ValidatedRegisteredPlayer,
+		registeredPlayer: RegisteredPlayer,
 		context: TransformationContext,
 	): GgRegistrationData {
 		const customFields = this.buildCustomFields(registeredPlayer, context)
@@ -39,7 +39,7 @@ export class RosterPlayerTransformer {
 	 * Build custom fields object for Golf Genius member
 	 */
 	private buildCustomFields(
-		registeredPlayer: ValidatedRegisteredPlayer,
+		registeredPlayer: RegisteredPlayer,
 		context: TransformationContext,
 	): Record<string, string | null> {
 		const { event, course, group } = context

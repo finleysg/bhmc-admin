@@ -6,8 +6,8 @@ import {
 	DjangoUser,
 	Payment,
 	RegistrationStatusChoices,
-	ValidatedPayment,
-	ValidatedRegistrationFee,
+	PaymentWithDetails,
+	CompleteRegistrationFee,
 } from "@repo/domain/types"
 
 import {
@@ -261,7 +261,7 @@ export class StripeWebhookService {
 			}
 
 			// Get event
-			const event = await this.eventsService.getValidatedClubEventById(eventId, false)
+			const event = await this.eventsService.getCompleteClubEventById(eventId, false)
 
 			const userName = `${userRow.firstName} ${userRow.lastName}`
 			await this.mailService.sendRefundNotification(
@@ -310,7 +310,7 @@ export class StripeWebhookService {
 			}
 
 			// Get event
-			const event = await this.eventsService.getValidatedClubEventById(eventId, false)
+			const event = await this.eventsService.getCompleteClubEventById(eventId, false)
 
 			// Get fees with slot info to find the registration
 			const fees = await this.registrationRepository.findRegistrationFeesByPayment(paymentId)
@@ -339,12 +339,12 @@ export class StripeWebhookService {
 				return
 			}
 
-			// Get fees with eventFee data for ValidatedPayment
+			// Get fees with eventFee data for PaymentWithDetails
 			const slotIds = fees.map((f) => f.registrationSlotId)
 			const feesWithEventFee =
 				await this.registrationRepository.findFeesWithEventFeeAndFeeType(slotIds)
 
-			const validatedFees: ValidatedRegistrationFee[] = feesWithEventFee
+			const validatedFees: CompleteRegistrationFee[] = feesWithEventFee
 				.filter((f) => f.eventFee && f.feeType)
 				.map(
 					(f) =>
@@ -354,10 +354,10 @@ export class StripeWebhookService {
 								eventFee: NonNullable<typeof f.eventFee>
 								feeType: NonNullable<typeof f.feeType>
 							},
-						) as ValidatedRegistrationFee,
+						) as CompleteRegistrationFee,
 				)
 
-			const validatedPayment: ValidatedPayment = {
+			const PaymentWithDetails: PaymentWithDetails = {
 				id: paymentWithDetails.payment.id,
 				paymentCode: paymentWithDetails.payment.paymentCode,
 				paymentKey: paymentWithDetails.payment.paymentKey ?? null,
@@ -377,7 +377,7 @@ export class StripeWebhookService {
 				user,
 				event,
 				registration,
-				validatedPayment,
+				PaymentWithDetails,
 			)
 			this.logger.log(`Confirmation email sent for payment ${paymentId}`)
 		} catch (error) {
