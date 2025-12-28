@@ -1,3 +1,4 @@
+export * from "./admin-registration-notification-email"
 export * from "./has-notes-notification-email"
 export * from "./match-play-email"
 export * from "./new-member-notification-email"
