@@ -37,6 +37,7 @@ import {
 	type RegistrationSlotRow,
 	type RegistrationSlotInsert,
 	type PlayerInsert,
+	toDbString,
 } from "../database"
 import {
 	toPayment,
@@ -348,7 +349,7 @@ export class RegistrationRepository {
 	}
 
 	async findExpiredPendingRegistrations(now: Date): Promise<Registration[]> {
-		const nowStr = now.toISOString().slice(0, 19).replace("T", " ")
+		const nowStr = toDbString(now)
 		const results = await this.drizzle.db
 			.select()
 			.from(registration)

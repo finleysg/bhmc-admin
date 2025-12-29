@@ -1,8 +1,10 @@
 import {
 	Body,
 	Controller,
+	ForbiddenException,
 	Get,
 	Logger,
+	NotFoundException,
 	Param,
 	ParseIntPipe,
 	Post,
@@ -22,7 +24,6 @@ import {
 	UpdatePayment,
 	CreatePaymentIntent,
 	CreateRegistration,
-	CustomerSessionRequest,
 } from "./dto"
 import { RegistrationFlowService } from "./registration-flow.service"
 
@@ -79,11 +80,21 @@ export class UserRegistrationController {
 	 */
 	@Put(":id/cancel")
 	async cancelRegistration(
+		@Req() req: AuthenticatedRequest,
 		@Param("id", ParseIntPipe) registrationId: number,
 		@Body() dto: CancelRegistration,
 	): Promise<{ success: boolean }> {
-		this.logger.log(`Canceling registration ${registrationId}: ${dto.reason}`)
+		const reg = await this.flowService.findRegistrationById(registrationId)
+		if (!reg) {
+			this.logger.log(`Registration ${registrationId} not found for cancel`)
+			return { success: true }
+		}
 
+		if (reg.userId !== req.user.id) {
+			throw new ForbiddenException("Cannot cancel registration you do not own")
+		}
+
+		this.logger.log(`Canceling registration ${registrationId}: ${dto.reason}`)
 		await this.flowService.cancelRegistration(registrationId, dto.paymentId ?? null, dto.reason)
 
 		return { success: true }
@@ -116,11 +127,20 @@ export class UserRegistrationController {
 	 */
 	@Put("payments/:id")
 	async updatePayment(
+		@Req() req: AuthenticatedRequest,
 		@Param("id", ParseIntPipe) paymentId: number,
 		@Body() dto: UpdatePayment,
 	): Promise<{ success: boolean }> {
-		this.logger.log(`Updating payment ${paymentId}`)
+		const payment = await this.flowService.findPaymentById(paymentId)
+		if (!payment) {
+			throw new NotFoundException(`Payment ${paymentId} not found`)
+		}
 
+		if (payment.userId !== req.user.id) {
+			throw new ForbiddenException("Cannot update payment you do not own")
+		}
+
+		this.logger.log(`Updating payment ${paymentId}`)
 		await this.flowService.updatePayment(paymentId, dto)
 
 		return { success: true }
@@ -132,11 +152,20 @@ export class UserRegistrationController {
 	 */
 	@Post("payments/:id/payment-intent")
 	async createPaymentIntent(
+		@Req() req: AuthenticatedRequest,
 		@Param("id", ParseIntPipe) paymentId: number,
 		@Body() dto: CreatePaymentIntent,
 	): Promise<PaymentIntentResult> {
-		this.logger.log(`Creating payment intent for payment ${paymentId}`)
+		const payment = await this.flowService.findPaymentById(paymentId)
+		if (!payment) {
+			throw new NotFoundException(`Payment ${paymentId} not found`)
+		}
 
+		if (payment.userId !== req.user.id) {
+			throw new ForbiddenException("Cannot create payment intent for payment you do not own")
+		}
+
+		this.logger.log(`Creating payment intent for payment ${paymentId}`)
 		return this.flowService.createPaymentIntent(paymentId, dto.eventId, dto.registrationId)
 	}
 
@@ -145,12 +174,10 @@ export class UserRegistrationController {
 	 * POST /payments/customer-session
 	 */
 	@Post("payments/customer-session")
-	async createCustomerSession(
-		@Body() dto: CustomerSessionRequest,
-	): Promise<CustomerSessionResponse> {
-		this.logger.log(`Creating customer session for ${dto.email}`)
+	async createCustomerSession(@Req() req: AuthenticatedRequest): Promise<CustomerSessionResponse> {
+		this.logger.log(`Creating customer session for ${req.user.email}`)
 
-		return this.flowService.createCustomerSession(dto.email)
+		return this.flowService.createCustomerSession(req.user.email)
 	}
 
 	/**

@@ -4,12 +4,14 @@ import { calculateAmountDue } from "@repo/domain/functions"
 import {
 	AmountDue,
 	ClubEvent,
+	Payment,
 	PaymentIntentResult,
+	Registration,
 	RegistrationStatusChoices,
 } from "@repo/domain/types"
 
-import { authUser, toDbString, DrizzleService } from "../database"
-import { eq } from "drizzle-orm"
+import { authUser, toDbString, DrizzleService, registrationSlot } from "../database"
+import { eq, inArray } from "drizzle-orm"
 import { EventsService } from "../events"
 import { StripeService } from "../stripe/stripe.service"
 
@@ -92,6 +94,20 @@ export class RegistrationFlowService {
 				expires,
 			)
 		}
+	}
+
+	/**
+	 * Get a registration by ID.
+	 */
+	async findRegistrationById(registrationId: number): Promise<Registration | null> {
+		return this.repository.findRegistrationById(registrationId)
+	}
+
+	/**
+	 * Get a payment by ID.
+	 */
+	async findPaymentById(paymentId: number): Promise<Payment | null> {
+		return this.repository.findPaymentById(paymentId)
 	}
 
 	/**
@@ -497,21 +513,25 @@ export class RegistrationFlowService {
 			})
 		}
 
-		// Reserve slots (atomically update status)
-		// In production, this should use row locking for concurrency
-		for (const slotId of slotIds) {
-			// Re-check status before updating
-			const slot = await this.repository.findRegistrationSlotRowById(slotId)
-			if (slot.status !== RegistrationStatusChoices.AVAILABLE) {
-				// Another request got this slot
+		// Optimistic concurrency control to reserve slots
+		await this.drizzle.db.transaction(async (tx) => {
+			const slots = await tx
+				.select()
+				.from(registrationSlot)
+				.where(inArray(registrationSlot.id, slotIds))
+				.for('update')  // Row-level lock
+		
+			// Validate all slots are AVAILABLE
+			for (const slot of slots) {
+				if (slot.status !== RegistrationStatusChoices.AVAILABLE) {
 				throw new SlotConflictError()
+				}
 			}
-		}
-
-		// Update all slots
-		await this.repository.updateRegistrationSlots(slotIds, {
-			status: RegistrationStatusChoices.PENDING,
-			registrationId,
+			
+			// Update atomically within same transaction
+			await tx.update(registrationSlot)
+				.set({ status: RegistrationStatusChoices.PENDING, registrationId })
+				.where(inArray(registrationSlot.id, slotIds))
 		})
 
 		return { registrationId, slotIds }
