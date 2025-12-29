@@ -1,5 +1,6 @@
 import { Controller, Get } from "@nestjs/common"
 
+import { Public } from "../auth"
 import { hole } from "../database"
 import { DrizzleService } from "../database/drizzle.service"
 
@@ -7,11 +8,13 @@ import { DrizzleService } from "../database/drizzle.service"
 export class HealthController {
 	constructor(private readonly drizzleService: DrizzleService) {}
 
+	@Public()
 	@Get("health")
 	health() {
 		return { status: "ok" }
 	}
 
+	@Public()
 	@Get("health/db")
 	async dbHealth() {
 		try {

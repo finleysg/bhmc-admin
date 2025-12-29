@@ -10,13 +10,10 @@ import {
 	Post,
 	Put,
 	Req,
-	UseGuards,
 } from "@nestjs/common"
 import { Request } from "express"
 
 import { AmountDue, DjangoUser, PaymentIntentResult } from "@repo/domain/types"
-
-import { JwtAuthGuard } from "../auth/jwt.guard"
 
 import {
 	CancelRegistration,
@@ -51,7 +48,6 @@ interface CustomerSessionResponse {
 }
 
 @Controller("registration")
-@UseGuards(JwtAuthGuard)
 export class UserRegistrationController {
 	private readonly logger = new Logger(UserRegistrationController.name)
 

@@ -31,9 +31,17 @@ export class DjangoAuthService {
 			if (axios.isAxiosError(error)) {
 				if (error.response?.status === 401) {
 					this.logger.debug("Token validation failed: unauthorized")
-				} else {
-					this.logger.warn(`Token validation error: ${error.message}`)
+					return null
 				}
+				if (error.response?.status && error.response.status >= 500) {
+					this.logger.error(`Django service error: ${error.response.status}`)
+					throw new Error("Authentication service unavailable")
+				}
+				if (!error.response) {
+					this.logger.error(`Django service unreachable: ${error.message}`)
+					throw new Error("Authentication service unavailable")
+				}
+				this.logger.warn(`Token validation error: ${error.message}`)
 			} else {
 				this.logger.error("Unexpected error validating token", error)
 			}

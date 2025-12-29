@@ -1,14 +1,4 @@
-import {
-	Body,
-	Controller,
-	Get,
-	Param,
-	ParseIntPipe,
-	Post,
-	Put,
-	Query,
-	UseGuards,
-} from "@nestjs/common"
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from "@nestjs/common"
 import type {
 	AdminRegistration,
 	AvailableSlotGroup,
@@ -18,15 +8,15 @@ import type {
 	CompleteRegistration,
 } from "@repo/domain/types"
 
-import { JwtAuthGuard } from "../auth/jwt.guard"
+import { Admin } from "../auth"
 import { RegistrationService } from "./registration.service"
 
 @Controller("registration")
+@Admin()
 export class RegistrationController {
 	constructor(private readonly registrationService: RegistrationService) {}
 
 	@Get("players")
-	@UseGuards(JwtAuthGuard)
 	async playerQuery(@Query() query: PlayerQuery) {
 		const obj = {
 			searchText: query.searchText,
@@ -36,7 +26,6 @@ export class RegistrationController {
 	}
 
 	@Get(":eventId/groups/search")
-	@UseGuards(JwtAuthGuard)
 	async searchGroups(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Query("searchText") searchText: string,
@@ -48,7 +37,6 @@ export class RegistrationController {
 	}
 
 	@Get(":eventId/groups/:playerId")
-	@UseGuards(JwtAuthGuard)
 	async getGroup(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Param("playerId", ParseIntPipe) playerId: number,
@@ -57,7 +45,6 @@ export class RegistrationController {
 	}
 
 	@Put(":eventId/admin-registration/:registrationId")
-	@UseGuards(JwtAuthGuard)
 	async completeAdminRegistration(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Param("registrationId", ParseIntPipe) registrationId: number,
@@ -75,7 +62,6 @@ export class RegistrationController {
 	}
 
 	@Get(":eventId/players")
-	@UseGuards(JwtAuthGuard)
 	async getRegisteredPlayers(
 		@Param("eventId", ParseIntPipe) eventId: number,
 	): Promise<RegisteredPlayer[]> {
@@ -83,7 +69,6 @@ export class RegistrationController {
 	}
 
 	@Get(":eventId/available-slots")
-	@UseGuards(JwtAuthGuard)
 	async getAvailableSlots(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Query("courseId", ParseIntPipe) courseId: number,
@@ -93,7 +78,6 @@ export class RegistrationController {
 	}
 
 	@Post(":eventId/reserve-admin-slots")
-	@UseGuards(JwtAuthGuard)
 	async reserveAdminSlots(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Body() slotIds: number[],
@@ -102,7 +86,6 @@ export class RegistrationController {
 	}
 
 	@Post(":registrationId/drop-players")
-	@UseGuards(JwtAuthGuard)
 	async dropPlayers(
 		@Param("registrationId", ParseIntPipe) registrationId: number,
 		@Body() slotIds: number[],
@@ -112,7 +95,6 @@ export class RegistrationController {
 	}
 
 	@Post("refund")
-	@UseGuards(JwtAuthGuard)
 	async processRefunds(@Body() refundRequests: RefundRequest[]) {
 		const issuerId = 1 // TODO: change issuer to a string
 		await this.registrationService.processRefunds(refundRequests, issuerId)

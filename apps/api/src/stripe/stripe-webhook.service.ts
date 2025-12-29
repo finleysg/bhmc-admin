@@ -282,6 +282,7 @@ export class StripeWebhookService {
 				lastName: userRow.lastName,
 				isActive: Boolean(userRow.isActive),
 				isStaff: Boolean(userRow.isStaff),
+				isSuperuser: Boolean(userRow.isSuperuser),
 				ghin: null,
 				birthDate: null,
 			}

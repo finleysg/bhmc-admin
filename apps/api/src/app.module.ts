@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common"
 import { APP_FILTER, APP_GUARD } from "@nestjs/core"
 import { ScheduleModule } from "@nestjs/schedule"
 
-import { JwtAuthGuard } from "./auth/jwt.guard"
+import { AuthModule, JwtAuthGuard } from "./auth"
 import { CoreModule } from "./core/core.module"
 import { DatabaseExceptionFilter } from "./database/database-exception.filter"
 import { DatabaseModule } from "./database/database.module"
@@ -17,6 +17,7 @@ import { StripeModule } from "./stripe/stripe.module"
 @Module({
 	imports: [
 		ScheduleModule.forRoot(),
+		AuthModule,
 		CoreModule,
 		DatabaseModule,
 		EventsModule,
