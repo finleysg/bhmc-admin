@@ -6,7 +6,7 @@ import {
 	PreparedTournamentPoints,
 	PreparedTournamentResult,
 	TournamentResults,
-	ValidatedClubEvent,
+	CompleteClubEvent,
 } from "@repo/domain/types"
 
 import { CoursesRepository } from "../courses"
@@ -35,10 +35,10 @@ export class EventsService {
 		private readonly courses: CoursesRepository,
 	) {}
 
-	async getValidatedClubEventById(
+	async getCompleteClubEventById(
 		eventId: number,
 		requireIntegration: boolean | undefined = true,
-	): Promise<ValidatedClubEvent> {
+	): Promise<CompleteClubEvent> {
 		const eventRow = await this.repository.findEventById(eventId)
 		if (!eventRow) throw new BadRequestException(`Event with id ${eventId} does not exist.`)
 

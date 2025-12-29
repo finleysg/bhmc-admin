@@ -1,27 +1,19 @@
 import { Injectable, Logger } from "@nestjs/common"
-import { eq, inArray } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import Stripe from "stripe"
 
 import {
 	DjangoUser,
 	Payment,
-	RegistrationStatusChoices,
-	ValidatedPayment,
-	ValidatedRegistrationFee,
+	PaymentWithDetails,
+	CompleteRegistrationFee,
 } from "@repo/domain/types"
 
-import {
-	authUser,
-	DrizzleService,
-	payment,
-	refund,
-	registrationFee,
-	registrationSlot,
-	toDbString,
-} from "../database"
+import { authUser, DrizzleService, payment, refund, toDbString } from "../database"
 import { EventsService } from "../events"
 import { MailService } from "../mail"
 import {
+	RegistrationFlowService,
 	RegistrationRepository,
 	RegistrationService,
 	toRegistrationFeeWithEventFee,
@@ -33,6 +25,7 @@ export class StripeWebhookService {
 
 	constructor(
 		private drizzle: DrizzleService,
+		private registrationFlowService: RegistrationFlowService,
 		private registrationRepository: RegistrationRepository,
 		private registrationService: RegistrationService,
 		private eventsService: EventsService,
@@ -61,47 +54,31 @@ export class StripeWebhookService {
 			return
 		}
 
-		const now = toDbString(new Date())
+		// Get registrationId from metadata or find from fees
+		let registrationId = paymentIntent.metadata?.registrationId
+			? parseInt(paymentIntent.metadata.registrationId, 10)
+			: null
 
-		await this.drizzle.db.transaction(async (tx) => {
-			// 1. Update payment: confirmed=1, confirmDate
-			await tx
-				.update(payment)
-				.set({
-					confirmed: 1,
-					confirmDate: now,
-					paymentDate: now,
-				})
-				.where(eq(payment.id, paymentRecord.id))
-
-			// 2. Get all registrationFees for this payment
-			const fees = await tx
-				.select()
-				.from(registrationFee)
-				.where(eq(registrationFee.paymentId, paymentRecord.id))
-
-			if (fees.length === 0) {
-				this.logger.warn(`No registration fees found for payment ${paymentRecord.id}`)
-				return
+		if (!registrationId) {
+			// Fallback: find from registration fees
+			const fees = await this.registrationRepository.findRegistrationFeesByPayment(paymentRecord.id)
+			if (fees.length > 0 && fees[0].registrationSlotId) {
+				const slot = await this.registrationRepository.findRegistrationSlotById(
+					fees[0].registrationSlotId,
+				)
+				registrationId = slot.registrationId ?? null
 			}
+		}
 
-			// 3. Update registrationFee: isPaid=1
-			const feeIds = fees.map((f) => f.id)
-			await tx.update(registrationFee).set({ isPaid: 1 }).where(inArray(registrationFee.id, feeIds))
+		if (!registrationId) {
+			this.logger.warn(`No registrationId found for payment ${paymentRecord.id}`)
+			return
+		}
 
-			// 4. Get unique slot IDs and update status X -> R
-			const slotIds = [
-				...new Set(fees.map((f) => f.registrationSlotId).filter(Boolean)),
-			] as number[]
-			if (slotIds.length > 0) {
-				await tx
-					.update(registrationSlot)
-					.set({ status: RegistrationStatusChoices.RESERVED })
-					.where(inArray(registrationSlot.id, slotIds))
-			}
-		})
+		// Use flow service to confirm payment (updates slots, payment, fees)
+		await this.registrationFlowService.paymentConfirmed(registrationId, paymentRecord.id)
 
-		// 5. Send confirmation email (outside transaction)
+		// Send confirmation email
 		await this.sendConfirmationEmail(paymentRecord.id, paymentRecord.eventId, paymentRecord.userId)
 	}
 
@@ -261,7 +238,7 @@ export class StripeWebhookService {
 			}
 
 			// Get event
-			const event = await this.eventsService.getValidatedClubEventById(eventId, false)
+			const event = await this.eventsService.getCompleteClubEventById(eventId, false)
 
 			const userName = `${userRow.firstName} ${userRow.lastName}`
 			await this.mailService.sendRefundNotification(
@@ -310,7 +287,7 @@ export class StripeWebhookService {
 			}
 
 			// Get event
-			const event = await this.eventsService.getValidatedClubEventById(eventId, false)
+			const event = await this.eventsService.getCompleteClubEventById(eventId, false)
 
 			// Get fees with slot info to find the registration
 			const fees = await this.registrationRepository.findRegistrationFeesByPayment(paymentId)
@@ -339,12 +316,12 @@ export class StripeWebhookService {
 				return
 			}
 
-			// Get fees with eventFee data for ValidatedPayment
+			// Get fees with eventFee data for PaymentWithDetails
 			const slotIds = fees.map((f) => f.registrationSlotId)
 			const feesWithEventFee =
 				await this.registrationRepository.findFeesWithEventFeeAndFeeType(slotIds)
 
-			const validatedFees: ValidatedRegistrationFee[] = feesWithEventFee
+			const validatedFees: CompleteRegistrationFee[] = feesWithEventFee
 				.filter((f) => f.eventFee && f.feeType)
 				.map(
 					(f) =>
@@ -354,10 +331,10 @@ export class StripeWebhookService {
 								eventFee: NonNullable<typeof f.eventFee>
 								feeType: NonNullable<typeof f.feeType>
 							},
-						) as ValidatedRegistrationFee,
+						) as CompleteRegistrationFee,
 				)
 
-			const validatedPayment: ValidatedPayment = {
+			const PaymentWithDetails: PaymentWithDetails = {
 				id: paymentWithDetails.payment.id,
 				paymentCode: paymentWithDetails.payment.paymentCode,
 				paymentKey: paymentWithDetails.payment.paymentKey ?? null,
@@ -377,7 +354,7 @@ export class StripeWebhookService {
 				user,
 				event,
 				registration,
-				validatedPayment,
+				PaymentWithDetails,
 			)
 			this.logger.log(`Confirmation email sent for payment ${paymentId}`)
 		} catch (error) {

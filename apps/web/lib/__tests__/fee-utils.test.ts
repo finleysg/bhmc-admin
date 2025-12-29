@@ -1,6 +1,6 @@
 // fee-utils.test.ts
 import { convertSlotsToPlayerFees } from "../fee-utils"
-import type { ValidatedRegistrationSlot, ValidatedEventFee } from "@repo/domain/types"
+import type { CompleteRegistrationSlot, EventFeeWithType } from "@repo/domain/types"
 
 describe("convertSlotsToPlayerFees", () => {
 	it("returns empty array for empty slots", () => {
@@ -9,7 +9,7 @@ describe("convertSlotsToPlayerFees", () => {
 	})
 
 	it("single player, no fees", () => {
-		const slot: ValidatedRegistrationSlot = {
+		const slot: CompleteRegistrationSlot = {
 			id: 1,
 			eventId: 1,
 			player: {
@@ -41,7 +41,7 @@ describe("convertSlotsToPlayerFees", () => {
 	})
 
 	it("single player, one fee selected", () => {
-		const eventFee: ValidatedEventFee = {
+		const eventFee: EventFeeWithType = {
 			id: 2,
 			eventId: 1,
 			amount: 50,
@@ -50,7 +50,7 @@ describe("convertSlotsToPlayerFees", () => {
 			feeTypeId: 1,
 			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
 		}
-		const slot: ValidatedRegistrationSlot = {
+		const slot: CompleteRegistrationSlot = {
 			id: 1,
 			eventId: 1,
 			player: {
@@ -97,7 +97,7 @@ describe("convertSlotsToPlayerFees", () => {
 	})
 
 	it("single player, one fee not selected", () => {
-		const eventFee: ValidatedEventFee = {
+		const eventFee: EventFeeWithType = {
 			id: 2,
 			eventId: 1,
 			amount: 50,
@@ -106,7 +106,7 @@ describe("convertSlotsToPlayerFees", () => {
 			feeTypeId: 1,
 			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
 		}
-		const slot: ValidatedRegistrationSlot = {
+		const slot: CompleteRegistrationSlot = {
 			id: 1,
 			eventId: 1,
 			player: {
@@ -142,7 +142,7 @@ describe("convertSlotsToPlayerFees", () => {
 	})
 
 	it("multiple fees, mixed selection", () => {
-		const eventFees: ValidatedEventFee[] = [
+		const eventFees: EventFeeWithType[] = [
 			{
 				id: 2,
 				eventId: 1,
@@ -162,7 +162,7 @@ describe("convertSlotsToPlayerFees", () => {
 				feeType: { id: 2, name: "Other", code: "OTHER", payout: "none", restriction: "none" },
 			},
 		]
-		const slot: ValidatedRegistrationSlot = {
+		const slot: CompleteRegistrationSlot = {
 			id: 1,
 			eventId: 1,
 			player: {
@@ -208,7 +208,7 @@ describe("convertSlotsToPlayerFees", () => {
 	})
 
 	it("multiple players, independent fees", () => {
-		const eventFee: ValidatedEventFee = {
+		const eventFee: EventFeeWithType = {
 			id: 2,
 			eventId: 1,
 			amount: 50,
@@ -217,7 +217,7 @@ describe("convertSlotsToPlayerFees", () => {
 			feeTypeId: 1,
 			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
 		}
-		const slotA: ValidatedRegistrationSlot = {
+		const slotA: CompleteRegistrationSlot = {
 			id: 1,
 			eventId: 1,
 			player: {
@@ -247,7 +247,7 @@ describe("convertSlotsToPlayerFees", () => {
 			startingOrder: 1,
 			slot: 1,
 		}
-		const slotB: ValidatedRegistrationSlot = {
+		const slotB: CompleteRegistrationSlot = {
 			id: 2,
 			eventId: 1,
 			player: {
@@ -275,7 +275,7 @@ describe("convertSlotsToPlayerFees", () => {
 	})
 
 	it("fee amount as string", () => {
-		const eventFee: ValidatedEventFee = {
+		const eventFee: EventFeeWithType = {
 			id: 2,
 			eventId: 1,
 			// Testing runtime coercion: database/API may return amount as string
@@ -285,7 +285,7 @@ describe("convertSlotsToPlayerFees", () => {
 			feeTypeId: 1,
 			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
 		}
-		const slot: ValidatedRegistrationSlot = {
+		const slot: CompleteRegistrationSlot = {
 			id: 1,
 			eventId: 1,
 			player: {
@@ -310,7 +310,7 @@ describe("convertSlotsToPlayerFees", () => {
 	})
 
 	it("fee with zero amount", () => {
-		const eventFee: ValidatedEventFee = {
+		const eventFee: EventFeeWithType = {
 			id: 2,
 			eventId: 1,
 			amount: 0,
@@ -319,7 +319,7 @@ describe("convertSlotsToPlayerFees", () => {
 			feeTypeId: 1,
 			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
 		}
-		const slot: ValidatedRegistrationSlot = {
+		const slot: CompleteRegistrationSlot = {
 			id: 1,
 			eventId: 1,
 			player: {
@@ -344,7 +344,7 @@ describe("convertSlotsToPlayerFees", () => {
 	})
 
 	it("required and optional fees included", () => {
-		const eventFees: ValidatedEventFee[] = [
+		const eventFees: EventFeeWithType[] = [
 			{
 				id: 2,
 				eventId: 1,
@@ -364,7 +364,7 @@ describe("convertSlotsToPlayerFees", () => {
 				feeType: { id: 2, name: "Other", code: "OTHER", payout: "none", restriction: "none" },
 			},
 		]
-		const slot: ValidatedRegistrationSlot = {
+		const slot: CompleteRegistrationSlot = {
 			id: 1,
 			eventId: 1,
 			player: {
@@ -391,7 +391,7 @@ describe("convertSlotsToPlayerFees", () => {
 	})
 
 	it("fee display order preserved", () => {
-		const eventFees: ValidatedEventFee[] = [
+		const eventFees: EventFeeWithType[] = [
 			{
 				id: 2,
 				eventId: 1,
@@ -411,7 +411,7 @@ describe("convertSlotsToPlayerFees", () => {
 				feeType: { id: 2, name: "Other", code: "OTHER", payout: "none", restriction: "none" },
 			},
 		]
-		const slot: ValidatedRegistrationSlot = {
+		const slot: CompleteRegistrationSlot = {
 			id: 1,
 			eventId: 1,
 			player: {
@@ -437,7 +437,7 @@ describe("convertSlotsToPlayerFees", () => {
 	})
 
 	it("player name is firstName + lastName", () => {
-		const eventFee: ValidatedEventFee = {
+		const eventFee: EventFeeWithType = {
 			id: 2,
 			eventId: 1,
 			amount: 50,
@@ -446,7 +446,7 @@ describe("convertSlotsToPlayerFees", () => {
 			feeTypeId: 1,
 			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
 		}
-		const slot: ValidatedRegistrationSlot = {
+		const slot: CompleteRegistrationSlot = {
 			id: 1,
 			eventId: 1,
 			player: {
@@ -471,7 +471,7 @@ describe("convertSlotsToPlayerFees", () => {
 	})
 
 	it("registrationFeeId set when fee is paid", () => {
-		const eventFee: ValidatedEventFee = {
+		const eventFee: EventFeeWithType = {
 			id: 2,
 			eventId: 1,
 			amount: 50,
@@ -480,7 +480,7 @@ describe("convertSlotsToPlayerFees", () => {
 			feeTypeId: 1,
 			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
 		}
-		const slot: ValidatedRegistrationSlot = {
+		const slot: CompleteRegistrationSlot = {
 			id: 1,
 			eventId: 1,
 			player: {

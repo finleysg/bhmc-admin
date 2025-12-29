@@ -3,8 +3,8 @@
 import { reducer, initialState, State, Action, translateRefundRequests } from "../reducer"
 import {
 	type Player,
-	type ValidatedClubEvent,
-	type ValidatedRegistration,
+	type CompleteClubEvent,
+	type CompleteRegistration,
 	RegistrationStatusChoices,
 } from "@repo/domain/types"
 
@@ -17,12 +17,12 @@ const mockPlayer = (id: number): Player => ({
 	isMember: true,
 })
 
-const mockClubEvent: ValidatedClubEvent = {
+const mockClubEvent: CompleteClubEvent = {
 	id: 1,
 	name: "Test Event",
-} as ValidatedClubEvent
+} as CompleteClubEvent
 
-const mockRegistration = (playerIds: Array<number | null>): ValidatedRegistration => ({
+const mockRegistration = (playerIds: Array<number | null>): CompleteRegistration => ({
 	id: 10,
 	eventId: 1,
 	startingHole: 1,
@@ -140,7 +140,7 @@ describe("translateRefundRequests", () => {
 				{ id: 102, paymentId: 1 },
 			],
 		}
-		const selectedGroup = { id: 10, slots: [slot] } as ValidatedRegistration
+		const selectedGroup = { id: 10, slots: [slot] } as CompleteRegistration
 		const state: State = {
 			...initialState,
 			selectedGroup,
@@ -160,7 +160,7 @@ describe("translateRefundRequests", () => {
 				{ id: 201, paymentId: 2 },
 			],
 		}
-		const selectedGroup = { id: 10, slots: [slot] } as ValidatedRegistration
+		const selectedGroup = { id: 10, slots: [slot] } as CompleteRegistration
 		const state: State = {
 			...initialState,
 			selectedGroup,
@@ -174,7 +174,7 @@ describe("translateRefundRequests", () => {
 
 	it("skips fees when fee not found in slot", () => {
 		const slot = { id: 10, player: mockPlayer(1), fees: [{ id: 101, paymentId: 1 }] }
-		const selectedGroup = { id: 10, slots: [slot] } as ValidatedRegistration
+		const selectedGroup = { id: 10, slots: [slot] } as CompleteRegistration
 		const state: State = {
 			...initialState,
 			selectedGroup,
@@ -194,7 +194,7 @@ describe("translateRefundRequests", () => {
 
 	it("returns correct RefundRequest structure", () => {
 		const slot = { id: 10, player: mockPlayer(1), fees: [{ id: 101, paymentId: 1 }] }
-		const selectedGroup = { id: 10, slots: [slot] } as ValidatedRegistration
+		const selectedGroup = { id: 10, slots: [slot] } as CompleteRegistration
 		const state: State = {
 			...initialState,
 			selectedGroup,

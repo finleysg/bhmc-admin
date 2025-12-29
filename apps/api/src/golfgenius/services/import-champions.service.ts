@@ -22,7 +22,7 @@ export class ImportChampionsService {
 		this.logger.log(`Starting champion import for event ${eventId}`)
 
 		// Get validated event (ensures event exists, has ggId, etc.)
-		const event = await this.eventsService.getValidatedClubEventById(eventId)
+		const event = await this.eventsService.getCompleteClubEventById(eventId)
 
 		this.logger.log(`Processing champions for event: ${event.name}`)
 

@@ -3,15 +3,15 @@
 import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from "@headlessui/react"
 import { useDebounceValue } from "usehooks-ts"
 import { useEffect, useState } from "react"
-import type { ValidatedRegistration, ValidatedClubEvent } from "@repo/domain/types"
+import type { CompleteRegistration, CompleteClubEvent } from "@repo/domain/types"
 
 import { getStart } from "@repo/domain/functions"
 
 interface GroupSearchProps {
-	clubEvent: ValidatedClubEvent
+	clubEvent: CompleteClubEvent
 	minChars?: number
-	initialGroup?: ValidatedRegistration
-	onGroupSelected: (group: ValidatedRegistration) => void
+	initialGroup?: CompleteRegistration
+	onGroupSelected: (group: CompleteRegistration) => void
 	onError?: (error: unknown) => void
 }
 
@@ -23,7 +23,7 @@ interface GroupSearchProps {
  * @param clubEvent - The club event used to determine available courses, slots, and to scope the group search.
  * @param minChars - Minimum number of characters required before triggering a search (default: 3).
  * @param initialGroup - Optional initial selection to populate the component.
- * @param onGroupSelected - Callback invoked with the chosen `ValidatedRegistration` when a group is selected.
+ * @param onGroupSelected - Callback invoked with the chosen `CompleteRegistration` when a group is selected.
  * @param onError - Optional callback invoked with any error that occurs while fetching search results.
  * @returns The component UI for searching and selecting a group.
  */
@@ -34,11 +34,9 @@ export function GroupSearch({
 	onGroupSelected,
 	onError,
 }: GroupSearchProps) {
-	const [selectedGroup, setSelectedGroup] = useState<ValidatedRegistration | undefined>(
-		initialGroup,
-	)
+	const [selectedGroup, setSelectedGroup] = useState<CompleteRegistration | undefined>(initialGroup)
 	const [searchText, setSearchText] = useState("")
-	const [searchResults, setSearchResults] = useState<ValidatedRegistration[]>([])
+	const [searchResults, setSearchResults] = useState<CompleteRegistration[]>([])
 	const [loading, setLoading] = useState(false)
 	const [debouncedSearchText] = useDebounceValue(searchText, 300)
 
@@ -55,7 +53,7 @@ export function GroupSearch({
 				})
 				const response = await fetch(`/api/registration/${clubEvent.id}/groups/search?${params}`)
 				if (response.ok) {
-					const groups = (await response.json()) as ValidatedRegistration[]
+					const groups = (await response.json()) as CompleteRegistration[]
 					setSearchResults(groups)
 				} else {
 					setSearchResults([])
@@ -70,7 +68,7 @@ export function GroupSearch({
 		void fetchGroups()
 	}, [debouncedSearchText, minChars, clubEvent.id, onError])
 
-	const handleGroupSelect = (group: ValidatedRegistration | null) => {
+	const handleGroupSelect = (group: CompleteRegistration | null) => {
 		if (!group) return
 		setSelectedGroup(group)
 		setSearchText("")
@@ -86,7 +84,7 @@ export function GroupSearch({
 	 * @param group - The validated registration representing the group to render start information for
 	 * @returns The start information for the group's first slot, or `null` if not applicable
 	 */
-	function renderStartInfo(group: ValidatedRegistration) {
+	function renderStartInfo(group: CompleteRegistration) {
 		if (!clubEvent.canChoose) {
 			return null
 		}
@@ -102,7 +100,7 @@ export function GroupSearch({
 	}
 
 	// Helper to render player names
-	function renderPlayerNames(slots: ValidatedRegistration["slots"]) {
+	function renderPlayerNames(slots: CompleteRegistration["slots"]) {
 		if (!slots) return null
 		return slots.map((slot, idx) =>
 			slot.player ? (

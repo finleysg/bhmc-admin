@@ -10,11 +10,7 @@ import { PlayerSearch } from "@/app/events/[eventId]/players/components/player-s
 import { ReserveSpot } from "@/app/events/[eventId]/players/components/reserve-spot"
 import { SelectAvailable } from "@/app/events/[eventId]/players/components/select-available"
 import { useAuth } from "@/lib/auth-context"
-import type {
-	AvailableSlotGroup,
-	ValidatedClubEvent as ClubEvent,
-	Player,
-} from "@repo/domain/types"
+import type { AvailableSlotGroup, CompleteClubEvent as ClubEvent, Player } from "@repo/domain/types"
 
 import { reducer, getInitialState } from "./reducer"
 

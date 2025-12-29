@@ -1,4 +1,4 @@
-import { ClubEvent, Hole, RegistrationSlot, ValidatedRegisteredPlayer } from "../types"
+import { ClubEvent, Hole, RegistrationSlot, RegisteredPlayer } from "../types"
 import { formatTime, parseTeeTimeSplits, parseTime } from "./time-utils"
 
 /**
@@ -79,7 +79,7 @@ export function calculateStartingHole(slot: RegistrationSlot, holes: Hole[]): st
  * - `startingOrder` is 0 or 1 mapping to "A" or "B".
  * - Returns `${holeNumber}${letter}`.
  */
-export function getStartingHole(registeredPlayer: ValidatedRegisteredPlayer): string {
+export function getStartingHole(registeredPlayer: RegisteredPlayer): string {
 	const holeNumber = registeredPlayer.hole?.holeNumber ?? "ERR"
 	const order = registeredPlayer.slot.startingOrder
 	if (order !== 0 && order !== 1) {
@@ -177,10 +177,7 @@ export function getStart(event: ClubEvent, slot: RegistrationSlot, holes: Hole[]
  *
  * This function is pure and deterministic: all required data must be provided by the caller.
  */
-export function getPlayerStartName(
-	event: ClubEvent,
-	registeredPlayer: ValidatedRegisteredPlayer,
-): string {
+export function getPlayerStartName(event: ClubEvent, registeredPlayer: RegisteredPlayer): string {
 	// Use the canChoose flag to determine whether course-based starts apply.
 	// If canChoose is falsy (0/false/undefined) there is no course data and we return "N/A".
 	if (!event.canChoose) {
@@ -210,7 +207,7 @@ export function getPlayerStartName(
  */
 export function getPlayerTeamName(
 	event: ClubEvent,
-	registeredPlayer: ValidatedRegisteredPlayer,
+	registeredPlayer: RegisteredPlayer,
 	groupMembers: RegistrationSlot[] = [],
 ): string {
 	// Nine hole events: we expect a course name

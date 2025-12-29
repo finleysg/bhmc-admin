@@ -50,7 +50,7 @@ export class ImportAllResultsService {
 	// ============= PUBLIC METHODS =============
 
 	async importAllResultsStream(eventId: number): Promise<Observable<TournamentProgressEvent>> {
-		const clubEvent = await this.eventsService.getValidatedClubEventById(eventId)
+		const clubEvent = await this.eventsService.getCompleteClubEventById(eventId)
 		const tournaments = clubEvent.tournaments.filter((t) => t.name !== "Overall")
 
 		if (tournaments.length === 0) {

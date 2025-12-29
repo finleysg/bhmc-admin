@@ -14,8 +14,8 @@ import type {
 	AvailableSlotGroup,
 	RefundRequest,
 	PlayerQuery,
-	ValidatedRegisteredPlayer,
-	ValidatedRegistration,
+	RegisteredPlayer,
+	CompleteRegistration,
 } from "@repo/domain/types"
 
 import { JwtAuthGuard } from "../auth/jwt.guard"
@@ -40,7 +40,7 @@ export class RegistrationController {
 	async searchGroups(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Query("searchText") searchText: string,
-	): Promise<ValidatedRegistration[]> {
+	): Promise<CompleteRegistration[]> {
 		if (!searchText?.trim()) {
 			return []
 		}
@@ -52,7 +52,7 @@ export class RegistrationController {
 	async getGroup(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Param("playerId", ParseIntPipe) playerId: number,
-	): Promise<ValidatedRegistration> {
+	): Promise<CompleteRegistration> {
 		return this.registrationService.findGroup(eventId, playerId)
 	}
 
@@ -78,7 +78,7 @@ export class RegistrationController {
 	@UseGuards(JwtAuthGuard)
 	async getRegisteredPlayers(
 		@Param("eventId", ParseIntPipe) eventId: number,
-	): Promise<ValidatedRegisteredPlayer[]> {
+	): Promise<RegisteredPlayer[]> {
 		return await this.registrationService.getRegisteredPlayers(eventId)
 	}
 

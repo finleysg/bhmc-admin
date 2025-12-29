@@ -41,6 +41,7 @@ export interface ClubEvent {
 	starterTimeInterval: number
 	teamSize: number
 	prioritySignupStart?: string | null
+	signupWaves?: number | null
 	ageRestriction?: number | null
 	ageRestrictionType: AgeRestrictionTypeValue
 	ggId?: string | null

@@ -47,6 +47,7 @@ export const event = mysqlTable(
 		starterTimeInterval: int("starter_time_interval").notNull(),
 		teamSize: int("team_size").notNull(),
 		prioritySignupStart: datetime("priority_signup_start", { mode: "string", fsp: 6 }),
+		signupWaves: int("signup_waves"),
 		ageRestriction: int("age_restriction"),
 		ageRestrictionType: varchar("age_restriction_type", { length: 1 }).notNull(),
 		ggId: varchar("gg_id", { length: 22 }),

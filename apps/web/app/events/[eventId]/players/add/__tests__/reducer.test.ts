@@ -13,7 +13,7 @@ import type { AdminRegistrationOptionsState } from "@/components/admin-registrat
 
 // reducer.test.ts
 
-function mockEvent(): import("@repo/domain/types").ValidatedClubEvent {
+function mockEvent(): import("@repo/domain/types").CompleteClubEvent {
 	return {
 		id: 1,
 		ggId: "GG1",

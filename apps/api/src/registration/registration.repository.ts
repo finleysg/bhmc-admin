@@ -1,13 +1,15 @@
-import { and, eq, inArray, or, like } from "drizzle-orm"
+import { and, eq, inArray, or, like, lt, sql, count } from "drizzle-orm"
 
 import { Injectable } from "@nestjs/common"
 
 import {
+	Payment,
 	Player,
 	Registration,
 	RegistrationFee,
 	RegistrationSlot,
 	RegistrationStatusChoices,
+	RegistrationStatusValue,
 } from "@repo/domain/types"
 
 import {
@@ -24,16 +26,21 @@ import {
 	registrationSlot,
 	type CourseRow,
 	type HoleRow,
+	type PaymentInsert,
 	type PaymentRow,
 	type PlayerRow,
 	type RefundInsert,
+	type RegistrationFeeInsert,
 	type RegistrationFeeRow,
+	type RegistrationInsert,
 	type RegistrationRow,
 	type RegistrationSlotRow,
 	type RegistrationSlotInsert,
 	type PlayerInsert,
+	toDbString,
 } from "../database"
 import {
+	toPayment,
 	toPlayer,
 	toRegistration,
 	toRegistrationFee,
@@ -287,5 +294,168 @@ export class RegistrationRepository {
 			.update(registrationFee)
 			.set({ isPaid: isPaid ? 1 : 0 })
 			.where(inArray(registrationFee.id, feeIds))
+	}
+
+	// =============================================================================
+	// Registration flow queries
+	// =============================================================================
+
+	async findRegistrationByUserAndEvent(
+		userId: number,
+		eventId: number,
+	): Promise<Registration | null> {
+		const [reg] = await this.drizzle.db
+			.select()
+			.from(registration)
+			.where(and(eq(registration.userId, userId), eq(registration.eventId, eventId)))
+			.limit(1)
+
+		return reg ? toRegistration(reg) : null
+	}
+
+	async findSlotsWithStatusByRegistration(
+		registrationId: number,
+		statuses: RegistrationStatusValue[],
+	): Promise<RegistrationSlot[]> {
+		const results = await this.drizzle.db
+			.select()
+			.from(registrationSlot)
+			.where(
+				and(
+					eq(registrationSlot.registrationId, registrationId),
+					inArray(registrationSlot.status, statuses),
+				),
+			)
+
+		return results.map(toRegistrationSlot)
+	}
+
+	async countReservedSlotsForEvent(eventId: number): Promise<number> {
+		const [result] = await this.drizzle.db
+			.select({ count: count() })
+			.from(registrationSlot)
+			.where(
+				and(
+					eq(registrationSlot.eventId, eventId),
+					inArray(registrationSlot.status, [
+						RegistrationStatusChoices.PENDING,
+						RegistrationStatusChoices.AWAITING_PAYMENT,
+						RegistrationStatusChoices.RESERVED,
+					]),
+				),
+			)
+
+		return result?.count ?? 0
+	}
+
+	async findExpiredPendingRegistrations(now: Date): Promise<Registration[]> {
+		const nowStr = toDbString(now)
+		const results = await this.drizzle.db
+			.select()
+			.from(registration)
+			.where(lt(registration.expires, sql`${nowStr}`))
+
+		return results.map(toRegistration)
+	}
+
+	async createRegistration(data: RegistrationInsert): Promise<number> {
+		const [result] = await this.drizzle.db.insert(registration).values(data)
+		return Number(result.insertId)
+	}
+
+	async updateRegistration(
+		registrationId: number,
+		data: Partial<RegistrationInsert>,
+	): Promise<void> {
+		await this.drizzle.db.update(registration).set(data).where(eq(registration.id, registrationId))
+	}
+
+	async deleteRegistration(registrationId: number): Promise<void> {
+		await this.drizzle.db.delete(registration).where(eq(registration.id, registrationId))
+	}
+
+	// =============================================================================
+	// Player flow queries
+	// =============================================================================
+
+	async findPlayerByEmail(email: string): Promise<Player | null> {
+		const [p] = await this.drizzle.db.select().from(player).where(eq(player.email, email)).limit(1)
+
+		return p ? toPlayer(p) : null
+	}
+
+	async findPlayerByUserId(userId: number): Promise<Player | null> {
+		const [p] = await this.drizzle.db
+			.select()
+			.from(player)
+			.where(eq(player.userId, userId))
+			.limit(1)
+
+		return p ? toPlayer(p) : null
+	}
+
+	// =============================================================================
+	// Payment flow queries
+	// =============================================================================
+
+	async findPaymentById(paymentId: number): Promise<Payment | null> {
+		const [p] = await this.drizzle.db
+			.select()
+			.from(payment)
+			.where(eq(payment.id, paymentId))
+			.limit(1)
+
+		return p ? toPayment(p) : null
+	}
+
+	async createPayment(data: PaymentInsert): Promise<number> {
+		const [result] = await this.drizzle.db.insert(payment).values(data)
+		return Number(result.insertId)
+	}
+
+	async updatePayment(paymentId: number, data: Partial<PaymentInsert>): Promise<void> {
+		await this.drizzle.db.update(payment).set(data).where(eq(payment.id, paymentId))
+	}
+
+	async updatePaymentIntent(
+		paymentId: number,
+		paymentCode: string,
+		paymentKey: string,
+	): Promise<void> {
+		await this.drizzle.db
+			.update(payment)
+			.set({ paymentCode, paymentKey })
+			.where(eq(payment.id, paymentId))
+	}
+
+	async createRegistrationFee(data: RegistrationFeeInsert): Promise<number> {
+		const [result] = await this.drizzle.db.insert(registrationFee).values(data)
+		return Number(result.insertId)
+	}
+
+	async deleteRegistrationFeesByPayment(paymentId: number): Promise<void> {
+		await this.drizzle.db.delete(registrationFee).where(eq(registrationFee.paymentId, paymentId))
+	}
+
+	async createRegistrationSlot(data: RegistrationSlotInsert): Promise<number> {
+		const [result] = await this.drizzle.db.insert(registrationSlot).values(data)
+		return Number(result.insertId)
+	}
+
+	async deleteRegistrationSlotsByRegistration(registrationId: number): Promise<void> {
+		await this.drizzle.db
+			.delete(registrationSlot)
+			.where(eq(registrationSlot.registrationId, registrationId))
+	}
+
+	async updateRegistrationSlots(
+		slotIds: number[],
+		data: Partial<RegistrationSlotInsert>,
+	): Promise<void> {
+		if (slotIds.length === 0) return
+		await this.drizzle.db
+			.update(registrationSlot)
+			.set(data)
+			.where(inArray(registrationSlot.id, slotIds))
 	}
 }

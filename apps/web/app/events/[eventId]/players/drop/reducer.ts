@@ -1,15 +1,15 @@
 // Reducer and types for DropPlayerPage
 
 import type {
-	ValidatedClubEvent,
-	ValidatedRegistration,
+	CompleteClubEvent,
+	CompleteRegistration,
 	Player,
 	RefundRequest,
 } from "@repo/domain/types"
 
 export type State = {
-	clubEvent: ValidatedClubEvent | null
-	selectedGroup: ValidatedRegistration | undefined
+	clubEvent: CompleteClubEvent | null
+	selectedGroup: CompleteRegistration | undefined
 	selectedPlayers: Player[]
 	selectedFees: { slotId: number; registrationFeeIds: number[] }[]
 	error?: unknown
@@ -19,8 +19,8 @@ export type State = {
 }
 
 export type Action =
-	| { type: "SET_EVENT"; payload: ValidatedClubEvent }
-	| { type: "SET_GROUP"; payload: ValidatedRegistration }
+	| { type: "SET_EVENT"; payload: CompleteClubEvent }
+	| { type: "SET_GROUP"; payload: CompleteRegistration }
 	| { type: "SET_ERROR"; payload: unknown }
 	| { type: "SET_LOADING"; payload: boolean }
 	| { type: "SELECT_PLAYER"; payload: Player }

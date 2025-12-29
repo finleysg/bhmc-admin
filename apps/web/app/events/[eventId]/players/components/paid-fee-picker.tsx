@@ -4,14 +4,14 @@ import { useEffect, useState, useMemo } from "react"
 
 import { calculateAmountDue, formatCurrency } from "@repo/domain/functions"
 
-import { ValidatedClubEvent, ValidatedRegistrationSlot } from "@repo/domain/types"
+import { CompleteClubEvent, CompleteRegistrationSlot } from "@repo/domain/types"
 import { PlayerFees } from "@/types/event-fee"
 import { PlayerFeePicker } from "./player-fee-picker"
 import { convertSlotsToPlayerFees } from "@/lib/fee-utils"
 
 interface PaidFeePickerProps {
-	clubEvent: ValidatedClubEvent
-	slots: ValidatedRegistrationSlot[]
+	clubEvent: CompleteClubEvent
+	slots: CompleteRegistrationSlot[]
 	onChange: (selections: { slotId: number; registrationFeeIds: number[] }[]) => void
 }
 
