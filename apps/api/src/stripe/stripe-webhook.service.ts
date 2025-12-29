@@ -1,27 +1,19 @@
 import { Injectable, Logger } from "@nestjs/common"
-import { eq, inArray } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import Stripe from "stripe"
 
 import {
 	DjangoUser,
 	Payment,
-	RegistrationStatusChoices,
 	PaymentWithDetails,
 	CompleteRegistrationFee,
 } from "@repo/domain/types"
 
-import {
-	authUser,
-	DrizzleService,
-	payment,
-	refund,
-	registrationFee,
-	registrationSlot,
-	toDbString,
-} from "../database"
+import { authUser, DrizzleService, payment, refund, toDbString } from "../database"
 import { EventsService } from "../events"
 import { MailService } from "../mail"
 import {
+	RegistrationFlowService,
 	RegistrationRepository,
 	RegistrationService,
 	toRegistrationFeeWithEventFee,
@@ -33,6 +25,7 @@ export class StripeWebhookService {
 
 	constructor(
 		private drizzle: DrizzleService,
+		private registrationFlowService: RegistrationFlowService,
 		private registrationRepository: RegistrationRepository,
 		private registrationService: RegistrationService,
 		private eventsService: EventsService,
@@ -61,47 +54,31 @@ export class StripeWebhookService {
 			return
 		}
 
-		const now = toDbString(new Date())
+		// Get registrationId from metadata or find from fees
+		let registrationId = paymentIntent.metadata?.registrationId
+			? parseInt(paymentIntent.metadata.registrationId, 10)
+			: null
 
-		await this.drizzle.db.transaction(async (tx) => {
-			// 1. Update payment: confirmed=1, confirmDate
-			await tx
-				.update(payment)
-				.set({
-					confirmed: 1,
-					confirmDate: now,
-					paymentDate: now,
-				})
-				.where(eq(payment.id, paymentRecord.id))
-
-			// 2. Get all registrationFees for this payment
-			const fees = await tx
-				.select()
-				.from(registrationFee)
-				.where(eq(registrationFee.paymentId, paymentRecord.id))
-
-			if (fees.length === 0) {
-				this.logger.warn(`No registration fees found for payment ${paymentRecord.id}`)
-				return
+		if (!registrationId) {
+			// Fallback: find from registration fees
+			const fees = await this.registrationRepository.findRegistrationFeesByPayment(paymentRecord.id)
+			if (fees.length > 0 && fees[0].registrationSlotId) {
+				const slot = await this.registrationRepository.findRegistrationSlotById(
+					fees[0].registrationSlotId,
+				)
+				registrationId = slot.registrationId ?? null
 			}
+		}
 
-			// 3. Update registrationFee: isPaid=1
-			const feeIds = fees.map((f) => f.id)
-			await tx.update(registrationFee).set({ isPaid: 1 }).where(inArray(registrationFee.id, feeIds))
+		if (!registrationId) {
+			this.logger.warn(`No registrationId found for payment ${paymentRecord.id}`)
+			return
+		}
 
-			// 4. Get unique slot IDs and update status X -> R
-			const slotIds = [
-				...new Set(fees.map((f) => f.registrationSlotId).filter(Boolean)),
-			] as number[]
-			if (slotIds.length > 0) {
-				await tx
-					.update(registrationSlot)
-					.set({ status: RegistrationStatusChoices.RESERVED })
-					.where(inArray(registrationSlot.id, slotIds))
-			}
-		})
+		// Use flow service to confirm payment (updates slots, payment, fees)
+		await this.registrationFlowService.paymentConfirmed(registrationId, paymentRecord.id)
 
-		// 5. Send confirmation email (outside transaction)
+		// Send confirmation email
 		await this.sendConfirmationEmail(paymentRecord.id, paymentRecord.eventId, paymentRecord.userId)
 	}
 
