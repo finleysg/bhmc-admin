@@ -10,8 +10,8 @@ import {
 	RegistrationStatusChoices,
 } from "@repo/domain/types"
 
-import { authUser, toDbString, DrizzleService, registrationSlot } from "../database"
-import { eq, inArray } from "drizzle-orm"
+import { authUser, registration, registrationSlot, toDbString, DrizzleService } from "../database"
+import { and, eq, inArray } from "drizzle-orm"
 import { EventsService } from "../events"
 import { StripeService } from "../stripe/stripe.service"
 
@@ -519,17 +519,18 @@ export class RegistrationFlowService {
 				.select()
 				.from(registrationSlot)
 				.where(inArray(registrationSlot.id, slotIds))
-				.for('update')  // Row-level lock
-		
+				.for("update") // Row-level lock
+
 			// Validate all slots are AVAILABLE
 			for (const slot of slots) {
 				if (slot.status !== RegistrationStatusChoices.AVAILABLE) {
-				throw new SlotConflictError()
+					throw new SlotConflictError()
 				}
 			}
-			
+
 			// Update atomically within same transaction
-			await tx.update(registrationSlot)
+			await tx
+				.update(registrationSlot)
 				.set({ status: RegistrationStatusChoices.PENDING, registrationId })
 				.where(inArray(registrationSlot.id, slotIds))
 		})
@@ -545,58 +546,89 @@ export class RegistrationFlowService {
 		signedUpBy: string,
 		expires: Date,
 	): Promise<ReserveResult> {
-		// Check for existing registration
-		const existing = await this.repository.findRegistrationByUserAndEvent(userId, event.id)
-		if (existing) {
-			const reservedSlots = await this.repository.findSlotsWithStatusByRegistration(existing.id, [
-				RegistrationStatusChoices.RESERVED,
-			])
-			if (reservedSlots.length > 0) {
-				throw new AlreadyRegisteredError()
+		return await this.drizzle.db.transaction(async (tx) => {
+			// Lock all reserved/pending/awaiting slots for this event
+			const lockedSlots = await tx
+				.select({ id: registrationSlot.id })
+				.from(registrationSlot)
+				.where(
+					and(
+						eq(registrationSlot.eventId, event.id),
+						inArray(registrationSlot.status, [
+							RegistrationStatusChoices.PENDING,
+							RegistrationStatusChoices.AWAITING_PAYMENT,
+							RegistrationStatusChoices.RESERVED,
+						]),
+					),
+				)
+				.for("update")
+
+			// Capacity check inside transaction (uses locked row count)
+			if (event.registrationMaximum) {
+				if (lockedSlots.length + slotCount > event.registrationMaximum) {
+					throw new EventFullError()
+				}
 			}
-		}
 
-		// Check event capacity
-		if (event.registrationMaximum) {
-			const currentCount = await this.repository.countReservedSlotsForEvent(event.id)
-			if (currentCount + slotCount > event.registrationMaximum) {
-				throw new EventFullError()
+			// Re-check existing registration inside transaction
+			const [existing] = await tx
+				.select()
+				.from(registration)
+				.where(and(eq(registration.userId, userId), eq(registration.eventId, event.id)))
+
+			if (existing) {
+				// Check for reserved slots
+				const reservedSlots = await tx
+					.select()
+					.from(registrationSlot)
+					.where(
+						and(
+							eq(registrationSlot.registrationId, existing.id),
+							eq(registrationSlot.status, RegistrationStatusChoices.RESERVED),
+						),
+					)
+				if (reservedSlots.length > 0) {
+					throw new AlreadyRegisteredError()
+				}
 			}
-		}
 
-		// Create or update registration
-		let registrationId: number
-		if (existing) {
-			registrationId = existing.id
-			await this.repository.updateRegistration(registrationId, {
-				expires: toDbString(expires),
-			})
-			// Delete old pending slots
-			await this.repository.deleteRegistrationSlotsByRegistration(registrationId)
-		} else {
-			registrationId = await this.repository.createRegistration({
-				eventId: event.id,
-				userId,
-				signedUpBy,
-				expires: toDbString(expires),
-				createdDate: toDbString(new Date()),
-			})
-		}
+			// Create or update registration
+			let registrationId: number
+			if (existing) {
+				registrationId = existing.id
+				await tx
+					.update(registration)
+					.set({ expires: toDbString(expires) })
+					.where(eq(registration.id, registrationId))
 
-		// Create new slots
-		const slotIds: number[] = []
-		for (let i = 0; i < slotCount; i++) {
-			const slotId = await this.repository.createRegistrationSlot({
-				eventId: event.id,
-				registrationId,
-				status: RegistrationStatusChoices.PENDING,
-				startingOrder: i,
-				slot: i,
-			})
-			slotIds.push(slotId)
-		}
+				// Delete old pending slots
+				await tx.delete(registrationSlot).where(eq(registrationSlot.registrationId, registrationId))
+			} else {
+				const [result] = await tx.insert(registration).values({
+					eventId: event.id,
+					userId,
+					signedUpBy,
+					expires: toDbString(expires),
+					createdDate: toDbString(new Date()),
+				})
+				registrationId = Number(result.insertId)
+			}
 
-		return { registrationId, slotIds }
+			// Create new slots
+			const slotIds: number[] = []
+			for (let i = 0; i < slotCount; i++) {
+				const [result] = await tx.insert(registrationSlot).values({
+					eventId: event.id,
+					registrationId,
+					status: RegistrationStatusChoices.PENDING,
+					startingOrder: i,
+					slot: i,
+				})
+				slotIds.push(Number(result.insertId))
+			}
+
+			return { registrationId, slotIds }
+		})
 	}
 
 	private calculatePaymentTotal(details: PaymentDetail[]): AmountDue {

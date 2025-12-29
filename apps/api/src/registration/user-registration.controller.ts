@@ -186,8 +186,18 @@ export class UserRegistrationController {
 	 */
 	@Get("payments/:id/stripe-amount")
 	async getStripeAmount(
+		@Req() req: AuthenticatedRequest,
 		@Param("id", ParseIntPipe) paymentId: number,
 	): Promise<StripeAmountResponse> {
+		const payment = await this.flowService.findPaymentById(paymentId)
+		if (!payment) {
+			throw new NotFoundException(`Payment ${paymentId} not found`)
+		}
+
+		if (payment.userId !== req.user.id) {
+			throw new ForbiddenException("Cannot access payment you do not own")
+		}
+
 		return this.flowService.getStripeAmount(paymentId)
 	}
 }

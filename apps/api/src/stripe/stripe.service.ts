@@ -165,7 +165,7 @@ export class StripeService {
 		})
 
 		if (!session.client_secret) {
-			throw new Error("Failed to create PaymentIntent: no client secret returned")
+			throw new Error("Failed to create customer session: no client secret returned")
 		}
 
 		return session.client_secret
