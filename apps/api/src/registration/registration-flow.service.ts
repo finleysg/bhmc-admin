@@ -347,12 +347,15 @@ export class RegistrationFlowService {
 			throw new Error(`No player found with email ${email}`)
 		}
 
-		// Check if player has a Stripe customer ID
-		// For now, create a new customer each time (can be optimized later)
-		const customerId = await this.stripe.createCustomer(
-			email,
-			`${player.firstName} ${player.lastName}`,
-		)
+		let customerId = player.stripeCustomerId
+
+		// Create new Stripe customer if player doesn't have one
+		if (!customerId) {
+			customerId = await this.stripe.createCustomer(email, `${player.firstName} ${player.lastName}`)
+
+			// Persist customerId to player record
+			await this.repository.updatePlayer(player.id, { stripeCustomerId: customerId })
+		}
 
 		const clientSecret = await this.stripe.createCustomerSession(customerId)
 
