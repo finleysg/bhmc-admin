@@ -6,6 +6,7 @@ import {
 	ForbiddenException,
 	Injectable,
 	Logger,
+	ServiceUnavailableException,
 	UnauthorizedException,
 } from "@nestjs/common"
 import { Reflector } from "@nestjs/core"
@@ -16,7 +17,7 @@ import { ROLES_KEY, Role } from "./decorators/roles.decorator"
 import { DjangoAuthService } from "./django-auth.service"
 
 interface AuthenticatedRequest extends Request {
-	user: DjangoUser
+	user?: DjangoUser
 }
 
 @Injectable()
@@ -47,7 +48,14 @@ export class JwtAuthGuard implements CanActivate {
 		}
 
 		// Validate token via DjangoAuthService
-		const user = await this.authService.validateToken(token)
+		let user: DjangoUser | null
+		try {
+			user = await this.authService.validateToken(token)
+		} catch (error) {
+			this.logger.error("Auth service error", error)
+			throw new ServiceUnavailableException("Authentication service unavailable")
+		}
+
 		if (!user) {
 			throw new UnauthorizedException("Invalid or expired token")
 		}

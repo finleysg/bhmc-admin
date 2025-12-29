@@ -1,6 +1,6 @@
 import axios from "axios"
 
-import { Injectable, Logger } from "@nestjs/common"
+import { Injectable, InternalServerErrorException, Logger, ServiceUnavailableException } from "@nestjs/common"
 import { DjangoUser, DjangoUserResponse } from "@repo/domain/types"
 import { transformDjangoUser } from "@repo/domain/functions"
 
@@ -35,11 +35,11 @@ export class DjangoAuthService {
 				}
 				if (error.response?.status && error.response.status >= 500) {
 					this.logger.error(`Django service error: ${error.response.status}`)
-					throw new Error("Authentication service unavailable")
+					throw new InternalServerErrorException("Authentication service unavailable")
 				}
 				if (!error.response) {
 					this.logger.error(`Django service unreachable: ${error.message}`)
-					throw new Error("Authentication service unavailable")
+					throw new ServiceUnavailableException("Authentication service unavailable")
 				}
 				this.logger.warn(`Token validation error: ${error.message}`)
 			} else {
