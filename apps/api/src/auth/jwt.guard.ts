@@ -63,7 +63,7 @@ export class JwtAuthGuard implements CanActivate {
 		// Attach user to request
 		req.user = user
 
-		// Check role requirements
+		// Check role hierarchy
 		const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
 			context.getHandler(),
 			context.getClass(),
@@ -83,6 +83,10 @@ export class JwtAuthGuard implements CanActivate {
 			if (!user.isStaff && !user.isSuperuser) {
 				throw new ForbiddenException("Admin access required")
 			}
+		} else {
+			// Unknown role - deny by default
+			this.logger.error(`Unknown role(s) required: ${requiredRoles.join(", ")}`)
+			throw new ForbiddenException("Invalid role configuration")
 		}
 
 		return true
