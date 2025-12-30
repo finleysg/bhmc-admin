@@ -13,24 +13,19 @@ import {
 } from "@nestjs/common"
 import { Request } from "express"
 
-import { AmountDue, DjangoUser, PaymentIntentResult } from "@repo/domain/types"
-
 import {
-	CancelRegistration,
-	CreatePayment,
-	UpdatePayment,
-	CreatePaymentIntent,
-	CreateRegistration,
-} from "./dto"
+	AmountDue,
+	DjangoUser,
+	PaymentIntentResult,
+	RegistrationWithSlots,
+} from "@repo/domain/types"
+
+import { CancelRegistration, CreatePayment, UpdatePayment, CreatePaymentIntent } from "./dto"
+import type { ReserveRequest } from "./dto"
 import { RegistrationFlowService } from "./registration-flow.service"
 
 interface AuthenticatedRequest extends Request {
 	user: DjangoUser
-}
-
-interface ReserveResponse {
-	registrationId: number
-	slotIds: number[]
 }
 
 interface PaymentResponse {
@@ -60,14 +55,13 @@ export class UserRegistrationController {
 	@Post()
 	async createRegistration(
 		@Req() req: AuthenticatedRequest,
-		@Body() dto: CreateRegistration,
-	): Promise<ReserveResponse> {
+		@Body() dto: ReserveRequest,
+	): Promise<RegistrationWithSlots> {
 		const user = req.user
-		const signedUpBy = `${user.firstName} ${user.lastName}`
 
-		this.logger.log(`Creating registration for user ${user.id} event ${dto.event}`)
+		this.logger.log(`Creating registration for user ${user.id} event ${dto.eventId}`)
 
-		return this.flowService.createAndReserve(user.id, user.email, dto, signedUpBy)
+		return this.flowService.createAndReserve(user, dto)
 	}
 
 	/**

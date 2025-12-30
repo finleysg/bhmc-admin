@@ -4,10 +4,13 @@ import { calculateAmountDue } from "@repo/domain/functions"
 import {
 	AmountDue,
 	ClubEvent,
+	DjangoUser,
 	Payment,
 	PaymentIntentResult,
 	Registration,
 	RegistrationStatusChoices,
+	RegistrationSlotWithPlayer,
+	RegistrationWithSlots,
 } from "@repo/domain/types"
 
 import { authUser, registration, registrationSlot, toDbString, DrizzleService } from "../database"
@@ -16,7 +19,7 @@ import { EventsService } from "../events"
 import { StripeService } from "../stripe/stripe.service"
 
 import { CreatePayment, PaymentDetail, UpdatePayment } from "./dto/create-payment"
-import { CreateRegistration } from "./dto/create-registration"
+import { ReserveRequest } from "./dto/create-registration"
 import {
 	AlreadyRegisteredError,
 	CourseRequiredError,
@@ -27,6 +30,7 @@ import {
 	PaymentNotFoundError,
 	SlotConflictError,
 } from "./errors/registration.errors"
+import { toPlayer, toRegistrationSlot } from "./mappers"
 import { RegistrationRepository } from "./registration.repository"
 import { getCurrentWave, getRegistrationWindow, getStartingWave } from "./wave-calculator"
 
@@ -60,39 +64,65 @@ export class RegistrationFlowService {
 	 * For non-choosable events, creates new slots on demand.
 	 */
 	async createAndReserve(
-		userId: number,
-		playerEmail: string,
-		request: CreateRegistration,
-		signedUpBy: string,
-	): Promise<ReserveResult> {
-		const event = await this.events.getCompleteClubEventById(request.event, false)
+		user: DjangoUser,
+		request: ReserveRequest,
+	): Promise<RegistrationWithSlots> {
+		const signedUpBy = `${user.firstName} ${user.lastName}`
+		const event = await this.events.getCompleteClubEventById(request.eventId, false)
 
 		// Validate request
-		this.validateRegistrationRequest(event, userId, request.slots, request.course ?? null)
+		this.validateRegistrationRequest(event, user.id, request.slotIds, request.courseId ?? null)
 
 		// Calculate expiry
 		const expiryMinutes = event.canChoose ? CHOOSABLE_EXPIRY_MINUTES : NON_CHOOSABLE_EXPIRY_MINUTES
 		const expires = new Date(Date.now() + expiryMinutes * 60 * 1000)
 
+		let result: ReserveResult
 		if (event.canChoose) {
-			return this.reserveChoosableSlots(
-				userId,
-				playerEmail,
+			result = await this.reserveChoosableSlots(
+				user.id,
+				user.email,
 				event,
-				request.course!,
-				request.slots,
+				request.courseId!,
+				request.slotIds,
 				signedUpBy,
 				expires,
 			)
 		} else {
-			return this.createNonChoosableSlots(
-				userId,
-				playerEmail,
+			result = await this.createNonChoosableSlots(
+				user.id,
+				user.email,
 				event,
-				request.slots.length,
+				request.slotIds.length,
 				signedUpBy,
 				expires,
 			)
+		}
+
+		return this.buildRegistrationWithSlots(result.registrationId)
+	}
+
+	/**
+	 * Build RegistrationWithSlots from a registration ID.
+	 */
+	private async buildRegistrationWithSlots(registrationId: number): Promise<RegistrationWithSlots> {
+		const reg = await this.repository.findRegistrationById(registrationId)
+		if (!reg) {
+			throw new Error(`Registration ${registrationId} not found`)
+		}
+
+		const slotRows = await this.repository.findSlotsWithPlayerAndHole(registrationId)
+		const slots: RegistrationSlotWithPlayer[] = slotRows.map((row) => {
+			const slot = toRegistrationSlot(row.slot)
+			return {
+				...slot,
+				player: row.player ? toPlayer(row.player) : null,
+			}
+		})
+
+		return {
+			...reg,
+			slots,
 		}
 	}
 
@@ -497,6 +527,17 @@ export class RegistrationFlowService {
 			}
 		}
 
+		// Find requesting player to assign to lowest numbered slot
+		const requestingPlayer = await this.repository.findPlayerByEmail(playerEmail)
+		if (!requestingPlayer) {
+			throw new Error(`No player found with email ${playerEmail}`)
+		}
+
+		// Determine lowest numbered slot (by slot field)
+		const lowestSlotId = slotIds
+			.map((id) => ({ id, slot: availableSlotMap.get(id)!.slot.slot }))
+			.sort((a, b) => a.slot - b.slot)[0].id
+
 		// Create or update registration
 		let registrationId: number
 		if (existing) {
@@ -531,11 +572,24 @@ export class RegistrationFlowService {
 				}
 			}
 
-			// Update atomically within same transaction
+			// Assign requesting player to lowest numbered slot
 			await tx
 				.update(registrationSlot)
-				.set({ status: RegistrationStatusChoices.PENDING, registrationId })
-				.where(inArray(registrationSlot.id, slotIds))
+				.set({
+					status: RegistrationStatusChoices.PENDING,
+					registrationId,
+					playerId: requestingPlayer.id,
+				})
+				.where(eq(registrationSlot.id, lowestSlotId))
+
+			// Reserve other slots without player assignment
+			const otherSlotIds = slotIds.filter((id) => id !== lowestSlotId)
+			if (otherSlotIds.length > 0) {
+				await tx
+					.update(registrationSlot)
+					.set({ status: RegistrationStatusChoices.PENDING, registrationId })
+					.where(inArray(registrationSlot.id, otherSlotIds))
+			}
 		})
 
 		return { registrationId, slotIds }

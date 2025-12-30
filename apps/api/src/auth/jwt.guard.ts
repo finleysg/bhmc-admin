@@ -42,6 +42,7 @@ export class JwtAuthGuard implements CanActivate {
 		const req = context.switchToHttp().getRequest<AuthenticatedRequest>()
 
 		// Extract token
+		this.logger.log("Extracting token from request: " + JSON.stringify(req.headers))
 		const token = this.extractToken(req)
 		if (!token) {
 			throw new UnauthorizedException("Missing authorization token")
@@ -93,6 +94,12 @@ export class JwtAuthGuard implements CanActivate {
 	}
 
 	private extractToken(req: Request): string | null {
+		// Try cookie first
+		if (req.cookies?.access_token) {
+			return req.cookies.access_token as string
+		}
+
+		// Fallback to Authorization header
 		const auth = req.headers["authorization"] || req.headers["Authorization"]
 		if (!auth || Array.isArray(auth)) return null
 

@@ -9,7 +9,7 @@ export class RegistrationCleanupCron {
 
 	constructor(private readonly flowService: RegistrationFlowService) {}
 
-	@Cron(CronExpression.EVERY_MINUTE)
+	@Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
 	async handleCleanup(): Promise<void> {
 		const count = await this.flowService.cleanUpExpired()
 		if (count > 0) {

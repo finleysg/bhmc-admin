@@ -1,6 +1,11 @@
 import axios from "axios"
 
-import { Injectable, InternalServerErrorException, Logger, ServiceUnavailableException } from "@nestjs/common"
+import {
+	Injectable,
+	InternalServerErrorException,
+	Logger,
+	ServiceUnavailableException,
+} from "@nestjs/common"
 import { DjangoUser, DjangoUserResponse } from "@repo/domain/types"
 import { transformDjangoUser } from "@repo/domain/functions"
 
