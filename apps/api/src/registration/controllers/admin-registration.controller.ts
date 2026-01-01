@@ -8,13 +8,13 @@ import type {
 	CompleteRegistration,
 } from "@repo/domain/types"
 
-import { Admin } from "../auth"
-import { RegistrationService } from "./registration.service"
+import { Admin } from "../../auth"
+import { AdminRegistrationService } from "../services/admin-registration.service"
 
 @Controller("registration")
 @Admin()
-export class RegistrationController {
-	constructor(private readonly registrationService: RegistrationService) {}
+export class AdminRegistrationController {
+	constructor(private readonly registrationService: AdminRegistrationService) {}
 
 	@Get("players")
 	async playerQuery(@Query() query: PlayerQuery) {

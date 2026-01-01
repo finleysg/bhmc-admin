@@ -12,7 +12,7 @@ import {
 } from "@repo/domain/types"
 
 import { EventsService } from "../../events/events.service"
-import { RegistrationService } from "../../registration/registration.service"
+import { AdminRegistrationService } from "../../registration/services/admin-registration.service"
 import { ApiClient } from "../api-client"
 import { ImportResult, toTournamentData } from "../dto"
 import { ProgressTracker } from "./progress-tracker"
@@ -36,7 +36,7 @@ export class PointsImportService {
 		private readonly apiClient: ApiClient,
 		private readonly progressTracker: ProgressTracker,
 		private readonly eventsService: EventsService,
-		private readonly registrationService: RegistrationService,
+		private readonly registrationService: AdminRegistrationService,
 	) {}
 
 	// ============= PUBLIC METHODS =============

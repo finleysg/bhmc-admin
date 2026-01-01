@@ -5,7 +5,9 @@ import {
 	Registration,
 	RegistrationFee,
 	RegistrationSlot,
+	RegistrationSlotWithPlayerAndFees,
 	RegistrationStatusValue,
+	RegistrationWithSlots,
 } from "@repo/domain/types"
 
 import { toHole } from "../courses/mappers"
@@ -18,7 +20,9 @@ import type {
 	PlayerRow,
 	RefundRow,
 	RegistrationFeeRow,
+	RegistrationFull,
 	RegistrationRow,
+	RegistrationSlotFull,
 	RegistrationSlotRow,
 } from "../database"
 import { toEventFeeWithType } from "../events/mappers"
@@ -219,4 +223,27 @@ export type FeeWithEventFeeRow = {
 export type PaymentWithRefundsRow = {
 	payment: PaymentRow
 	refunds: RefundRow[]
+}
+
+/**
+ * Maps RegistrationSlotFull to RegistrationSlotWithPlayerAndFees domain type
+ */
+export function toRegistrationSlotWithPlayerAndFees(
+	row: RegistrationSlotFull,
+): RegistrationSlotWithPlayerAndFees {
+	return {
+		...toRegistrationSlot(row),
+		player: row.player ? toPlayer(row.player) : null,
+		fees: row.fees.map(toRegistrationFee),
+	}
+}
+
+/**
+ * Maps RegistrationFull to RegistrationWithSlots domain type
+ */
+export function toRegistrationWithSlots(row: RegistrationFull): RegistrationWithSlots {
+	return {
+		...toRegistration(row),
+		slots: row.slots.map(toRegistrationSlotWithPlayerAndFees),
+	}
 }

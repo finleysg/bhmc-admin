@@ -8,6 +8,7 @@ export interface DjangoUserResponse {
 	is_superuser: boolean
 	ghin: string | null
 	birth_date: string | null
+	player_id: number
 }
 
 export interface DjangoUser {
@@ -20,4 +21,5 @@ export interface DjangoUser {
 	isSuperuser: boolean
 	ghin: string | null
 	birthDate: string | null
+	playerId: number
 }

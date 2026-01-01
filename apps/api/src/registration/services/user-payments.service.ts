@@ -1,0 +1,283 @@
+import { Injectable, Logger } from "@nestjs/common"
+
+import { calculateAmountDue } from "@repo/domain/functions"
+import {
+	AmountDue,
+	Payment,
+	PaymentIntentResult,
+	RegistrationStatusChoices,
+	CreatePaymentRequest,
+	PaymentDetailRequest,
+	UpdatePaymentRequest,
+} from "@repo/domain/types"
+
+import { authUser, toDbString, DrizzleService } from "../../database"
+import { eq } from "drizzle-orm"
+import { EventsService } from "../../events"
+import { StripeService } from "../../stripe/stripe.service"
+
+import { PaymentNotFoundError } from "../errors/registration.errors"
+import { toPayment, toRegistrationFee } from "../mappers"
+import { PaymentsRepository } from "../repositories/payments.repository"
+import { RegistrationRepository } from "../repositories/registration.repository"
+
+@Injectable()
+export class UserPaymentsService {
+	private readonly logger = new Logger(UserPaymentsService.name)
+
+	constructor(
+		private readonly paymentRepository: PaymentsRepository,
+		private readonly registrationRepository: RegistrationRepository,
+		private readonly events: EventsService,
+		private readonly stripe: StripeService,
+		private readonly drizzle: DrizzleService,
+	) {}
+
+	/**
+	 * Get a payment by ID.
+	 */
+	async findPaymentById(paymentId: number): Promise<Payment | null> {
+		const row = await this.paymentRepository.findPaymentById(paymentId)
+		return row ? toPayment(row) : null
+	}
+
+	/**
+	 * Create a payment record with registration fees.
+	 */
+	async createPayment(data: CreatePaymentRequest): Promise<number> {
+		const { subtotal, transactionFee } = this.calculatePaymentTotal(data.paymentDetails)
+
+		const paymentId = await this.paymentRepository.createPayment({
+			eventId: data.eventId,
+			userId: data.userId,
+			notificationType: data.notificationType ?? null,
+			paymentAmount: subtotal.toFixed(2),
+			transactionFee: transactionFee.toFixed(2),
+			paymentDate: toDbString(new Date()),
+			confirmed: 0,
+			paymentCode: "pending",
+		})
+
+		// Create registration fee records
+		for (const detail of data.paymentDetails) {
+			await this.paymentRepository.createRegistrationFee({
+				eventFeeId: detail.eventFeeId,
+				registrationSlotId: detail.registrationSlotId,
+				paymentId,
+				amount: detail.amount.toFixed(2),
+				isPaid: 0,
+			})
+		}
+
+		return paymentId
+	}
+
+	/**
+	 * Update an existing payment record with new details.
+	 */
+	async updatePayment(paymentId: number, data: UpdatePaymentRequest): Promise<void> {
+		const payment = await this.paymentRepository.findPaymentById(paymentId)
+		if (!payment) {
+			throw new PaymentNotFoundError(paymentId)
+		}
+
+		// Delete existing fees
+		await this.paymentRepository.deleteRegistrationFeesByPayment(paymentId)
+
+		const { subtotal, transactionFee } = this.calculatePaymentTotal(data.paymentDetails)
+
+		// Update payment
+		await this.paymentRepository.updatePayment(paymentId, {
+			paymentAmount: subtotal.toFixed(2),
+			transactionFee: transactionFee.toFixed(2),
+			notificationType: data.notificationType ?? null,
+		})
+
+		// Create new registration fee records
+		for (const detail of data.paymentDetails) {
+			await this.paymentRepository.createRegistrationFee({
+				eventFeeId: detail.eventFeeId,
+				registrationSlotId: detail.registrationSlotId,
+				paymentId,
+				amount: detail.amount.toFixed(2),
+				isPaid: 0,
+			})
+		}
+	}
+
+	/**
+	 * Get the Stripe amount (in cents) for a payment including fees.
+	 */
+	async getStripeAmount(paymentId: number): Promise<{ amountCents: number; amountDue: AmountDue }> {
+		const payment = await this.paymentRepository.findPaymentById(paymentId)
+		if (!payment) {
+			throw new PaymentNotFoundError(paymentId)
+		}
+
+		const feeRows = await this.paymentRepository.findRegistrationFeesByPayment(paymentId)
+		const fees = feeRows.map(toRegistrationFee)
+		const amountDue = calculateAmountDue(fees.map((f) => f.amount))
+
+		return {
+			amountCents: Math.round(amountDue.total * 100),
+			amountDue,
+		}
+	}
+
+	/**
+	 * Create a Stripe PaymentIntent and transition to AWAITING_PAYMENT.
+	 */
+	async createPaymentIntent(
+		paymentId: number,
+		eventId: number,
+		registrationId: number,
+	): Promise<PaymentIntentResult> {
+		const payment = await this.paymentRepository.findPaymentById(paymentId)
+		if (!payment) {
+			throw new PaymentNotFoundError(paymentId)
+		}
+
+		const event = await this.events.getCompleteClubEventById(eventId, false)
+		const { amountCents, amountDue } = await this.getStripeAmount(paymentId)
+
+		// Update payment with calculated amounts
+		await this.paymentRepository.updatePayment(paymentId, {
+			paymentAmount: amountDue.subtotal.toFixed(2),
+			transactionFee: amountDue.transactionFee.toFixed(2),
+		})
+
+		// Get user for description and player for Stripe customer
+		let userName = "Unknown"
+		let email: string | undefined
+		let stripeCustomerId: string | undefined
+		const [user] = await this.drizzle.db
+			.select()
+			.from(authUser)
+			.where(eq(authUser.id, payment.userId))
+			.limit(1)
+
+		if (user) {
+			userName = `${user.firstName} ${user.lastName}`
+			email = user.email
+		}
+
+		// Get player's Stripe customer ID if they have one
+		const player = await this.registrationRepository.findPlayerByUserId(payment.userId)
+		if (player?.stripeCustomerId) {
+			stripeCustomerId = player.stripeCustomerId
+		}
+
+		const description = `Online payment for ${event.name} (${event.startDate}) by ${userName}`
+		const result = await this.stripe.createPaymentIntent(
+			amountCents,
+			description,
+			{
+				eventId,
+				registrationId,
+				paymentId,
+				userName,
+				userEmail: email ?? "",
+				eventName: event.name,
+				eventStartDate: event.startDate,
+			},
+			stripeCustomerId,
+			email,
+		)
+
+		// Store payment intent ID
+		await this.paymentRepository.updatePaymentIntent(
+			paymentId,
+			result.paymentIntentId,
+			result.clientSecret,
+		)
+
+		// Transition slots to AWAITING_PAYMENT
+		await this.paymentProcessing(registrationId)
+
+		return result
+	}
+
+	/**
+	 * Create or get a Stripe customer session for saved payment methods.
+	 */
+	async createCustomerSession(
+		email: string,
+	): Promise<{ clientSecret: string; customerId: string }> {
+		const player = await this.registrationRepository.findPlayerByEmail(email)
+		if (!player) {
+			throw new Error(`No player found with email ${email}`)
+		}
+
+		let customerId = player.stripeCustomerId
+
+		// Create new Stripe customer if player doesn't have one
+		if (!customerId) {
+			customerId = await this.stripe.createCustomer(email, `${player.firstName} ${player.lastName}`)
+
+			// Persist customerId to player record
+			await this.registrationRepository.updatePlayer(player.id, { stripeCustomerId: customerId })
+		}
+
+		const clientSecret = await this.stripe.createCustomerSession(customerId)
+
+		return { clientSecret, customerId }
+	}
+
+	// =============================================================================
+	// State transitions
+	// =============================================================================
+
+	/**
+	 * Transition slots from PENDING to AWAITING_PAYMENT.
+	 */
+	async paymentProcessing(registrationId: number): Promise<void> {
+		const slots = await this.registrationRepository.findSlotsWithStatusByRegistration(
+			registrationId,
+			[RegistrationStatusChoices.PENDING],
+		)
+
+		if (slots.length === 0) return
+
+		const slotIds = slots.map((s) => s.id)
+		await this.registrationRepository.updateRegistrationSlots(slotIds, {
+			status: RegistrationStatusChoices.AWAITING_PAYMENT,
+		})
+
+		// Clear expiry since payment is in progress
+		await this.registrationRepository.updateRegistration(registrationId, { expires: null })
+	}
+
+	/**
+	 * Transition slots from AWAITING_PAYMENT to RESERVED.
+	 * Called by webhook when payment succeeds.
+	 */
+	async paymentConfirmed(registrationId: number, paymentId: number): Promise<void> {
+		const slots = await this.registrationRepository.findSlotsWithStatusByRegistration(
+			registrationId,
+			[RegistrationStatusChoices.AWAITING_PAYMENT],
+		)
+
+		if (slots.length === 0) return
+
+		const slotIds = slots.map((s) => s.id)
+		await this.registrationRepository.updateRegistrationSlots(slotIds, {
+			status: RegistrationStatusChoices.RESERVED,
+		})
+
+		// Mark payment as confirmed
+		await this.paymentRepository.updatePayment(paymentId, {
+			confirmed: 1,
+			confirmDate: toDbString(new Date()),
+		})
+
+		// Mark registration fees as paid
+		const feeRows = await this.paymentRepository.findRegistrationFeesByPayment(paymentId)
+		const feeIds = feeRows.map((f) => f.id)
+		await this.paymentRepository.updateRegistrationFeeStatus(feeIds, true)
+	}
+
+	private calculatePaymentTotal(details: PaymentDetailRequest[]): AmountDue {
+		const amounts = details.map((d) => d.amount)
+		return calculateAmountDue(amounts)
+	}
+}

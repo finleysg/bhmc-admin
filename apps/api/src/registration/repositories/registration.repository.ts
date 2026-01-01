@@ -1,16 +1,7 @@
 import { and, eq, inArray, or, like, lt, sql, count } from "drizzle-orm"
+import type { MySql2Database } from "drizzle-orm/mysql2"
 
 import { Injectable } from "@nestjs/common"
-
-import {
-	Payment,
-	Player,
-	Registration,
-	RegistrationFee,
-	RegistrationSlot,
-	RegistrationStatusChoices,
-	RegistrationStatusValue,
-} from "@repo/domain/types"
 
 import {
 	course,
@@ -38,31 +29,19 @@ import {
 	type RegistrationSlotInsert,
 	type PlayerInsert,
 	toDbString,
-} from "../database"
-import {
-	toPayment,
-	toPlayer,
-	toRegistration,
-	toRegistrationFee,
-	toRegistrationSlot,
-	type FeeWithEventFeeRow,
-	type SlotWithPlayerAndHoleRow,
-} from "./mappers"
+	RegistrationFull,
+	RegistrationSlotFull,
+	RegistrationWithSlots,
+	RegistrationSlotWithHole,
+} from "../../database"
+import { type FeeWithEventFeeRow, type SlotWithPlayerAndHoleRow } from "../mappers"
+import { RegistrationStatusChoices, RegistrationStatusValue } from "@repo/domain/types"
 
 @Injectable()
 export class RegistrationRepository {
 	constructor(private drizzle: DrizzleService) {}
 
-	// register_player
-	async findPlayerById(id: number): Promise<Player> {
-		const [p] = await this.drizzle.db.select().from(player).where(eq(player.id, id)).limit(1)
-		if (!p) {
-			throw new Error(`No player found with id ${id}`)
-		}
-		return toPlayer(p)
-	}
-
-	async findPlayerRowById(id: number): Promise<PlayerRow> {
+	async findPlayerById(id: number): Promise<PlayerRow> {
 		const [p] = await this.drizzle.db.select().from(player).where(eq(player.id, id)).limit(1)
 		if (!p) {
 			throw new Error(`No player found with id ${id}`)
@@ -70,34 +49,49 @@ export class RegistrationRepository {
 		return p
 	}
 
-	async findPlayersByIds(ids: number[]): Promise<Player[]> {
+	async findPlayersByIds(ids: number[]): Promise<PlayerRow[]> {
 		if (!ids.length) return []
-		const results = await this.drizzle.db.select().from(player).where(inArray(player.id, ids))
-		return results.map(toPlayer)
+		return await this.drizzle.db.select().from(player).where(inArray(player.id, ids))
 	}
 
-	async findMemberPlayers(): Promise<Player[]> {
-		const players = await this.drizzle.db.select().from(player).where(eq(player.isMember, 1))
-		return players.map(toPlayer)
+	async findMemberPlayers(): Promise<PlayerRow[]> {
+		return await this.drizzle.db.select().from(player).where(eq(player.isMember, 1))
 	}
 
-	async updatePlayer(playerId: number, data: Partial<PlayerInsert>): Promise<Player> {
+	async updatePlayer(playerId: number, data: Partial<PlayerInsert>): Promise<PlayerRow> {
 		await this.drizzle.db.update(player).set(data).where(eq(player.id, playerId))
 		return this.findPlayerById(playerId)
 	}
 
 	// Registration slots
+	async findRegistrationSlotsByRegistrationId(
+		registrationId: number,
+	): Promise<RegistrationSlotRow[]> {
+		const results = await this.drizzle.db
+			.select()
+			.from(registrationSlot)
+			.where(eq(registrationSlot.registrationId, registrationId))
+
+		return results
+	}
+
 	async updateRegistrationSlot(
 		slotId: number,
 		data: Partial<RegistrationSlotInsert>,
-	): Promise<RegistrationSlot> {
-		await this.drizzle.db.update(registrationSlot).set(data).where(eq(registrationSlot.id, slotId))
+		tx?: MySql2Database,
+	): Promise<RegistrationSlotRow> {
+		const db = tx ?? this.drizzle.db
+		await db.update(registrationSlot).set(data).where(eq(registrationSlot.id, slotId))
 
-		return this.findRegistrationSlotById(slotId)
+		return this.findRegistrationSlotById(slotId, tx)
 	}
 
-	async findRegistrationSlotById(slotId: number): Promise<RegistrationSlot> {
-		const [slot] = await this.drizzle.db
+	async findRegistrationSlotById(
+		slotId: number,
+		tx?: MySql2Database,
+	): Promise<RegistrationSlotRow> {
+		const db = tx ?? this.drizzle.db
+		const [slot] = await db
 			.select()
 			.from(registrationSlot)
 			.where(eq(registrationSlot.id, slotId))
@@ -105,7 +99,32 @@ export class RegistrationRepository {
 		if (!slot) {
 			throw new Error(`No registration slot found with id ${slotId}`)
 		}
-		return toRegistrationSlot(slot)
+		return slot
+	}
+
+	async findRegistrationSlotWithHoleById(slotId: number): Promise<RegistrationSlotWithHole> {
+		const [result] = await this.drizzle.db
+			.select({
+				slot: registrationSlot,
+				hole: hole,
+			})
+			.from(registrationSlot)
+			.leftJoin(hole, eq(registrationSlot.holeId, hole.id))
+			.where(eq(registrationSlot.id, slotId))
+			.limit(1)
+
+		if (!result) {
+			throw new Error(`No registration slot found with id ${slotId}`)
+		}
+
+		if (!result.hole) {
+			throw new Error(`No hole found for registration slot id ${slotId}`)
+		}
+
+		return {
+			...result.slot,
+			hole: result.hole,
+		}
 	}
 
 	async findRegistrationSlotRowById(slotId: number): Promise<RegistrationSlotRow> {
@@ -120,25 +139,16 @@ export class RegistrationRepository {
 		return slot
 	}
 
-	async findRegistrationSlotByGgId(ggId: string): Promise<RegistrationSlot | null> {
+	async findRegistrationSlotByGgId(ggId: string): Promise<RegistrationSlotRow | null> {
 		const [slot] = await this.drizzle.db
 			.select()
 			.from(registrationSlot)
 			.where(eq(registrationSlot.ggId, ggId))
 			.limit(1)
-		return slot ? toRegistrationSlot(slot) : null
+		return slot ?? null
 	}
 
-	async findRegistrationById(registrationId: number): Promise<Registration | null> {
-		const [reg] = await this.drizzle.db
-			.select()
-			.from(registration)
-			.where(eq(registration.id, registrationId))
-			.limit(1)
-		return reg ? toRegistration(reg) : null
-	}
-
-	async findRegistrationRowById(registrationId: number): Promise<RegistrationRow | null> {
+	async findRegistrationById(registrationId: number): Promise<RegistrationRow | null> {
 		const [reg] = await this.drizzle.db
 			.select()
 			.from(registration)
@@ -147,15 +157,61 @@ export class RegistrationRepository {
 		return reg ?? null
 	}
 
+	async findCompleteRegistrationById(registrationId: number): Promise<RegistrationFull | null> {
+		const results = await this.drizzle.db
+			.select({
+				registration,
+				slot: registrationSlot,
+				player,
+				fee: registrationFee,
+			})
+			.from(registration)
+			.leftJoin(registrationSlot, eq(registrationSlot.registrationId, registration.id))
+			.leftJoin(player, eq(registrationSlot.playerId, player.id))
+			.leftJoin(registrationFee, eq(registrationFee.registrationSlotId, registrationSlot.id))
+			.where(eq(registration.id, registrationId))
+
+		if (results.length === 0) return null
+
+		const reg = results[0].registration
+		const slotsMap = new Map<number, RegistrationSlotFull>()
+
+		for (const row of results) {
+			if (!row.slot) continue
+
+			if (!slotsMap.has(row.slot.id)) {
+				slotsMap.set(row.slot.id, {
+					...row.slot,
+					player: row.player!,
+					fees: [],
+				})
+			}
+
+			if (row.fee) {
+				slotsMap.get(row.slot.id)!.fees.push(row.fee)
+			}
+		}
+
+		return {
+			...reg,
+			slots: Array.from(slotsMap.values()),
+		}
+	}
+
 	async findRegistrationIdByEventAndPlayer(
 		eventId: number,
 		playerId: number,
+		tx?: MySql2Database,
 	): Promise<number | null> {
-		const [slot] = await this.drizzle.db
+		const db = tx ?? this.drizzle.db
+		const query = db
 			.select()
 			.from(registrationSlot)
 			.where(and(eq(registrationSlot.eventId, eventId), eq(registrationSlot.playerId, playerId)))
 			.limit(1)
+
+		// Apply row lock when inside a transaction
+		const [slot] = tx ? await query.for("update") : await query
 
 		return slot?.registrationId ?? null
 	}
@@ -240,7 +296,7 @@ export class RegistrationRepository {
 			.where(
 				and(
 					eq(registrationSlot.eventId, eventId),
-					eq(registrationSlot.status, RegistrationStatusChoices.AVAILABLE),
+					eq(registrationSlot.status, "A"),
 					eq(hole.courseId, courseId),
 				),
 			)
@@ -270,13 +326,29 @@ export class RegistrationRepository {
 		}
 	}
 
-	async findRegistrationFeesByPayment(paymentId: number): Promise<RegistrationFee[]> {
-		const results = await this.drizzle.db
+	async findRegistrationFeesByPayment(paymentId: number): Promise<RegistrationFeeRow[]> {
+		return this.drizzle.db
 			.select()
 			.from(registrationFee)
 			.where(eq(registrationFee.paymentId, paymentId))
+	}
 
-		return results.map(toRegistrationFee)
+	async findRegistrationFeesByRegistrationId(
+		registrationId: number,
+		confirmedOnly?: boolean,
+	): Promise<RegistrationFeeRow[]> {
+		const results = await this.drizzle.db
+			.select({ fee: registrationFee })
+			.from(registrationFee)
+			.innerJoin(registrationSlot, eq(registrationFee.registrationSlotId, registrationSlot.id))
+			.innerJoin(payment, eq(registrationFee.paymentId, payment.id))
+			.where(
+				confirmedOnly
+					? and(eq(registrationSlot.registrationId, registrationId), eq(payment.confirmed, 1))
+					: eq(registrationSlot.registrationId, registrationId),
+			)
+
+		return results.map((r) => r.fee)
 	}
 
 	async createRefund(data: RefundInsert): Promise<number> {
@@ -303,20 +375,34 @@ export class RegistrationRepository {
 	async findRegistrationByUserAndEvent(
 		userId: number,
 		eventId: number,
-	): Promise<Registration | null> {
-		const [reg] = await this.drizzle.db
-			.select()
+	): Promise<RegistrationWithSlots | null> {
+		const results = await this.drizzle.db
+			.select({
+				registration,
+				slot: registrationSlot,
+			})
 			.from(registration)
+			.leftJoin(registrationSlot, eq(registrationSlot.registrationId, registration.id))
 			.where(and(eq(registration.userId, userId), eq(registration.eventId, eventId)))
-			.limit(1)
 
-		return reg ? toRegistration(reg) : null
+		if (results.length === 0) return null
+
+		const reg = results[0].registration
+		const slots: RegistrationSlotRow[] = []
+
+		for (const row of results) {
+			if (row.slot) {
+				slots.push(row.slot)
+			}
+		}
+
+		return { ...reg, slots }
 	}
 
 	async findSlotsWithStatusByRegistration(
 		registrationId: number,
 		statuses: RegistrationStatusValue[],
-	): Promise<RegistrationSlot[]> {
+	): Promise<RegistrationSlotRow[]> {
 		const results = await this.drizzle.db
 			.select()
 			.from(registrationSlot)
@@ -327,7 +413,7 @@ export class RegistrationRepository {
 				),
 			)
 
-		return results.map(toRegistrationSlot)
+		return results
 	}
 
 	async countReservedSlotsForEvent(eventId: number): Promise<number> {
@@ -348,14 +434,14 @@ export class RegistrationRepository {
 		return result?.count ?? 0
 	}
 
-	async findExpiredPendingRegistrations(now: Date): Promise<Registration[]> {
+	async findExpiredPendingRegistrations(now: Date): Promise<RegistrationRow[]> {
 		const nowStr = toDbString(now)
 		const results = await this.drizzle.db
 			.select()
 			.from(registration)
 			.where(lt(registration.expires, sql`${nowStr}`))
 
-		return results.map(toRegistration)
+		return results
 	}
 
 	async createRegistration(data: RegistrationInsert): Promise<number> {
@@ -378,34 +464,34 @@ export class RegistrationRepository {
 	// Player flow queries
 	// =============================================================================
 
-	async findPlayerByEmail(email: string): Promise<Player | null> {
+	async findPlayerByEmail(email: string): Promise<PlayerRow | null> {
 		const [p] = await this.drizzle.db.select().from(player).where(eq(player.email, email)).limit(1)
 
-		return p ? toPlayer(p) : null
+		return p ?? null
 	}
 
-	async findPlayerByUserId(userId: number): Promise<Player | null> {
+	async findPlayerByUserId(userId: number): Promise<PlayerRow | null> {
 		const [p] = await this.drizzle.db
 			.select()
 			.from(player)
 			.where(eq(player.userId, userId))
 			.limit(1)
 
-		return p ? toPlayer(p) : null
+		return p ?? null
 	}
 
 	// =============================================================================
 	// Payment flow queries
 	// =============================================================================
 
-	async findPaymentById(paymentId: number): Promise<Payment | null> {
+	async findPaymentById(paymentId: number): Promise<PaymentRow | null> {
 		const [p] = await this.drizzle.db
 			.select()
 			.from(payment)
 			.where(eq(payment.id, paymentId))
 			.limit(1)
 
-		return p ? toPayment(p) : null
+		return p ?? null
 	}
 
 	async createPayment(data: PaymentInsert): Promise<number> {

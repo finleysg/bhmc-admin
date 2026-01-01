@@ -12,5 +12,6 @@ export function transformDjangoUser(response: DjangoUserResponse): DjangoUser {
 		isSuperuser: response.is_superuser,
 		ghin: response.ghin,
 		birthDate: response.birth_date,
+		playerId: response.player_id,
 	}
 }

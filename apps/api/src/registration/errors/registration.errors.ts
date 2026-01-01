@@ -22,8 +22,17 @@ export class PlayerConflictError extends HttpException {
 }
 
 export class AlreadyRegisteredError extends HttpException {
-	constructor() {
-		super("You already have a completed registration for this event", HttpStatus.BAD_REQUEST)
+	constructor(playerId: number, eventId: number) {
+		super(`Player ${playerId} is already registered for event ${eventId}`, HttpStatus.BAD_REQUEST)
+	}
+}
+
+export class SlotOverflowError extends HttpException {
+	constructor(registrationId: number, slotCount: number) {
+		super(
+			`Registration ${registrationId} does not have ${slotCount} slots available`,
+			HttpStatus.BAD_REQUEST,
+		)
 	}
 }
 

@@ -25,7 +25,7 @@ import {
 	CompleteRegistrationFee,
 } from "@repo/domain/types"
 
-import { toCourse, toHole } from "../courses/mappers"
+import { toCourse, toHole } from "../../courses/mappers"
 import {
 	authUser,
 	course,
@@ -40,10 +40,10 @@ import {
 	registrationFee,
 	registrationSlot,
 	toDbString,
-} from "../database"
-import { EventsService } from "../events"
-import { MailService } from "../mail/mail.service"
-import { StripeService } from "../stripe/stripe.service"
+} from "../../database"
+import { EventsService } from "../../events"
+import { MailService } from "../../mail/mail.service"
+import { StripeService } from "../../stripe/stripe.service"
 import {
 	attachFeesToSlots,
 	hydrateSlotsWithPlayerAndHole,
@@ -51,8 +51,8 @@ import {
 	toRegistration,
 	toRegistrationFeeWithEventFee,
 	toRegistrationSlot,
-} from "./mappers"
-import { RegistrationRepository } from "./registration.repository"
+} from "../mappers"
+import { RegistrationRepository } from "../repositories/registration.repository"
 
 type ActualFeeAmount = {
 	eventFeeId: number
@@ -63,8 +63,8 @@ type AdminRegistrationSlotWithAmount = Omit<AdminRegistrationSlot, "feeIds"> & {
 }
 
 @Injectable()
-export class RegistrationService {
-	private readonly logger = new Logger(RegistrationService.name)
+export class AdminRegistrationService {
+	private readonly logger = new Logger(AdminRegistrationService.name)
 
 	constructor(
 		private drizzle: DrizzleService,
@@ -253,11 +253,13 @@ export class RegistrationService {
 	}
 
 	async updatePlayerGgId(playerId: number, ggId: string): Promise<Player> {
-		return this.repository.updatePlayer(playerId, { ggId })
+		const row = await this.repository.updatePlayer(playerId, { ggId })
+		return toPlayer(row)
 	}
 
 	async updateRegistrationSlotGgId(slotId: number, ggId: string): Promise<RegistrationSlot> {
-		return this.repository.updateRegistrationSlot(slotId, { ggId })
+		const row = await this.repository.updateRegistrationSlot(slotId, { ggId })
+		return toRegistrationSlot(row)
 	}
 
 	async getPlayerMapForEvent(eventId: number): Promise<PlayerMap> {
@@ -437,7 +439,7 @@ export class RegistrationService {
 
 		const playerIds = Array.from(new Set(slots.map((slot) => slot.playerId)))
 		const players = await this.repository.findPlayersByIds(playerIds)
-		const playerLookup = new Map<number, Player>(players.map((p) => [p.id, p]))
+		const playerLookup = new Map<number, Player>(players.map((p) => [p.id, toPlayer(p)]))
 
 		for (const slot of slots) {
 			const convertedSlot: AdminRegistrationSlotWithAmount = {
@@ -663,5 +665,42 @@ export class RegistrationService {
 				throw stripeError
 			}
 		}
+	}
+
+	/**
+	 * Clean up expired pending registrations.
+	 * Called by cron job.
+	 * TODO: Should we clean up payments and fees as well?
+	 */
+	async cleanUpExpired(): Promise<number> {
+		const now = new Date()
+		const expired = await this.repository.findExpiredPendingRegistrations(now)
+
+		if (expired.length === 0) return 0
+
+		this.logger.log(`Cleaning up ${expired.length} expired registrations`)
+
+		for (const reg of expired) {
+			const canChoose = await this.events.isCanChooseHolesEvent(reg.eventId)
+			const slots = await this.repository.findRegistrationSlotsByRegistrationId(reg.id)
+			const slotIds = slots.map((s) => s.id)
+
+			if (canChoose) {
+				// For choosable events, reset slots to AVAILABLE
+				await this.repository.updateRegistrationSlots(slotIds, {
+					status: RegistrationStatusChoices.AVAILABLE,
+					registrationId: null,
+					playerId: null,
+				})
+			} else {
+				// For non-choosable events, delete the slots
+				await this.repository.deleteRegistrationSlotsByRegistration(reg.id)
+			}
+
+			// Delete the registration
+			await this.repository.deleteRegistration(reg.id)
+		}
+
+		return expired.length
 	}
 }

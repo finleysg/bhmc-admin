@@ -13,9 +13,9 @@ import { authUser, DrizzleService, payment, refund, toDbString } from "../databa
 import { EventsService } from "../events"
 import { MailService } from "../mail"
 import {
-	RegistrationFlowService,
+	UserPaymentsService,
 	RegistrationRepository,
-	RegistrationService,
+	AdminRegistrationService,
 	toRegistrationFeeWithEventFee,
 } from "../registration"
 
@@ -25,9 +25,9 @@ export class StripeWebhookService {
 
 	constructor(
 		private drizzle: DrizzleService,
-		private registrationFlowService: RegistrationFlowService,
+		private userPaymentsService: UserPaymentsService,
 		private registrationRepository: RegistrationRepository,
-		private registrationService: RegistrationService,
+		private adminRegistrationService: AdminRegistrationService,
 		private eventsService: EventsService,
 		private mailService: MailService,
 	) {}
@@ -76,7 +76,7 @@ export class StripeWebhookService {
 		}
 
 		// Use flow service to confirm payment (updates slots, payment, fees)
-		await this.registrationFlowService.paymentConfirmed(registrationId, paymentRecord.id)
+		await this.userPaymentsService.paymentConfirmed(registrationId, paymentRecord.id)
 
 		// Send confirmation email
 		await this.sendConfirmationEmail(paymentRecord.id, paymentRecord.eventId, paymentRecord.userId)
@@ -285,6 +285,7 @@ export class StripeWebhookService {
 				isSuperuser: Boolean(userRow.isSuperuser),
 				ghin: null,
 				birthDate: null,
+				playerId: 0,
 			}
 
 			// Get event
@@ -299,6 +300,10 @@ export class StripeWebhookService {
 
 			const firstFee = fees[0]
 			const slotId = firstFee.registrationSlotId
+			if (!slotId) {
+				this.logger.warn(`Fee ${firstFee.id} has no slot id`)
+				return
+			}
 			const slot = await this.registrationRepository.findRegistrationSlotById(slotId)
 
 			if (!slot.playerId) {
@@ -307,7 +312,7 @@ export class StripeWebhookService {
 			}
 
 			// Get validated registration
-			const registration = await this.registrationService.findGroup(eventId, slot.playerId)
+			const registration = await this.adminRegistrationService.findGroup(eventId, slot.playerId)
 
 			// Build validated payment with fee details
 			const paymentWithDetails =
@@ -318,7 +323,9 @@ export class StripeWebhookService {
 			}
 
 			// Get fees with eventFee data for PaymentWithDetails
-			const slotIds = fees.map((f) => f.registrationSlotId)
+			const slotIds = fees
+				.map((f) => f.registrationSlotId)
+				.filter((id): id is number => id !== null)
 			const feesWithEventFee =
 				await this.registrationRepository.findFeesWithEventFeeAndFeeType(slotIds)
 

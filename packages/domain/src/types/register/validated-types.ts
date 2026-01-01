@@ -18,6 +18,11 @@ export type RegistrationSlotWithPlayer = Omit<RegistrationSlot, "player"> & {
 	player: Player | null
 }
 
+export type RegistrationSlotWithPlayerAndFees = Omit<RegistrationSlot, "player" | "fees"> & {
+	player: Player | null
+	fees: RegistrationFee[]
+}
+
 export type CompleteRegistrationSlot = Omit<RegistrationSlot, "player" | "hole" | "fees"> & {
 	player: Player
 	hole: Hole
@@ -28,7 +33,7 @@ export type CompleteRegistrationSlot = Omit<RegistrationSlot, "player" | "hole" 
  * A variation of Registration used in the registration flow.
  */
 export type RegistrationWithSlots = Omit<Registration, "slots"> & {
-	slots: RegistrationSlotWithPlayer[]
+	slots: RegistrationSlotWithPlayerAndFees[]
 }
 
 /**
@@ -55,4 +60,9 @@ export type RegisteredPlayer = {
 
 export type PaymentWithDetails = Payment & {
 	paymentDetails: CompleteRegistrationFee[]
+}
+
+export interface RegistrationAndPayment {
+	registration: RegistrationWithSlots
+	payment: PaymentWithDetails
 }
