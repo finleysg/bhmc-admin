@@ -4,7 +4,7 @@ import { Injectable, Logger } from "@nestjs/common"
 import { PlayerProgressEvent, CompleteClubEvent, RegisteredPlayer } from "@repo/domain/types"
 
 import { EventsService } from "../../events/events.service"
-import { RegistrationService } from "../../registration/registration.service"
+import { AdminRegistrationService } from "../../registration/services/admin-registration.service"
 import { ApiClient } from "../api-client"
 import { ExportError, ExportResult } from "../dto"
 import { ProgressTracker } from "./progress-tracker"
@@ -22,7 +22,7 @@ export class RosterExportService {
 
 	constructor(
 		private readonly events: EventsService,
-		private readonly registration: RegistrationService,
+		private readonly registration: AdminRegistrationService,
 		private readonly apiClient: ApiClient,
 		private readonly progressTracker: ProgressTracker,
 		private readonly playerTransformer: RosterPlayerTransformer,

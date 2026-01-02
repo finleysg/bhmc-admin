@@ -29,7 +29,7 @@ import {
 	tournamentResult,
 } from "../database"
 import { EventsService } from "../events"
-import { RegistrationService } from "../registration"
+import { AdminRegistrationService } from "../registration"
 import {
 	addDataRows,
 	addFixedColumns,
@@ -75,7 +75,7 @@ export class ReportsService {
 	constructor(
 		private readonly courses: CoursesRepository,
 		private readonly events: EventsService,
-		private readonly registration: RegistrationService,
+		private readonly registration: AdminRegistrationService,
 		private readonly drizzle: DrizzleService,
 	) {}
 

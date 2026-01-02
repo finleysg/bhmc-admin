@@ -1,85 +1,110 @@
 import { Request } from "express"
 
-import axios from "axios"
+import {
+	CanActivate,
+	ExecutionContext,
+	ForbiddenException,
+	Injectable,
+	Logger,
+	ServiceUnavailableException,
+	UnauthorizedException,
+} from "@nestjs/common"
+import { Reflector } from "@nestjs/core"
+import { DjangoUser } from "@repo/domain/types"
 
-import { CanActivate, ExecutionContext, Injectable, Logger } from "@nestjs/common"
+import { IS_PUBLIC_KEY } from "./decorators/public.decorator"
+import { ROLES_KEY, Role } from "./decorators/roles.decorator"
+import { DjangoAuthService } from "./django-auth.service"
+import { AuthenticatedRequest } from "."
 
-/**
- * Authentication guard that validates Django auth tokens.
- *
- * Expects requests with Authorization header: "Token <token>"
- * Validates the token by calling Django's /auth/users/me/ endpoint.
- */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
 	private readonly logger = new Logger(JwtAuthGuard.name)
-	private readonly djangoApiUrl: string
 
-	constructor() {
-		this.djangoApiUrl = process.env.DJANGO_API_URL || "http://localhost:8000"
-	}
+	constructor(
+		private readonly reflector: Reflector,
+		private readonly authService: DjangoAuthService,
+	) {}
 
 	async canActivate(context: ExecutionContext): Promise<boolean> {
-		const req = context.switchToHttp().getRequest<Request>()
-
-		// Skip authentication for public endpoints
-		if (
-			req.url === "/health" ||
-			req.url === "/health/db" ||
-			req.url.startsWith("/stripe/webhook")
-		) {
+		// Check @Public() metadata - skip auth entirely
+		const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+			context.getHandler(),
+			context.getClass(),
+		])
+		if (isPublic) {
 			return true
 		}
 
+		const req = context.switchToHttp().getRequest<AuthenticatedRequest>()
+
+		// Extract token
+		const token = this.extractToken(req)
+		if (!token) {
+			throw new UnauthorizedException("Missing authorization token")
+		}
+
+		// Validate token via DjangoAuthService
+		let user: DjangoUser | null
+		try {
+			user = await this.authService.validateToken(token)
+		} catch (error) {
+			this.logger.error("Auth service error", error)
+			throw new ServiceUnavailableException("Authentication service unavailable")
+		}
+
+		if (!user) {
+			throw new UnauthorizedException("Invalid or expired token")
+		}
+
+		// Attach user to request
+		req.user = user
+
+		// Check role hierarchy
+		const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+			context.getHandler(),
+			context.getClass(),
+		])
+
+		if (!requiredRoles || requiredRoles.length === 0) {
+			// No roles required - authenticated user is sufficient
+			return true
+		}
+
+		// Check role hierarchy
+		if (requiredRoles.includes("superadmin")) {
+			if (!user.isSuperuser) {
+				throw new ForbiddenException("Superadmin access required")
+			}
+		} else if (requiredRoles.includes("admin")) {
+			if (!user.isStaff && !user.isSuperuser) {
+				throw new ForbiddenException("Admin access required")
+			}
+		} else {
+			// Unknown role - deny by default
+			this.logger.error(`Unknown role(s) required: ${requiredRoles.join(", ")}`)
+			throw new ForbiddenException("Invalid role configuration")
+		}
+
+		return true
+	}
+
+	private extractToken(req: Request): string | null {
+		// Try cookie first
+		if (req.cookies?.access_token) {
+			return req.cookies.access_token as string
+		}
+
+		// Fallback to Authorization header
 		const auth = req.headers["authorization"] || req.headers["Authorization"]
-		if (!auth || Array.isArray(auth)) return false
+		if (!auth || Array.isArray(auth)) return null
 
 		const parts = auth.split(" ")
-		if (parts.length !== 2) return false
+		if (parts.length !== 2) return null
 
 		const [scheme, token] = parts
+		if (!/^(Token|Bearer)$/i.test(scheme)) return null
 
-		// Accept both "Token" (Django style) and "Bearer" (for backwards compatibility)
-		if (!/^(Token|Bearer)$/i.test(scheme)) return false
-
-		try {
-			const response = await axios.get(`${this.djangoApiUrl}/auth/users/me/`, {
-				headers: {
-					Authorization: `Token ${token}`,
-				},
-				timeout: 5000,
-			})
-
-			// If we get a successful response, the token is valid
-			// Optionally attach user info to the request for downstream use
-			if (response.status === 200 && response.data) {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-				;(req as any).user = response.data
-				return true
-			}
-
-			return false
-		} catch (error) {
-			if (axios.isAxiosError(error)) {
-				if (error.response?.status === 401) {
-					this.logger.debug("Token validation failed: unauthorized")
-					return false
-				} else if (error.response?.status && error.response.status >= 500) {
-					this.logger.error(`Django service error: ${error.response.status}`)
-					throw new Error("Authentication service unavailable")
-				} else if (!error.response) {
-					this.logger.error(`Django service unreachable: ${error.message}`)
-					throw new Error("Authentication service unavailable")
-				} else {
-					this.logger.warn(`Token validation error: ${error.message}`)
-					return false
-				}
-			} else {
-				this.logger.error(
-					`Unexpected error validating token: ${error instanceof Error ? error.message : String(error)}`,
-				)
-				throw error
-			}
-		}
+		return token
 	}
 }

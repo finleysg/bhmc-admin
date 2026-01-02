@@ -14,6 +14,8 @@ import {
 } from "@nestjs/common"
 import { IntegrationActionName } from "@repo/domain/types"
 
+import { Admin } from "../auth"
+
 import { EventsService } from "../events/events.service"
 import { LogIntegrationInterceptor } from "./interceptors/log-integration.interceptor"
 import { EventSyncService } from "./services/event-sync.service"
@@ -27,6 +29,7 @@ import { RosterExportService } from "./services/roster-export.service"
 import { ScoresImportService } from "./services/scores-import.service"
 
 @Controller("golfgenius")
+@Admin()
 export class GolfgeniusController {
 	private readonly logger = new Logger(GolfgeniusController.name)
 

@@ -9,7 +9,9 @@ export function transformDjangoUser(response: DjangoUserResponse): DjangoUser {
 		lastName: response.last_name,
 		isActive: response.is_active,
 		isStaff: response.is_staff,
+		isSuperuser: response.is_superuser,
 		ghin: response.ghin,
 		birthDate: response.birth_date,
+		playerId: response.player_id,
 	}
 }

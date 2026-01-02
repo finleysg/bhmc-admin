@@ -4,6 +4,8 @@ import * as path from "path"
 const envFile = process.env.NODE_ENV === "development" ? ".env.development" : ".env"
 dotenv.config({ path: path.resolve(__dirname, "..", envFile) })
 
+import cookieParser from "cookie-parser"
+
 import { LogLevel } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
 
@@ -30,6 +32,7 @@ async function bootstrap() {
 	const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001
 	const webOrigin = process.env.WEB_ORIGIN || "http://localhost:3000"
 
+	app.use(cookieParser())
 	// Enable CORS for the web app origin (credentials allowed for cookie/session forwarding)
 	app.enableCors({ origin: webOrigin, credentials: true })
 

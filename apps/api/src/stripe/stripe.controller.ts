@@ -10,6 +10,8 @@ import {
 } from "@nestjs/common"
 import Stripe from "stripe"
 
+import { Public } from "../auth"
+
 import { StripeService } from "./stripe.service"
 import { StripeWebhookService } from "./stripe-webhook.service"
 
@@ -22,6 +24,7 @@ export class StripeController {
 		private readonly webhookService: StripeWebhookService,
 	) {}
 
+	@Public()
 	@Post("webhook/clover")
 	@HttpCode(HttpStatus.OK)
 	async handleWebhook(

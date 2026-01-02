@@ -1,11 +1,19 @@
 import {
 	NotificationTypeValue,
 	Payment,
+	PaymentWithDetails,
 	Player,
+	Refund,
 	Registration,
 	RegistrationFee,
 	RegistrationSlot,
+	RegistrationSlotWithPlayerAndFees,
 	RegistrationStatusValue,
+	RegistrationWithSlots,
+	CompleteRegistration,
+	CompleteRegistrationSlot,
+	CompleteRegistrationFee,
+	CompleteCourse,
 } from "@repo/domain/types"
 
 import { toHole } from "../courses/mappers"
@@ -15,11 +23,15 @@ import type {
 	FeeTypeRow,
 	HoleRow,
 	PaymentRow,
+	PaymentRowWithDetails,
 	PlayerRow,
 	RefundRow,
 	RegistrationFeeRow,
+	RegistrationFull,
 	RegistrationRow,
+	RegistrationSlotFull,
 	RegistrationSlotRow,
+	CompleteRegistrationRow,
 } from "../database"
 import { toEventFeeWithType } from "../events/mappers"
 
@@ -98,6 +110,22 @@ export function toPayment(row: PaymentRow): Payment {
 		transactionFee: parseFloat(row.transactionFee),
 		paymentDate: row.paymentDate ?? "",
 		confirmDate: row.confirmDate ?? null,
+	}
+}
+
+/**
+ * Maps RefundRow to Refund domain type
+ */
+export function toRefund(row: RefundRow): Refund {
+	return {
+		id: row.id,
+		refundCode: row.refundCode,
+		refundAmount: parseFloat(row.refundAmount),
+		notes: row.notes ?? null,
+		confirmed: Boolean(row.confirmed),
+		refundDate: row.refundDate ?? null,
+		issuerId: row.issuerId,
+		paymentId: row.paymentId,
 	}
 }
 
@@ -219,4 +247,90 @@ export type FeeWithEventFeeRow = {
 export type PaymentWithRefundsRow = {
 	payment: PaymentRow
 	refunds: RefundRow[]
+}
+
+/**
+ * Maps RegistrationSlotFull to RegistrationSlotWithPlayerAndFees domain type
+ */
+export function toRegistrationSlotWithPlayerAndFees(
+	row: RegistrationSlotFull,
+): RegistrationSlotWithPlayerAndFees {
+	return {
+		...toRegistrationSlot(row),
+		player: row.player ? toPlayer(row.player) : null,
+		fees: row.fees.map(toRegistrationFee),
+	}
+}
+
+/**
+ * Maps RegistrationFull to RegistrationWithSlots domain type
+ */
+export function toRegistrationWithSlots(row: RegistrationFull): RegistrationWithSlots {
+	return {
+		...toRegistration(row),
+		slots: row.slots.map(toRegistrationSlotWithPlayerAndFees),
+	}
+}
+
+export function toPaymentWithDetails(row: PaymentRowWithDetails): PaymentWithDetails {
+	return {
+		...toPayment(row),
+		details: row.paymentDetails.map(toRegistrationFee),
+	}
+}
+
+/**
+ * Maps CompleteRegistrationRow to CompleteRegistration domain type.
+ * Handles dummy course/hole for registrations without course details.
+ */
+export function toCompleteRegistration(row: CompleteRegistrationRow): CompleteRegistration {
+	const hasCourseDetails = row.courseId != null
+
+	const slots: CompleteRegistrationSlot[] = row.slots.map((slotRow) => {
+		const fees: CompleteRegistrationFee[] = slotRow.fees.map((feeRow) => ({
+			...toRegistrationFee(feeRow.fee),
+			eventFee: toEventFeeWithType({ eventFee: feeRow.eventFee, feeType: feeRow.feeType }),
+		}))
+
+		return {
+			id: slotRow.id,
+			registrationId: slotRow.registrationId ?? 0,
+			eventId: slotRow.eventId,
+			startingOrder: slotRow.startingOrder,
+			slot: slotRow.slot,
+			status: slotRow.status as RegistrationStatusValue,
+			holeId: slotRow.holeId ?? undefined,
+			hole: slotRow.hole ? toHole(slotRow.hole) : { id: -1, courseId: -1, holeNumber: -1, par: -1 },
+			playerId: slotRow.playerId ?? undefined,
+			player: toPlayer(slotRow.player),
+			ggId: slotRow.ggId ?? undefined,
+			fees,
+		}
+	})
+
+	const course: CompleteCourse =
+		hasCourseDetails && row.course
+			? {
+					id: row.course.id,
+					name: row.course.name,
+					numberOfHoles: row.course.numberOfHoles,
+					ggId: row.course.ggId ?? undefined,
+					holes: [],
+					tees: [],
+				}
+			: { id: -1, name: "dummy", numberOfHoles: 0, holes: [], tees: [] }
+
+	return {
+		id: row.id,
+		eventId: row.eventId,
+		notes: row.notes ?? undefined,
+		courseId: row.courseId ?? undefined,
+		course,
+		signedUpBy: row.signedUpBy ?? "",
+		userId: row.userId ?? 0,
+		expires: row.expires ?? undefined,
+		ggId: row.ggId ?? undefined,
+		createdDate: row.createdDate,
+		slots,
+	}
 }

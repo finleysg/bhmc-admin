@@ -51,8 +51,8 @@ pnpm format:check           # Prettier check
 - **Barrel Exports**: Each module exports public API via `index.ts`
 - **Domain-Driven Design**: Service/controller/DTO layers per module
 - **Type-Safe Testing**: Use actual domain types, not `any`, in test fixtures
-- **API Repositories**: Only accept and return internal models
-- **API Services**: Only accept and return domain models
+- **API Repositories**: Only accept and return internal models or primitives
+- **API Services**: Only accept and return domain models or primitives
 
 ## Planning
 

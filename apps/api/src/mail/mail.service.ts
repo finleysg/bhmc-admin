@@ -10,9 +10,9 @@ import {
 } from "@repo/domain/functions"
 import {
 	ClubEvent,
+	CompletePayment,
 	DjangoUser,
 	Player,
-	PaymentWithDetails,
 	CompleteRegistration,
 } from "@repo/domain/types"
 import * as nodemailer from "nodemailer"
@@ -102,7 +102,7 @@ export class MailService {
 		user: DjangoUser,
 		event: ClubEvent,
 		registration: CompleteRegistration,
-		payment: PaymentWithDetails,
+		payment: CompletePayment,
 	): Promise<void> {
 		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
 		const eventUrl = `${websiteUrl}${getEventUrl(event)}`

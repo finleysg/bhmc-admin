@@ -5,11 +5,16 @@ import { DatabaseModule } from "../database/database.module"
 import { EventsModule } from "../events/events.module"
 import { MailModule } from "../mail/mail.module"
 import { StripeModule } from "../stripe/stripe.module"
-import { RegistrationRepository, RegistrationService } from "./"
-import { RegistrationCleanupCron } from "./cron/registration-cleanup.cron"
-import { RegistrationController } from "./registration.controller"
-import { RegistrationFlowService } from "./registration-flow.service"
-import { UserRegistrationController } from "./user-registration.controller"
+import {
+	AdminRegistrationController,
+	UserRegistrationController,
+	RegistrationCleanupCron,
+	PaymentsRepository,
+	RegistrationRepository,
+	UserPaymentsService,
+	UserRegistrationService,
+	AdminRegistrationService,
+} from "./"
 
 @Module({
 	imports: [
@@ -19,13 +24,21 @@ import { UserRegistrationController } from "./user-registration.controller"
 		MailModule,
 		forwardRef(() => StripeModule),
 	],
-	controllers: [RegistrationController, UserRegistrationController],
+	controllers: [AdminRegistrationController, UserRegistrationController],
 	providers: [
+		AdminRegistrationService,
+		PaymentsRepository,
 		RegistrationCleanupCron,
-		RegistrationFlowService,
 		RegistrationRepository,
-		RegistrationService,
+		UserPaymentsService,
+		UserRegistrationService,
 	],
-	exports: [RegistrationFlowService, RegistrationRepository, RegistrationService],
+	exports: [
+		AdminRegistrationService,
+		UserPaymentsService,
+		UserRegistrationService,
+		PaymentsRepository,
+		RegistrationRepository,
+	],
 })
 export class RegistrationModule {}

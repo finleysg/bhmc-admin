@@ -66,6 +66,14 @@ export class EventsService {
 		return this.repository.existsById(eventId)
 	}
 
+	async isCanChooseHolesEvent(eventId: number): Promise<boolean> {
+		const event = await this.repository.findEventById(eventId)
+		if (!event) {
+			throw new BadRequestException(`Event with id ${eventId} does not exist.`)
+		}
+		return event.canChoose === 1
+	}
+
 	async syncEventToGolfGenius(id: number, ggId: string, portalUrl: string) {
 		await this.repository.updateEvent(id, { ggId, portalUrl })
 	}

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { Player } from "@repo/domain/types"
 
-import { RegistrationRepository, RegistrationService } from "../../registration"
+import { RegistrationRepository, AdminRegistrationService } from "../../registration"
 import { ApiClient } from "../api-client"
 import { MemberSyncResult } from "../dto"
 import { ApiError, AuthError, RateLimitError } from "../errors"
@@ -12,7 +12,7 @@ export class MemberSyncService {
 	private readonly logger = new Logger(MemberSyncService.name)
 
 	constructor(
-		private readonly registration: RegistrationService,
+		private readonly registration: AdminRegistrationService,
 		private readonly repository: RegistrationRepository,
 		private readonly apiClient: ApiClient,
 	) {}

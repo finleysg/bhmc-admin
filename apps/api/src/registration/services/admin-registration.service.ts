@@ -15,6 +15,8 @@ import {
 	Player,
 	PlayerMap,
 	PlayerRecord,
+	Payment,
+	Refund,
 	RefundRequest,
 	RegistrationSlot,
 	RegistrationStatusChoices,
@@ -23,9 +25,11 @@ import {
 	RegisteredPlayer,
 	CompleteRegistration,
 	CompleteRegistrationFee,
+	CompletePayment,
+	CompleteRegistrationAndPayment,
 } from "@repo/domain/types"
 
-import { toCourse, toHole } from "../courses/mappers"
+import { toCourse, toHole } from "../../courses/mappers"
 import {
 	authUser,
 	course,
@@ -40,19 +44,23 @@ import {
 	registrationFee,
 	registrationSlot,
 	toDbString,
-} from "../database"
-import { EventsService } from "../events"
-import { MailService } from "../mail/mail.service"
-import { StripeService } from "../stripe/stripe.service"
+} from "../../database"
+import { EventsService } from "../../events"
+import { MailService } from "../../mail/mail.service"
+import { StripeService } from "../../stripe/stripe.service"
 import {
 	attachFeesToSlots,
 	hydrateSlotsWithPlayerAndHole,
+	toCompleteRegistration,
+	toPayment,
 	toPlayer,
+	toRefund,
 	toRegistration,
 	toRegistrationFeeWithEventFee,
 	toRegistrationSlot,
-} from "./mappers"
-import { RegistrationRepository } from "./registration.repository"
+} from "../mappers"
+import { RegistrationRepository } from "../repositories/registration.repository"
+import { PaymentsRepository } from "../repositories/payments.repository"
 
 type ActualFeeAmount = {
 	eventFeeId: number
@@ -63,12 +71,13 @@ type AdminRegistrationSlotWithAmount = Omit<AdminRegistrationSlot, "feeIds"> & {
 }
 
 @Injectable()
-export class RegistrationService {
-	private readonly logger = new Logger(RegistrationService.name)
+export class AdminRegistrationService {
+	private readonly logger = new Logger(AdminRegistrationService.name)
 
 	constructor(
 		private drizzle: DrizzleService,
 		private repository: RegistrationRepository,
+		private readonly paymentsRepository: PaymentsRepository,
 		private readonly events: EventsService,
 		private readonly mailService: MailService,
 		private readonly stripeService: StripeService,
@@ -253,11 +262,13 @@ export class RegistrationService {
 	}
 
 	async updatePlayerGgId(playerId: number, ggId: string): Promise<Player> {
-		return this.repository.updatePlayer(playerId, { ggId })
+		const row = await this.repository.updatePlayer(playerId, { ggId })
+		return toPlayer(row)
 	}
 
 	async updateRegistrationSlotGgId(slotId: number, ggId: string): Promise<RegistrationSlot> {
-		return this.repository.updateRegistrationSlot(slotId, { ggId })
+		const row = await this.repository.updateRegistrationSlot(slotId, { ggId })
+		return toRegistrationSlot(row)
 	}
 
 	async getPlayerMapForEvent(eventId: number): Promise<PlayerMap> {
@@ -437,7 +448,7 @@ export class RegistrationService {
 
 		const playerIds = Array.from(new Set(slots.map((slot) => slot.playerId)))
 		const players = await this.repository.findPlayersByIds(playerIds)
-		const playerLookup = new Map<number, Player>(players.map((p) => [p.id, p]))
+		const playerLookup = new Map<number, Player>(players.map((p) => [p.id, toPlayer(p)]))
 
 		for (const slot of slots) {
 			const convertedSlot: AdminRegistrationSlotWithAmount = {
@@ -600,12 +611,14 @@ export class RegistrationService {
 		}
 
 		for (const request of requests) {
-			const paymentRecord = await this.repository.findPaymentWithDetailsById(request.paymentId)
-			if (!paymentRecord || !paymentRecord.payment.paymentCode || !paymentRecord.details.length) {
+			const paymentRecord = await this.paymentsRepository.findPaymentWithDetailsById(
+				request.paymentId,
+			)
+			if (!paymentRecord || !paymentRecord.paymentCode || !paymentRecord.paymentDetails.length) {
 				throw new NotFoundException(`Payment ${request.paymentId} is not valid for refund`)
 			}
 
-			const refundAmount = paymentRecord.details.reduce((total: number, fee) => {
+			const refundAmount = paymentRecord.paymentDetails.reduce((total: number, fee) => {
 				const amount = fee.isPaid ? Math.round(parseFloat(fee.amount) * 100) : 0
 				return total + amount
 			}, 0)
@@ -649,7 +662,7 @@ export class RegistrationService {
 
 			try {
 				const stripeRefundId = await this.stripeService.createRefund(
-					paymentRecord.payment.paymentCode,
+					paymentRecord.paymentCode,
 					refundInDollars,
 				)
 
@@ -663,5 +676,145 @@ export class RegistrationService {
 				throw stripeError
 			}
 		}
+	}
+
+	/**
+	 * Clean up expired pending registrations.
+	 * Called by cron job.
+	 * TODO: Should we clean up payments and fees as well?
+	 */
+	async cleanUpExpired(): Promise<number> {
+		const now = new Date()
+		const expired = await this.repository.findExpiredPendingRegistrations(now)
+
+		if (expired.length === 0) return 0
+
+		this.logger.log(`Cleaning up ${expired.length} expired registrations`)
+
+		for (const reg of expired) {
+			const canChoose = await this.events.isCanChooseHolesEvent(reg.eventId)
+			const slots = await this.repository.findRegistrationSlotsByRegistrationId(reg.id)
+			const slotIds = slots.map((s) => s.id)
+
+			if (canChoose) {
+				// For choosable events, reset slots to AVAILABLE
+				await this.repository.updateRegistrationSlots(slotIds, {
+					status: RegistrationStatusChoices.AVAILABLE,
+					registrationId: null,
+					playerId: null,
+				})
+			} else {
+				// For non-choosable events, delete the slots
+				await this.repository.deleteRegistrationSlotsByRegistration(reg.id)
+			}
+
+			// Delete the registration
+			await this.repository.deleteRegistration(reg.id)
+		}
+
+		return expired.length
+	}
+
+	/**
+	 * Transition slots from AWAITING_PAYMENT to RESERVED.
+	 * Called by webhook when payment succeeds.
+	 */
+	async paymentConfirmed(registrationId: number, paymentId: number): Promise<void> {
+		const slots = await this.repository.findSlotsWithStatusByRegistration(registrationId, [
+			RegistrationStatusChoices.AWAITING_PAYMENT,
+		])
+
+		if (slots.length > 0) {
+			const slotIds = slots.map((s) => s.id)
+			await this.repository.updateRegistrationSlots(slotIds, {
+				status: RegistrationStatusChoices.RESERVED,
+			})
+		}
+
+		// Mark payment as confirmed
+		await this.paymentsRepository.updatePayment(paymentId, {
+			confirmed: 1,
+			confirmDate: toDbString(new Date()),
+		})
+
+		// Mark registration fees as paid
+		const feeRows = await this.paymentsRepository.findPaymentDetailsByPayment(paymentId)
+		const feeIds = feeRows.map((f) => f.id)
+		await this.paymentsRepository.updatePaymentDetailStatus(feeIds, true)
+	}
+
+	/**
+	 * Retrieve a fully validated CompleteRegistrationAndPayment.
+	 * Throws NotFoundException if registration or payment not found.
+	 */
+	async getCompleteRegistrationAndPayment(
+		registrationId: number,
+		paymentId: number,
+	): Promise<CompleteRegistrationAndPayment> {
+		const regRow = await this.repository.findCompleteRegistrationById(registrationId)
+
+		if (!regRow) {
+			throw new NotFoundException(`Registration ${registrationId} not found`)
+		}
+
+		const completeRegistration = toCompleteRegistration(regRow)
+
+		const paymentRow = await this.paymentsRepository.findPaymentById(paymentId)
+
+		if (!paymentRow) {
+			throw new NotFoundException(`Payment ${paymentId} not found`)
+		}
+
+		const allFees = completeRegistration.slots.flatMap((slot) => slot.fees)
+		const completePayment: CompletePayment = {
+			...toPayment(paymentRow),
+			details: allFees,
+		}
+
+		return {
+			registration: completeRegistration,
+			payment: completePayment,
+		}
+	}
+
+	async findPaymentByPaymentCode(paymentCode: string): Promise<Payment | null> {
+		const row = await this.paymentsRepository.findByPaymentCode(paymentCode)
+		return row ? toPayment(row) : null
+	}
+
+	async findRefundByRefundCode(refundCode: string): Promise<Refund | null> {
+		const row = await this.paymentsRepository.findRefundByRefundCode(refundCode)
+		return row ? toRefund(row) : null
+	}
+
+	async createRefund(data: {
+		refundCode: string
+		refundAmount: number
+		notes: string
+		issuerId: number
+		paymentId: number
+	}): Promise<number> {
+		return this.paymentsRepository.createRefund({
+			refundCode: data.refundCode,
+			refundAmount: data.refundAmount.toFixed(2),
+			notes: data.notes,
+			confirmed: 0,
+			refundDate: toDbString(new Date()),
+			issuerId: data.issuerId,
+			paymentId: data.paymentId,
+		})
+	}
+
+	async confirmRefund(refundCode: string): Promise<void> {
+		const row = await this.paymentsRepository.findRefundByRefundCode(refundCode)
+		if (!row) {
+			this.logger.warn(`Refund ${refundCode} not found for confirmation`)
+			return
+		}
+		if (row.confirmed) {
+			this.logger.log(`Refund ${refundCode} already confirmed`)
+			return
+		}
+		await this.paymentsRepository.confirmRefund(row.id)
 	}
 }

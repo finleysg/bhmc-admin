@@ -1,17 +1,17 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { Cron, CronExpression } from "@nestjs/schedule"
 
-import { RegistrationFlowService } from "../registration-flow.service"
+import { AdminRegistrationService } from "../services/admin-registration.service"
 
 @Injectable()
 export class RegistrationCleanupCron {
 	private readonly logger = new Logger(RegistrationCleanupCron.name)
 
-	constructor(private readonly flowService: RegistrationFlowService) {}
+	constructor(private readonly service: AdminRegistrationService) {}
 
-	@Cron(CronExpression.EVERY_MINUTE)
+	@Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
 	async handleCleanup(): Promise<void> {
-		const count = await this.flowService.cleanUpExpired()
+		const count = await this.service.cleanUpExpired()
 		if (count > 0) {
 			this.logger.log(`Cleaned up ${count} expired registrations`)
 		}

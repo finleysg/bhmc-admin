@@ -3,6 +3,7 @@
  * Use these types instead of internal models for type-safe DB access.
  */
 import {
+	authUser,
 	champion,
 	course,
 	event,
@@ -63,6 +64,9 @@ export type LowScoreRow = typeof lowScore.$inferSelect
 // Golf Genius
 export type IntegrationLogRow = typeof integrationLog.$inferSelect
 
+// Auth
+export type AuthUserRow = typeof authUser.$inferSelect
+
 // =============================================================================
 // Insert Types (from Drizzle $inferInsert - ID is optional)
 // =============================================================================
@@ -99,6 +103,9 @@ export type LowScoreInsert = typeof lowScore.$inferInsert
 
 // Golf Genius
 export type IntegrationLogInsert = typeof integrationLog.$inferInsert
+
+// Auth
+export type AuthUserInsert = typeof authUser.$inferInsert
 
 // =============================================================================
 // Composition Utilities
@@ -174,9 +181,11 @@ export type RegistrationSlotWithFees = WithCompositions<
 	{ fees: RegistrationFeeRow[] }
 >
 
+export type RegistrationSlotWithHole = WithCompositions<RegistrationSlotRow, { hole: HoleRow }>
+
 export type RegistrationSlotFull = WithCompositions<
 	RegistrationSlotRow,
-	{ player: PlayerRow; fees: RegistrationFeeRow[]; hole: HoleRow | null }
+	{ player: PlayerRow; fees: RegistrationFeeRow[] }
 >
 
 export type RegistrationFeeWithEventFee = WithCompositions<
@@ -184,7 +193,32 @@ export type RegistrationFeeWithEventFee = WithCompositions<
 	{ eventFee: EventFeeRow }
 >
 
-export type PaymentWithDetails = WithCompositions<
+export type RegistrationFull = WithCompositions<RegistrationRow, { slots: RegistrationSlotFull[] }>
+
+export type CompleteRegistrationFeeRow = {
+	fee: RegistrationFeeRow
+	eventFee: EventFeeRow
+	feeType: FeeTypeRow
+}
+
+export type CompleteRegistrationSlotRow = WithCompositions<
+	RegistrationSlotRow,
+	{
+		player: PlayerRow
+		hole: HoleRow | null
+		fees: CompleteRegistrationFeeRow[]
+	}
+>
+
+export type CompleteRegistrationRow = WithCompositions<
+	RegistrationRow,
+	{
+		course: CourseRow | null
+		slots: CompleteRegistrationSlotRow[]
+	}
+>
+
+export type PaymentRowWithDetails = WithCompositions<
 	PaymentRow,
 	{ paymentDetails: RegistrationFeeRow[] }
 >
