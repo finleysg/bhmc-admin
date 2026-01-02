@@ -97,7 +97,7 @@ export class UserRegistrationService {
 		registrationId: number,
 		playerId?: number,
 	): Promise<RegistrationWithSlots> {
-		const row = await this.repository.findCompleteRegistrationById(registrationId)
+		const row = await this.repository.findRegistrationFullById(registrationId)
 		if (!row) {
 			throw new NotFoundException(`Registration ${registrationId} not found`)
 		}

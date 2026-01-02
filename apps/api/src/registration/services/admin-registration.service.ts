@@ -15,6 +15,8 @@ import {
 	Player,
 	PlayerMap,
 	PlayerRecord,
+	Payment,
+	Refund,
 	RefundRequest,
 	RegistrationSlot,
 	RegistrationStatusChoices,
@@ -23,6 +25,8 @@ import {
 	RegisteredPlayer,
 	CompleteRegistration,
 	CompleteRegistrationFee,
+	CompletePayment,
+	CompleteRegistrationAndPayment,
 } from "@repo/domain/types"
 
 import { toCourse, toHole } from "../../courses/mappers"
@@ -47,12 +51,16 @@ import { StripeService } from "../../stripe/stripe.service"
 import {
 	attachFeesToSlots,
 	hydrateSlotsWithPlayerAndHole,
+	toCompleteRegistration,
+	toPayment,
 	toPlayer,
+	toRefund,
 	toRegistration,
 	toRegistrationFeeWithEventFee,
 	toRegistrationSlot,
 } from "../mappers"
 import { RegistrationRepository } from "../repositories/registration.repository"
+import { PaymentsRepository } from "../repositories/payments.repository"
 
 type ActualFeeAmount = {
 	eventFeeId: number
@@ -69,6 +77,7 @@ export class AdminRegistrationService {
 	constructor(
 		private drizzle: DrizzleService,
 		private repository: RegistrationRepository,
+		private readonly paymentsRepository: PaymentsRepository,
 		private readonly events: EventsService,
 		private readonly mailService: MailService,
 		private readonly stripeService: StripeService,
@@ -602,12 +611,14 @@ export class AdminRegistrationService {
 		}
 
 		for (const request of requests) {
-			const paymentRecord = await this.repository.findPaymentWithDetailsById(request.paymentId)
-			if (!paymentRecord || !paymentRecord.payment.paymentCode || !paymentRecord.details.length) {
+			const paymentRecord = await this.paymentsRepository.findPaymentWithDetailsById(
+				request.paymentId,
+			)
+			if (!paymentRecord || !paymentRecord.paymentCode || !paymentRecord.paymentDetails.length) {
 				throw new NotFoundException(`Payment ${request.paymentId} is not valid for refund`)
 			}
 
-			const refundAmount = paymentRecord.details.reduce((total: number, fee) => {
+			const refundAmount = paymentRecord.paymentDetails.reduce((total: number, fee) => {
 				const amount = fee.isPaid ? Math.round(parseFloat(fee.amount) * 100) : 0
 				return total + amount
 			}, 0)
@@ -651,7 +662,7 @@ export class AdminRegistrationService {
 
 			try {
 				const stripeRefundId = await this.stripeService.createRefund(
-					paymentRecord.payment.paymentCode,
+					paymentRecord.paymentCode,
 					refundInDollars,
 				)
 
@@ -702,5 +713,108 @@ export class AdminRegistrationService {
 		}
 
 		return expired.length
+	}
+
+	/**
+	 * Transition slots from AWAITING_PAYMENT to RESERVED.
+	 * Called by webhook when payment succeeds.
+	 */
+	async paymentConfirmed(registrationId: number, paymentId: number): Promise<void> {
+		const slots = await this.repository.findSlotsWithStatusByRegistration(registrationId, [
+			RegistrationStatusChoices.AWAITING_PAYMENT,
+		])
+
+		if (slots.length > 0) {
+			const slotIds = slots.map((s) => s.id)
+			await this.repository.updateRegistrationSlots(slotIds, {
+				status: RegistrationStatusChoices.RESERVED,
+			})
+		}
+
+		// Mark payment as confirmed
+		await this.paymentsRepository.updatePayment(paymentId, {
+			confirmed: 1,
+			confirmDate: toDbString(new Date()),
+		})
+
+		// Mark registration fees as paid
+		const feeRows = await this.paymentsRepository.findPaymentDetailsByPayment(paymentId)
+		const feeIds = feeRows.map((f) => f.id)
+		await this.paymentsRepository.updatePaymentDetailStatus(feeIds, true)
+	}
+
+	/**
+	 * Retrieve a fully validated CompleteRegistrationAndPayment.
+	 * Throws NotFoundException if registration or payment not found.
+	 */
+	async getCompleteRegistrationAndPayment(
+		registrationId: number,
+		paymentId: number,
+	): Promise<CompleteRegistrationAndPayment> {
+		const regRow = await this.repository.findCompleteRegistrationById(registrationId)
+
+		if (!regRow) {
+			throw new NotFoundException(`Registration ${registrationId} not found`)
+		}
+
+		const completeRegistration = toCompleteRegistration(regRow)
+
+		const paymentRow = await this.paymentsRepository.findPaymentById(paymentId)
+
+		if (!paymentRow) {
+			throw new NotFoundException(`Payment ${paymentId} not found`)
+		}
+
+		const allFees = completeRegistration.slots.flatMap((slot) => slot.fees)
+		const completePayment: CompletePayment = {
+			...toPayment(paymentRow),
+			details: allFees,
+		}
+
+		return {
+			registration: completeRegistration,
+			payment: completePayment,
+		}
+	}
+
+	async findPaymentByPaymentCode(paymentCode: string): Promise<Payment | null> {
+		const row = await this.paymentsRepository.findByPaymentCode(paymentCode)
+		return row ? toPayment(row) : null
+	}
+
+	async findRefundByRefundCode(refundCode: string): Promise<Refund | null> {
+		const row = await this.paymentsRepository.findRefundByRefundCode(refundCode)
+		return row ? toRefund(row) : null
+	}
+
+	async createRefund(data: {
+		refundCode: string
+		refundAmount: number
+		notes: string
+		issuerId: number
+		paymentId: number
+	}): Promise<number> {
+		return this.paymentsRepository.createRefund({
+			refundCode: data.refundCode,
+			refundAmount: data.refundAmount.toFixed(2),
+			notes: data.notes,
+			confirmed: 0,
+			refundDate: toDbString(new Date()),
+			issuerId: data.issuerId,
+			paymentId: data.paymentId,
+		})
+	}
+
+	async confirmRefund(refundCode: string): Promise<void> {
+		const row = await this.paymentsRepository.findRefundByRefundCode(refundCode)
+		if (!row) {
+			this.logger.warn(`Refund ${refundCode} not found for confirmation`)
+			return
+		}
+		if (row.confirmed) {
+			this.logger.log(`Refund ${refundCode} already confirmed`)
+			return
+		}
+		await this.paymentsRepository.confirmRefund(row.id)
 	}
 }

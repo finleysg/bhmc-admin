@@ -5,11 +5,13 @@ import { Injectable } from "@nestjs/common"
 import {
 	DrizzleService,
 	payment,
+	PaymentRowWithDetails,
 	refund,
 	registrationFee,
 	type PaymentInsert,
 	type PaymentRow,
 	type RefundInsert,
+	type RefundRow,
 	type RegistrationFeeInsert,
 	type RegistrationFeeRow,
 } from "../../database"
@@ -18,9 +20,7 @@ import {
 export class PaymentsRepository {
 	constructor(private drizzle: DrizzleService) {}
 
-	async findPaymentWithDetailsById(
-		paymentId: number,
-	): Promise<{ payment: PaymentRow; details: RegistrationFeeRow[] } | null> {
+	async findPaymentWithDetailsById(paymentId: number): Promise<PaymentRowWithDetails | null> {
 		const results = await this.drizzle.db
 			.select({
 				payment,
@@ -33,16 +33,12 @@ export class PaymentsRepository {
 		if (!results[0]?.payment) return null
 
 		return {
-			payment: results[0].payment,
-			details: results
-				.filter(
-					(r): r is { payment: PaymentRow; details: RegistrationFeeRow } => r.details !== null,
-				)
-				.map((r) => r.details),
+			...results[0].payment,
+			paymentDetails: results.filter((r) => r.details !== null).map((r) => r.details!) ?? [],
 		}
 	}
 
-	async findRegistrationFeesByPayment(paymentId: number): Promise<RegistrationFeeRow[]> {
+	async findPaymentDetailsByPayment(paymentId: number): Promise<RegistrationFeeRow[]> {
 		return this.drizzle.db
 			.select()
 			.from(registrationFee)
@@ -58,7 +54,7 @@ export class PaymentsRepository {
 		await this.drizzle.db.update(refund).set({ refundCode }).where(eq(refund.id, refundId))
 	}
 
-	async updateRegistrationFeeStatus(feeIds: number[], isPaid: boolean): Promise<void> {
+	async updatePaymentDetailStatus(feeIds: number[], isPaid: boolean): Promise<void> {
 		if (feeIds.length === 0) return
 		await this.drizzle.db
 			.update(registrationFee)
@@ -96,12 +92,34 @@ export class PaymentsRepository {
 			.where(eq(payment.id, paymentId))
 	}
 
-	async createRegistrationFee(data: RegistrationFeeInsert): Promise<number> {
+	async createPaymentDetail(data: RegistrationFeeInsert): Promise<number> {
 		const [result] = await this.drizzle.db.insert(registrationFee).values(data)
 		return Number(result.insertId)
 	}
 
-	async deleteRegistrationFeesByPayment(paymentId: number): Promise<void> {
+	async deletePaymentDetailsByPayment(paymentId: number): Promise<void> {
 		await this.drizzle.db.delete(registrationFee).where(eq(registrationFee.paymentId, paymentId))
+	}
+
+	async findByPaymentCode(paymentCode: string): Promise<PaymentRow | null> {
+		const [p] = await this.drizzle.db
+			.select()
+			.from(payment)
+			.where(eq(payment.paymentCode, paymentCode))
+			.limit(1)
+		return p ?? null
+	}
+
+	async findRefundByRefundCode(refundCode: string): Promise<RefundRow | null> {
+		const [r] = await this.drizzle.db
+			.select()
+			.from(refund)
+			.where(eq(refund.refundCode, refundCode))
+			.limit(1)
+		return r ?? null
+	}
+
+	async confirmRefund(refundId: number): Promise<void> {
+		await this.drizzle.db.update(refund).set({ confirmed: 1 }).where(eq(refund.id, refundId))
 	}
 }

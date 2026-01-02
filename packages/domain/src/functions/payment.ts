@@ -1,4 +1,4 @@
-import { AmountDue, EventFee, FeeRestrictionChoices, Player, PaymentWithDetails } from "../types"
+import { AmountDue, EventFee, FeeRestrictionChoices, Player, CompletePayment } from "../types"
 import { getAge } from "./player"
 
 const SENIOR_AGE = 62
@@ -92,9 +92,9 @@ export function getTotalAmountForPlayer(
 	return calculateAmountDue(feeAmounts)
 }
 
-export function getRequiredFees(payment: PaymentWithDetails): number {
+export function getRequiredFees(payment: CompletePayment): number {
 	let amount = 0
-	payment.paymentDetails.forEach((detail) => {
+	payment.details.forEach((detail) => {
 		if (detail.eventFee.isRequired) {
 			amount += detail.amount
 		}
@@ -102,9 +102,9 @@ export function getRequiredFees(payment: PaymentWithDetails): number {
 	return amount
 }
 
-export function getOptionalFees(payment: PaymentWithDetails): number {
+export function getOptionalFees(payment: CompletePayment): number {
 	let amount = 0
-	payment.paymentDetails.forEach((detail) => {
+	payment.details.forEach((detail) => {
 		if (!detail.eventFee.isRequired) {
 			amount += detail.amount
 		}

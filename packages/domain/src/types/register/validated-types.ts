@@ -59,10 +59,19 @@ export type RegisteredPlayer = {
 }
 
 export type PaymentWithDetails = Payment & {
-	paymentDetails: CompleteRegistrationFee[]
+	details: RegistrationFee[]
+}
+
+export type CompletePayment = Payment & {
+	details: CompleteRegistrationFee[]
 }
 
 export interface RegistrationAndPayment {
 	registration: RegistrationWithSlots
 	payment: PaymentWithDetails
+}
+
+export interface CompleteRegistrationAndPayment {
+	registration: CompleteRegistration
+	payment: CompletePayment
 }

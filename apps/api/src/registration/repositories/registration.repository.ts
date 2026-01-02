@@ -1,4 +1,4 @@
-import { and, eq, inArray, or, like, lt, sql, count } from "drizzle-orm"
+import { and, eq, inArray, or, like, lt, sql } from "drizzle-orm"
 import type { MySql2Database } from "drizzle-orm/mysql2"
 
 import { Injectable } from "@nestjs/common"
@@ -17,8 +17,6 @@ import {
 	registrationSlot,
 	type CourseRow,
 	type HoleRow,
-	type PaymentInsert,
-	type PaymentRow,
 	type PlayerRow,
 	type RefundInsert,
 	type RegistrationFeeInsert,
@@ -33,9 +31,11 @@ import {
 	RegistrationSlotFull,
 	RegistrationWithSlots,
 	RegistrationSlotWithHole,
+	CompleteRegistrationRow,
+	CompleteRegistrationSlotRow,
 } from "../../database"
 import { type FeeWithEventFeeRow, type SlotWithPlayerAndHoleRow } from "../mappers"
-import { RegistrationStatusChoices, RegistrationStatusValue } from "@repo/domain/types"
+import { RegistrationStatusValue } from "@repo/domain/types"
 
 @Injectable()
 export class RegistrationRepository {
@@ -127,18 +127,6 @@ export class RegistrationRepository {
 		}
 	}
 
-	async findRegistrationSlotRowById(slotId: number): Promise<RegistrationSlotRow> {
-		const [slot] = await this.drizzle.db
-			.select()
-			.from(registrationSlot)
-			.where(eq(registrationSlot.id, slotId))
-			.limit(1)
-		if (!slot) {
-			throw new Error(`No registration slot found with id ${slotId}`)
-		}
-		return slot
-	}
-
 	async findRegistrationSlotByGgId(ggId: string): Promise<RegistrationSlotRow | null> {
 		const [slot] = await this.drizzle.db
 			.select()
@@ -157,7 +145,7 @@ export class RegistrationRepository {
 		return reg ?? null
 	}
 
-	async findCompleteRegistrationById(registrationId: number): Promise<RegistrationFull | null> {
+	async findRegistrationFullById(registrationId: number): Promise<RegistrationFull | null> {
 		const results = await this.drizzle.db
 			.select({
 				registration,
@@ -194,6 +182,64 @@ export class RegistrationRepository {
 
 		return {
 			...reg,
+			slots: Array.from(slotsMap.values()),
+		}
+	}
+
+	async findCompleteRegistrationById(
+		registrationId: number,
+	): Promise<CompleteRegistrationRow | null> {
+		const results = await this.drizzle.db
+			.select({
+				registration,
+				course,
+				slot: registrationSlot,
+				player,
+				hole,
+				fee: registrationFee,
+				eventFee,
+				feeType,
+			})
+			.from(registration)
+			.leftJoin(course, eq(registration.courseId, course.id))
+			.leftJoin(registrationSlot, eq(registrationSlot.registrationId, registration.id))
+			.leftJoin(player, eq(registrationSlot.playerId, player.id))
+			.leftJoin(hole, eq(registrationSlot.holeId, hole.id))
+			.leftJoin(registrationFee, eq(registrationFee.registrationSlotId, registrationSlot.id))
+			.leftJoin(eventFee, eq(registrationFee.eventFeeId, eventFee.id))
+			.leftJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
+			.where(eq(registration.id, registrationId))
+
+		if (results.length === 0) return null
+
+		const reg = results[0].registration
+		const courseRow = results[0].course
+		const slotsMap = new Map<number, CompleteRegistrationSlotRow>()
+
+		for (const row of results) {
+			if (!row.slot) continue
+
+			if (!slotsMap.has(row.slot.id)) {
+				slotsMap.set(row.slot.id, {
+					...row.slot,
+					player: row.player!,
+					hole: row.hole,
+					fees: [],
+				})
+			}
+
+			if (row.fee && row.eventFee && row.feeType) {
+				slotsMap.get(row.slot.id)!.fees.push({
+					fee: row.fee,
+					eventFee: row.eventFee,
+					feeType: row.feeType,
+				})
+			}
+		}
+
+		return {
+			...reg,
+			course: courseRow,
 			slots: Array.from(slotsMap.values()),
 		}
 	}
@@ -302,37 +348,6 @@ export class RegistrationRepository {
 			)
 	}
 
-	async findPaymentWithDetailsById(
-		paymentId: number,
-	): Promise<{ payment: PaymentRow; details: RegistrationFeeRow[] } | null> {
-		const results = await this.drizzle.db
-			.select({
-				payment,
-				details: registrationFee,
-			})
-			.from(payment)
-			.leftJoin(registrationFee, eq(payment.id, registrationFee.paymentId))
-			.where(eq(payment.id, paymentId))
-
-		if (!results[0]?.payment) return null
-
-		return {
-			payment: results[0].payment,
-			details: results
-				.filter(
-					(r): r is { payment: PaymentRow; details: RegistrationFeeRow } => r.details !== null,
-				)
-				.map((r) => r.details),
-		}
-	}
-
-	async findRegistrationFeesByPayment(paymentId: number): Promise<RegistrationFeeRow[]> {
-		return this.drizzle.db
-			.select()
-			.from(registrationFee)
-			.where(eq(registrationFee.paymentId, paymentId))
-	}
-
 	async findRegistrationFeesByRegistrationId(
 		registrationId: number,
 		confirmedOnly?: boolean,
@@ -359,18 +374,6 @@ export class RegistrationRepository {
 	async updateRefundCode(refundId: number, refundCode: string): Promise<void> {
 		await this.drizzle.db.update(refund).set({ refundCode }).where(eq(refund.id, refundId))
 	}
-
-	async updateRegistrationFeeStatus(feeIds: number[], isPaid: boolean): Promise<void> {
-		if (feeIds.length === 0) return
-		await this.drizzle.db
-			.update(registrationFee)
-			.set({ isPaid: isPaid ? 1 : 0 })
-			.where(inArray(registrationFee.id, feeIds))
-	}
-
-	// =============================================================================
-	// Registration flow queries
-	// =============================================================================
 
 	async findRegistrationByUserAndEvent(
 		userId: number,
@@ -416,24 +419,6 @@ export class RegistrationRepository {
 		return results
 	}
 
-	async countReservedSlotsForEvent(eventId: number): Promise<number> {
-		const [result] = await this.drizzle.db
-			.select({ count: count() })
-			.from(registrationSlot)
-			.where(
-				and(
-					eq(registrationSlot.eventId, eventId),
-					inArray(registrationSlot.status, [
-						RegistrationStatusChoices.PENDING,
-						RegistrationStatusChoices.AWAITING_PAYMENT,
-						RegistrationStatusChoices.RESERVED,
-					]),
-				),
-			)
-
-		return result?.count ?? 0
-	}
-
 	async findExpiredPendingRegistrations(now: Date): Promise<RegistrationRow[]> {
 		const nowStr = toDbString(now)
 		const results = await this.drizzle.db
@@ -460,10 +445,6 @@ export class RegistrationRepository {
 		await this.drizzle.db.delete(registration).where(eq(registration.id, registrationId))
 	}
 
-	// =============================================================================
-	// Player flow queries
-	// =============================================================================
-
 	async findPlayerByEmail(email: string): Promise<PlayerRow | null> {
 		const [p] = await this.drizzle.db.select().from(player).where(eq(player.email, email)).limit(1)
 
@@ -480,40 +461,6 @@ export class RegistrationRepository {
 		return p ?? null
 	}
 
-	// =============================================================================
-	// Payment flow queries
-	// =============================================================================
-
-	async findPaymentById(paymentId: number): Promise<PaymentRow | null> {
-		const [p] = await this.drizzle.db
-			.select()
-			.from(payment)
-			.where(eq(payment.id, paymentId))
-			.limit(1)
-
-		return p ?? null
-	}
-
-	async createPayment(data: PaymentInsert): Promise<number> {
-		const [result] = await this.drizzle.db.insert(payment).values(data)
-		return Number(result.insertId)
-	}
-
-	async updatePayment(paymentId: number, data: Partial<PaymentInsert>): Promise<void> {
-		await this.drizzle.db.update(payment).set(data).where(eq(payment.id, paymentId))
-	}
-
-	async updatePaymentIntent(
-		paymentId: number,
-		paymentCode: string,
-		paymentKey: string,
-	): Promise<void> {
-		await this.drizzle.db
-			.update(payment)
-			.set({ paymentCode, paymentKey })
-			.where(eq(payment.id, paymentId))
-	}
-
 	async createRegistrationFee(data: RegistrationFeeInsert): Promise<number> {
 		const [result] = await this.drizzle.db.insert(registrationFee).values(data)
 		return Number(result.insertId)
@@ -521,11 +468,6 @@ export class RegistrationRepository {
 
 	async deleteRegistrationFeesByPayment(paymentId: number): Promise<void> {
 		await this.drizzle.db.delete(registrationFee).where(eq(registrationFee.paymentId, paymentId))
-	}
-
-	async createRegistrationSlot(data: RegistrationSlotInsert): Promise<number> {
-		const [result] = await this.drizzle.db.insert(registrationSlot).values(data)
-		return Number(result.insertId)
 	}
 
 	async deleteRegistrationSlotsByRegistration(registrationId: number): Promise<void> {

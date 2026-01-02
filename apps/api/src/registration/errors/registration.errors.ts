@@ -6,12 +6,6 @@ export class SlotConflictError extends HttpException {
 	}
 }
 
-export class MissingSlotsError extends HttpException {
-	constructor() {
-		super("One or more of the slots you requested are not available", HttpStatus.CONFLICT)
-	}
-}
-
 export class PlayerConflictError extends HttpException {
 	constructor() {
 		super(

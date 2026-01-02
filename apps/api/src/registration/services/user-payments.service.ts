@@ -60,7 +60,7 @@ export class UserPaymentsService {
 
 		// Create registration fee records
 		for (const detail of data.paymentDetails) {
-			await this.paymentRepository.createRegistrationFee({
+			await this.paymentRepository.createPaymentDetail({
 				eventFeeId: detail.eventFeeId,
 				registrationSlotId: detail.registrationSlotId,
 				paymentId,
@@ -82,7 +82,7 @@ export class UserPaymentsService {
 		}
 
 		// Delete existing fees
-		await this.paymentRepository.deleteRegistrationFeesByPayment(paymentId)
+		await this.paymentRepository.deletePaymentDetailsByPayment(paymentId)
 
 		const { subtotal, transactionFee } = this.calculatePaymentTotal(data.paymentDetails)
 
@@ -95,7 +95,7 @@ export class UserPaymentsService {
 
 		// Create new registration fee records
 		for (const detail of data.paymentDetails) {
-			await this.paymentRepository.createRegistrationFee({
+			await this.paymentRepository.createPaymentDetail({
 				eventFeeId: detail.eventFeeId,
 				registrationSlotId: detail.registrationSlotId,
 				paymentId,
@@ -114,7 +114,7 @@ export class UserPaymentsService {
 			throw new PaymentNotFoundError(paymentId)
 		}
 
-		const feeRows = await this.paymentRepository.findRegistrationFeesByPayment(paymentId)
+		const feeRows = await this.paymentRepository.findPaymentDetailsByPayment(paymentId)
 		const fees = feeRows.map(toRegistrationFee)
 		const amountDue = calculateAmountDue(fees.map((f) => f.amount))
 
@@ -223,10 +223,6 @@ export class UserPaymentsService {
 		return { clientSecret, customerId }
 	}
 
-	// =============================================================================
-	// State transitions
-	// =============================================================================
-
 	/**
 	 * Transition slots from PENDING to AWAITING_PAYMENT.
 	 */
@@ -245,35 +241,6 @@ export class UserPaymentsService {
 
 		// Clear expiry since payment is in progress
 		await this.registrationRepository.updateRegistration(registrationId, { expires: null })
-	}
-
-	/**
-	 * Transition slots from AWAITING_PAYMENT to RESERVED.
-	 * Called by webhook when payment succeeds.
-	 */
-	async paymentConfirmed(registrationId: number, paymentId: number): Promise<void> {
-		const slots = await this.registrationRepository.findSlotsWithStatusByRegistration(
-			registrationId,
-			[RegistrationStatusChoices.AWAITING_PAYMENT],
-		)
-
-		if (slots.length === 0) return
-
-		const slotIds = slots.map((s) => s.id)
-		await this.registrationRepository.updateRegistrationSlots(slotIds, {
-			status: RegistrationStatusChoices.RESERVED,
-		})
-
-		// Mark payment as confirmed
-		await this.paymentRepository.updatePayment(paymentId, {
-			confirmed: 1,
-			confirmDate: toDbString(new Date()),
-		})
-
-		// Mark registration fees as paid
-		const feeRows = await this.paymentRepository.findRegistrationFeesByPayment(paymentId)
-		const feeIds = feeRows.map((f) => f.id)
-		await this.paymentRepository.updateRegistrationFeeStatus(feeIds, true)
 	}
 
 	private calculatePaymentTotal(details: PaymentDetailRequest[]): AmountDue {

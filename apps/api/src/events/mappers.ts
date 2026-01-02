@@ -2,6 +2,7 @@ import {
 	AgeRestrictionTypeValue,
 	ClubEvent,
 	EventFee,
+	EventFeeWithType,
 	EventStatusValue,
 	EventTypeValue,
 	FeeRestrictionValue,
@@ -109,9 +110,12 @@ export function toEventFee(row: EventFeeRow): EventFee {
 }
 
 /**
- * Maps EventFeeRow with FeeTypeRow to EventFee with nested feeType
+ * Maps EventFeeRow with FeeTypeRow to EventFeeWithType (with required feeType)
  */
-export function toEventFeeWithType(row: { eventFee: EventFeeRow; feeType: FeeTypeRow }): EventFee {
+export function toEventFeeWithType(row: {
+	eventFee: EventFeeRow
+	feeType: FeeTypeRow
+}): EventFeeWithType {
 	return {
 		...toEventFee(row.eventFee),
 		feeType: toFeeType(row.feeType),
