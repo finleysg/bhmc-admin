@@ -303,7 +303,8 @@ export class UserRegistrationService {
 			// Create or update registration
 			if (existing) {
 				registrationId = existing.id
-				tx.update(registration)
+				await tx
+					.update(registration)
 					.set({
 						courseId,
 						expires: toDbString(expires),

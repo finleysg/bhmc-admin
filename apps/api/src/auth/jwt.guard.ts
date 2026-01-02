@@ -15,10 +15,7 @@ import { DjangoUser } from "@repo/domain/types"
 import { IS_PUBLIC_KEY } from "./decorators/public.decorator"
 import { ROLES_KEY, Role } from "./decorators/roles.decorator"
 import { DjangoAuthService } from "./django-auth.service"
-
-interface AuthenticatedRequest extends Request {
-	user?: DjangoUser
-}
+import { AuthenticatedRequest } from "."
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -42,7 +39,6 @@ export class JwtAuthGuard implements CanActivate {
 		const req = context.switchToHttp().getRequest<AuthenticatedRequest>()
 
 		// Extract token
-		this.logger.debug("Extracting token from request: " + JSON.stringify(req.headers))
 		const token = this.extractToken(req)
 		if (!token) {
 			throw new UnauthorizedException("Missing authorization token")

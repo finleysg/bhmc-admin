@@ -167,10 +167,10 @@ export class RegistrationRepository {
 		for (const row of results) {
 			if (!row.slot) continue
 
-			if (!slotsMap.has(row.slot.id)) {
+			if (!slotsMap.has(row.slot.id) && row.player) {
 				slotsMap.set(row.slot.id, {
 					...row.slot,
-					player: row.player!,
+					player: row.player,
 					fees: [],
 				})
 			}
@@ -219,10 +219,10 @@ export class RegistrationRepository {
 		for (const row of results) {
 			if (!row.slot) continue
 
-			if (!slotsMap.has(row.slot.id)) {
+			if (!slotsMap.has(row.slot.id) && row.player && row.hole) {
 				slotsMap.set(row.slot.id, {
 					...row.slot,
-					player: row.player!,
+					player: row.player,
 					hole: row.hole,
 					fees: [],
 				})

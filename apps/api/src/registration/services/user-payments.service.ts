@@ -43,6 +43,7 @@ export class UserPaymentsService {
 
 	/**
 	 * Create a payment record with registration fees.
+	 * TODO: wrap in transaction.
 	 */
 	async createPayment(data: CreatePaymentRequest): Promise<number> {
 		const { subtotal, transactionFee } = this.calculatePaymentTotal(data.paymentDetails)
@@ -74,6 +75,7 @@ export class UserPaymentsService {
 
 	/**
 	 * Update an existing payment record with new details.
+	 * TODO: wrap in transaction.
 	 */
 	async updatePayment(paymentId: number, data: UpdatePaymentRequest): Promise<void> {
 		const payment = await this.paymentRepository.findPaymentById(paymentId)
