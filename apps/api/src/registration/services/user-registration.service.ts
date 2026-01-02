@@ -192,10 +192,10 @@ export class UserRegistrationService {
 	 */
 	async cancelRegistration(
 		registrationId: number,
-		userId: number,
+		playerId: number,
 		paymentId?: number | null,
 	): Promise<void> {
-		const reg = await this.findRegistrationById(registrationId, userId)
+		const reg = await this.findRegistrationById(registrationId, playerId)
 		if (!reg) {
 			this.logger.warn(`Registration ${registrationId} not found for cancel`)
 			return
