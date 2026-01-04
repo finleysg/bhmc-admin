@@ -154,7 +154,7 @@ export class UserRegistrationService {
 
 		// Get empty slots sorted by slot number
 		const emptySlots = regWithSlots.slots
-			.filter((s) => s.playerId === null)
+			.filter((s) => s.playerId === undefined)
 			.sort((a, b) => a.slot - b.slot)
 
 		if (playerIds.length > emptySlots.length) {
