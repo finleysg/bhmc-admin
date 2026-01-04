@@ -169,16 +169,16 @@ export class RegistrationRepository {
 		for (const row of results) {
 			if (!row.slot) continue
 
-			if (!slotsMap.has(row.slot.id) && row.player) {
+			if (!slotsMap.has(row.slot.id)) {
 				slotsMap.set(row.slot.id, {
 					...row.slot,
-					player: row.player,
+					player: row.player ?? undefined,
 					fees: [],
 				})
 			}
 
 			if (row.fee) {
-				slotsMap.get(row.slot.id)!.fees.push(row.fee)
+				slotsMap.get(row.slot.id)?.fees?.push(row.fee)
 			}
 		}
 
