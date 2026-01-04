@@ -30,8 +30,8 @@ export function WelcomeBackEmail({ firstName, year, accountUrl }: WelcomeEmailPr
 				for information about the new season and any changes coming in {year}.
 			</Text>
 			<Text style={paragraph}>
-				Thank you again for joining us again this year. If you have any questions, please contact a
-				board member or send the club secretary a note at{" "}
+				Thank you for joining us again this year. If you have any questions, please contact a board
+				member or send the club secretary a note at{" "}
 				<Link href="mailto:secretary@bhmc.org" style={link}>
 					secretary@bhmc.org
 				</Link>
