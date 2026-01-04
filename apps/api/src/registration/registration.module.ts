@@ -14,6 +14,7 @@ import {
 	UserPaymentsService,
 	UserRegistrationService,
 	AdminRegistrationService,
+	UserPaymentsController,
 } from "./"
 
 @Module({
@@ -24,7 +25,7 @@ import {
 		MailModule,
 		forwardRef(() => StripeModule),
 	],
-	controllers: [AdminRegistrationController, UserRegistrationController],
+	controllers: [AdminRegistrationController, UserPaymentsController, UserRegistrationController],
 	providers: [
 		AdminRegistrationService,
 		PaymentsRepository,

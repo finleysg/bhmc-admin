@@ -12,19 +12,17 @@ import {
 	Req,
 } from "@nestjs/common"
 
-import { AmountDue, PaymentIntentResult } from "@repo/domain/types"
+import { AmountDue } from "@repo/domain/types"
 
 import type {
 	CreatePaymentIntentRequest,
 	CreatePaymentRequest,
+	PaymentWithDetails,
 	UpdatePaymentRequest,
 } from "@repo/domain/types"
 import type { AuthenticatedRequest } from "../../auth"
 import { UserPaymentsService } from "../services/user-payments.service"
-
-interface PaymentResponse {
-	paymentId: number
-}
+import Stripe from "stripe"
 
 interface StripeAmountResponse {
 	amountCents: number
@@ -50,17 +48,17 @@ export class UserPaymentsController {
 	async createPayment(
 		@Req() req: AuthenticatedRequest,
 		@Body() dto: CreatePaymentRequest,
-	): Promise<PaymentResponse> {
+	): Promise<PaymentWithDetails> {
 		const user = req.user
 
 		this.logger.log(`Creating payment for user ${user.id} event ${dto.eventId}`)
 
-		const paymentId = await this.service.createPayment({
+		const payment = await this.service.createPayment({
 			...dto,
 			userId: user.id,
 		})
 
-		return { paymentId }
+		return payment
 	}
 
 	/**
@@ -72,7 +70,7 @@ export class UserPaymentsController {
 		@Req() req: AuthenticatedRequest,
 		@Param("id", ParseIntPipe) paymentId: number,
 		@Body() dto: UpdatePaymentRequest,
-	): Promise<{ success: boolean }> {
+	): Promise<PaymentWithDetails> {
 		const payment = await this.service.findPaymentById(paymentId)
 		if (!payment) {
 			throw new NotFoundException(`Payment ${paymentId} not found`)
@@ -83,9 +81,9 @@ export class UserPaymentsController {
 		}
 
 		this.logger.log(`Updating payment ${paymentId}`)
-		await this.service.updatePayment(paymentId, dto)
+		const updatedPayment = await this.service.updatePayment(paymentId, dto)
 
-		return { success: true }
+		return updatedPayment
 	}
 
 	/**
@@ -97,7 +95,7 @@ export class UserPaymentsController {
 		@Req() req: AuthenticatedRequest,
 		@Param("id", ParseIntPipe) paymentId: number,
 		@Body() dto: CreatePaymentIntentRequest,
-	): Promise<PaymentIntentResult> {
+	): Promise<Stripe.PaymentIntent> {
 		const payment = await this.service.findPaymentById(paymentId)
 		if (!payment) {
 			throw new NotFoundException(`Payment ${paymentId} not found`)

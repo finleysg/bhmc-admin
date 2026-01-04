@@ -82,7 +82,16 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
 		}
 
 		// Unknown error: generic handling
-		this.logger.error("Unhandled exception", JSON.stringify(exception))
+		if (exception instanceof Error) {
+			this.logger.error({
+				message: exception.message,
+				name: exception.name,
+				stack: exception.stack,
+				cause: exception.cause instanceof Error ? exception.cause.message : exception.cause,
+			})
+		} else {
+			this.logger.error("Unhandled non-Error exception", exception)
+		}
 		response.status(status).json({ statusCode: status, message })
 	}
 }

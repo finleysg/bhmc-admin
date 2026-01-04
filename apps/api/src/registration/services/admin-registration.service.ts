@@ -27,6 +27,7 @@ import {
 	CompleteRegistrationFee,
 	CompletePayment,
 	CompleteRegistrationAndPayment,
+	EventTypeChoices,
 } from "@repo/domain/types"
 
 import { toCourse, toHole } from "../../courses/mappers"
@@ -374,20 +375,31 @@ export class AdminRegistrationService {
 			}
 		})
 
-		// Send notification emails (non-blocking)
-		this.sendAdminRegistrationEmails(
-			eventRecord,
-			registrationId,
-			paymentId,
-			dto.userId,
-			dto.collectPayment,
-		).catch((error) => {
-			this.logger.error(`Failed to send admin registration emails: ${error}`)
-		})
+		// Membership registration?
+		if (eventRecord.eventType === EventTypeChoices.SEASON_REGISTRATION) {
+			const season = new Date(eventRecord.startDate).getFullYear()
+			for (const slot of convertedSlots) {
+				await this.updateMembershipStatus(slot.playerId, season)
+			}
+		}
+
+		// Send notification emails
+		try {
+			await this.sendAdminRegistrationEmails(
+				eventRecord,
+				registrationId,
+				paymentId,
+				dto.userId,
+				dto.collectPayment,
+			)
+		} catch (error) {
+			this.logger.error(`Failed to send admin registration emails: ${String(error)}`)
+		}
 
 		return paymentId
 	}
 
+	// TODO: seems like this can be simplified
 	private async sendAdminRegistrationEmails(
 		event: CompleteClubEvent,
 		registrationId: number,
@@ -681,7 +693,6 @@ export class AdminRegistrationService {
 	/**
 	 * Clean up expired pending registrations.
 	 * Called by cron job.
-	 * TODO: Should we clean up payments and fees as well?
 	 */
 	async cleanUpExpired(): Promise<number> {
 		const now = new Date()
@@ -692,12 +703,19 @@ export class AdminRegistrationService {
 		this.logger.log(`Cleaning up ${expired.length} expired registrations`)
 
 		for (const reg of expired) {
-			const canChoose = await this.events.isCanChooseHolesEvent(reg.eventId)
-			const slots = await this.repository.findRegistrationSlotsByRegistrationId(reg.id)
-			const slotIds = slots.map((s) => s.id)
+			// Delete related payment data
+			const payments = await this.paymentsRepository.findPaymentsForRegistration(reg.id)
+			this.logger.log(`Found ${payments.length} payments to delete.`)
+			for (const payment of payments) {
+				this.logger.log(`Deleting fees and payment for id ${payment.id}`)
+				await this.paymentsRepository.deletePaymentDetailsByPayment(payment.id)
+				await this.paymentsRepository.deletePayment(payment.id)
+			}
 
+			const canChoose = await this.events.isCanChooseHolesEvent(reg.eventId)
 			if (canChoose) {
 				// For choosable events, reset slots to AVAILABLE
+				const slotIds = reg.slots.map((s) => s.id)
 				await this.repository.updateRegistrationSlots(slotIds, {
 					status: RegistrationStatusChoices.AVAILABLE,
 					registrationId: null,
@@ -816,5 +834,14 @@ export class AdminRegistrationService {
 			return
 		}
 		await this.paymentsRepository.confirmRefund(row.id)
+	}
+
+	async updateMembershipStatus(userId: number, season: number): Promise<void> {
+		const player = await this.repository.findPlayerByUserId(userId)
+		if (player) {
+			player.isMember = 1
+			player.lastSeason = season
+			await this.repository.updatePlayer(player.id, player)
+		}
 	}
 }

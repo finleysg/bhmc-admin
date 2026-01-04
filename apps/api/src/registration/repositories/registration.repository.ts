@@ -1,7 +1,7 @@
 import { and, eq, inArray, or, like, lt, sql } from "drizzle-orm"
 import type { MySql2Database } from "drizzle-orm/mysql2"
 
-import { Injectable } from "@nestjs/common"
+import { Injectable, Logger } from "@nestjs/common"
 
 import {
 	course,
@@ -39,6 +39,8 @@ import { RegistrationStatusValue } from "@repo/domain/types"
 
 @Injectable()
 export class RegistrationRepository {
+	private readonly logger = new Logger(RegistrationRepository.name)
+
 	constructor(private drizzle: DrizzleService) {}
 
 	async findPlayerById(id: number): Promise<PlayerRow> {
@@ -219,21 +221,28 @@ export class RegistrationRepository {
 		for (const row of results) {
 			if (!row.slot) continue
 
-			if (!slotsMap.has(row.slot.id) && row.player && row.hole) {
-				slotsMap.set(row.slot.id, {
-					...row.slot,
-					player: row.player,
-					hole: row.hole,
-					fees: [],
-				})
+			if (!slotsMap.has(row.slot.id)) {
+				if (row.player) {
+					slotsMap.set(row.slot.id, {
+						...row.slot,
+						player: row.player,
+						hole: row.hole,
+						fees: [],
+					})
+				} else {
+					this.logger.warn(`Slot ${row.slot.id} missing player - skipping`)
+				}
 			}
 
 			if (row.fee && row.eventFee && row.feeType) {
-				slotsMap.get(row.slot.id)!.fees.push({
-					fee: row.fee,
-					eventFee: row.eventFee,
-					feeType: row.feeType,
-				})
+				const slot = slotsMap.get(row.slot.id)
+				if (slot) {
+					slot.fees.push({
+						fee: row.fee,
+						eventFee: row.eventFee,
+						feeType: row.feeType,
+					})
+				}
 			}
 		}
 
@@ -419,14 +428,34 @@ export class RegistrationRepository {
 		return results
 	}
 
-	async findExpiredPendingRegistrations(now: Date): Promise<RegistrationRow[]> {
+	async findExpiredPendingRegistrations(now: Date): Promise<RegistrationWithSlots[]> {
 		const nowStr = toDbString(now)
 		const results = await this.drizzle.db
-			.select()
+			.select({
+				registration,
+				slot: registrationSlot,
+			})
 			.from(registration)
-			.where(lt(registration.expires, sql`${nowStr}`))
+			.innerJoin(registrationSlot, eq(registrationSlot.registrationId, registration.id))
+			.where(and(lt(registration.expires, sql`${nowStr}`), eq(registrationSlot.status, "P")))
 
-		return results
+		if (results.length === 0) return []
+
+		const registrationsMap = new Map<number, RegistrationWithSlots>()
+
+		for (const row of results) {
+			if (!registrationsMap.has(row.registration.id)) {
+				registrationsMap.set(row.registration.id, {
+					...row.registration,
+					slots: [],
+				})
+			}
+			if (row.slot) {
+				registrationsMap.get(row.registration.id)!.slots.push(row.slot)
+			}
+		}
+
+		return Array.from(registrationsMap.values())
 	}
 
 	async createRegistration(data: RegistrationInsert): Promise<number> {

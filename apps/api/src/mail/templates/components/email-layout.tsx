@@ -1,4 +1,15 @@
-import { Body, Container, Head, Heading, Html, Img, Link, Section } from "@react-email/components"
+import {
+	Body,
+	Column,
+	Container,
+	Head,
+	Heading,
+	Html,
+	Img,
+	Link,
+	Row,
+	Section,
+} from "@react-email/components"
 import type { ReactNode } from "react"
 
 const LOGO =
@@ -21,12 +32,16 @@ export function EmailLayout({ children }: EmailLayoutProps) {
 			<Head />
 			<Body style={body}>
 				<Container style={container}>
-					<Section style={header}>
-						<Link href="https://bhmc.org/home">
-							<Img src={LOGO} alt="Bunker Hills Logo" style={logo} />
-						</Link>
-						<Heading style={heading}>Bunker Hills Men's Club</Heading>
-					</Section>
+					<Row>
+						<Column style={logoColumn}>
+							<Link href="https://bhmc.org/home">
+								<Img src={LOGO} alt="Bunker Hills Logo" style={logo} />
+							</Link>
+						</Column>
+						<Column>
+							<Heading style={heading}>Bunker Hills Men's Club</Heading>
+						</Column>
+					</Row>
 					<Section style={content}>{children}</Section>
 				</Container>
 			</Body>
@@ -48,19 +63,22 @@ const container = {
 	margin: "10px auto",
 }
 
-const header = {
-	display: "flex",
-	alignItems: "center",
+const logoColumn = {
+	textAlign: "left" as const,
+	verticalAlign: "top" as const,
+	marginRight: "12px",
 }
 
 const logo = {
-	width: "80%",
-	height: "auto",
+	height: "4em",
+	width: "auto",
 }
 
 const heading = {
 	color: colors.heading,
-	fontSize: "1.8em",
+	fontSize: "1.5em",
+	margin: 0,
+	verticalAlign: "top" as const,
 }
 
 const content = {
