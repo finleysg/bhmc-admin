@@ -1,11 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
-/**
- * Justification: This file wraps the underlying mysql2 Pool at runtime to add
- * development-time logging. Those wrappers access `any`-typed pool internals
- * (query/execute) and accept `any` params from callers; disabling the unsafe
- * rules here keeps the rest of the project strict while allowing this targeted
- * runtime instrumentation.
- */
 import { drizzle, MySql2Database } from "drizzle-orm/mysql2"
 import * as mysql from "mysql2/promise"
 

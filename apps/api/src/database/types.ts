@@ -185,7 +185,7 @@ export type RegistrationSlotWithHole = WithCompositions<RegistrationSlotRow, { h
 
 export type RegistrationSlotFull = WithCompositions<
 	RegistrationSlotRow,
-	{ player: PlayerRow; fees: RegistrationFeeRow[] }
+	{ player?: PlayerRow; fees?: RegistrationFeeRow[] }
 >
 
 export type RegistrationFeeWithEventFee = WithCompositions<

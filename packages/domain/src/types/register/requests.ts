@@ -1,4 +1,4 @@
-import { NotificationTypeValue } from "./choices"
+import { EventTypeValue } from "../events"
 
 /**
  * Request model for creating a registration: aka "reserve".
@@ -47,8 +47,8 @@ export interface PaymentDetailRequest {
  */
 export interface CreatePaymentRequest {
 	eventId: number
+	eventType: EventTypeValue
 	userId: number
-	notificationType?: NotificationTypeValue | null
 	paymentDetails: PaymentDetailRequest[]
 }
 
@@ -58,7 +58,6 @@ export interface CreatePaymentRequest {
 export interface UpdatePaymentRequest {
 	eventId: number
 	userId: number
-	notificationType?: NotificationTypeValue | null
 	paymentDetails: PaymentDetailRequest[]
 }
 

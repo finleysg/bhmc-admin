@@ -55,7 +55,10 @@ export class UserRegistrationController {
 		@Req() req: AuthenticatedRequest,
 		@Param("id", ParseIntPipe) registrationId: number,
 	): Promise<RegistrationWithSlots> {
-		const registration = await this.flowService.findRegistrationById(registrationId, req.user.playerId)
+		const registration = await this.flowService.findRegistrationById(
+			registrationId,
+			req.user.playerId,
+		)
 		if (!registration) {
 			throw new NotFoundException(`Registration ${registrationId} not found`)
 		}
@@ -73,8 +76,14 @@ export class UserRegistrationController {
 		@Param("id", ParseIntPipe) registrationId: number,
 		@Body() dto: CancelRegistrationRequest,
 	): Promise<{ success: boolean }> {
-		this.logger.log(`Canceling registration ${registrationId}: ${dto.reason}`)
-		await this.flowService.cancelRegistration(registrationId, req.user.playerId, dto.paymentId ?? null)
+		this.logger.log(
+			`Canceling registration ${registrationId} and payment ${dto.paymentId}: ${dto.reason}`,
+		)
+		await this.flowService.cancelRegistration(
+			registrationId,
+			req.user.playerId,
+			dto.paymentId ?? null,
+		)
 
 		return { success: true }
 	}
@@ -89,7 +98,7 @@ export class UserRegistrationController {
 		@Param("id", ParseIntPipe) registrationId: number,
 		@Body() dto: UpdateNotesRequest,
 	): Promise<{ success: boolean }> {
-		await this.flowService.updateNotes(registrationId, req.user.id, dto.notes)
+		await this.flowService.updateNotes(registrationId, req.user.playerId, dto.notes)
 		return { success: true }
 	}
 

@@ -1,14 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common"
 
-import { calculateAmountDue } from "@repo/domain/functions"
+import { calculateAmountDue, deriveNotificationType } from "@repo/domain/functions"
 import {
 	AmountDue,
 	Payment,
-	PaymentIntentResult,
 	RegistrationStatusChoices,
 	CreatePaymentRequest,
 	PaymentDetailRequest,
 	UpdatePaymentRequest,
+	PaymentWithDetails,
 } from "@repo/domain/types"
 
 import { authUser, toDbString, DrizzleService } from "../../database"
@@ -17,9 +17,10 @@ import { EventsService } from "../../events"
 import { StripeService } from "../../stripe/stripe.service"
 
 import { PaymentNotFoundError } from "../errors/registration.errors"
-import { toPayment, toRegistrationFee } from "../mappers"
+import { toPayment, toPaymentWithDetails, toRegistrationFee } from "../mappers"
 import { PaymentsRepository } from "../repositories/payments.repository"
 import { RegistrationRepository } from "../repositories/registration.repository"
+import Stripe from "stripe"
 
 @Injectable()
 export class UserPaymentsService {
@@ -45,13 +46,29 @@ export class UserPaymentsService {
 	 * Create a payment record with registration fees.
 	 * TODO: wrap in transaction.
 	 */
-	async createPayment(data: CreatePaymentRequest): Promise<number> {
+	async createPayment(data: CreatePaymentRequest): Promise<PaymentWithDetails> {
 		const { subtotal, transactionFee } = this.calculatePaymentTotal(data.paymentDetails)
+
+		// Derive notification type from event/player context
+		const eventFees = await this.events.getEventFeesByEventId(data.eventId)
+		const player = await this.registrationRepository.findPlayerByUserId(data.userId)
+
+		const requiredFeeIds = new Set(eventFees.filter((f) => f.isRequired).map((f) => f.id))
+		const hasRequiredFees = data.paymentDetails.some((d) => requiredFeeIds.has(d.eventFeeId))
+
+		const notificationType = deriveNotificationType(
+			data.eventType,
+			player?.lastSeason ?? null,
+			hasRequiredFees,
+		)
+		this.logger.log(
+			`Derived a notification type of ${notificationType} for event type ${data.eventType}`,
+		)
 
 		const paymentId = await this.paymentRepository.createPayment({
 			eventId: data.eventId,
 			userId: data.userId,
-			notificationType: data.notificationType ?? null,
+			notificationType,
 			paymentAmount: subtotal.toFixed(2),
 			transactionFee: transactionFee.toFixed(2),
 			paymentDate: toDbString(new Date()),
@@ -70,14 +87,15 @@ export class UserPaymentsService {
 			})
 		}
 
-		return paymentId
+		const result = await this.paymentRepository.findPaymentWithDetailsById(paymentId)
+		return toPaymentWithDetails(result!)
 	}
 
 	/**
 	 * Update an existing payment record with new details.
 	 * TODO: wrap in transaction.
 	 */
-	async updatePayment(paymentId: number, data: UpdatePaymentRequest): Promise<void> {
+	async updatePayment(paymentId: number, data: UpdatePaymentRequest): Promise<PaymentWithDetails> {
 		const payment = await this.paymentRepository.findPaymentById(paymentId)
 		if (!payment) {
 			throw new PaymentNotFoundError(paymentId)
@@ -88,11 +106,24 @@ export class UserPaymentsService {
 
 		const { subtotal, transactionFee } = this.calculatePaymentTotal(data.paymentDetails)
 
+		// Derive notification type from event/player context
+		const event = await this.events.getCompleteClubEventById(data.eventId, false)
+		const player = await this.registrationRepository.findPlayerByUserId(data.userId)
+
+		const requiredFeeIds = new Set(event.eventFees.filter((f) => f.isRequired).map((f) => f.id))
+		const hasRequiredFees = data.paymentDetails.some((d) => requiredFeeIds.has(d.eventFeeId))
+
+		const notificationType = deriveNotificationType(
+			event.eventType,
+			player?.lastSeason ?? null,
+			hasRequiredFees,
+		)
+
 		// Update payment
 		await this.paymentRepository.updatePayment(paymentId, {
 			paymentAmount: subtotal.toFixed(2),
 			transactionFee: transactionFee.toFixed(2),
-			notificationType: data.notificationType ?? null,
+			notificationType,
 		})
 
 		// Create new registration fee records
@@ -105,6 +136,18 @@ export class UserPaymentsService {
 				isPaid: 0,
 			})
 		}
+
+		const result = await this.paymentRepository.findPaymentWithDetailsById(paymentId)
+		return toPaymentWithDetails(result!)
+	}
+
+	/**
+	 * Typically because a registration is being cancelled or cleaned up (expired)
+	 * @param paymentId
+	 */
+	async deletePaymentAndFees(paymentId: number): Promise<void> {
+		await this.paymentRepository.deletePaymentDetailsByPayment(paymentId)
+		await this.paymentRepository.deletePayment(paymentId)
 	}
 
 	/**
@@ -133,7 +176,7 @@ export class UserPaymentsService {
 		paymentId: number,
 		eventId: number,
 		registrationId: number,
-	): Promise<PaymentIntentResult> {
+	): Promise<Stripe.PaymentIntent> {
 		const payment = await this.paymentRepository.findPaymentById(paymentId)
 		if (!payment) {
 			throw new PaymentNotFoundError(paymentId)
@@ -189,8 +232,8 @@ export class UserPaymentsService {
 		// Store payment intent ID
 		await this.paymentRepository.updatePaymentIntent(
 			paymentId,
-			result.paymentIntentId,
-			result.clientSecret,
+			result.id,
+			result.client_secret!, // This was validated in the `createPaymentIntent` call
 		)
 
 		// Transition slots to AWAITING_PAYMENT

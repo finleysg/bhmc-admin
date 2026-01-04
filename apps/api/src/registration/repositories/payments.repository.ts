@@ -8,6 +8,7 @@ import {
 	PaymentRowWithDetails,
 	refund,
 	registrationFee,
+	registrationSlot,
 	type PaymentInsert,
 	type PaymentRow,
 	type RefundInsert,
@@ -72,6 +73,16 @@ export class PaymentsRepository {
 		return p ?? null
 	}
 
+	async findPaymentsForRegistration(registrationId: number): Promise<PaymentRow[]> {
+		return this.drizzle.db
+			.selectDistinct({ payment })
+			.from(payment)
+			.innerJoin(registrationFee, eq(payment.id, registrationFee.paymentId))
+			.innerJoin(registrationSlot, eq(registrationFee.registrationSlotId, registrationSlot.id))
+			.where(eq(registrationSlot.registrationId, registrationId))
+			.then((rows) => rows.map((r) => r.payment))
+	}
+
 	async createPayment(data: PaymentInsert): Promise<number> {
 		const [result] = await this.drizzle.db.insert(payment).values(data)
 		return Number(result.insertId)
@@ -95,6 +106,11 @@ export class PaymentsRepository {
 	async createPaymentDetail(data: RegistrationFeeInsert): Promise<number> {
 		const [result] = await this.drizzle.db.insert(registrationFee).values(data)
 		return Number(result.insertId)
+	}
+
+	// TODO: turn this into a soft delete
+	async deletePayment(paymentId: number): Promise<void> {
+		await this.drizzle.db.delete(payment).where(eq(payment.id, paymentId))
 	}
 
 	async deletePaymentDetailsByPayment(paymentId: number): Promise<void> {

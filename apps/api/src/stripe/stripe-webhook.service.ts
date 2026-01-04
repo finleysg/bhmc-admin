@@ -1,8 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common"
 import Stripe from "stripe"
 
-import { CompletePayment, CompleteRegistration } from "@repo/domain/types"
+import { EventTypeChoices, NotificationTypeChoices } from "@repo/domain/types"
 
+import { wrapError } from "../common/errors"
 import { DjangoAuthService } from "../auth"
 import { EventsService } from "../events"
 import { MailService } from "../mail"
@@ -47,12 +48,7 @@ export class StripeWebhookService {
 
 		await this.adminRegistrationService.paymentConfirmed(registrationId, paymentRecord.id)
 
-		const result = await this.adminRegistrationService.getCompleteRegistrationAndPayment(
-			registrationId,
-			paymentRecord.id,
-		)
-
-		await this.sendConfirmationEmail(result.registration, result.payment)
+		await this.sendConfirmationEmail(registrationId, paymentRecord.id)
 	}
 
 	handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent): void {
@@ -150,16 +146,19 @@ export class StripeWebhookService {
 
 			this.logger.log(`Refund notification email sent for ${refundCode}`)
 		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error)
-			this.logger.error(`Failed to send refund notification email: ${message}`)
+			const wrapped = wrapError(error, `sendRefundNotification for refund ${refundCode}`)
+			this.logger.error({ message: wrapped.message, cause: wrapped.cause, stack: wrapped.stack })
 		}
 	}
 
-	private async sendConfirmationEmail(
-		registration: CompleteRegistration,
-		payment: CompletePayment,
-	): Promise<void> {
+	private async sendConfirmationEmail(registrationId: number, paymentId: number): Promise<void> {
 		try {
+			const { registration, payment } =
+				await this.adminRegistrationService.getCompleteRegistrationAndPayment(
+					registrationId,
+					paymentId,
+				)
+
 			const user = await this.djangoAuthService.findById(payment.userId)
 
 			if (!user) {
@@ -168,12 +167,46 @@ export class StripeWebhookService {
 			}
 
 			const event = await this.eventsService.getCompleteClubEventById(payment.eventId, false)
+			const year = new Date(event.startDate).getFullYear().toString()
 
-			await this.mailService.sendRegistrationConfirmation(user, event, registration, payment)
-			this.logger.log(`Confirmation email sent for payment ${payment.id}`)
+			if (event.eventType === EventTypeChoices.SEASON_REGISTRATION) {
+				await this.adminRegistrationService.updateMembershipStatus(user.id, +year)
+			}
+
+			this.logger.log(
+				`Sending confirmation email for notification type ${payment.notificationType} to ${user.email}.`,
+			)
+
+			switch (payment.notificationType) {
+				case NotificationTypeChoices.RETURNING_MEMBER:
+					await this.mailService.sendWelcomeBackEmail(
+						{ firstName: user.firstName, email: user.email },
+						year,
+					)
+					break
+				case NotificationTypeChoices.NEW_MEMBER:
+					await this.mailService.sendWelcomeEmail(
+						{ firstName: user.firstName, email: user.email },
+						year,
+					)
+					break
+				case NotificationTypeChoices.MATCH_PLAY:
+					await this.mailService.sendMatchPlayEmail(
+						{ firstName: user.firstName, email: user.email },
+						year,
+					)
+					break
+				case NotificationTypeChoices.UPDATED_REGISTRATION:
+					await this.mailService.sendRegistrationUpdate(user, event, registration, payment)
+					break
+				default:
+					await this.mailService.sendRegistrationConfirmation(user, event, registration, payment)
+			}
+
+			this.logger.log(`Confirmation email sent for payment ${payment.id} to ${user.email}.`)
 		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error)
-			this.logger.error(`Failed to send confirmation email: ${message}`)
+			const wrapped = wrapError(error, `sendConfirmationEmail for payment ${paymentId}`)
+			this.logger.error({ message: wrapped.message, cause: wrapped.cause, stack: wrapped.stack })
 		}
 	}
 }

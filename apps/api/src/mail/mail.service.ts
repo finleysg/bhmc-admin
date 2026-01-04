@@ -8,6 +8,7 @@ import {
 	getRequiredFees,
 	getStart,
 } from "@repo/domain/functions"
+import { wrapError } from "../common/errors"
 import {
 	ClubEvent,
 	CompletePayment,
@@ -21,10 +22,13 @@ import type { ReactElement } from "react"
 
 import {
 	AdminRegistrationNotificationEmail,
+	MatchPlayEmail,
 	RefundNotificationEmail,
 	RegistrationConfirmationEmail,
+	RegistrationUpdateEmail,
 	WelcomeEmail,
 } from "./templates"
+import { WelcomeBackEmail } from "./templates/welcome-back-email"
 
 export interface SendEmailOptions {
 	to: string | string[]
@@ -80,21 +84,49 @@ export class MailService {
 			const info = (await this.transporter.sendMail(mailOptions)) as { messageId: string }
 			this.logger.log(`Email sent successfully: ${info.messageId}`)
 		} catch (error) {
-			this.logger.error(
-				`Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`,
-			)
-			throw error
+			const to = Array.isArray(options.to) ? options.to.join(",") : options.to
+			const wrapped = wrapError(error, `sendEmail to ${to}`)
+			this.logger.error({ message: wrapped.message, cause: wrapped.cause, stack: wrapped.stack })
+			throw wrapped
 		}
 	}
 
-	async sendWelcomeEmail(player: Player, year: string): Promise<void> {
+	async sendWelcomeEmail(player: Pick<Player, "firstName" | "email">, year: string): Promise<void> {
 		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
 		const accountUrl = `${websiteUrl}/my-account`
 
 		await this.sendEmail({
 			to: player.email,
-			subject: "Welcome to Bunker Hills Men's Club!",
+			subject: "Welcome to the Bunker Hills Men's Club!",
 			template: WelcomeEmail({ firstName: player.firstName, year, accountUrl }),
+		})
+	}
+
+	async sendWelcomeBackEmail(
+		player: Pick<Player, "firstName" | "email">,
+		year: string,
+	): Promise<void> {
+		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
+		const accountUrl = `${websiteUrl}/my-account`
+
+		await this.sendEmail({
+			to: player.email,
+			subject: "It's Great to Have You Back!",
+			template: WelcomeBackEmail({ firstName: player.firstName, year, accountUrl }),
+		})
+	}
+
+	async sendMatchPlayEmail(
+		player: Pick<Player, "firstName" | "email">,
+		year: string,
+	): Promise<void> {
+		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
+		const matchplayUrl = `${websiteUrl}/match-play`
+
+		await this.sendEmail({
+			to: player.email,
+			subject: `${year} Season Long Match Play Registration`,
+			template: MatchPlayEmail({ firstName: player.firstName, year, matchplayUrl }),
 		})
 	}
 
@@ -104,13 +136,72 @@ export class MailService {
 		registration: CompleteRegistration,
 		payment: CompletePayment,
 	): Promise<void> {
+		const { emailProps, otherRecipients } = this.buildRegistrationEmailData(
+			user,
+			event,
+			registration,
+			payment,
+		)
+
+		await this.sendEmail({
+			to: user.email,
+			subject: `Registration Confirmation: ${event.name}`,
+			template: RegistrationConfirmationEmail({
+				...emailProps,
+				paymentConfirmationCode: payment.paymentCode,
+			}),
+		})
+
+		if (otherRecipients.length > 0) {
+			await this.sendEmail({
+				to: otherRecipients,
+				subject: `Registration Confirmation: ${event.name}`,
+				template: RegistrationConfirmationEmail(emailProps),
+			})
+		}
+	}
+
+	async sendRegistrationUpdate(
+		user: DjangoUser,
+		event: ClubEvent,
+		registration: CompleteRegistration,
+		payment: CompletePayment,
+	): Promise<void> {
+		const { emailProps, otherRecipients } = this.buildRegistrationEmailData(
+			user,
+			event,
+			registration,
+			payment,
+		)
+
+		await this.sendEmail({
+			to: user.email,
+			subject: `Registration Update: ${event.name}`,
+			template: RegistrationUpdateEmail({
+				...emailProps,
+				paymentConfirmationCode: payment.paymentCode,
+			}),
+		})
+
+		if (otherRecipients.length > 0) {
+			await this.sendEmail({
+				to: otherRecipients,
+				subject: `Registration Update: ${event.name}`,
+				template: RegistrationUpdateEmail(emailProps),
+			})
+		}
+	}
+
+	private buildRegistrationEmailData(
+		user: DjangoUser,
+		event: ClubEvent,
+		registration: CompleteRegistration,
+		payment: CompletePayment,
+	) {
 		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
 		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
-
-		// Get start time/hole from first slot
 		const eventHoleOrStart = getStart(event, registration.slots[0], registration.course.holes)
 
-		// Build players array for template
 		const players = registration.slots.map((slot) => ({
 			name: `${slot.player.firstName} ${slot.player.lastName}`,
 			email: slot.player.email,
@@ -138,28 +229,11 @@ export class MailService {
 			players,
 		}
 
-		// Send to registrant with payment code
-		await this.sendEmail({
-			to: user.email,
-			subject: `Registration Confirmation: ${event.name}`,
-			template: RegistrationConfirmationEmail({
-				...emailProps,
-				paymentConfirmationCode: payment.paymentCode,
-			}),
-		})
-
-		// Send to other players (without payment code)
 		const otherRecipients = registration.slots
 			.map((slot) => slot.player.email)
 			.filter((email) => email !== user.email)
 
-		if (otherRecipients.length > 0) {
-			await this.sendEmail({
-				to: otherRecipients,
-				subject: `Registration Confirmation: ${event.name}`,
-				template: RegistrationConfirmationEmail(emailProps),
-			})
-		}
+		return { emailProps, otherRecipients }
 	}
 
 	async sendRefundNotification(

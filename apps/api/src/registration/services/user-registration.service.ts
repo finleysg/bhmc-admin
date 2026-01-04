@@ -31,6 +31,7 @@ import {
 import { toRegistrationSlot, toRegistrationWithSlots } from "../mappers"
 import { RegistrationRepository } from "../repositories/registration.repository"
 import { getCurrentWave, getRegistrationWindow, getStartingWave } from "../wave-calculator"
+import { UserPaymentsService } from "./user-payments.service"
 
 // Expiry times in minutes
 const CHOOSABLE_EXPIRY_MINUTES = 5
@@ -42,6 +43,7 @@ export class UserRegistrationService {
 
 	constructor(
 		private readonly repository: RegistrationRepository,
+		private readonly payments: UserPaymentsService,
 		private readonly events: EventsService,
 		private readonly drizzle: DrizzleService,
 	) {}
@@ -81,7 +83,6 @@ export class UserRegistrationService {
 				user.id,
 				user.playerId,
 				event,
-				request.slotIds.length,
 				signedUpBy,
 				expires,
 			)
@@ -153,7 +154,7 @@ export class UserRegistrationService {
 
 		// Get empty slots sorted by slot number
 		const emptySlots = regWithSlots.slots
-			.filter((s) => s.playerId === null)
+			.filter((s) => s.playerId === undefined)
 			.sort((a, b) => a.slot - b.slot)
 
 		if (playerIds.length > emptySlots.length) {
@@ -201,9 +202,12 @@ export class UserRegistrationService {
 			return
 		}
 
+		if (paymentId) {
+			await this.payments.deletePaymentAndFees(paymentId)
+		}
+
 		const canChoose = await this.events.isCanChooseHolesEvent(reg.eventId)
 		const slotIds = reg.slots.map((s) => s.id)
-
 		if (canChoose) {
 			// For choosable events, reset slots to AVAILABLE
 			await this.repository.updateRegistrationSlots(slotIds, {
@@ -214,11 +218,6 @@ export class UserRegistrationService {
 		} else {
 			// For non-choosable events, delete the slots
 			await this.repository.deleteRegistrationSlotsByRegistration(registrationId)
-		}
-
-		// Delete registration fees if payment exists
-		if (paymentId) {
-			await this.repository.deleteRegistrationFeesByPayment(paymentId)
 		}
 
 		// Delete the registration
@@ -235,7 +234,7 @@ export class UserRegistrationService {
 		courseId: number | null,
 	): Promise<void> {
 		// Ensure we have at least one slot
-		if (slotIds.length === 0) {
+		if (event.canChoose && slotIds.length === 0) {
 			throw new BadRequestException("At least one slot must be requested")
 		}
 
@@ -344,10 +343,11 @@ export class UserRegistrationService {
 		userId: number,
 		playerId: number,
 		event: ClubEvent,
-		slotCount: number,
 		signedUpBy: string,
 		expires: Date,
 	): Promise<number> {
+		const slotCount = event.maximumSignupGroupSize ?? 1
+
 		return await this.drizzle.db.transaction(async (tx) => {
 			// Lock all reserved/pending/awaiting slots for this event
 			const lockedSlots = await tx
@@ -367,7 +367,7 @@ export class UserRegistrationService {
 
 			// Capacity check inside transaction (uses locked row count)
 			if (event.registrationMaximum) {
-				if (lockedSlots.length + slotCount > event.registrationMaximum) {
+				if (lockedSlots.length + 1 > event.registrationMaximum) {
 					throw new EventFullError()
 				}
 			}
@@ -394,27 +394,24 @@ export class UserRegistrationService {
 				}
 			}
 
-			// Create or update registration
-			let registrationId: number
+			// We will let the system cleanup process deal with a stale registration
+			// and create a new one for this user.
 			if (existing) {
-				registrationId = existing.id
+				await tx.update(registration).set({ userId: null }).where(eq(registration.id, existing.id))
 				await tx
-					.update(registration)
-					.set({ expires: toDbString(expires) })
-					.where(eq(registration.id, registrationId))
-
-				// Delete old pending slots
-				await tx.delete(registrationSlot).where(eq(registrationSlot.registrationId, registrationId))
-			} else {
-				const [result] = await tx.insert(registration).values({
-					eventId: event.id,
-					userId,
-					signedUpBy,
-					expires: toDbString(expires),
-					createdDate: toDbString(new Date()),
-				})
-				registrationId = Number(result.insertId)
+					.update(registrationSlot)
+					.set({ playerId: null })
+					.where(eq(registrationSlot.registrationId, existing.id))
 			}
+
+			const [result] = await tx.insert(registration).values({
+				eventId: event.id,
+				userId,
+				signedUpBy,
+				expires: toDbString(expires),
+				createdDate: toDbString(new Date()),
+			})
+			const registrationId = Number(result.insertId)
 
 			// Create new slots
 			const slotIds: number[] = []

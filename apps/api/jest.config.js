@@ -4,10 +4,10 @@ module.exports = {
 	roots: ["<rootDir>/src"],
 	testMatch: ["**/__tests__/**/*.ts", "**/?(*.)+(spec|test).ts"],
 	transform: {
-		"^.+\\.ts$": "ts-jest",
+		"^.+\\.tsx?$": "ts-jest",
 	},
 	collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts", "!src/**/__tests__/**"],
-	moduleFileExtensions: ["ts", "js", "json"],
+	moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
 	setupFilesAfterEnv: ["<rootDir>/test.setup.ts"],
 	testTimeout: 10000,
 }

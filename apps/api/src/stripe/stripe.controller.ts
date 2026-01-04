@@ -60,7 +60,7 @@ export class StripeController {
 				await this.webhookService.handleRefundUpdated(event.data.object)
 				break
 			default:
-				this.logger.log(`Unhandled event type: ${event.type}`)
+				this.logger.debug(`Unhandled event type: ${event.type}`)
 		}
 
 		return { received: true }

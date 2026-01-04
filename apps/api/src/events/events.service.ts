@@ -3,6 +3,7 @@ import { and, eq, inArray } from "drizzle-orm"
 import { BadRequestException, Injectable, Logger } from "@nestjs/common"
 import { validateClubEvent } from "@repo/domain/functions"
 import {
+	EventFeeWithType,
 	PreparedTournamentPoints,
 	PreparedTournamentResult,
 	TournamentResults,
@@ -64,6 +65,11 @@ export class EventsService {
 
 	async exists(eventId: number): Promise<boolean> {
 		return this.repository.existsById(eventId)
+	}
+
+	async getEventFeesByEventId(eventId: number): Promise<EventFeeWithType[]> {
+		const result = await this.repository.listEventFeesByEvent(eventId)
+		return result.map(toEventFeeWithType)
 	}
 
 	async isCanChooseHolesEvent(eventId: number): Promise<boolean> {

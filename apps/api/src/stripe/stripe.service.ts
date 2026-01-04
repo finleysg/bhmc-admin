@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config"
 import Stripe from "stripe"
 
 import { calculateAmountDue } from "@repo/domain/functions"
-import { AmountDue, PaymentIntentMetadata, PaymentIntentResult } from "@repo/domain/types"
+import { AmountDue, PaymentIntentMetadata } from "@repo/domain/types"
 
 @Injectable()
 export class StripeService {
@@ -72,7 +72,7 @@ export class StripeService {
 		metadata: PaymentIntentMetadata,
 		customerId?: string,
 		email?: string,
-	): Promise<PaymentIntentResult> {
+	): Promise<Stripe.PaymentIntent> {
 		if (amountCents <= 0) {
 			throw new Error("Payment amount must be positive")
 		}
@@ -107,10 +107,7 @@ export class StripeService {
 			throw new Error("Failed to create PaymentIntent: no client secret returned")
 		}
 
-		return {
-			paymentIntentId: paymentIntent.id,
-			clientSecret: paymentIntent.client_secret,
-		}
+		return paymentIntent
 	}
 
 	/**

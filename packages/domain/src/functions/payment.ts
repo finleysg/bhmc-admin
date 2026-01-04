@@ -1,4 +1,14 @@
-import { AmountDue, EventFee, FeeRestrictionChoices, Player, CompletePayment } from "../types"
+import {
+	AmountDue,
+	EventFee,
+	FeeRestrictionChoices,
+	Player,
+	CompletePayment,
+	EventTypeChoices,
+	EventTypeValue,
+	NotificationTypeChoices,
+	NotificationTypeValue,
+} from "../types"
 import { getAge } from "./player"
 
 const SENIOR_AGE = 62
@@ -45,6 +55,23 @@ export function calculateAmountDue(amounts: number[]): AmountDue {
 		subtotal,
 		transactionFee,
 		total,
+	}
+}
+
+/**
+ * Calculates the total amount due including transaction fees and converts
+ * the return result into the US currency's subunit (cents).
+ * @param amounts - An array of fees as decimals
+ */
+export function calculateAmountDueInCents(amounts: number[]): AmountDue {
+	const subtotal = amounts.reduce((sum, fee) => sum + fee, 0)
+	const transactionFee = calculateTransactionFee(subtotal)
+	const total = Math.round((subtotal + transactionFee) * 100) / 100
+
+	return {
+		subtotal: Math.round(subtotal * 100),
+		transactionFee: Math.round(transactionFee * 100),
+		total: Math.round(total * 100),
 	}
 }
 
@@ -110,4 +137,34 @@ export function getOptionalFees(payment: CompletePayment): number {
 		}
 	})
 	return amount
+}
+
+/**
+ * Derive notification type from event, player, and payment context.
+ * - Season registration ("R"): "R" if returning member (last_season == current - 1), else "N"
+ * - Match play ("S"): "M"
+ * - Other events: "C" if has required fees, "U" otherwise
+ */
+export function deriveNotificationType(
+	eventType: EventTypeValue,
+	playerLastSeason: number | null,
+	hasRequiredFees: boolean,
+	now: Date = new Date(),
+): NotificationTypeValue {
+	if (eventType === EventTypeChoices.SEASON_REGISTRATION) {
+		const currentSeason = now.getFullYear()
+		if (playerLastSeason === currentSeason - 1) {
+			return NotificationTypeChoices.RETURNING_MEMBER
+		}
+		return NotificationTypeChoices.NEW_MEMBER
+	}
+
+	if (eventType === EventTypeChoices.MATCH_PLAY) {
+		return NotificationTypeChoices.MATCH_PLAY
+	}
+
+	if (hasRequiredFees) {
+		return NotificationTypeChoices.SIGNUP_CONFIRMATION
+	}
+	return NotificationTypeChoices.UPDATED_REGISTRATION
 }
