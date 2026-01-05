@@ -32,6 +32,7 @@ import { toRegistrationSlot, toRegistrationWithSlots } from "../mappers"
 import { RegistrationRepository } from "../repositories/registration.repository"
 import { getCurrentWave, getRegistrationWindow, getStartingWave } from "../wave-calculator"
 import { UserPaymentsService } from "./user-payments.service"
+import { RegistrationBroadcastService } from "./registration-broadcast.service"
 
 // Expiry times in minutes
 const CHOOSABLE_EXPIRY_MINUTES = 5
@@ -46,6 +47,7 @@ export class UserRegistrationService {
 		private readonly payments: UserPaymentsService,
 		private readonly events: EventsService,
 		private readonly drizzle: DrizzleService,
+		private readonly broadcast: RegistrationBroadcastService,
 	) {}
 
 	/**
@@ -78,6 +80,7 @@ export class UserRegistrationService {
 				signedUpBy,
 				expires,
 			)
+			this.broadcast.notifyChange(event.id)
 		} else {
 			registrationId = await this.createNonChoosableSlots(
 				user.id,
@@ -185,6 +188,7 @@ export class UserRegistrationService {
 			}
 		})
 
+		this.broadcast.notifyChange(regWithSlots.eventId)
 		return await this.findRegistrationById(registrationId)
 	}
 
@@ -222,6 +226,10 @@ export class UserRegistrationService {
 
 		// Delete the registration
 		await this.repository.deleteRegistration(registrationId)
+
+		if (canChoose) {
+			this.broadcast.notifyChange(reg.eventId)
+		}
 	}
 
 	// =============================================================================

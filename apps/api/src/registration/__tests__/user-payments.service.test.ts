@@ -166,12 +166,17 @@ const createMockDrizzleService = () => ({
 	},
 })
 
+const createMockBroadcastService = () => ({
+	notifyChange: jest.fn(),
+})
+
 function createService() {
 	const paymentsRepo = createMockPaymentsRepository()
 	const registrationRepo = createMockRegistrationRepository()
 	const eventsService = createMockEventsService()
 	const stripeService = createMockStripeService()
 	const drizzleService = createMockDrizzleService()
+	const broadcastService = createMockBroadcastService()
 
 	const service = new UserPaymentsService(
 		paymentsRepo as any,
@@ -179,9 +184,18 @@ function createService() {
 		eventsService as any,
 		stripeService as any,
 		drizzleService as any,
+		broadcastService as any,
 	)
 
-	return { service, paymentsRepo, registrationRepo, eventsService, stripeService, drizzleService }
+	return {
+		service,
+		paymentsRepo,
+		registrationRepo,
+		eventsService,
+		stripeService,
+		drizzleService,
+		broadcastService,
+	}
 }
 
 // =============================================================================

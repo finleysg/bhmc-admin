@@ -104,6 +104,21 @@ export class RegistrationRepository {
 		return slot
 	}
 
+	async findRegistrationSlotsByEventId(
+		eventId: number,
+	): Promise<{ slot: RegistrationSlotRow; player: PlayerRow | null; hole: HoleRow | null }[]> {
+		return this.drizzle.db
+			.select({
+				slot: registrationSlot,
+				player,
+				hole,
+			})
+			.from(registrationSlot)
+			.leftJoin(player, eq(registrationSlot.playerId, player.id))
+			.leftJoin(hole, eq(registrationSlot.holeId, hole.id))
+			.where(eq(registrationSlot.eventId, eventId))
+	}
+
 	async findRegistrationSlotWithHoleById(slotId: number): Promise<RegistrationSlotWithHole> {
 		const [result] = await this.drizzle.db
 			.select({

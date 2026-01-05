@@ -258,7 +258,7 @@ export function toRegistrationSlotWithPlayerAndFees(
 	return {
 		...toRegistrationSlot(row),
 		player: row.player ? toPlayer(row.player) : null,
-		fees: row.fees.map(toRegistrationFee),
+		fees: row.fees?.map(toRegistrationFee) ?? [],
 	}
 }
 
