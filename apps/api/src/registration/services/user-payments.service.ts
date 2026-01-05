@@ -20,6 +20,7 @@ import { PaymentNotFoundError } from "../errors/registration.errors"
 import { toPayment, toPaymentWithDetails, toRegistrationFee } from "../mappers"
 import { PaymentsRepository } from "../repositories/payments.repository"
 import { RegistrationRepository } from "../repositories/registration.repository"
+import { RegistrationBroadcastService } from "./registration-broadcast.service"
 import Stripe from "stripe"
 
 @Injectable()
@@ -32,6 +33,7 @@ export class UserPaymentsService {
 		private readonly events: EventsService,
 		private readonly stripe: StripeService,
 		private readonly drizzle: DrizzleService,
+		private readonly broadcast: RegistrationBroadcastService,
 	) {}
 
 	/**
@@ -237,7 +239,7 @@ export class UserPaymentsService {
 		)
 
 		// Transition slots to AWAITING_PAYMENT
-		await this.paymentProcessing(registrationId)
+		await this.paymentProcessing(registrationId, eventId)
 
 		return result
 	}
@@ -271,7 +273,7 @@ export class UserPaymentsService {
 	/**
 	 * Transition slots from PENDING to AWAITING_PAYMENT.
 	 */
-	async paymentProcessing(registrationId: number): Promise<void> {
+	async paymentProcessing(registrationId: number, eventId?: number): Promise<void> {
 		const slots = await this.registrationRepository.findSlotsWithStatusByRegistration(
 			registrationId,
 			[RegistrationStatusChoices.PENDING],
@@ -286,6 +288,14 @@ export class UserPaymentsService {
 
 		// Clear expiry since payment is in progress
 		await this.registrationRepository.updateRegistration(registrationId, { expires: null })
+
+		// Notify listeners for canChoose events
+		if (eventId) {
+			const event = await this.events.getEventById(eventId)
+			if (event.canChoose) {
+				this.broadcast.notifyChange(eventId)
+			}
+		}
 	}
 
 	private calculatePaymentTotal(details: PaymentDetailRequest[]): AmountDue {

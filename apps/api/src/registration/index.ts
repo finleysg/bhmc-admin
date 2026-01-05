@@ -1,8 +1,11 @@
 // Public services
 export { AdminRegistrationController } from "./controllers/admin-registration.controller"
+export { RegistrationLiveController } from "./controllers/registration-live.controller"
 export { UserPaymentsController } from "./controllers/user-payments.controller"
 export { UserRegistrationController } from "./controllers/user-registration.controller"
 export { AdminRegistrationService } from "./services/admin-registration.service"
+export { RegistrationBroadcastService } from "./services/registration-broadcast.service"
+export { RegistrationDataService } from "./services/registration-data.service"
 export { UserPaymentsService } from "./services/user-payments.service"
 export { UserRegistrationService } from "./services/user-registration.service"
 export { RegistrationRepository } from "./repositories/registration.repository"

@@ -10,12 +10,23 @@ import { Registration } from "./registration"
 import { RegistrationFee } from "./registration-fee"
 import { RegistrationSlot } from "./registration-slot"
 
+export type WaveInfo = {
+	wave: number
+	isOpen: boolean
+	opens: string // iso date string
+}
+
 export type CompleteRegistrationFee = Omit<RegistrationFee, "eventFee"> & {
 	eventFee: EventFeeWithType
 }
 
 export type RegistrationSlotWithPlayer = Omit<RegistrationSlot, "player"> & {
 	player: Player | null
+}
+
+export type RegistrationSlotWithPlayerAndWave = Omit<RegistrationSlot, "player"> & {
+	player: Player | null
+	wave?: WaveInfo
 }
 
 export type RegistrationSlotWithPlayerAndFees = Omit<RegistrationSlot, "player" | "fees"> & {

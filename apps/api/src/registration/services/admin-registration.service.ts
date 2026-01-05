@@ -62,6 +62,7 @@ import {
 } from "../mappers"
 import { RegistrationRepository } from "../repositories/registration.repository"
 import { PaymentsRepository } from "../repositories/payments.repository"
+import { RegistrationBroadcastService } from "./registration-broadcast.service"
 
 type ActualFeeAmount = {
 	eventFeeId: number
@@ -82,6 +83,7 @@ export class AdminRegistrationService {
 		private readonly events: EventsService,
 		private readonly mailService: MailService,
 		private readonly stripeService: StripeService,
+		private readonly broadcast: RegistrationBroadcastService,
 	) {}
 
 	async getRegisteredPlayers(eventId: number): Promise<RegisteredPlayer[]> {
@@ -396,6 +398,10 @@ export class AdminRegistrationService {
 			this.logger.error(`Failed to send admin registration emails: ${String(error)}`)
 		}
 
+		if (eventRecord.canChoose) {
+			this.broadcast.notifyChange(eventId)
+		}
+
 		return paymentId
 	}
 
@@ -514,17 +520,17 @@ export class AdminRegistrationService {
 	}
 
 	async reserveSlots(eventId: number, slotIds: number[]): Promise<number> {
-		return await this.drizzle.db.transaction(async (tx) => {
+		const registrationId = await this.drizzle.db.transaction(async (tx) => {
 			const [registrationResult] = await tx.insert(registration).values({
 				eventId,
 				createdDate: toDbString(new Date()),
 			})
-			const registrationId = Number(registrationResult.insertId)
+			const regId = Number(registrationResult.insertId)
 
 			const updateResult = await tx
 				.update(registrationSlot)
 				.set({
-					registrationId,
+					registrationId: regId,
 					status: RegistrationStatusChoices.PENDING,
 				})
 				.where(
@@ -544,8 +550,11 @@ export class AdminRegistrationService {
 				throw new BadRequestException("Not all requested slots are available!")
 			}
 
-			return registrationId
+			return regId
 		})
+
+		this.broadcast.notifyChange(eventId)
+		return registrationId
 	}
 
 	async dropPlayers(registrationId: number, slotIds: number[]): Promise<number> {
@@ -613,6 +622,10 @@ export class AdminRegistrationService {
 				await tx.delete(registrationSlot).where(inArray(registrationSlot.id, slotIds))
 			}
 		})
+
+		if (eventRecord.canChoose) {
+			this.broadcast.notifyChange(eventRecord.id)
+		}
 
 		return slotIds.length
 	}
@@ -721,6 +734,7 @@ export class AdminRegistrationService {
 					registrationId: null,
 					playerId: null,
 				})
+				this.broadcast.notifyChange(reg.eventId)
 			} else {
 				// For non-choosable events, delete the slots
 				await this.repository.deleteRegistrationSlotsByRegistration(reg.id)
@@ -738,6 +752,7 @@ export class AdminRegistrationService {
 	 * Called by webhook when payment succeeds.
 	 */
 	async paymentConfirmed(registrationId: number, paymentId: number): Promise<void> {
+		const reg = await this.repository.findRegistrationById(registrationId)
 		const slots = await this.repository.findSlotsWithStatusByRegistration(registrationId, [
 			RegistrationStatusChoices.AWAITING_PAYMENT,
 		])
@@ -759,6 +774,13 @@ export class AdminRegistrationService {
 		const feeRows = await this.paymentsRepository.findPaymentDetailsByPayment(paymentId)
 		const feeIds = feeRows.map((f) => f.id)
 		await this.paymentsRepository.updatePaymentDetailStatus(feeIds, true)
+
+		if (reg) {
+			const event = await this.events.getEventById(reg.eventId)
+			if (event.canChoose) {
+				this.broadcast.notifyChange(reg.eventId)
+			}
+		}
 	}
 
 	/**
