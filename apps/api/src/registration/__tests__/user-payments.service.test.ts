@@ -149,6 +149,7 @@ const createMockRegistrationRepository = () => ({
 const createMockEventsService = () => ({
 	getEventFeesByEventId: jest.fn(),
 	getCompleteClubEventById: jest.fn(),
+	getEventById: jest.fn(),
 })
 
 const createMockStripeService = () => ({
@@ -643,6 +644,7 @@ describe("UserPaymentsService", () => {
 			paymentsRepo.updatePayment.mockResolvedValue(undefined)
 			paymentsRepo.updatePaymentIntent.mockResolvedValue(undefined)
 			eventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
+			eventsService.getEventById.mockResolvedValue(createClubEvent())
 			registrationRepo.findPlayerByUserId.mockResolvedValue(createPlayerRow())
 			registrationRepo.findSlotsWithStatusByRegistration.mockResolvedValue(pendingSlots)
 			registrationRepo.updateRegistrationSlots.mockResolvedValue(undefined)

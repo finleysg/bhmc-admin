@@ -94,17 +94,27 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 		eventId: number,
 		state: EventStreamState,
 	): Promise<RegistrationUpdateEvent> {
-		if (!state.cachedEvent) {
-			state.cachedEvent = await this.events.getEventById(eventId)
-		}
-		const slots = await this.dataService.getSlotsWithWaveInfo(eventId, state.cachedEvent)
-		const currentWave = getCurrentWave(state.cachedEvent)
+		try {
+			if (!state.cachedEvent) {
+				state.cachedEvent = await this.events.getEventById(eventId)
+			}
+			const slots = await this.dataService.getSlotsWithWaveInfo(eventId, state.cachedEvent)
+			const currentWave = getCurrentWave(state.cachedEvent)
 
-		return {
-			eventId,
-			slots,
-			currentWave,
-			timestamp: new Date().toISOString(),
+			return {
+				eventId,
+				slots,
+				currentWave,
+				timestamp: new Date().toISOString(),
+			}
+		} catch (error) {
+			this.logger.error(`Failed to build update event for ${eventId}`, error)
+			return {
+				eventId,
+				slots: [],
+				currentWave: state.lastWave,
+				timestamp: new Date().toISOString(),
+			}
 		}
 	}
 

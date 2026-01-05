@@ -291,7 +291,7 @@ export class UserPaymentsService {
 
 		// Notify listeners for canChoose events
 		if (eventId) {
-			const event = await this.events.getCompleteClubEventById(eventId, false)
+			const event = await this.events.getEventById(eventId)
 			if (event.canChoose) {
 				this.broadcast.notifyChange(eventId)
 			}

@@ -1,5 +1,6 @@
 import { RegistrationBroadcastService } from "../services/registration-broadcast.service"
 import { firstValueFrom, take } from "rxjs"
+import { ClubEvent } from "@repo/domain/types"
 
 // Mock services
 const createMockDataService = () => ({
@@ -9,7 +10,7 @@ const createMockDataService = () => ({
 	]),
 })
 
-const mockEvent = {
+const mockEvent: Partial<ClubEvent> = {
 	id: 1,
 	canChoose: true,
 	signupWaves: null,

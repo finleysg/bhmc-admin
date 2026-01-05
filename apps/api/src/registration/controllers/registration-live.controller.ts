@@ -1,6 +1,6 @@
 import { Controller, Logger, Param, ParseIntPipe, Req, Res, Sse } from "@nestjs/common"
-import { Observable, interval, merge } from "rxjs"
-import { map, takeUntil } from "rxjs/operators"
+import { Observable, interval, merge, of } from "rxjs"
+import { catchError, map, takeUntil } from "rxjs/operators"
 import type { Request, Response } from "express"
 
 import {
@@ -40,6 +40,13 @@ export class RegistrationLiveController {
 					id: event.timestamp,
 				}),
 			),
+			catchError((error) => {
+				this.logger.error(`Error in broadcast stream for event ${eventId}`, error)
+				return of({
+					data: JSON.stringify({ error: "Stream error occurred" }),
+					type: "error",
+				} as SseMessage)
+			}),
 		)
 
 		// Heartbeat every 30 seconds
