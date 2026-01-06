@@ -32,19 +32,33 @@ function createService() {
 }
 
 describe("RegistrationBroadcastService", () => {
+	let activeService: RegistrationBroadcastService | null = null
+
+	beforeEach(() => {
+		jest.useFakeTimers()
+	})
+
 	afterEach(() => {
+		activeService?.onModuleDestroy()
+		activeService = null
+		jest.clearAllTimers()
+		jest.useRealTimers()
 		jest.clearAllMocks()
 	})
 
 	describe("subscribe", () => {
 		it("creates a new stream for an event", async () => {
 			const { service, dataService } = createService()
+			activeService = service
 
 			const subscription = service.subscribe(1)
 			expect(subscription).toBeDefined()
 
-			// First emission happens on subscribe (startWith + debounce)
-			const event = await firstValueFrom(subscription.pipe(take(1)))
+			// Start waiting for emission, then advance timers past debounce
+			const promise = firstValueFrom(subscription.pipe(take(1)))
+			jest.advanceTimersByTime(2100)
+
+			const event = await promise
 			expect(event.eventId).toBe(1)
 			expect(event.slots).toHaveLength(2)
 			expect(dataService.getSlotsWithWaveInfo).toHaveBeenCalledWith(1, mockEvent)
@@ -52,12 +66,17 @@ describe("RegistrationBroadcastService", () => {
 
 		it("creates separate streams for different events", async () => {
 			const { service, dataService } = createService()
+			activeService = service
 
 			const sub1 = service.subscribe(1)
 			const sub2 = service.subscribe(2)
 
-			await firstValueFrom(sub1.pipe(take(1)))
-			await firstValueFrom(sub2.pipe(take(1)))
+			const promise1 = firstValueFrom(sub1.pipe(take(1)))
+			const promise2 = firstValueFrom(sub2.pipe(take(1)))
+			jest.advanceTimersByTime(2100)
+
+			await promise1
+			await promise2
 
 			expect(dataService.getSlotsWithWaveInfo).toHaveBeenCalledWith(1, mockEvent)
 			expect(dataService.getSlotsWithWaveInfo).toHaveBeenCalledWith(2, mockEvent)
@@ -67,6 +86,7 @@ describe("RegistrationBroadcastService", () => {
 	describe("notifyChange", () => {
 		it("does nothing for events with no subscribers", () => {
 			const { service, dataService } = createService()
+			activeService = service
 
 			// Should not throw
 			service.notifyChange(999)
@@ -78,11 +98,12 @@ describe("RegistrationBroadcastService", () => {
 	describe("onModuleDestroy", () => {
 		it("cleans up all streams", () => {
 			const { service } = createService()
+			activeService = service
 
 			service.subscribe(1)
 			service.subscribe(2)
 
-			// Should not throw
+			// Should not throw - afterEach will also call this
 			service.onModuleDestroy()
 		})
 	})
