@@ -42,7 +42,7 @@ pnpm format:check           # Prettier check
 
 - **TypeScript**: Strict mode, no `any` in production code
 - **Database**: MySQL via Drizzle ORM (external schema - no migrations)
-- **Validation**: Zod for runtime validation, class-validator for NestJS DTOs
+- **Validation**: Plain TypeScript validation in domain package, class-validator for NestJS DTOs
 - **Testing**: Jest with `Partial<T>` patterns for type-safe mocks
 - **Environment**: Config via `.env` files, validated with Joi
 
@@ -50,9 +50,117 @@ pnpm format:check           # Prettier check
 
 - **Barrel Exports**: Each module exports public API via `index.ts`
 - **Domain-Driven Design**: Service/controller/DTO layers per module
-- **Type-Safe Testing**: Use actual domain types, not `any`, in test fixtures
 - **API Repositories**: Only accept and return internal models or primitives
 - **API Services**: Only accept and return domain models or primitives
+
+## API Module Structure
+
+```
+{module}/
+├── {module}.module.ts          # NestJS module declaration
+├── index.ts                    # Barrel exports
+├── {name}.controller.ts        # HTTP handlers
+├── mappers.ts                  # Row → domain type converters
+├── services/
+│   └── {name}.service.ts       # Business logic
+├── repositories/
+│   └── {name}.repository.ts    # Drizzle data access
+├── errors/
+│   └── {module}.errors.ts      # Custom HttpExceptions
+├── cron/                       # Scheduled tasks (optional)
+└── __tests__/
+    └── {name}.test.ts          # Jest tests
+```
+
+## Naming Conventions
+
+| Layer      | File                               | Class                            |
+| ---------- | ---------------------------------- | -------------------------------- |
+| Controller | `admin-registration.controller.ts` | `AdminRegistrationController`    |
+| Service    | `admin-registration.service.ts`    | `AdminRegistrationService`       |
+| Repository | `registration.repository.ts`       | `RegistrationRepository`         |
+| Error      | `registration.errors.ts`           | `SlotConflictError`              |
+| Mapper     | `mappers.ts`                       | `toPlayer()`, `toRegistration()` |
+
+## Data Flow
+
+```
+Controller → Service → Repository → Drizzle
+     ↓           ↓           ↓
+   DTO      Domain Type    Row Type
+```
+
+- **Repositories**: Accept/return row types or primitives, throw `Error` on not found
+- **Services**: Accept/return domain types, throw `HttpException` subclasses
+- **Mappers**: `to{DomainType}(row)` functions bridge rows → domain types
+
+## Error Handling
+
+```typescript
+// Custom errors extend HttpException
+export class SlotConflictError extends HttpException {
+	constructor() {
+		super("Slots already reserved", HttpStatus.CONFLICT)
+	}
+}
+
+// Service throws domain-specific errors
+if (!row) throw new BadRequestException(`Event ${id} not found`)
+```
+
+## Test Patterns
+
+```typescript
+// Factory functions with Partial<T> overrides
+const createPlayerRow = (overrides: Partial<PlayerRow> = {}): PlayerRow => ({
+	id: 1,
+	firstName: "Test",
+	// ... defaults
+	...overrides,
+})
+
+// Mock factories
+const createMockRepository = () => ({
+	findById: jest.fn(),
+	update: jest.fn(),
+})
+```
+
+## Domain Package
+
+**Types** (`@repo/domain/types`):
+
+- Organized by feature: `events/`, `register/`, `courses/`
+- Base types: `ClubEvent`, `Registration`, `Player`
+- Composed variants: `CompleteClubEvent`, `CompleteRegistration`
+- Choice constants: `EventTypeChoices`, `RegistrationStatusChoices`
+
+**Functions** (`@repo/domain/functions`):
+
+- Pure, deterministic, no side effects
+- Validation: `validateClubEvent()` throws or returns narrowed type
+- Utilities: `formatCurrency()`, `getAge()`, `calculateTeeTime()`
+
+## Web Patterns
+
+- **Data fetching**: Plain `fetch` + `useState`/`useEffect` (no React Query)
+- **Forms**: `useReducer` for complex state (no form library)
+- **State**: React Context for auth, local state otherwise
+- **Styling**: Tailwind v4 + daisyUI 5 utility classes
+- **API**: Routes in `/app/api/` proxy to backend with Django tokens
+
+## Common Imports
+
+```typescript
+// Domain types
+import type { ClubEvent, Player, CompleteRegistration } from "@repo/domain/types"
+
+// Domain functions
+import { formatCurrency, validateRegistration } from "@repo/domain/functions"
+
+// Database (API only)
+import { player, registration, DrizzleService, type PlayerRow } from "../../database"
+```
 
 ## General Agent Instructions
 

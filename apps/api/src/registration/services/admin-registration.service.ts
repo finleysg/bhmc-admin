@@ -753,12 +753,20 @@ export class AdminRegistrationService {
 	 */
 	async paymentConfirmed(registrationId: number, paymentId: number): Promise<void> {
 		const reg = await this.repository.findRegistrationById(registrationId)
-		const slots = await this.repository.findSlotsWithStatusByRegistration(registrationId, [
-			RegistrationStatusChoices.AWAITING_PAYMENT,
-		])
+		if (!reg) {
+			throw new Error(
+				`Inconceivable! No registration found for id ${registrationId} in the webhook flow.`,
+			)
+		}
 
-		if (slots.length > 0) {
-			const slotIds = slots.map((s) => s.id)
+		const slots = await this.repository.findRegistrationSlotsByRegistrationId(registrationId)
+
+		// Not all slots may have been reserved. It's common for a user to over-select.
+		const reservedSlots = slots.filter(
+			(slot) => slot.status === RegistrationStatusChoices.AWAITING_PAYMENT && slot.playerId,
+		)
+		if (reservedSlots.length > 0) {
+			const slotIds = reservedSlots.map((s) => s.id)
 			await this.repository.updateRegistrationSlots(slotIds, {
 				status: RegistrationStatusChoices.RESERVED,
 			})
@@ -775,11 +783,23 @@ export class AdminRegistrationService {
 		const feeIds = feeRows.map((f) => f.id)
 		await this.paymentsRepository.updatePaymentDetailStatus(feeIds, true)
 
-		if (reg) {
-			const event = await this.events.getEventById(reg.eventId)
+		// Free up or remove slots with no player
+		const event = await this.events.getEventById(reg.eventId)
+		const stillAvailable = slots.filter((slot) => !slot.playerId)
+		if (stillAvailable.length > 0) {
+			const slotIds = stillAvailable.map((s) => s.id)
 			if (event.canChoose) {
-				this.broadcast.notifyChange(reg.eventId)
+				await this.repository.updateRegistrationSlots(slotIds, {
+					status: RegistrationStatusChoices.AVAILABLE,
+					registrationId: null,
+				})
+			} else {
+				await this.repository.deleteRegistrationSlots(slotIds)
 			}
+		}
+
+		if (event.canChoose) {
+			this.broadcast.notifyChange(reg.eventId)
 		}
 	}
 

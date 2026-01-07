@@ -117,6 +117,7 @@ export class RegistrationRepository {
 			.leftJoin(player, eq(registrationSlot.playerId, player.id))
 			.leftJoin(hole, eq(registrationSlot.holeId, hole.id))
 			.where(eq(registrationSlot.eventId, eventId))
+			.orderBy(registrationSlot.id, registrationSlot.slot)
 	}
 
 	async findRegistrationSlotWithHoleById(slotId: number): Promise<RegistrationSlotWithHole> {
@@ -518,6 +519,10 @@ export class RegistrationRepository {
 		await this.drizzle.db
 			.delete(registrationSlot)
 			.where(eq(registrationSlot.registrationId, registrationId))
+	}
+
+	async deleteRegistrationSlots(slotIds: number[]): Promise<void> {
+		await this.drizzle.db.delete(registrationSlot).where(inArray(registrationSlot.id, slotIds))
 	}
 
 	async updateRegistrationSlots(
