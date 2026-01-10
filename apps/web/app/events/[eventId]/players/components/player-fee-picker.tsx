@@ -76,16 +76,16 @@ export function PlayerFeePicker({
 				<div className="space-y-2">
 					{playerFees.fees.map((fee) => (
 						<label key={fee.id} className="flex items-center justify-between">
+							<input
+								type="checkbox"
+								className="checkbox checkbox-sm"
+								checked={fee.isSelected}
+								disabled={!fee.canChange}
+								onChange={() => handleChange(fee)}
+							/>							
 							<span className="text-sm">{fee.name || "Fee"}</span>
 							<div className="flex items-center gap-2">
 								<span className="text-sm text-base-content/70">{formatCurrency(fee.amount)}</span>
-								<input
-									type="checkbox"
-									className="checkbox checkbox-sm"
-									checked={fee.isSelected}
-									disabled={!fee.canChange}
-									onChange={() => handleChange(fee)}
-								/>
 							</div>
 						</label>
 					))}

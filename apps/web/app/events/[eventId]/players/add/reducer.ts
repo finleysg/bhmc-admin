@@ -10,7 +10,6 @@ import type {
 } from "@repo/domain/types"
 
 export interface AddPlayerState {
-	registrationId: number | null
 	signedUpBy: string
 	event: ClubEvent | null
 	selectedPlayers: Player[]
@@ -20,7 +19,6 @@ export interface AddPlayerState {
 	selectedFees: { playerId: number; eventFeeId: number }[]
 	canSelectGroup: boolean
 	canSelectFees: boolean
-	canReserveSpot: boolean
 	canCompleteRegistration: boolean
 	isLoading: boolean
 	error: string | null
@@ -34,7 +32,6 @@ export type Action =
 	| { type: "REMOVE_PLAYER"; payload: Player }
 	| { type: "SELECT_SLOTS"; payload: { slotIds: number[]; group?: AvailableSlotGroup } }
 	| { type: "SET_FEES"; payload: { playerId: number; eventFeeId: number }[] }
-	| { type: "SET_REGISTRATION_ID"; payload: number }
 	| { type: "SET_REGISTRATION_OPTIONS"; payload: AdminRegistrationOptionsState }
 	| { type: "SET_COMPLETE_SUCCESS"; payload: boolean }
 	| { type: "SET_ERROR"; payload: unknown }
@@ -43,7 +40,6 @@ export type Action =
 
 export function getInitialState(): AddPlayerState {
 	return {
-		registrationId: null,
 		event: null,
 		selectedPlayers: [],
 		selectedSlotGroup: null,
@@ -57,7 +53,6 @@ export function getInitialState(): AddPlayerState {
 		adminRegistration: null,
 		isLoading: true,
 		canCompleteRegistration: false,
-		canReserveSpot: false,
 		canSelectFees: false,
 		canSelectGroup: false,
 		completeSuccess: false,
@@ -66,7 +61,7 @@ export function getInitialState(): AddPlayerState {
 }
 
 export function generateAdminRegistration(
-	state: Omit<AddPlayerState, "adminRegistration"> & { registrationId: number | null },
+	state: Omit<AddPlayerState, "adminRegistration">,
 ): AdminRegistration | null {
 	// null until we can register
 	if (!state.canCompleteRegistration) {
@@ -94,21 +89,18 @@ export function generateAdminRegistration(
 	// Build slots array
 	let slots: AdminRegistrationSlot[] = []
 	if (state.selectedSlotGroup && state.selectedPlayers.length > 0) {
-		const selectedSlotIds = state.selectedSlotGroup.slots.map((s) => s.id)
-		slots = selectedSlotIds.map((slotId, index) => {
-			const player = state.selectedPlayers[index]
-			const feeIds = player ? (feesMap.get(player.id) ?? []) : []
+		slots = state.selectedPlayers.map((p, index) => {
+			const feeIds = feesMap.get(p.id) ?? []
+			const slot = state.selectedSlotGroup!.slots[index]
 			return {
-				registrationId: state.registrationId ?? -1,
-				slotId: slotId,
-				playerId: player.id,
+				slotId: slot?.id,
+				playerId: p.id,
 				feeIds,
 			}
 		})
 	}
 
 	return {
-		id: state.registrationId ?? -1,
 		userId: state.selectedPlayers[0].userId ?? -1,
 		signedUpBy: state.signedUpBy,
 		courseId,
@@ -142,7 +134,6 @@ export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 					newPlayers.length > 0 &&
 					(state.event?.canChoose ? state.selectedSlotGroup !== null : true),
 				canCompleteRegistration:
-					state.registrationId !== null &&
 					(state.event?.canChoose ? state.selectedSlotGroup !== null : true) &&
 					state.selectedPlayers.length > 0 &&
 					state.selectedFees.length > 0,
@@ -164,7 +155,6 @@ export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 					newPlayers.length > 0 &&
 					(state.event?.canChoose ? state.selectedSlotGroup !== null : true),
 				canCompleteRegistration:
-					state.registrationId !== null &&
 					(state.event?.canChoose ? state.selectedSlotGroup !== null : true) &&
 					state.selectedPlayers.length > 0 &&
 					state.selectedFees.length > 0,
@@ -179,12 +169,10 @@ export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 			const nextState = {
 				...state,
 				selectedSlotGroup: group,
-				registrationId: null,
 				completeSuccess: false,
 				canSelectFees:
 					state.selectedPlayers.length > 0 && (state.event?.canChoose ? group !== null : true),
 				canCompleteRegistration:
-					state.registrationId !== null &&
 					(state.event?.canChoose ? state.selectedSlotGroup !== null : true) &&
 					state.selectedPlayers.length > 0 &&
 					state.selectedFees.length > 0,
@@ -201,23 +189,6 @@ export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 				selectedFees: fees,
 				canReserveSpot: fees.length > 0,
 				canCompleteRegistration:
-					state.registrationId !== null &&
-					(state.event?.canChoose ? state.selectedSlotGroup !== null : true) &&
-					state.selectedPlayers.length > 0 &&
-					state.selectedFees.length > 0,
-			}
-			return {
-				...nextState,
-				adminRegistration: generateAdminRegistration(nextState),
-			}
-		}
-		case "SET_REGISTRATION_ID": {
-			const id = action.payload
-			const nextState = {
-				...state,
-				registrationId: id,
-				canCompleteRegistration:
-					id !== null &&
 					(state.event?.canChoose ? state.selectedSlotGroup !== null : true) &&
 					state.selectedPlayers.length > 0 &&
 					state.selectedFees.length > 0,

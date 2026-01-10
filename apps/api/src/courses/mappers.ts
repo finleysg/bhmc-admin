@@ -1,6 +1,6 @@
 import { Course, Hole, Tee } from "@repo/domain/types"
 
-import type { CourseRow, HoleRow, TeeRow } from "../database"
+import type { CourseRow, CourseWithHoles, HoleRow, TeeRow } from "../database"
 
 /**
  * Maps CourseRow to Course domain type
@@ -14,6 +14,15 @@ export function toCourse(row: CourseRow): Course {
 		tees: [],
 		holes: [],
 	}
+}
+
+/**
+ * Maps database course with holes to domain model
+ */
+export function toCourseWithHoles(row: CourseWithHoles): CourseWithHoles {
+	const course = toCourse(row) as CourseWithHoles
+	course.holes = row.holes.map(h => toHole(h))
+	return course
 }
 
 /**

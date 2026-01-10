@@ -102,9 +102,6 @@ export class UserRegistrationService {
 		playerId?: number,
 	): Promise<RegistrationWithSlots> {
 		const row = await this.repository.findRegistrationFullById(registrationId)
-		if (!row) {
-			throw new NotFoundException(`Registration ${registrationId} not found`)
-		}
 
 		// Verify group membership: user's player must be in one of the slots
 		if (playerId) {

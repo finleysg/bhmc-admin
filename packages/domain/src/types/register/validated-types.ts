@@ -52,7 +52,7 @@ export type RegistrationWithSlots = Omit<Registration, "slots"> & {
  */
 export type CompleteRegistration = Omit<Registration, "slots" | "course"> & {
 	slots: CompleteRegistrationSlot[]
-	course: CompleteCourse
+	course?: CompleteCourse
 }
 
 /**

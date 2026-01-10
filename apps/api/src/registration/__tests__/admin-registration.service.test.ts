@@ -90,9 +90,19 @@ const createMockBroadcastService = () => ({
 	notifyChange: jest.fn(),
 })
 
+const createMockAuthService = () => ({
+	findById: jest.fn(),
+})
+
+const createMockCoursesService = () => ({
+	findCourseWithHolesById: jest.fn(),
+})
+
 const createMocks = () => ({
 	repository: createMockRegistrationRepository(),
 	paymentsRepository: createMockPaymentsRepository(),
+	auth: createMockAuthService(),
+	courses: createMockCoursesService(),
 	events: createMockEventsService(),
 	broadcast: createMockBroadcastService(),
 	drizzle: {},
@@ -105,6 +115,8 @@ const createService = (mocks: ReturnType<typeof createMocks>) =>
 		mocks.drizzle as any,
 		mocks.repository as any,
 		mocks.paymentsRepository as any,
+		mocks.auth as any,
+		mocks.courses as any,
 		mocks.events as any,
 		mocks.mailService as any,
 		mocks.stripeService as any,

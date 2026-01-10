@@ -200,7 +200,7 @@ export class MailService {
 	) {
 		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
 		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
-		const eventHoleOrStart = getStart(event, registration.slots[0], registration.course.holes)
+		const eventHoleOrStart = registration.course ? getStart(event, registration.slots[0], registration.course.holes) : undefined
 
 		const players = registration.slots.map((slot) => ({
 			name: `${slot.player.firstName} ${slot.player.lastName}`,
@@ -278,7 +278,7 @@ export class MailService {
 		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
 		const paymentUrl = `${websiteUrl}/registration/${registration.id}/payment/${paymentId}`
 
-		const eventHoleOrStart = getStart(event, registration.slots[0], registration.course.holes)
+		const eventHoleOrStart = registration.course ? getStart(event, registration.slots[0], registration.course.holes) : undefined
 
 		const players = registration.slots.map((slot) => ({
 			name: `${slot.player.firstName} ${slot.player.lastName}`,
@@ -291,12 +291,12 @@ export class MailService {
 
 		const requiredFees = registration.slots.reduce(
 			(sum, slot) =>
-				sum + slot.fees.filter((f) => f.eventFee.isRequired).reduce((s, f) => s + f.amount, 0),
+				sum + slot.fees.filter((f) => f.eventFee?.isRequired).reduce((s, f) => s + f.amount, 0),
 			0,
 		)
 		const optionalFees = registration.slots.reduce(
 			(sum, slot) =>
-				sum + slot.fees.filter((f) => !f.eventFee.isRequired).reduce((s, f) => s + f.amount, 0),
+				sum + slot.fees.filter((f) => !f.eventFee?.isRequired).reduce((s, f) => s + f.amount, 0),
 			0,
 		)
 		const totalFees = requiredFees + optionalFees

@@ -69,12 +69,8 @@ export function PlayerEventFeePicker({
 
 				<div className="space-y-2">
 					{fees.map((fee) => (
-						<label key={fee.id} className="flex items-center justify-between">
-							<span className="text-sm">{fee.feeType?.name || "Fee"}</span>
-							<div className="flex items-center gap-2">
-								<span className="text-sm text-base-content/70">
-									{formatCurrency(getAmount(fee, player))}
-								</span>
+						<label key={fee.id} className="flex justify-between">
+							<div className="flex gap-3">
 								<input
 									type="checkbox"
 									className="checkbox checkbox-sm"
@@ -82,7 +78,11 @@ export function PlayerEventFeePicker({
 									disabled={fee.isRequired}
 									onChange={() => onToggle(fee.id)}
 								/>
+								<span className="text-sm">{fee.feeType?.name || "Fee"}</span>
 							</div>
+							<span className="text-sm text-base-content/70">
+								{formatCurrency(getAmount(fee, player))}
+							</span>
 						</label>
 					))}
 				</div>

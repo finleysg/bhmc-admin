@@ -15,7 +15,7 @@ import {
 import { toChampion, toLowScore } from "./mappers"
 
 @Injectable()
-export class CoreRepository {
+export class CoreService {
 	constructor(private drizzle: DrizzleService) {}
 
 	async findLowScores(season: number, courseName: string, isNet: boolean): Promise<LowScore[]> {

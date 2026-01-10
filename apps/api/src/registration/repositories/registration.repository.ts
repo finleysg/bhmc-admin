@@ -1,7 +1,7 @@
 import { and, eq, inArray, or, like, lt, sql } from "drizzle-orm"
 import type { MySql2Database } from "drizzle-orm/mysql2"
 
-import { Injectable, Logger } from "@nestjs/common"
+import { Injectable, Logger, NotFoundException } from "@nestjs/common"
 
 import {
 	course,
@@ -163,7 +163,7 @@ export class RegistrationRepository {
 		return reg ?? null
 	}
 
-	async findRegistrationFullById(registrationId: number): Promise<RegistrationFull | null> {
+	async findRegistrationFullById(registrationId: number): Promise<RegistrationFull> {
 		const results = await this.drizzle.db
 			.select({
 				registration,
@@ -177,7 +177,7 @@ export class RegistrationRepository {
 			.leftJoin(registrationFee, eq(registrationFee.registrationSlotId, registrationSlot.id))
 			.where(eq(registration.id, registrationId))
 
-		if (results.length === 0) return null
+		if (results.length === 0) throw new NotFoundException(`No registration for id ${registrationId}`)
 
 		const reg = results[0].registration
 		const slotsMap = new Map<number, RegistrationSlotFull>()

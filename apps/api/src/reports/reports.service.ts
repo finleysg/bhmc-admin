@@ -15,7 +15,7 @@ import {
 	RegisteredPlayer,
 } from "@repo/domain/types"
 
-import { CoursesRepository, toHole } from "../courses"
+import { CoursesService, toHole } from "../courses"
 import {
 	DrizzleService,
 	eventFee,
@@ -73,7 +73,7 @@ interface EventPlayerSlot {
 @Injectable()
 export class ReportsService {
 	constructor(
-		private readonly courses: CoursesRepository,
+		private readonly courses: CoursesService,
 		private readonly events: EventsService,
 		private readonly registration: AdminRegistrationService,
 		private readonly drizzle: DrizzleService,

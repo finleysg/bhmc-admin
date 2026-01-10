@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
+import { and, eq, inArray, isNotNull, like, ne, or } from "drizzle-orm"
 
 import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import {
@@ -20,6 +20,7 @@ import {
 	RefundRequest,
 	RegistrationSlot,
 	RegistrationStatusChoices,
+	RegistrationStatusValue,
 	PlayerQuery,
 	CompleteClubEvent,
 	RegisteredPlayer,
@@ -28,12 +29,15 @@ import {
 	CompletePayment,
 	CompleteRegistrationAndPayment,
 	EventTypeChoices,
+	AmountDue,
+	ClubEvent,
+	CourseWithHoles,
 } from "@repo/domain/types"
 
 import { toCourse, toHole } from "../../courses/mappers"
 import {
-	authUser,
 	course,
+	CourseFull,
 	DrizzleService,
 	eventFee,
 	feeType,
@@ -59,10 +63,14 @@ import {
 	toRegistration,
 	toRegistrationFeeWithEventFee,
 	toRegistrationSlot,
+	toRegistrationWithSlots,
 } from "../mappers"
 import { RegistrationRepository } from "../repositories/registration.repository"
 import { PaymentsRepository } from "../repositories/payments.repository"
 import { RegistrationBroadcastService } from "./registration-broadcast.service"
+import { EventFullError, SlotConflictError } from "../errors"
+import { DjangoAuthService } from "../../auth"
+import { CoursesService } from "../../courses"
 
 type ActualFeeAmount = {
 	eventFeeId: number
@@ -80,6 +88,8 @@ export class AdminRegistrationService {
 		private drizzle: DrizzleService,
 		private repository: RegistrationRepository,
 		private readonly paymentsRepository: PaymentsRepository,
+		private readonly auth: DjangoAuthService,
+		private readonly courses: CoursesService,
 		private readonly events: EventsService,
 		private readonly mailService: MailService,
 		private readonly stripeService: StripeService,
@@ -301,63 +311,103 @@ export class AdminRegistrationService {
 		return playerMap
 	}
 
-	async completeAdminRegistration(
+    async createAdminRegistration(
+        eventId: number,
+        dto: AdminRegistration,
+    ): Promise<{registrationId: number, paymentId: number}> {
+        const eventRecord = await this.events.getCompleteClubEventById(eventId, false)
+
+        const convertedSlots = await this.convertSlots(eventRecord, dto.slots)
+        const allAmounts = convertedSlots.flatMap((slot) => slot.amounts.map((a) => a.amount))
+        const totalAmountDue = calculateAmountDue(allAmounts)
+
+        const expires = new Date()
+        expires.setHours(expires.getHours() + dto.expires)
+
+		if (eventRecord.canChoose) {
+			const { registrationId, paymentId } = await this.createChooseableRegistration(
+				eventId,
+				expires,
+				totalAmountDue,
+				convertedSlots,
+				dto
+			)
+			this.broadcast.notifyChange(eventId)
+
+			return { registrationId, paymentId }
+		} else {
+			const { registrationId, paymentId } = await this.createNonChoosableRegistration(
+				eventRecord,
+				expires,
+				totalAmountDue,
+				convertedSlots,
+				dto
+			)
+
+			// Membership registration?
+			if (eventRecord.eventType === EventTypeChoices.SEASON_REGISTRATION) {
+				const season = new Date(eventRecord.startDate).getFullYear()
+				for (const slot of convertedSlots) {
+					await this.updateMembershipStatus(slot.playerId, season)
+				}
+			}
+
+			return { registrationId, paymentId }
+		}
+    }
+
+	private async createChooseableRegistration(
 		eventId: number,
-		registrationId: number,
+		expires: Date,
+		amountDue: AmountDue,
+		slotAmounts: AdminRegistrationSlotWithAmount[],
 		dto: AdminRegistration,
-	): Promise<number> {
-		let paymentId: number = -1
-
-		const [existingRegistration] = await this.drizzle.db
-			.select()
-			.from(registration)
-			.where(and(eq(registration.id, registrationId), eq(registration.eventId, eventId)))
-			.limit(1)
-
-		if (!existingRegistration) {
-			throw new NotFoundException(`Registration ${registrationId} not found`)
-		}
-
-		const eventRecord = await this.events.getCompleteClubEventById(eventId, false)
-		if (!eventRecord) {
-			throw new BadRequestException("event id not found")
-		}
-
-		const convertedSlots = await this.convertSlots(eventRecord, dto.slots)
-		const allAmounts = convertedSlots.flatMap((slot) => slot.amounts.map((a) => a.amount))
-		const totalAmountDue = calculateAmountDue(allAmounts)
-
-		const expires = new Date()
-		expires.setHours(expires.getHours() + dto.expires)
+	): Promise<{registrationId: number, paymentId: number}> {
+		let registrationId = 0
+		let paymentId = 0
 
 		await this.drizzle.db.transaction(async (tx) => {
-			await tx
-				.update(registration)
-				.set({
+			const slotIds = dto.slots.map(s => s.slotId)
+			const slots = await tx
+				.select()
+				.from(registrationSlot)
+				.where(inArray(registrationSlot.id, slotIds))
+				.for("update") // Row-level lock
+
+			// Validate all slots are AVAILABLE
+			for (const slot of slots) {
+				if (slot.status !== RegistrationStatusChoices.AVAILABLE) {
+					throw new SlotConflictError()
+				}
+			}
+
+			const [result] = await tx.insert(registration).values({
+					eventId: eventId,
 					userId: dto.userId,
-					signedUpBy: dto.signedUpBy,
-					notes: dto.notes,
 					courseId: dto.courseId,
+					signedUpBy: dto.signedUpBy,
 					expires: toDbString(expires),
+					createdDate: toDbString(new Date()),
 				})
-				.where(eq(registration.id, registrationId))
+				registrationId = Number(result.insertId)
 
 			const paymentCode = dto.collectPayment ? "Requested" : "Waived"
 			const [paymentResult] = await tx.insert(payment).values({
 				paymentCode,
 				eventId,
 				userId: dto.userId,
-				paymentAmount: totalAmountDue.total.toFixed(2),
-				transactionFee: totalAmountDue.transactionFee.toFixed(2),
+				paymentAmount: amountDue.total.toFixed(2),
+				transactionFee: amountDue.transactionFee.toFixed(2),
 				confirmed: 0,
 				notificationType: "A",
 			})
 			paymentId = Number(paymentResult.insertId)
 
-			for (const slot of convertedSlots) {
+			for (const slot of slotAmounts) {
 				await tx
 					.update(registrationSlot)
 					.set({
+						registrationId,
 						status: RegistrationStatusChoices.AWAITING_PAYMENT,
 						playerId: slot.playerId,
 						holeId: dto.startingHoleId,
@@ -377,83 +427,170 @@ export class AdminRegistrationService {
 			}
 		})
 
-		// Membership registration?
-		if (eventRecord.eventType === EventTypeChoices.SEASON_REGISTRATION) {
-			const season = new Date(eventRecord.startDate).getFullYear()
-			for (const slot of convertedSlots) {
-				await this.updateMembershipStatus(slot.playerId, season)
-			}
-		}
-
-		// Send notification emails
-		try {
-			await this.sendAdminRegistrationEmails(
-				eventRecord,
-				registrationId,
-				paymentId,
-				dto.userId,
-				dto.collectPayment,
-			)
-		} catch (error) {
-			this.logger.error(`Failed to send admin registration emails: ${String(error)}`)
-		}
-
-		if (eventRecord.canChoose) {
-			this.broadcast.notifyChange(eventId)
-		}
-
-		return paymentId
+		return { registrationId, paymentId }
 	}
 
-	// TODO: seems like this can be simplified
-	private async sendAdminRegistrationEmails(
-		event: CompleteClubEvent,
+	// The slots for this type of registration are made
+	// by the client - they don't exist yet in the database.
+	private async createNonChoosableRegistration(
+		event: ClubEvent,
+		expires: Date,
+		amountDue: AmountDue,
+		slotAmounts: AdminRegistrationSlotWithAmount[],
+		dto: AdminRegistration,
+	): Promise<{registrationId: number, paymentId: number}> {
+		let registrationId = 0
+		let paymentId = 0
+
+		await this.drizzle.db.transaction(async (tx) => {
+			// Lock all reserved/pending/awaiting slots for this event
+			const lockedSlots = await tx
+				.select({ id: registrationSlot.id })
+				.from(registrationSlot)
+				.where(
+					and(
+						eq(registrationSlot.eventId, event.id),
+						inArray(registrationSlot.status, [
+							RegistrationStatusChoices.PENDING,
+							RegistrationStatusChoices.AWAITING_PAYMENT,
+							RegistrationStatusChoices.RESERVED,
+						]),
+					),
+				)
+				.for("update")
+
+			// Capacity check
+			if (event.registrationMaximum) {
+				if (lockedSlots.length + 1 > event.registrationMaximum) {
+					throw new EventFullError()
+				}
+			}
+
+			// If this user already started a registration, create a new one
+			// and let the system cleanup process deal with a stale registration
+			const [existing] = await tx
+				.select()
+				.from(registration)
+				.where(and(eq(registration.userId, dto.userId), eq(registration.eventId, event.id)))
+
+			if (existing) {
+				await tx.update(registration).set({ userId: null }).where(eq(registration.id, existing.id))
+				await tx
+					.update(registrationSlot)
+					.set({ playerId: null, registrationId: null })
+					.where(and(
+						eq(registrationSlot.registrationId, existing.id),
+						ne(registrationSlot.status, RegistrationStatusChoices.RESERVED) // just in case the user completed a registration
+					))
+			}
+
+			const [result] = await tx.insert(registration).values({
+				eventId: event.id,
+				userId: dto.userId,
+				signedUpBy: dto.signedUpBy,
+				expires: toDbString(expires),
+				createdDate: toDbString(new Date()),
+			})
+			const registrationId = Number(result.insertId)
+
+			const paymentCode = dto.collectPayment ? "Requested" : "Waived"
+			const [paymentResult] = await tx.insert(payment).values({
+				paymentCode,
+				eventId: event.id,
+				userId: dto.userId,
+				paymentAmount: amountDue.total.toFixed(2),
+				transactionFee: amountDue.transactionFee.toFixed(2),
+				confirmed: 0,
+				notificationType: "A",
+			})
+			paymentId = Number(paymentResult.insertId)
+
+			// Create new slots
+			for (const slot of slotAmounts) {
+				const [result] = await tx.insert(registrationSlot).values({
+					eventId: event.id,
+					playerId: slot.playerId,
+					registrationId,
+					status: RegistrationStatusChoices.PENDING,
+					startingOrder: 1,
+					slot: 0,
+				})
+				let slotId = result.insertId
+
+				for (const fee of slot.amounts) {
+					await tx.insert(registrationFee).values({
+						isPaid: 0,
+						eventFeeId: fee.eventFeeId,
+						paymentId,
+						registrationSlotId: slotId,
+						amount: fee.amount.toFixed(2),
+					})
+				}
+			}
+		})
+
+		return { registrationId, paymentId }
+	}
+
+	async sendPaymentRequestNotification(
+		eventId: number,
 		registrationId: number,
 		paymentId: number,
-		paymentUserId: number,
 		collectPayment: boolean,
 	): Promise<void> {
-		// Get payment user's email
-		const [userRow] = await this.drizzle.db
-			.select()
-			.from(authUser)
-			.where(eq(authUser.id, paymentUserId))
-			.limit(1)
+		const event = await this.events.getCompleteClubEventById(eventId)
+		const registration = await this.repository.findRegistrationFullById(registrationId)
+		const course = registration.courseId ? await this.courses.findCourseWithHolesById(registration.courseId) : undefined
+		const user = await this.auth.findById(registration.userId!)
 
-		if (!userRow) {
-			this.logger.warn(`User ${paymentUserId} not found for admin registration notification`)
-			return
+		if (!user) {
+			throw new BadRequestException("Inconceivable! No user found for the notification.")
 		}
 
-		// Build validated registration
-		const regWithCourse = await this.repository.findRegistrationWithCourse(registrationId)
-		if (!regWithCourse) {
-			this.logger.warn(`Registration ${registrationId} not found`)
-			return
+		const eventFeeMap = new Map(event.eventFees.map((ef) => [ef.id, ef]))
+		const holeMap = new Map(course?.holes.map((h) => [h.id, h]) ?? [])
+
+		const registrationComplete: CompleteRegistration = {
+			id: registration.id,
+			eventId: registration.eventId,
+			notes: registration.notes ?? undefined,
+			courseId: registration.courseId ?? undefined,
+			course: course ? { ...course, tees: [] } : { id: -1, name: "dummy", numberOfHoles: 0, holes: [], tees: [] },
+			signedUpBy: registration.signedUpBy ?? "",
+			userId: registration.userId ?? 0,
+			expires: registration.expires ?? undefined,
+			ggId: registration.ggId ?? undefined,
+			createdDate: registration.createdDate,
+			slots: registration.slots.map((slot) => ({
+				id: slot.id,
+				registrationId: slot.registrationId ?? 0,
+				eventId: slot.eventId,
+				startingOrder: slot.startingOrder,
+				slot: slot.slot,
+				status: slot.status as RegistrationStatusValue,
+				holeId: slot.holeId ?? undefined,
+				hole: holeMap.get(slot.holeId!) ?? dummyHole(),
+				playerId: slot.playerId ?? undefined,
+				player: toPlayer(slot.player!),
+				ggId: slot.ggId ?? undefined,
+				fees: (slot.fees ?? []).map((fee) => ({
+					id: fee.id,
+					registrationSlotId: fee.registrationSlotId ?? 0,
+					paymentId: fee.paymentId,
+					amount: parseFloat(fee.amount),
+					isPaid: Boolean(fee.isPaid),
+					eventFeeId: fee.eventFeeId,
+					eventFee: eventFeeMap.get(fee.eventFeeId)!,
+				})),
+			})),
 		}
-
-		const result = toRegistration(regWithCourse.registration)
-		if (regWithCourse.course) {
-			result.course = toCourse(regWithCourse.course)
-		}
-
-		const slotRows = await this.repository.findSlotsWithPlayerAndHole(registrationId)
-		const slots = hydrateSlotsWithPlayerAndHole(slotRows)
-
-		const slotIds = slots.filter((s) => s.id !== undefined).map((s) => s.id)
-		const feeRows = await this.repository.findFeesWithEventFeeAndFeeType(slotIds)
-		attachFeesToSlots(slots, feeRows)
-
-		result.slots = slots
-
-		const validatedReg = validateRegistration(result)
 
 		await this.mailService.sendAdminRegistrationNotification(
 			event,
-			validatedReg,
+			registrationComplete,
 			paymentId,
-			userRow.email,
-			collectPayment,
+			user.email,
+			collectPayment
 		)
 	}
 

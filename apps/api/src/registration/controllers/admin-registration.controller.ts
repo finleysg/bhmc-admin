@@ -10,11 +10,15 @@ import type {
 
 import { Admin } from "../../auth"
 import { AdminRegistrationService } from "../services/admin-registration.service"
+import { MailService } from "../../mail"
 
 @Controller("registration")
 @Admin()
 export class AdminRegistrationController {
-	constructor(private readonly registrationService: AdminRegistrationService) {}
+	constructor(
+		private readonly mailService: MailService,
+		private readonly registrationService: AdminRegistrationService,
+	) {}
 
 	@Get("players")
 	async playerQuery(@Query() query: PlayerQuery) {
@@ -44,21 +48,18 @@ export class AdminRegistrationController {
 		return this.registrationService.findGroup(eventId, playerId)
 	}
 
-	@Put(":eventId/admin-registration/:registrationId")
-	async completeAdminRegistration(
+	@Put(":eventId/admin-registration")
+	async createdminRegistration(
 		@Param("eventId", ParseIntPipe) eventId: number,
-		@Param("registrationId", ParseIntPipe) registrationId: number,
 		@Body() dto: AdminRegistration,
 	) {
-		const paymentId = await this.registrationService.completeAdminRegistration(
+		const { registrationId, paymentId } = await this.registrationService.createAdminRegistration(
 			eventId,
-			registrationId,
 			dto,
 		)
-		if (dto.collectPayment && paymentId > 0) {
-			// TODO: Trigger payment request email
-		}
-		return { paymentId }
+		await this.registrationService.sendPaymentRequestNotification(eventId, registrationId, paymentId, dto.collectPayment)
+		
+		return { registrationId, paymentId }
 	}
 
 	@Get(":eventId/players")
