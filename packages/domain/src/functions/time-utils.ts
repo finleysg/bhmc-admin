@@ -8,6 +8,13 @@
  * Avoids timezone shift that occurs with new Date("YYYY-MM-DD").
  */
 export function parseLocalDate(dateString: string): Date {
+	if (!dateString || typeof dateString !== 'string') {
+		throw new Error('Invalid date string: expected non-empty string')
+	}
+	// Validate YYYY-MM-DD format
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+		throw new Error(`Invalid date format: expected YYYY-MM-DD, got ${dateString}`)
+	}
 	return new Date(dateString + "T00:00:00")
 }
 
