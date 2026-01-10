@@ -10,6 +10,7 @@ interface PlayerEventFeePickerProps {
 	onToggle: (feeId: number) => void
 	variant: "desktop" | "mobile"
 	gridTemplateColumns?: string
+	eventDate?: Date
 }
 
 export function PlayerEventFeePicker({
@@ -19,10 +20,12 @@ export function PlayerEventFeePicker({
 	onToggle,
 	variant,
 	gridTemplateColumns,
+	eventDate,
 }: PlayerEventFeePickerProps) {
 	const playerTotal = getTotalAmountForPlayer(
 		player,
 		fees.filter((fee) => selectedFeeIds.includes(fee.id)),
+		eventDate,
 	)
 
 	if (variant === "desktop") {
@@ -81,7 +84,7 @@ export function PlayerEventFeePicker({
 								<span className="text-sm">{fee.feeType?.name || "Fee"}</span>
 							</div>
 							<span className="text-sm text-base-content/70">
-								{formatCurrency(getAmount(fee, player))}
+								{formatCurrency(getAmount(fee, player, eventDate))}
 							</span>
 						</label>
 					))}

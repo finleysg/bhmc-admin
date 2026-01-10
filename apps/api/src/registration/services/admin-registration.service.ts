@@ -348,7 +348,7 @@ export class AdminRegistrationService {
 
 			// Capacity check
 			if (event.registrationMaximum) {
-				if (lockedSlots.length + 1 > event.registrationMaximum) {
+				if (lockedSlots.length + slotAmounts.length > event.registrationMaximum) {
 					throw new EventFullError()
 				}
 			}

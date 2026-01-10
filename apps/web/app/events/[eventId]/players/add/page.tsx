@@ -156,6 +156,7 @@ export default function AddPlayerPage() {
 										fees={state.event.eventFees}
 										players={state.selectedPlayers}
 										onChange={handleFeeChange}
+										eventDate={new Date(state.event.startDate)}
 									/>
 								)}
 							</div>

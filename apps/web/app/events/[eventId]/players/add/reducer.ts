@@ -86,14 +86,15 @@ export function generateAdminRegistration(
 		feesMap.set(f.playerId, [...existing, f.eventFeeId])
 	})
 
-	// Build slots array
+	// Build slots array - only include players that have corresponding slots
 	let slots: AdminRegistrationSlot[] = []
 	if (state.selectedSlotGroup && state.selectedPlayers.length > 0) {
-		slots = state.selectedPlayers.map((p, index) => {
+		const availableSlots = state.selectedSlotGroup.slots
+		const playersWithSlots = state.selectedPlayers.slice(0, availableSlots.length)
+		slots = playersWithSlots.map((p, index) => {
 			const feeIds = feesMap.get(p.id) ?? []
-			const slot = state.selectedSlotGroup!.slots[index]
 			return {
-				slotId: slot?.id,
+				slotId: availableSlots[index].id,
 				playerId: p.id,
 				feeIds,
 			}
