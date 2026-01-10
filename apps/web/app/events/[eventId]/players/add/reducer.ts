@@ -75,7 +75,7 @@ function createSyntheticSlot(player: Player, eventId: number): RegistrationSlot 
 	}
 }
 
-function generateAdminRegistration(
+export function generateAdminRegistration(
 	state: Omit<AddPlayerState, "adminRegistration">,
 ): AdminRegistration | null {
 	// null until we can register
@@ -169,7 +169,7 @@ function choosableReducer(state: AddPlayerState, action: Action): AddPlayerState
 				completeSuccess: false,
 				canSelectFees: state.selectedPlayers.length > 0 && group !== null,
 				canCompleteRegistration:
-					state.selectedPlayers.length > 0 && state.selectedSlotGroup !== null,
+					state.selectedPlayers.length > 0 && group !== null,
 			}
 			return {
 				...nextState,
