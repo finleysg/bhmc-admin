@@ -55,9 +55,12 @@ export class PlayerService {
 
 	/** Find a player by id */
 	async findPlayerById(playerId: number): Promise<Player> {
-		// TODO: convert error to NotFoundException
-		const player = await this.repository.findPlayerById(playerId)
-		return toPlayer(player)
+		try {
+			const player = await this.repository.findPlayerById(playerId)
+			return toPlayer(player)
+		} catch (error) {
+			throw new NotFoundException(`Player ${playerId} not found`)
+		}
 	}
 
 	/** Find a player by id */
