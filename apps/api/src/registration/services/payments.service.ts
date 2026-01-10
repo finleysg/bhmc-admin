@@ -21,11 +21,12 @@ import { toPayment, toPaymentWithDetails, toRegistrationFee } from "../mappers"
 import { PaymentsRepository } from "../repositories/payments.repository"
 import { RegistrationRepository } from "../repositories/registration.repository"
 import { RegistrationBroadcastService } from "./registration-broadcast.service"
+import { CleanupService } from "./cleanup.service"
 import Stripe from "stripe"
 
 @Injectable()
-export class UserPaymentsService {
-	private readonly logger = new Logger(UserPaymentsService.name)
+export class PaymentsService {
+	private readonly logger = new Logger(PaymentsService.name)
 
 	constructor(
 		private readonly paymentRepository: PaymentsRepository,
@@ -34,6 +35,7 @@ export class UserPaymentsService {
 		private readonly stripe: StripeService,
 		private readonly drizzle: DrizzleService,
 		private readonly broadcast: RegistrationBroadcastService,
+		private readonly slotCleanup: CleanupService,
 	) {}
 
 	/**
@@ -296,6 +298,62 @@ export class UserPaymentsService {
 				this.broadcast.notifyChange(eventId)
 			}
 		}
+	}
+
+	/**
+	 * Transition slots from AWAITING_PAYMENT to RESERVED.
+	 * Called by webhook when payment succeeds.
+	 */
+	async paymentConfirmed(registrationId: number, paymentId: number): Promise<void> {
+		const reg = await this.registrationRepository.findRegistrationById(registrationId)
+		if (!reg) {
+			throw new Error(
+				`Inconceivable! No registration found for id ${registrationId} in the webhook flow.`,
+			)
+		}
+
+		const slots =
+			await this.registrationRepository.findRegistrationSlotsByRegistrationId(registrationId)
+
+		// Not all slots may have been reserved. It's common for a user to over-select.
+		const reservedSlots = slots.filter(
+			(slot) => slot.status === RegistrationStatusChoices.AWAITING_PAYMENT && slot.playerId,
+		)
+		if (reservedSlots.length > 0) {
+			const slotIds = reservedSlots.map((s) => s.id)
+			await this.registrationRepository.updateRegistrationSlots(slotIds, {
+				status: RegistrationStatusChoices.RESERVED,
+			})
+		}
+
+		// Mark payment as confirmed
+		await this.paymentRepository.updatePayment(paymentId, {
+			confirmed: 1,
+			confirmDate: toDbString(new Date()),
+		})
+
+		// Mark registration fees as paid
+		const feeRows = await this.paymentRepository.findPaymentDetailsByPayment(paymentId)
+		const feeIds = feeRows.map((f) => f.id)
+		await this.paymentRepository.updatePaymentDetailStatus(feeIds, true)
+
+		// Free up or remove slots with no player
+		const event = await this.events.getEventById(reg.eventId)
+		const stillAvailable = slots.filter((slot) => !slot.playerId)
+		if (stillAvailable.length > 0) {
+			const slotIds = stillAvailable.map((s) => s.id)
+			await this.slotCleanup.releaseSlots(slotIds, event.canChoose)
+		}
+
+		if (event.canChoose) {
+			this.broadcast.notifyChange(reg.eventId)
+		}
+	}
+
+	/** Find payment by Stripe payment code. */
+	async findPaymentByPaymentCode(paymentCode: string): Promise<Payment | null> {
+		const row = await this.paymentRepository.findByPaymentCode(paymentCode)
+		return row ? toPayment(row) : null
 	}
 
 	private calculatePaymentTotal(details: PaymentDetailRequest[]): AmountDue {

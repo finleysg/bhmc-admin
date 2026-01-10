@@ -10,19 +10,23 @@ export function toCourse(row: CourseRow): Course {
 		id: row.id,
 		name: row.name,
 		numberOfHoles: row.numberOfHoles,
-		ggId: row.ggId ?? undefined,
+		ggId: row.ggId,
 		tees: [],
 		holes: [],
 	}
 }
 
 /**
- * Maps database course with holes to domain model
+ * Maps database course with holes to domain CourseWithHoles
  */
 export function toCourseWithHoles(row: CourseWithHoles): CourseWithHoles {
-	const course = toCourse(row) as CourseWithHoles
-	course.holes = row.holes.map(h => toHole(h))
-	return course
+	return {
+		id: row.id,
+		name: row.name,
+		numberOfHoles: row.numberOfHoles,
+		ggId: row.ggId,
+		holes: row.holes,
+	}
 }
 
 /**

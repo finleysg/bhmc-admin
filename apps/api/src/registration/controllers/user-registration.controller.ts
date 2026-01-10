@@ -21,14 +21,14 @@ import type {
 	UpdateNotesRequest,
 	UpdateSlotPlayerRequest,
 } from "@repo/domain/types"
-import { UserRegistrationService } from "../services/user-registration.service"
+import { RegistrationService } from "../services/registration.service"
 import type { AuthenticatedRequest } from "../../auth"
 
 @Controller("registration")
 export class UserRegistrationController {
 	private readonly logger = new Logger(UserRegistrationController.name)
 
-	constructor(private readonly flowService: UserRegistrationService) {}
+	constructor(private readonly flowService: RegistrationService) {}
 
 	/**
 	 * Create a registration and reserve slots.

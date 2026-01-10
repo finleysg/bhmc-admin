@@ -70,7 +70,7 @@ export default function AddPlayerPage() {
 		dispatch({ type: "SET_FEES", payload: selections })
 	}, [])
 
-	 const handleError = useCallback((err: unknown) => {
+	const handleError = useCallback((err: unknown) => {
 		dispatch({ type: "SET_ERROR", payload: err })
 	}, [])
 
@@ -84,16 +84,13 @@ export default function AddPlayerPage() {
 		try {
 			const dto = state.adminRegistration
 
-			const response = await fetch(
-				`/api/registration/${eventId}/admin-registration`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(dto),
+			const response = await fetch(`/api/registration/${eventId}/admin-registration`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			)
+				body: JSON.stringify(dto),
+			})
 
 			if (response.ok) {
 				dispatch({ type: "SET_COMPLETE_SUCCESS", payload: true })

@@ -31,23 +31,25 @@ import {
 import { toRegistrationSlot, toRegistrationWithSlots } from "../mappers"
 import { RegistrationRepository } from "../repositories/registration.repository"
 import { getCurrentWave, getRegistrationWindow, getStartingWave } from "../wave-calculator"
-import { UserPaymentsService } from "./user-payments.service"
+import { PaymentsService } from "./payments.service"
 import { RegistrationBroadcastService } from "./registration-broadcast.service"
+import { CleanupService } from "./cleanup.service"
 
 // Expiry times in minutes
 const CHOOSABLE_EXPIRY_MINUTES = 5
 const NON_CHOOSABLE_EXPIRY_MINUTES = 15
 
 @Injectable()
-export class UserRegistrationService {
-	private readonly logger = new Logger(UserRegistrationService.name)
+export class RegistrationService {
+	private readonly logger = new Logger(RegistrationService.name)
 
 	constructor(
 		private readonly repository: RegistrationRepository,
-		private readonly payments: UserPaymentsService,
+		private readonly payments: PaymentsService,
 		private readonly events: EventsService,
 		private readonly drizzle: DrizzleService,
 		private readonly broadcast: RegistrationBroadcastService,
+		private readonly slotCleanup: CleanupService,
 	) {}
 
 	/**
@@ -208,20 +210,7 @@ export class UserRegistrationService {
 		}
 
 		const canChoose = await this.events.isCanChooseHolesEvent(reg.eventId)
-		const slotIds = reg.slots.map((s) => s.id)
-		if (canChoose) {
-			// For choosable events, reset slots to AVAILABLE
-			await this.repository.updateRegistrationSlots(slotIds, {
-				status: RegistrationStatusChoices.AVAILABLE,
-				registrationId: null,
-				playerId: null,
-			})
-		} else {
-			// For non-choosable events, delete the slots
-			await this.repository.deleteRegistrationSlotsByRegistration(registrationId)
-		}
-
-		// Delete the registration
+		await this.slotCleanup.releaseSlotsByRegistration(registrationId, canChoose)
 		await this.repository.deleteRegistration(registrationId)
 
 		if (canChoose) {

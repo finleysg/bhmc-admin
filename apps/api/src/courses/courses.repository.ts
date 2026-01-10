@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm"
 
-import { Injectable, NotFoundException } from "@nestjs/common"
+import { Injectable } from "@nestjs/common"
 
 import {
 	course,
@@ -53,13 +53,23 @@ export class CoursesRepository {
 			.innerJoin(hole, eq(course.id, hole.courseId))
 			.where(eq(course.id, courseId))
 
-		if (results.length === 0) throw new NotFoundException(`No course found with id ${courseId}`)
+		if (results.length === 0) throw new Error(`No course found with id ${courseId}`)
 
-		const courseRecord = results[0].course as CourseFull
-		courseRecord.tees = results.map(r => r.tee)
-		courseRecord.holes = results.map(r => r.hole)
+		const teeMap = new Map<number, TeeRow>()
+		const holeMap = new Map<number, HoleRow>()
 
-		return courseRecord
+		for (const result of results) {
+			teeMap.set(result.tee.id, result.tee)
+			holeMap.set(result.hole.id, result.hole)
+		}
+
+		const courseFull: CourseFull = {
+			...results[0].course,
+			tees: Array.from(teeMap.values()),
+			holes: Array.from(holeMap.values()),
+		}
+
+		return courseFull
 	}
 
 	async findCourseWithHolesById(courseId: number): Promise<CourseWithHoles> {
@@ -72,10 +82,10 @@ export class CoursesRepository {
 			.innerJoin(hole, eq(course.id, hole.courseId))
 			.where(eq(course.id, courseId))
 
-		if (results.length === 0) throw new NotFoundException(`No course found with id ${courseId}`)
+		if (results.length === 0) throw new Error(`No course found with id ${courseId}`)
 
 		const courseRecord = results[0].course as CourseWithHoles
-		courseRecord.holes = results.map(r => r.hole)
+		courseRecord.holes = results.map((r) => r.hole)
 
 		return courseRecord
 	}

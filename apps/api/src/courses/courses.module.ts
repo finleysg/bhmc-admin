@@ -6,7 +6,7 @@ import { CoursesService } from "./courses.service"
 
 @Module({
 	imports: [DatabaseModule],
-	providers: [CoursesRepository],
+	providers: [CoursesRepository, CoursesService],
 	exports: [CoursesService],
 })
 export class CoursesModule {}

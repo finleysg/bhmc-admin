@@ -200,7 +200,9 @@ export class MailService {
 	) {
 		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
 		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
-		const eventHoleOrStart = registration.course ? getStart(event, registration.slots[0], registration.course.holes) : undefined
+		const eventHoleOrStart = registration.course
+			? getStart(event, registration.slots[0], registration.course.holes)
+			: undefined
 
 		const players = registration.slots.map((slot) => ({
 			name: `${slot.player.firstName} ${slot.player.lastName}`,
@@ -278,7 +280,9 @@ export class MailService {
 		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
 		const paymentUrl = `${websiteUrl}/registration/${registration.id}/payment/${paymentId}`
 
-		const eventHoleOrStart = registration.course ? getStart(event, registration.slots[0], registration.course.holes) : undefined
+		const eventHoleOrStart = registration.course
+			? getStart(event, registration.slots[0], registration.course.holes)
+			: undefined
 
 		const players = registration.slots.map((slot) => ({
 			name: `${slot.player.firstName} ${slot.player.lastName}`,

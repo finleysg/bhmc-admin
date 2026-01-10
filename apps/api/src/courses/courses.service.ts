@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common"
-import { CompleteCourse, Course, Hole, Tee } from "@repo/domain/types"
+import { Course, Hole, Tee } from "@repo/domain/types"
 
 import { toCourse, toCourseWithCompositions, toCourseWithHoles, toHole, toTee } from "./mappers"
 import { CoursesRepository } from "./courses.repository"
@@ -7,12 +7,10 @@ import { CourseWithHoles } from "../database"
 
 @Injectable()
 export class CoursesService {
-	constructor(
-		private repository: CoursesRepository,
-	) {}
+	constructor(private repository: CoursesRepository) {}
 
-	async findCourseByGgId(gg_id: string): Promise<Course | null> {
-		const course = await this.repository.findCourseByGgId(gg_id)
+	async findCourseByGgId(ggId: string): Promise<Course | null> {
+		const course = await this.repository.findCourseByGgId(ggId)
 		return course ? toCourse(course) : null
 	}
 
@@ -48,7 +46,7 @@ export class CoursesService {
 	}
 
 	async findCourseWithHolesById(courseId: number): Promise<CourseWithHoles> {
-		const course = await this.repository.findCourseFullById(courseId)
+		const course = await this.repository.findCourseWithHolesById(courseId)
 		return toCourseWithHoles(course)
 	}
 
@@ -59,7 +57,7 @@ export class CoursesService {
 
 	async findTeesByCourseId(courseId: number): Promise<Tee[]> {
 		const tees = await this.repository.findTeeRowsByCourseId(courseId)
-		return tees.map(t => toTee(t))
+		return tees.map((t) => toTee(t))
 	}
 
 	async findTeeByGgId(ggId: string): Promise<Tee | null> {

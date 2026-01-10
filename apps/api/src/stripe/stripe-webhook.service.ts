@@ -7,7 +7,7 @@ import { wrapError } from "../common/errors"
 import { DjangoAuthService } from "../auth"
 import { EventsService } from "../events"
 import { MailService } from "../mail"
-import { AdminRegistrationService } from "../registration"
+import { AdminRegistrationService, PaymentsService, RefundService } from "../registration"
 
 @Injectable()
 export class StripeWebhookService {
@@ -15,6 +15,8 @@ export class StripeWebhookService {
 
 	constructor(
 		private adminRegistrationService: AdminRegistrationService,
+		private paymentsService: PaymentsService,
+		private refundService: RefundService,
 		private djangoAuthService: DjangoAuthService,
 		private eventsService: EventsService,
 		private mailService: MailService,
@@ -24,8 +26,7 @@ export class StripeWebhookService {
 		const paymentIntentId = paymentIntent.id
 		this.logger.log(`Processing payment_intent.succeeded: ${paymentIntentId}`)
 
-		const paymentRecord =
-			await this.adminRegistrationService.findPaymentByPaymentCode(paymentIntentId)
+		const paymentRecord = await this.paymentsService.findPaymentByPaymentCode(paymentIntentId)
 
 		if (!paymentRecord) {
 			this.logger.warn(`No payment found for paymentIntent ${paymentIntentId}`)
@@ -46,7 +47,7 @@ export class StripeWebhookService {
 			return
 		}
 
-		await this.adminRegistrationService.paymentConfirmed(registrationId, paymentRecord.id)
+		await this.paymentsService.paymentConfirmed(registrationId, paymentRecord.id)
 
 		await this.sendConfirmationEmail(registrationId, paymentRecord.id)
 	}
@@ -71,15 +72,14 @@ export class StripeWebhookService {
 			return
 		}
 
-		const paymentRecord =
-			await this.adminRegistrationService.findPaymentByPaymentCode(paymentIntentId)
+		const paymentRecord = await this.paymentsService.findPaymentByPaymentCode(paymentIntentId)
 
 		if (!paymentRecord) {
 			this.logger.error(`Refund created but no payment found for ${paymentIntentId}`)
 			return
 		}
 
-		const existingRefund = await this.adminRegistrationService.findRefundByRefundCode(refundId)
+		const existingRefund = await this.refundService.findRefundByRefundCode(refundId)
 
 		if (existingRefund) {
 			this.logger.log(`Refund ${refundId} already exists, skipping creation`)
@@ -88,7 +88,7 @@ export class StripeWebhookService {
 
 		const systemUserId = await this.djangoAuthService.getOrCreateSystemUser("stripe_system")
 
-		await this.adminRegistrationService.createRefund({
+		await this.refundService.createRefund({
 			refundCode: refundId,
 			refundAmount: amount,
 			notes: reason,
@@ -115,7 +115,7 @@ export class StripeWebhookService {
 			return
 		}
 
-		await this.adminRegistrationService.confirmRefund(refundId)
+		await this.refundService.confirmRefund(refundId)
 		this.logger.log(`Refund ${refundId} confirmed`)
 	}
 

@@ -82,7 +82,7 @@ export function PlayerFeePicker({
 								checked={fee.isSelected}
 								disabled={!fee.canChange}
 								onChange={() => handleChange(fee)}
-							/>							
+							/>
 							<span className="text-sm">{fee.name || "Fee"}</span>
 							<div className="flex items-center gap-2">
 								<span className="text-sm text-base-content/70">{formatCurrency(fee.amount)}</span>
