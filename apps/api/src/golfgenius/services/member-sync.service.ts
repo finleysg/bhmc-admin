@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { Player } from "@repo/domain/types"
 
-import { RegistrationRepository, AdminRegistrationService } from "../../registration"
+import { PlayerService, RegistrationRepository } from "../../registration"
 import { ApiClient } from "../api-client"
 import { MemberSyncResult } from "../dto"
 import { ApiError, AuthError, RateLimitError } from "../errors"
@@ -12,8 +12,8 @@ export class MemberSyncService {
 	private readonly logger = new Logger(MemberSyncService.name)
 
 	constructor(
-		private readonly registration: AdminRegistrationService,
 		private readonly repository: RegistrationRepository,
+		private readonly players: PlayerService,
 		private readonly apiClient: ApiClient,
 	) {}
 
@@ -117,7 +117,7 @@ export class MemberSyncService {
 				}
 
 				// Update gg_id
-				await this.registration.updatePlayerGgId(player.id, memberCardId)
+				await this.players.updatePlayerGgId(player.id, memberCardId)
 				result.updated_players += 1
 			} catch (err) {
 				const name = `${player.firstName ?? ""} ${player.lastName ?? ""}`.trim()
@@ -188,7 +188,7 @@ export class MemberSyncService {
 				return res
 			}
 
-			const updated = await this.registration.updatePlayerGgId(player.id, String(ggIdToSet))
+			const updated = await this.players.updatePlayerGgId(player.id, String(ggIdToSet))
 			res.updated = true
 			res.message = `Updated gg_id for ${player.email}`
 			res.player = updated

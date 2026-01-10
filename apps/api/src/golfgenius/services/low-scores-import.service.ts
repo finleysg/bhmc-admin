@@ -1,14 +1,14 @@
 import { Injectable } from "@nestjs/common"
 
-import { CoreRepository } from "../../core"
+import { CoreService } from "../../core"
 import { EventsService } from "../../events/events.service"
-import { ScoresRepository } from "../../scores/scores.repository"
+import { ScoresService } from "../../scores/scores.service"
 
 @Injectable()
 export class LowScoresImportService {
 	constructor(
-		private readonly core: CoreRepository,
-		private readonly scores: ScoresRepository,
+		private readonly core: CoreService,
+		private readonly scores: ScoresService,
 		private readonly events: EventsService,
 	) {}
 

@@ -18,7 +18,7 @@ interface RegistrationConfirmationEmailProps {
 	eventName: string
 	eventUrl: string
 	eventDate: string
-	eventHoleOrStart: string
+	eventHoleOrStart?: string
 	requiredFees: string
 	optionalFees: string
 	transactionFees: string
@@ -62,11 +62,12 @@ export function RegistrationConfirmationEmail({
 				<Column style={labelCell}>Date:</Column>
 				<Column style={valueCell}>{eventDate}</Column>
 			</Row>
-			<Row style={tableRow}>
-				<Column style={labelCell}>Start:</Column>
-				<Column style={valueCell}>{eventHoleOrStart}</Column>
-			</Row>
-
+			{eventHoleOrStart && (
+				<Row style={tableRow}>
+					<Column style={labelCell}>Start:</Column>
+					<Column style={valueCell}>{eventHoleOrStart}</Column>
+				</Row>
+			)}
 			{/* Event Fees */}
 			<Heading as="h4" style={sectionHeading}>
 				Event Fees

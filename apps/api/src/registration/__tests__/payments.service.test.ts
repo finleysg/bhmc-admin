@@ -12,13 +12,14 @@ import type {
 } from "@repo/domain/types"
 
 import { PaymentNotFoundError } from "../errors/registration.errors"
-import { UserPaymentsService } from "../services/user-payments.service"
+import { PaymentsService } from "../services/payments.service"
 import type {
 	PaymentRow,
 	PaymentRowWithDetails,
 	PlayerRow,
 	RegistrationFeeRow,
 	RegistrationSlotRow,
+	RegistrationRow,
 } from "../../database"
 
 // =============================================================================
@@ -121,6 +122,19 @@ const createRegistrationSlotRow = (
 	...overrides,
 })
 
+const createRegistrationRow = (overrides: Partial<RegistrationRow> = {}): RegistrationRow => ({
+	id: 1,
+	eventId: 100,
+	userId: 10,
+	courseId: 1,
+	signedUpBy: "John Doe",
+	notes: null,
+	expires: "2025-06-01 08:05:00",
+	ggId: null,
+	createdDate: "2025-06-01 08:00:00",
+	...overrides,
+})
+
 // =============================================================================
 // Mock Setup
 // =============================================================================
@@ -135,6 +149,7 @@ const createMockPaymentsRepository = () => ({
 	findPaymentDetailsByPayment: jest.fn(),
 	findPaymentWithDetailsById: jest.fn(),
 	deletePayment: jest.fn(),
+	updatePaymentDetailStatus: jest.fn(),
 })
 
 const createMockRegistrationRepository = () => ({
@@ -144,6 +159,8 @@ const createMockRegistrationRepository = () => ({
 	findSlotsWithStatusByRegistration: jest.fn(),
 	updateRegistrationSlots: jest.fn(),
 	updateRegistration: jest.fn(),
+	findRegistrationById: jest.fn(),
+	findRegistrationSlotsByRegistrationId: jest.fn(),
 })
 
 const createMockEventsService = () => ({
@@ -171,6 +188,11 @@ const createMockBroadcastService = () => ({
 	notifyChange: jest.fn(),
 })
 
+const createMockSlotCleanupService = () => ({
+	releaseSlots: jest.fn(),
+	releaseSlotsByRegistration: jest.fn(),
+})
+
 function createService() {
 	const paymentsRepo = createMockPaymentsRepository()
 	const registrationRepo = createMockRegistrationRepository()
@@ -178,14 +200,16 @@ function createService() {
 	const stripeService = createMockStripeService()
 	const drizzleService = createMockDrizzleService()
 	const broadcastService = createMockBroadcastService()
+	const slotCleanupService = createMockSlotCleanupService()
 
-	const service = new UserPaymentsService(
+	const service = new PaymentsService(
 		paymentsRepo as any,
 		registrationRepo as any,
 		eventsService as any,
 		stripeService as any,
 		drizzleService as any,
 		broadcastService as any,
+		slotCleanupService as any,
 	)
 
 	return {
@@ -196,6 +220,7 @@ function createService() {
 		stripeService,
 		drizzleService,
 		broadcastService,
+		slotCleanupService,
 	}
 }
 
@@ -203,7 +228,7 @@ function createService() {
 // Tests
 // =============================================================================
 
-describe("UserPaymentsService", () => {
+describe("PaymentsService", () => {
 	describe("createPayment", () => {
 		it("creates payment with correct subtotal and transaction fee", async () => {
 			const { service, paymentsRepo, registrationRepo, eventsService } = createService()
@@ -805,6 +830,134 @@ describe("UserPaymentsService", () => {
 			await service.paymentProcessing(1)
 
 			expect(registrationRepo.updateRegistration).toHaveBeenCalledWith(1, { expires: null })
+		})
+	})
+
+	describe("paymentConfirmed", () => {
+		it("throws when registration not found", async () => {
+			const { service, registrationRepo } = createService()
+			registrationRepo.findRegistrationById.mockResolvedValue(null)
+
+			await expect(service.paymentConfirmed(999, 1)).rejects.toThrow(
+				"Inconceivable! No registration found for id 999 in the webhook flow.",
+			)
+		})
+
+		it("updates slots with status=AWAITING_PAYMENT and playerId to RESERVED", async () => {
+			const { service, registrationRepo, paymentsRepo, eventsService } = createService()
+			const reg = createRegistrationRow({ id: 1, eventId: 100 })
+			const slots = [
+				createRegistrationSlotRow({
+					id: 10,
+					status: RegistrationStatusChoices.AWAITING_PAYMENT,
+					playerId: 1,
+				}),
+				createRegistrationSlotRow({
+					id: 11,
+					status: RegistrationStatusChoices.AWAITING_PAYMENT,
+					playerId: 2,
+				}),
+			]
+
+			registrationRepo.findRegistrationById.mockResolvedValue(reg)
+			registrationRepo.findRegistrationSlotsByRegistrationId.mockResolvedValue(slots)
+			paymentsRepo.findPaymentDetailsByPayment.mockResolvedValue([])
+			eventsService.getEventById.mockResolvedValue(createClubEvent({ canChoose: false }))
+
+			await service.paymentConfirmed(1, 5)
+
+			expect(registrationRepo.updateRegistrationSlots).toHaveBeenCalledWith([10, 11], {
+				status: RegistrationStatusChoices.RESERVED,
+			})
+		})
+
+		it("marks payment as confirmed with date", async () => {
+			const { service, registrationRepo, paymentsRepo, eventsService } = createService()
+			const reg = createRegistrationRow({ id: 1, eventId: 100 })
+
+			registrationRepo.findRegistrationById.mockResolvedValue(reg)
+			registrationRepo.findRegistrationSlotsByRegistrationId.mockResolvedValue([])
+			paymentsRepo.findPaymentDetailsByPayment.mockResolvedValue([])
+			eventsService.getEventById.mockResolvedValue(createClubEvent({ canChoose: false }))
+
+			await service.paymentConfirmed(1, 5)
+
+			expect(paymentsRepo.updatePayment).toHaveBeenCalledWith(5, {
+				confirmed: 1,
+				confirmDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}/),
+			})
+		})
+
+		it("marks fee details as paid", async () => {
+			const { service, registrationRepo, paymentsRepo, eventsService } = createService()
+			const reg = createRegistrationRow({ id: 1, eventId: 100 })
+			const fees = [createRegistrationFeeRow({ id: 20 }), createRegistrationFeeRow({ id: 21 })]
+
+			registrationRepo.findRegistrationById.mockResolvedValue(reg)
+			registrationRepo.findRegistrationSlotsByRegistrationId.mockResolvedValue([])
+			paymentsRepo.findPaymentDetailsByPayment.mockResolvedValue(fees)
+			eventsService.getEventById.mockResolvedValue(createClubEvent({ canChoose: false }))
+
+			await service.paymentConfirmed(1, 5)
+
+			expect(paymentsRepo.updatePaymentDetailStatus).toHaveBeenCalledWith([20, 21], true)
+		})
+
+		it("releases unassigned slots for canChoose events via slotCleanup", async () => {
+			const { service, registrationRepo, paymentsRepo, eventsService, slotCleanupService } =
+				createService()
+			const reg = createRegistrationRow({ id: 1, eventId: 100 })
+			const slots = [
+				createRegistrationSlotRow({
+					id: 10,
+					status: RegistrationStatusChoices.AWAITING_PAYMENT,
+					playerId: 1,
+				}),
+				createRegistrationSlotRow({
+					id: 11,
+					status: RegistrationStatusChoices.AWAITING_PAYMENT,
+					playerId: null,
+				}),
+			]
+
+			registrationRepo.findRegistrationById.mockResolvedValue(reg)
+			registrationRepo.findRegistrationSlotsByRegistrationId.mockResolvedValue(slots)
+			paymentsRepo.findPaymentDetailsByPayment.mockResolvedValue([])
+			eventsService.getEventById.mockResolvedValue(createClubEvent({ canChoose: true }))
+
+			await service.paymentConfirmed(1, 5)
+
+			expect(slotCleanupService.releaseSlots).toHaveBeenCalledWith([11], true)
+		})
+
+		it("broadcasts change for canChoose events", async () => {
+			const { service, registrationRepo, paymentsRepo, eventsService, broadcastService } =
+				createService()
+			const reg = createRegistrationRow({ id: 1, eventId: 100 })
+
+			registrationRepo.findRegistrationById.mockResolvedValue(reg)
+			registrationRepo.findRegistrationSlotsByRegistrationId.mockResolvedValue([])
+			paymentsRepo.findPaymentDetailsByPayment.mockResolvedValue([])
+			eventsService.getEventById.mockResolvedValue(createClubEvent({ canChoose: true }))
+
+			await service.paymentConfirmed(1, 5)
+
+			expect(broadcastService.notifyChange).toHaveBeenCalledWith(100)
+		})
+
+		it("does not broadcast for non-canChoose events", async () => {
+			const { service, registrationRepo, paymentsRepo, eventsService, broadcastService } =
+				createService()
+			const reg = createRegistrationRow({ id: 1, eventId: 100 })
+
+			registrationRepo.findRegistrationById.mockResolvedValue(reg)
+			registrationRepo.findRegistrationSlotsByRegistrationId.mockResolvedValue([])
+			paymentsRepo.findPaymentDetailsByPayment.mockResolvedValue([])
+			eventsService.getEventById.mockResolvedValue(createClubEvent({ canChoose: false }))
+
+			await service.paymentConfirmed(1, 5)
+
+			expect(broadcastService.notifyChange).not.toHaveBeenCalled()
 		})
 	})
 })

@@ -21,6 +21,37 @@ import {
 export class PaymentsRepository {
 	constructor(private drizzle: DrizzleService) {}
 
+	// ==================== PAYMENT ====================
+
+	async findPaymentById(paymentId: number): Promise<PaymentRow | null> {
+		const [p] = await this.drizzle.db
+			.select()
+			.from(payment)
+			.where(eq(payment.id, paymentId))
+			.limit(1)
+
+		return p ?? null
+	}
+
+	async findByPaymentCode(paymentCode: string): Promise<PaymentRow | null> {
+		const [p] = await this.drizzle.db
+			.select()
+			.from(payment)
+			.where(eq(payment.paymentCode, paymentCode))
+			.limit(1)
+		return p ?? null
+	}
+
+	async findPaymentsForRegistration(registrationId: number): Promise<PaymentRow[]> {
+		return this.drizzle.db
+			.selectDistinct({ payment })
+			.from(payment)
+			.innerJoin(registrationFee, eq(payment.id, registrationFee.paymentId))
+			.innerJoin(registrationSlot, eq(registrationFee.registrationSlotId, registrationSlot.id))
+			.where(eq(registrationSlot.registrationId, registrationId))
+			.then((rows) => rows.map((r) => r.payment))
+	}
+
 	async findPaymentWithDetailsById(paymentId: number): Promise<PaymentRowWithDetails | null> {
 		const results = await this.drizzle.db
 			.select({
@@ -37,50 +68,6 @@ export class PaymentsRepository {
 			...results[0].payment,
 			paymentDetails: results.filter((r) => r.details !== null).map((r) => r.details!) ?? [],
 		}
-	}
-
-	async findPaymentDetailsByPayment(paymentId: number): Promise<RegistrationFeeRow[]> {
-		return this.drizzle.db
-			.select()
-			.from(registrationFee)
-			.where(eq(registrationFee.paymentId, paymentId))
-	}
-
-	async createRefund(data: RefundInsert): Promise<number> {
-		const [result] = await this.drizzle.db.insert(refund).values(data)
-		return Number(result.insertId)
-	}
-
-	async updateRefundCode(refundId: number, refundCode: string): Promise<void> {
-		await this.drizzle.db.update(refund).set({ refundCode }).where(eq(refund.id, refundId))
-	}
-
-	async updatePaymentDetailStatus(feeIds: number[], isPaid: boolean): Promise<void> {
-		if (feeIds.length === 0) return
-		await this.drizzle.db
-			.update(registrationFee)
-			.set({ isPaid: isPaid ? 1 : 0 })
-			.where(inArray(registrationFee.id, feeIds))
-	}
-
-	async findPaymentById(paymentId: number): Promise<PaymentRow | null> {
-		const [p] = await this.drizzle.db
-			.select()
-			.from(payment)
-			.where(eq(payment.id, paymentId))
-			.limit(1)
-
-		return p ?? null
-	}
-
-	async findPaymentsForRegistration(registrationId: number): Promise<PaymentRow[]> {
-		return this.drizzle.db
-			.selectDistinct({ payment })
-			.from(payment)
-			.innerJoin(registrationFee, eq(payment.id, registrationFee.paymentId))
-			.innerJoin(registrationSlot, eq(registrationFee.registrationSlotId, registrationSlot.id))
-			.where(eq(registrationSlot.registrationId, registrationId))
-			.then((rows) => rows.map((r) => r.payment))
 	}
 
 	async createPayment(data: PaymentInsert): Promise<number> {
@@ -103,28 +90,38 @@ export class PaymentsRepository {
 			.where(eq(payment.id, paymentId))
 	}
 
+	// TODO: turn this into a soft delete
+	async deletePayment(paymentId: number): Promise<void> {
+		await this.drizzle.db.delete(payment).where(eq(payment.id, paymentId))
+	}
+
+	// ==================== PAYMENT DETAIL ====================
+
+	async findPaymentDetailsByPayment(paymentId: number): Promise<RegistrationFeeRow[]> {
+		return this.drizzle.db
+			.select()
+			.from(registrationFee)
+			.where(eq(registrationFee.paymentId, paymentId))
+	}
+
 	async createPaymentDetail(data: RegistrationFeeInsert): Promise<number> {
 		const [result] = await this.drizzle.db.insert(registrationFee).values(data)
 		return Number(result.insertId)
 	}
 
-	// TODO: turn this into a soft delete
-	async deletePayment(paymentId: number): Promise<void> {
-		await this.drizzle.db.delete(payment).where(eq(payment.id, paymentId))
+	async updatePaymentDetailStatus(feeIds: number[], isPaid: boolean): Promise<void> {
+		if (feeIds.length === 0) return
+		await this.drizzle.db
+			.update(registrationFee)
+			.set({ isPaid: isPaid ? 1 : 0 })
+			.where(inArray(registrationFee.id, feeIds))
 	}
 
 	async deletePaymentDetailsByPayment(paymentId: number): Promise<void> {
 		await this.drizzle.db.delete(registrationFee).where(eq(registrationFee.paymentId, paymentId))
 	}
 
-	async findByPaymentCode(paymentCode: string): Promise<PaymentRow | null> {
-		const [p] = await this.drizzle.db
-			.select()
-			.from(payment)
-			.where(eq(payment.paymentCode, paymentCode))
-			.limit(1)
-		return p ?? null
-	}
+	// ==================== REFUND ====================
 
 	async findRefundByRefundCode(refundCode: string): Promise<RefundRow | null> {
 		const [r] = await this.drizzle.db
@@ -133,6 +130,15 @@ export class PaymentsRepository {
 			.where(eq(refund.refundCode, refundCode))
 			.limit(1)
 		return r ?? null
+	}
+
+	async createRefund(data: RefundInsert): Promise<number> {
+		const [result] = await this.drizzle.db.insert(refund).values(data)
+		return Number(result.insertId)
+	}
+
+	async updateRefundCode(refundId: number, refundCode: string): Promise<void> {
+		await this.drizzle.db.update(refund).set({ refundCode }).where(eq(refund.id, refundId))
 	}
 
 	async confirmRefund(refundId: number): Promise<void> {

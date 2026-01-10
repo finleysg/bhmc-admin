@@ -1,5 +1,4 @@
 export interface AdminRegistration {
-	id: number
 	userId: number
 	signedUpBy: string
 	courseId?: number | null
@@ -12,7 +11,6 @@ export interface AdminRegistration {
 }
 
 export interface AdminRegistrationSlot {
-	registrationId: number
 	slotId: number
 	playerId: number
 	feeIds: number[]

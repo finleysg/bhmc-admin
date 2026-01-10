@@ -3,11 +3,11 @@ import { Observable, Subject } from "rxjs"
 import { Injectable, Logger } from "@nestjs/common"
 import { PlayerProgressEvent } from "@repo/domain/types"
 
-import { CoursesRepository } from "../../courses"
+import { CoursesService } from "../../courses"
 import { ScorecardRow, ScoreInsert } from "../../database"
 import { EventsService } from "../../events"
 import { RegistrationRepository } from "../../registration"
-import { ScoresRepository } from "../../scores"
+import { ScoresService } from "../../scores"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import { ProgressTracker } from "./progress-tracker"
@@ -52,10 +52,10 @@ export class ScoresImportService {
 	private readonly logger = new Logger(ScoresImportService.name)
 
 	constructor(
-		private readonly scoresService: ScoresRepository,
+		private readonly scoresService: ScoresService,
 		private readonly apiClient: ApiClient,
 		private readonly registration: RegistrationRepository,
-		private readonly courses: CoursesRepository,
+		private readonly courses: CoursesService,
 		private readonly events: EventsService,
 		private readonly progressTracker: ProgressTracker,
 	) {}

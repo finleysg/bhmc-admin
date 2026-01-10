@@ -15,7 +15,7 @@ import {
 	RegisteredPlayer,
 } from "@repo/domain/types"
 
-import { CoursesRepository, toHole } from "../courses"
+import { CoursesService, toHole } from "../courses"
 import {
 	DrizzleService,
 	eventFee,
@@ -29,7 +29,7 @@ import {
 	tournamentResult,
 } from "../database"
 import { EventsService } from "../events"
-import { AdminRegistrationService } from "../registration"
+import { PlayerService } from "../registration"
 import {
 	addDataRows,
 	addFixedColumns,
@@ -73,9 +73,9 @@ interface EventPlayerSlot {
 @Injectable()
 export class ReportsService {
 	constructor(
-		private readonly courses: CoursesRepository,
+		private readonly courses: CoursesService,
 		private readonly events: EventsService,
-		private readonly registration: AdminRegistrationService,
+		private readonly players: PlayerService,
 		private readonly drizzle: DrizzleService,
 	) {}
 
@@ -102,7 +102,7 @@ export class ReportsService {
 		if (!event) {
 			throw new Error("Event not found")
 		}
-		const registeredPlayers = await this.registration.getRegisteredPlayers(eventId)
+		const registeredPlayers = await this.players.getRegisteredPlayers(eventId)
 
 		if (!registeredPlayers || registeredPlayers.length === 0) return []
 

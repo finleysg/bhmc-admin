@@ -4,6 +4,10 @@ import { Course } from "./course"
 import { Hole } from "./hole"
 import { Tee } from "./tee"
 
+export type CourseWithHoles = Course & {
+	holes: Hole[]
+}
+
 export type CompleteCourse = Course & {
 	holes: Hole[]
 	tees: Tee[]

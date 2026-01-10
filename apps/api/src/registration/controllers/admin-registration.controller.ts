@@ -10,11 +10,17 @@ import type {
 
 import { Admin } from "../../auth"
 import { AdminRegistrationService } from "../services/admin-registration.service"
+import { PlayerService } from "../services/player.service"
+import { RefundService } from "../services/refund.service"
 
 @Controller("registration")
 @Admin()
 export class AdminRegistrationController {
-	constructor(private readonly registrationService: AdminRegistrationService) {}
+	constructor(
+		private readonly adminRegistrationService: AdminRegistrationService,
+		private readonly adminRegisterService: PlayerService,
+		private readonly refundService: RefundService,
+	) {}
 
 	@Get("players")
 	async playerQuery(@Query() query: PlayerQuery) {
@@ -22,7 +28,7 @@ export class AdminRegistrationController {
 			searchText: query.searchText,
 			isMember: query.isMember ?? true,
 		}
-		return this.registrationService.searchPlayers(obj)
+		return this.adminRegisterService.searchPlayers(obj)
 	}
 
 	@Get(":eventId/groups/search")
@@ -33,7 +39,7 @@ export class AdminRegistrationController {
 		if (!searchText?.trim()) {
 			return []
 		}
-		return this.registrationService.findGroups(eventId, searchText)
+		return this.adminRegisterService.findGroups(eventId, searchText)
 	}
 
 	@Get(":eventId/groups/:playerId")
@@ -41,31 +47,31 @@ export class AdminRegistrationController {
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Param("playerId", ParseIntPipe) playerId: number,
 	): Promise<CompleteRegistration> {
-		return this.registrationService.findGroup(eventId, playerId)
+		return this.adminRegisterService.findGroup(eventId, playerId)
 	}
 
-	@Put(":eventId/admin-registration/:registrationId")
-	async completeAdminRegistration(
+	@Put(":eventId/admin-registration")
+	async createAdminRegistration(
 		@Param("eventId", ParseIntPipe) eventId: number,
-		@Param("registrationId", ParseIntPipe) registrationId: number,
 		@Body() dto: AdminRegistration,
 	) {
-		const paymentId = await this.registrationService.completeAdminRegistration(
+		const { registrationId, paymentId } =
+			await this.adminRegistrationService.createAdminRegistration(eventId, dto)
+		await this.adminRegistrationService.sendPaymentRequestNotification(
 			eventId,
 			registrationId,
-			dto,
+			paymentId,
+			dto.collectPayment,
 		)
-		if (dto.collectPayment && paymentId > 0) {
-			// TODO: Trigger payment request email
-		}
-		return { paymentId }
+
+		return { registrationId, paymentId }
 	}
 
 	@Get(":eventId/players")
 	async getRegisteredPlayers(
 		@Param("eventId", ParseIntPipe) eventId: number,
 	): Promise<RegisteredPlayer[]> {
-		return await this.registrationService.getRegisteredPlayers(eventId)
+		return await this.adminRegisterService.getRegisteredPlayers(eventId)
 	}
 
 	@Get(":eventId/available-slots")
@@ -74,7 +80,7 @@ export class AdminRegistrationController {
 		@Query("courseId", ParseIntPipe) courseId: number,
 		@Query("players", ParseIntPipe) players: number,
 	): Promise<AvailableSlotGroup[]> {
-		return await this.registrationService.getAvailableSlots(eventId, courseId, players)
+		return await this.adminRegisterService.getAvailableSlots(eventId, courseId, players)
 	}
 
 	@Post(":eventId/reserve-admin-slots")
@@ -82,7 +88,7 @@ export class AdminRegistrationController {
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Body() slotIds: number[],
 	) {
-		return this.registrationService.reserveSlots(eventId, slotIds)
+		return this.adminRegisterService.reserveSlots(eventId, slotIds)
 	}
 
 	@Post(":registrationId/drop-players")
@@ -90,14 +96,14 @@ export class AdminRegistrationController {
 		@Param("registrationId", ParseIntPipe) registrationId: number,
 		@Body() slotIds: number[],
 	) {
-		const droppedCount = await this.registrationService.dropPlayers(registrationId, slotIds)
+		const droppedCount = await this.adminRegisterService.dropPlayers(registrationId, slotIds)
 		return { droppedCount }
 	}
 
 	@Post("refund")
 	async processRefunds(@Body() refundRequests: RefundRequest[]) {
 		const issuerId = 1 // TODO: change issuer to a string
-		await this.registrationService.processRefunds(refundRequests, issuerId)
+		await this.refundService.processRefunds(refundRequests, issuerId)
 		return { success: true }
 	}
 }

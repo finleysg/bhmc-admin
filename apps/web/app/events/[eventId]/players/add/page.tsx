@@ -7,7 +7,6 @@ import { useParams, useRouter } from "next/navigation"
 import { AdminRegistrationOptions } from "@/components/admin-registration-options"
 import { EventFeePicker } from "@/app/events/[eventId]/players/components/event-fee-picker"
 import { PlayerSearch } from "@/app/events/[eventId]/players/components/player-search"
-import { ReserveSpot } from "@/app/events/[eventId]/players/components/reserve-spot"
 import { SelectAvailable } from "@/app/events/[eventId]/players/components/select-available"
 import { useAuth } from "@/lib/auth-context"
 import type { AvailableSlotGroup, CompleteClubEvent as ClubEvent, Player } from "@repo/domain/types"
@@ -71,35 +70,27 @@ export default function AddPlayerPage() {
 		dispatch({ type: "SET_FEES", payload: selections })
 	}, [])
 
-	const handleReserved = (registrationId: number) => {
-		console.log("Handling reserved with registration ID:", registrationId)
-		dispatch({ type: "SET_REGISTRATION_ID", payload: registrationId })
-	}
-
-	const handleError = (err: unknown) => {
+	const handleError = useCallback((err: unknown) => {
 		dispatch({ type: "SET_ERROR", payload: err })
-	}
+	}, [])
 
 	const handleCompleteRegistration = async () => {
 		console.log("Completing registration with state:", state)
 
-		if (!state.registrationId || !state.selectedSlotGroup) return
+		if (!state.selectedSlotGroup) return
 
 		dispatch({ type: "SET_IS_LOADING", payload: true })
 
 		try {
 			const dto = state.adminRegistration
 
-			const response = await fetch(
-				`/api/registration/${eventId}/admin-registration/${state.registrationId}`,
-				{
-					method: "PUT",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(dto),
+			const response = await fetch(`/api/registration/${eventId}/admin-registration`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			)
+				body: JSON.stringify(dto),
+			})
 
 			if (response.ok) {
 				dispatch({ type: "SET_COMPLETE_SUCCESS", payload: true })
@@ -165,21 +156,9 @@ export default function AddPlayerPage() {
 										fees={state.event.eventFees}
 										players={state.selectedPlayers}
 										onChange={handleFeeChange}
+										eventDate={new Date(state.event.startDate)}
 									/>
 								)}
-							</div>
-						)}
-
-						{state.canReserveSpot && (
-							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Hold This Spot</h4>{" "}
-								<ReserveSpot
-									eventId={eventId}
-									selectedSlotIds={state.selectedSlotGroup?.slots.map((s) => s.id ?? 0) ?? []}
-									onReserved={handleReserved}
-									onError={handleError}
-									disabled={false}
-								/>
 							</div>
 						)}
 

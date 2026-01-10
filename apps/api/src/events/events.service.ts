@@ -11,7 +11,7 @@ import {
 	CompleteClubEvent,
 } from "@repo/domain/types"
 
-import { CoursesRepository } from "../courses"
+import { CoursesService } from "../courses"
 import { DrizzleService, player, toDbString, tournamentResult } from "../database"
 import {
 	mapPreparedPointsToTournamentPointsInsert,
@@ -35,7 +35,7 @@ export class EventsService {
 	constructor(
 		private drizzle: DrizzleService,
 		private readonly repository: EventsRepository,
-		private readonly courses: CoursesRepository,
+		private readonly courses: CoursesService,
 	) {}
 
 	async getCompleteClubEventById(

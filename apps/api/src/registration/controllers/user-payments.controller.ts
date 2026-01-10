@@ -21,7 +21,7 @@ import type {
 	UpdatePaymentRequest,
 } from "@repo/domain/types"
 import type { AuthenticatedRequest } from "../../auth"
-import { UserPaymentsService } from "../services/user-payments.service"
+import { PaymentsService } from "../services/payments.service"
 import Stripe from "stripe"
 
 interface StripeAmountResponse {
@@ -38,7 +38,7 @@ interface CustomerSessionResponse {
 export class UserPaymentsController {
 	private readonly logger = new Logger(UserPaymentsController.name)
 
-	constructor(private readonly service: UserPaymentsService) {}
+	constructor(private readonly service: PaymentsService) {}
 
 	/**
 	 * Create a payment record with details.
