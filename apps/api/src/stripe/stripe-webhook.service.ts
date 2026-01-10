@@ -38,12 +38,14 @@ export class StripeWebhookService {
 			return
 		}
 
+		this.logger.log(`Payment intent metadata: ${JSON.stringify(paymentIntent.metadata)}`)
+
 		const registrationId = paymentIntent.metadata?.registrationId
 			? parseInt(paymentIntent.metadata.registrationId, 10)
 			: null
 
 		if (!registrationId) {
-			this.logger.warn(`No registrationId found for payment ${paymentRecord.id}`)
+			this.logger.error(`No registrationId provided for payment ${paymentRecord.id}`)
 			return
 		}
 
@@ -199,8 +201,15 @@ export class StripeWebhookService {
 				case NotificationTypeChoices.UPDATED_REGISTRATION:
 					await this.mailService.sendRegistrationUpdate(user, event, registration, payment)
 					break
-				default:
+				case NotificationTypeChoices.SIGNUP_CONFIRMATION:
 					await this.mailService.sendRegistrationConfirmation(user, event, registration, payment)
+					break
+				case NotificationTypeChoices.ADMIN:
+					// The admin flows take care of notifications
+					this.logger.log(`No email sent for admin payment ${payment.id} to ${user.email}.`)
+					break
+				default:
+					this.logger.warn(`Missing notification type for payment ${payment.id} to ${user.email}.`)
 			}
 
 			this.logger.log(`Confirmation email sent for payment ${payment.id} to ${user.email}.`)

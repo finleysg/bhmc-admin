@@ -43,6 +43,10 @@ export class RegistrationRepository {
 
 	// ==================== PLAYER ====================
 
+	async getPlayers(): Promise<PlayerRow[]> {
+		return await this.drizzle.db.select().from(player)
+	}
+
 	async findPlayerById(id: number): Promise<PlayerRow> {
 		const [p] = await this.drizzle.db.select().from(player).where(eq(player.id, id)).limit(1)
 		if (!p) {
@@ -66,6 +70,12 @@ export class RegistrationRepository {
 		return p ?? null
 	}
 
+	async findPlayerByGhin(ghin: string): Promise<PlayerRow | null> {
+		const [p] = await this.drizzle.db.select().from(player).where(eq(player.ghin, ghin)).limit(1)
+
+		return p ?? null
+	}
+
 	async findPlayerByUserId(userId: number): Promise<PlayerRow | null> {
 		const [p] = await this.drizzle.db
 			.select()
@@ -74,6 +84,32 @@ export class RegistrationRepository {
 			.limit(1)
 
 		return p ?? null
+	}
+
+	async findPlayersByText(pattern: string): Promise<PlayerRow[]> {
+		const searchPattern = `%${pattern}%`
+		return await this.drizzle.db
+			.select()
+			.from(player)
+			.where(
+				or(
+					like(player.lastName, searchPattern),
+					like(player.firstName, searchPattern),
+					like(player.email, searchPattern),
+					like(player.ghin, searchPattern),
+					like(sql`CONCAT(${player.firstName}, ' ', ${player.lastName})`, searchPattern),
+				),
+			)
+	}
+
+	async findRegisteredPlayers(eventId: number): Promise<PlayerRow[]> {
+		const results = await this.drizzle.db
+			.select({ player })
+			.from(registrationSlot)
+			.innerJoin(player, eq(registrationSlot.playerId, player.id))
+			.where(eq(registrationSlot.eventId, eventId))
+
+		return results.map((r) => r.player)
 	}
 
 	async updatePlayer(playerId: number, data: Partial<PlayerInsert>): Promise<PlayerRow> {

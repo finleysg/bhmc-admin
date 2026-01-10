@@ -1,12 +1,14 @@
 // Reducer logic for AddPlayerPage
 
 import type { AdminRegistrationOptionsState } from "@/components/admin-registration-options"
-import type {
-	AvailableSlotGroup,
-	CompleteClubEvent as ClubEvent,
-	Player,
-	AdminRegistration,
-	AdminRegistrationSlot,
+import {
+	type AvailableSlotGroup,
+	type CompleteClubEvent as ClubEvent,
+	type Player,
+	type AdminRegistration,
+	type AdminRegistrationSlot,
+	type RegistrationSlot,
+	RegistrationStatusChoices,
 } from "@repo/domain/types"
 
 export interface AddPlayerState {
@@ -60,7 +62,20 @@ export function getInitialState(): AddPlayerState {
 	}
 }
 
-export function generateAdminRegistration(
+function createSyntheticSlot(player: Player, eventId: number): RegistrationSlot {
+	return {
+		id: 0, // API ignores for non-CanChoose
+		registrationId: 0,
+		eventId,
+		startingOrder: 0,
+		slot: 0,
+		status: RegistrationStatusChoices.AVAILABLE,
+		playerId: player.id,
+		player,
+	}
+}
+
+function generateAdminRegistration(
 	state: Omit<AddPlayerState, "adminRegistration">,
 ): AdminRegistration | null {
 	// null until we can register
@@ -114,30 +129,16 @@ export function generateAdminRegistration(
 	}
 }
 
-export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
+function choosableReducer(state: AddPlayerState, action: Action): AddPlayerState {
 	switch (action.type) {
-		case "SET_EVENT": {
-			const nextState = { ...state, event: action.payload }
-			return {
-				...nextState,
-				adminRegistration: generateAdminRegistration(nextState),
-			}
-		}
-		case "SET_IS_LOADING":
-			return { ...state, isLoading: action.payload }
 		case "ADD_PLAYER": {
 			const newPlayers = [...state.selectedPlayers, action.payload]
 			const nextState = {
 				...state,
 				selectedPlayers: newPlayers,
-				canSelectGroup: (newPlayers.length > 0 && state.event?.canChoose) ?? false,
-				canSelectFees:
-					newPlayers.length > 0 &&
-					(state.event?.canChoose ? state.selectedSlotGroup !== null : true),
-				canCompleteRegistration:
-					(state.event?.canChoose ? state.selectedSlotGroup !== null : true) &&
-					state.selectedPlayers.length > 0 &&
-					state.selectedFees.length > 0,
+				canSelectGroup: newPlayers.length > 0,
+				canSelectFees: newPlayers.length > 0 && state.selectedSlotGroup !== null,
+				canCompleteRegistration: newPlayers.length > 0 && state.selectedSlotGroup !== null,
 			}
 			return {
 				...nextState,
@@ -151,14 +152,9 @@ export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 			const nextState = {
 				...state,
 				selectedPlayers: newPlayers,
-				canSelectGroup: (newPlayers.length > 0 && state.event?.canChoose) ?? false,
-				canSelectFees:
-					newPlayers.length > 0 &&
-					(state.event?.canChoose ? state.selectedSlotGroup !== null : true),
-				canCompleteRegistration:
-					(state.event?.canChoose ? state.selectedSlotGroup !== null : true) &&
-					state.selectedPlayers.length > 0 &&
-					state.selectedFees.length > 0,
+				canSelectGroup: newPlayers.length > 0,
+				canSelectFees: newPlayers.length > 0 && state.selectedSlotGroup !== null,
+				canCompleteRegistration: newPlayers.length > 0 && state.selectedSlotGroup !== null,
 			}
 			return {
 				...nextState,
@@ -171,12 +167,9 @@ export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 				...state,
 				selectedSlotGroup: group,
 				completeSuccess: false,
-				canSelectFees:
-					state.selectedPlayers.length > 0 && (state.event?.canChoose ? group !== null : true),
+				canSelectFees: state.selectedPlayers.length > 0 && group !== null,
 				canCompleteRegistration:
-					(state.event?.canChoose ? state.selectedSlotGroup !== null : true) &&
-					state.selectedPlayers.length > 0 &&
-					state.selectedFees.length > 0,
+					state.selectedPlayers.length > 0 && state.selectedSlotGroup !== null,
 			}
 			return {
 				...nextState,
@@ -190,15 +183,94 @@ export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 				selectedFees: fees,
 				canReserveSpot: fees.length > 0,
 				canCompleteRegistration:
-					(state.event?.canChoose ? state.selectedSlotGroup !== null : true) &&
-					state.selectedPlayers.length > 0 &&
-					state.selectedFees.length > 0,
+					state.selectedPlayers.length > 0 && state.selectedSlotGroup !== null,
 			}
 			return {
 				...nextState,
 				adminRegistration: generateAdminRegistration(nextState),
 			}
 		}
+		default:
+			return state
+	}
+}
+
+function nonChoosableReducer(state: AddPlayerState, action: Action): AddPlayerState {
+	switch (action.type) {
+		case "ADD_PLAYER": {
+			const newPlayers = [...state.selectedPlayers, action.payload]
+			const newSlot = createSyntheticSlot(action.payload, state.event!.id)
+			const existingSlots = state.selectedSlotGroup?.slots ?? []
+			const slotGroup: AvailableSlotGroup = {
+				holeId: 0,
+				holeNumber: 0,
+				startingOrder: 0,
+				slots: [...existingSlots, newSlot],
+			}
+			const nextState = {
+				...state,
+				selectedPlayers: newPlayers,
+				selectedSlotGroup: slotGroup,
+				canSelectGroup: false,
+				canSelectFees: newPlayers.length > 0,
+				canCompleteRegistration: newPlayers.length > 0,
+			}
+			return {
+				...nextState,
+				adminRegistration: generateAdminRegistration(nextState),
+			}
+		}
+		case "REMOVE_PLAYER": {
+			const newPlayers = state.selectedPlayers.filter(
+				(p) => p.id !== action.payload.id || p.email !== action.payload.email,
+			)
+			const updatedSlots = (state.selectedSlotGroup?.slots ?? []).filter(
+				(s) => s.playerId !== action.payload.id,
+			)
+			const slotGroup =
+				updatedSlots.length > 0 ? { ...state.selectedSlotGroup!, slots: updatedSlots } : null
+			const nextState = {
+				...state,
+				selectedPlayers: newPlayers,
+				selectedSlotGroup: slotGroup,
+				canSelectGroup: false,
+				canSelectFees: newPlayers.length > 0,
+				canCompleteRegistration: newPlayers.length > 0,
+			}
+			return {
+				...nextState,
+				adminRegistration: generateAdminRegistration(nextState),
+			}
+		}
+		case "SET_FEES": {
+			const fees = action.payload
+			const nextState = {
+				...state,
+				selectedFees: fees,
+				canReserveSpot: fees.length > 0,
+				canCompleteRegistration: state.selectedPlayers.length > 0,
+			}
+			return {
+				...nextState,
+				adminRegistration: generateAdminRegistration(nextState),
+			}
+		}
+		default:
+			return state
+	}
+}
+
+export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
+	switch (action.type) {
+		case "SET_EVENT": {
+			const nextState = { ...state, event: action.payload }
+			return {
+				...nextState,
+				adminRegistration: generateAdminRegistration(nextState),
+			}
+		}
+		case "SET_IS_LOADING":
+			return { ...state, isLoading: action.payload }
 		case "SET_REGISTRATION_OPTIONS": {
 			const nextState = { ...state, registrationOptions: action.payload }
 			return {
@@ -229,6 +301,9 @@ export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 			}
 		}
 		default:
-			return state
+			if (state.event?.canChoose) {
+				return choosableReducer(state, action)
+			}
+			return nonChoosableReducer(state, action)
 	}
 }

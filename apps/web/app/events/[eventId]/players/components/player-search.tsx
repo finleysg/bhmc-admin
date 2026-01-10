@@ -8,6 +8,8 @@ import { useEffect, useState } from "react"
 import type { Player } from "@repo/domain/types"
 
 interface PlayerSearchProps {
+	eventId?: number
+	excludeRegistered?: boolean
 	membersOnly?: boolean
 	minChars?: number
 	initialSelectedPlayers?: Player[]
@@ -17,6 +19,8 @@ interface PlayerSearchProps {
 }
 
 export function PlayerSearch({
+	eventId,
+	excludeRegistered = true,
 	membersOnly = true,
 	minChars = 3,
 	initialSelectedPlayers = [],
@@ -42,6 +46,8 @@ export function PlayerSearch({
 				const params = new URLSearchParams({
 					searchText: debouncedSearchText,
 					isMember: membersOnly.toString(),
+					...(eventId && { eventId: eventId.toString() }),
+					...(eventId && { excludeRegistered: excludeRegistered.toString() }),
 				})
 				const response = await fetch(`/api/registration/players?${params}`)
 				if (response.ok) {
@@ -59,7 +65,7 @@ export function PlayerSearch({
 		}
 
 		void fetchPlayers()
-	}, [debouncedSearchText, minChars, membersOnly, onError])
+	}, [debouncedSearchText, minChars, membersOnly, eventId, excludeRegistered, onError])
 
 	const handlePlayerSelect = (player: Player | null) => {
 		if (!player) return

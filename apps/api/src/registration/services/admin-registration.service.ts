@@ -95,7 +95,8 @@ export class AdminRegistrationService {
 			// Membership registration?
 			if (eventRecord.eventType === EventTypeChoices.SEASON_REGISTRATION) {
 				const season = new Date(eventRecord.startDate).getFullYear()
-				for (const slot of convertedSlots) {
+				for (const slot of dto.slots) {
+					this.logger.log(`Updating membership status for player ${slot.playerId}.`)
 					await this.updateMembershipStatus(slot.playerId, season)
 				}
 			}
@@ -105,13 +106,13 @@ export class AdminRegistrationService {
 	}
 
 	/** Send payment request email to user. */
-	async sendPaymentRequestNotification(
+	async sendAdminRegistrationNotification(
 		eventId: number,
 		registrationId: number,
 		paymentId: number,
 		collectPayment: boolean,
 	): Promise<void> {
-		const event = await this.events.getCompleteClubEventById(eventId)
+		const event = await this.events.getCompleteClubEventById(eventId, false)
 		const registrationRecord = await this.repository.findRegistrationFullById(registrationId)
 		const course = registrationRecord.courseId
 			? await this.courses.findCourseWithHolesById(registrationRecord.courseId)
@@ -172,8 +173,8 @@ export class AdminRegistrationService {
 	}
 
 	/** Mark player as member for season. */
-	async updateMembershipStatus(userId: number, season: number): Promise<void> {
-		const player = await this.repository.findPlayerByUserId(userId)
+	async updateMembershipStatus(playerId: number, season: number): Promise<void> {
+		const player = await this.repository.findPlayerById(playerId)
 		if (player) {
 			player.isMember = 1
 			player.lastSeason = season
@@ -284,9 +285,9 @@ export class AdminRegistrationService {
 				paymentCode,
 				eventId,
 				userId: dto.userId,
-				paymentAmount: amountDue.total.toFixed(2),
-				transactionFee: amountDue.transactionFee.toFixed(2),
-				confirmed: 0,
+				paymentAmount: dto.collectPayment ? amountDue.total.toFixed(2) : "0.00",
+				transactionFee: dto.collectPayment ? amountDue.transactionFee.toFixed(2) : "0.00",
+				confirmed: dto.collectPayment ? 0 : 1,
 				notificationType: "A",
 			})
 			paymentId = Number(paymentResult.insertId)
@@ -387,9 +388,9 @@ export class AdminRegistrationService {
 				paymentCode,
 				eventId: event.id,
 				userId: dto.userId,
-				paymentAmount: amountDue.total.toFixed(2),
-				transactionFee: amountDue.transactionFee.toFixed(2),
-				confirmed: 0,
+				paymentAmount: dto.collectPayment ? amountDue.total.toFixed(2) : "0.00",
+				transactionFee: dto.collectPayment ? amountDue.transactionFee.toFixed(2) : "0.00",
+				confirmed: dto.collectPayment ? 0 : 1,
 				notificationType: "A",
 			})
 			paymentId = Number(paymentResult.insertId)
@@ -400,8 +401,10 @@ export class AdminRegistrationService {
 					eventId: event.id,
 					playerId: slot.playerId,
 					registrationId,
-					status: RegistrationStatusChoices.PENDING,
-					startingOrder: 1,
+					status: dto.collectPayment
+						? RegistrationStatusChoices.PENDING
+						: RegistrationStatusChoices.RESERVED,
+					startingOrder: 0,
 					slot: 0,
 				})
 				const slotId = result.insertId

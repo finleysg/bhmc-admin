@@ -8,6 +8,7 @@ export interface Player {
 	tee: string
 	birthDate?: string | null
 	isMember: boolean
+	lastSeason?: number | null
 	ggId?: string | null
 	userId?: number | null
 	stripeCustomerId?: string | null

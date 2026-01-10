@@ -504,8 +504,7 @@ describe("RegistrationService", () => {
 		})
 
 		it("deletes payment when paymentId provided", async () => {
-			const { service, repository, eventsService, paymentsService } =
-				createService()
+			const { service, repository, eventsService, paymentsService } = createService()
 
 			const regFull = createRegistrationFull()
 

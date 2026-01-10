@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, like, or } from "drizzle-orm"
+import { and, eq, inArray, isNotNull } from "drizzle-orm"
 
 import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { dummyCourse, dummyHole, validateRegistration } from "@repo/domain/functions"
@@ -52,6 +52,19 @@ export class PlayerService {
 		private readonly events: EventsService,
 		private readonly broadcast: RegistrationBroadcastService,
 	) {}
+
+	/** Find a player by id */
+	async findPlayerById(playerId: number): Promise<Player> {
+		// TODO: convert error to NotFoundException
+		const player = await this.repository.findPlayerById(playerId)
+		return toPlayer(player)
+	}
+
+	/** Find a player by id */
+	async findPlayerByGhin(ghin: string): Promise<Player | undefined> {
+		const player = await this.repository.findPlayerByGhin(ghin)
+		return player ? toPlayer(player) : undefined
+	}
 
 	/** Get registered players with fees for an event. */
 	async getRegisteredPlayers(eventId: number): Promise<RegisteredPlayer[]> {
@@ -127,25 +140,36 @@ export class PlayerService {
 		return results
 	}
 
+	/** Return all members */
+	async getMembers(): Promise<Player[]> {
+		const members = await this.repository.findMemberPlayers()
+		return members.map((player) => toPlayer(player))
+	}
+
 	/** Search players by name/GHIN with membership filter. */
 	async searchPlayers(query: PlayerQuery): Promise<Player[]> {
-		const { searchText, isMember = true } = query
-		let whereClause: ReturnType<typeof and> | ReturnType<typeof eq> | undefined = undefined
+		let players: Player[] = []
+		const { searchText, isMember = true, eventId, excludeRegistered = true } = query
 
 		if (searchText) {
-			const search = `%${searchText}%`
-			const searchCondition = or(
-				like(player.firstName, search),
-				like(player.lastName, search),
-				like(player.ghin, search),
-			)
-			whereClause = isMember ? and(searchCondition, eq(player.isMember, 1)) : searchCondition
-		} else if (isMember) {
-			whereClause = eq(player.isMember, 1)
+			const results = await this.repository.findPlayersByText(searchText)
+			results.forEach((r) => players.push(toPlayer(r)))
+		} else {
+			const results = await this.repository.getPlayers()
+			results.forEach((r) => players.push(toPlayer(r)))
 		}
 
-		const results = await this.drizzle.db.select().from(player).where(whereClause)
-		return results.map(toPlayer)
+		if (isMember) {
+			players = players.filter((p) => p.isMember)
+		}
+
+		if (excludeRegistered && eventId) {
+			const registered = await this.repository.findRegisteredPlayers(eventId)
+			const registeredIds = new Set(registered.map((r) => r.id))
+			return players.filter((p) => !registeredIds.has(p.id))
+		}
+
+		return players
 	}
 
 	/** Find registration group by event and player. */

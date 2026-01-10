@@ -15,6 +15,7 @@ import {
 	DjangoUser,
 	Player,
 	CompleteRegistration,
+	EventTypeChoices,
 } from "@repo/domain/types"
 import * as nodemailer from "nodemailer"
 import mailgunTransport from "nodemailer-mailgun-transport"
@@ -29,6 +30,7 @@ import {
 	WelcomeEmail,
 } from "./templates"
 import { WelcomeBackEmail } from "./templates/welcome-back-email"
+import { WelcomeHonoraryEmail } from "./templates/welcome-honorary-email"
 
 export interface SendEmailOptions {
 	to: string | string[]
@@ -113,6 +115,21 @@ export class MailService {
 			to: player.email,
 			subject: "It's Great to Have You Back!",
 			template: WelcomeBackEmail({ firstName: player.firstName, year, accountUrl }),
+		})
+	}
+
+	async sendWelcomeHonoraryEmail(
+		player: Pick<Player, "firstName" | "email">,
+		year: string,
+		signedUpBy: string,
+	): Promise<void> {
+		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
+		const accountUrl = `${websiteUrl}/my-account`
+
+		await this.sendEmail({
+			to: player.email,
+			subject: "It's Great to Have You Back!",
+			template: WelcomeHonoraryEmail({ firstName: player.firstName, year, accountUrl, signedUpBy }),
 		})
 	}
 
@@ -277,9 +294,74 @@ export class MailService {
 		collectPayment: boolean,
 	): Promise<void> {
 		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
-		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
 		const paymentUrl = `${websiteUrl}/registration/${registration.id}/payment/${paymentId}`
+		const accountUrl = `${websiteUrl}/my-account`
 
+		this.logger.log(
+			`Preparing email notification with paymentUrl: ${paymentUrl}, collecting payment = ${collectPayment}.`,
+		)
+
+		// SEASON_REGISTRATION: send welcome emails
+		if (event.eventType === EventTypeChoices.SEASON_REGISTRATION) {
+			const year = new Date(event.startDate).getFullYear().toString()
+			const currentYear = new Date().getFullYear()
+
+			for (const slot of registration.slots) {
+				const player = slot.player
+				const isReturning = player.lastSeason === currentYear - 1
+
+				try {
+					if (!collectPayment) {
+						// Honorary/board member - no payment required
+						this.logger.log(`Sending honorary welcome email to ${player.email}.`)
+						await this.sendEmail({
+							to: player.email,
+							subject: "It's Great to Have You Back!",
+							template: WelcomeHonoraryEmail({
+								firstName: player.firstName,
+								year,
+								accountUrl,
+								signedUpBy: registration.signedUpBy,
+							}),
+						})
+					} else if (isReturning) {
+						// Returning member with payment
+						this.logger.log(`Sending returning member welcome email to ${player.email}.`)
+						await this.sendEmail({
+							to: player.email,
+							subject: "It's Great to Have You Back!",
+							template: WelcomeBackEmail({
+								firstName: player.firstName,
+								year,
+								accountUrl,
+								paymentUrl,
+							}),
+						})
+					} else {
+						// New member with payment
+						this.logger.log(`Sending new member welcome email to ${player.email}.`)
+						await this.sendEmail({
+							to: player.email,
+							subject: "Welcome to the Bunker Hills Men's Club!",
+							template: WelcomeEmail({
+								firstName: player.firstName,
+								year,
+								accountUrl,
+								paymentUrl,
+							}),
+						})
+					}
+				} catch (error) {
+					this.logger.error(
+						`Failed to send welcome email to ${player.email}: ${error instanceof Error ? error.message : "Unknown error"}`,
+					)
+				}
+			}
+			return
+		}
+
+		// Non-SEASON_REGISTRATION: send admin registration notification
+		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
 		const eventHoleOrStart = registration.course
 			? getStart(event, registration.slots[0], registration.course.holes)
 			: undefined
@@ -330,6 +412,7 @@ export class MailService {
 			const isPaymentPlayer = recipientEmail === paymentUserEmail
 
 			try {
+				this.logger.log(`Sending notification email to ${recipientEmail}.`)
 				await this.sendEmail({
 					to: recipientEmail,
 					subject: `Event Registration: ${event.name}`,

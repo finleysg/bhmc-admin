@@ -4,6 +4,14 @@
  */
 
 /**
+ * Parse a date-only string (YYYY-MM-DD) as local midnight.
+ * Avoids timezone shift that occurs with new Date("YYYY-MM-DD").
+ */
+export function parseLocalDate(dateString: string): Date {
+	return new Date(dateString + "T00:00:00")
+}
+
+/**
  * Parse a time string like "5:00 PM" or "12:30 AM" into minutes since midnight.
  * Throws on invalid input.
  */

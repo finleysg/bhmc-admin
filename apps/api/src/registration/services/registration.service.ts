@@ -125,6 +125,15 @@ export class RegistrationService {
 	}
 
 	/**
+	 * Get a registration by gg id. No validation - not a user facing query.
+	 */
+	async findRegistrationSlotByGgId(ggId: string): Promise<RegistrationSlot | undefined> {
+		const row = await this.repository.findRegistrationSlotByGgId(ggId)
+
+		return row ? toRegistrationSlot(row) : undefined
+	}
+
+	/**
 	 * Update a slot's player assignment.
 	 */
 	async updateSlotPlayer(slotId: number, playerId: number | null): Promise<RegistrationSlot> {

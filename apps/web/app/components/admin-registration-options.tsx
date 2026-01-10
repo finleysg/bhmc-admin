@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
+
 export interface AdminRegistrationOptionsState {
 	expires: number
 	sendPaymentRequest: boolean
@@ -12,8 +14,19 @@ interface AdminRegistrationOptionsProps {
 }
 
 export function AdminRegistrationOptions({ options, onChange }: AdminRegistrationOptionsProps) {
+	const [expiresInput, setExpiresInput] = useState(String(options.expires))
+
+	useEffect(() => {
+		setExpiresInput(String(options.expires))
+	}, [options.expires])
+
 	const handleExpiresChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		onChange({ ...options, expires: Number(e.target.value) })
+		setExpiresInput(e.target.value)
+	}
+
+	const handleExpiresBlur = () => {
+		const num = Number(expiresInput) || 0
+		onChange({ ...options, expires: num })
 	}
 
 	const handleSendPaymentRequestChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,8 +58,9 @@ export function AdminRegistrationOptions({ options, onChange }: AdminRegistratio
 					<input
 						type="number"
 						className="input input-bordered w-full"
-						value={options.expires}
+						value={expiresInput}
 						onChange={handleExpiresChange}
+						onBlur={handleExpiresBlur}
 						min={1}
 						disabled={!options.sendPaymentRequest}
 					/>

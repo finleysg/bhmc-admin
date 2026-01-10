@@ -7,9 +7,16 @@ import { DayPicker } from "react-day-picker"
 interface CalendarCardProps {
 	selectedDate: Date
 	onDateSelect: (date: Date | undefined) => void
+	eventDates?: Date[]
+	onMonthChange?: (date: Date) => void
 }
 
-export default function CalendarCard({ selectedDate, onDateSelect }: CalendarCardProps) {
+export default function CalendarCard({
+	selectedDate,
+	onDateSelect,
+	eventDates,
+	onMonthChange,
+}: CalendarCardProps) {
 	return (
 		<div className="card bg-base-100 shadow-xl">
 			<div className="card-body">
@@ -22,6 +29,9 @@ export default function CalendarCard({ selectedDate, onDateSelect }: CalendarCar
 					mode="single"
 					selected={selectedDate}
 					onSelect={onDateSelect}
+					onMonthChange={onMonthChange}
+					modifiers={{ hasEvent: eventDates ?? [] }}
+					modifiersClassNames={{ hasEvent: "bg-accent/20 font-semibold" }}
 					classNames={{
 						today: "text-accent",
 						day_button: "hover:bg-base-200",

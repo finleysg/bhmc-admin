@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from "@nestjs/common"
+import {
+	Body,
+	Controller,
+	Get,
+	Logger,
+	Param,
+	ParseIntPipe,
+	Post,
+	Query,
+} from "@nestjs/common"
 import type {
 	AdminRegistration,
 	AvailableSlotGroup,
@@ -16,6 +25,8 @@ import { RefundService } from "../services/refund.service"
 @Controller("registration")
 @Admin()
 export class AdminRegistrationController {
+	private readonly logger = new Logger(AdminRegistrationController.name)
+
 	constructor(
 		private readonly adminRegistrationService: AdminRegistrationService,
 		private readonly adminRegisterService: PlayerService,
@@ -24,9 +35,11 @@ export class AdminRegistrationController {
 
 	@Get("players")
 	async playerQuery(@Query() query: PlayerQuery) {
-		const obj = {
+		const obj: PlayerQuery = {
 			searchText: query.searchText,
 			isMember: query.isMember ?? true,
+			eventId: query.eventId ? Number(query.eventId) : undefined,
+			excludeRegistered: query.excludeRegistered ?? true,
 		}
 		return this.adminRegisterService.searchPlayers(obj)
 	}
@@ -50,14 +63,19 @@ export class AdminRegistrationController {
 		return this.adminRegisterService.findGroup(eventId, playerId)
 	}
 
-	@Put(":eventId/admin-registration")
+	@Post(":eventId/admin-registration")
 	async createAdminRegistration(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Body() dto: AdminRegistration,
 	) {
+		this.logger.log(`Admin ${dto.signedUpBy} registering user ${dto.userId} for event ${eventId}.`)
 		const { registrationId, paymentId } =
 			await this.adminRegistrationService.createAdminRegistration(eventId, dto)
-		await this.adminRegistrationService.sendPaymentRequestNotification(
+
+		this.logger.log(
+			`Sending payment request notification to user ${dto.userId} for event ${eventId}.`,
+		)
+		await this.adminRegistrationService.sendAdminRegistrationNotification(
 			eventId,
 			registrationId,
 			paymentId,

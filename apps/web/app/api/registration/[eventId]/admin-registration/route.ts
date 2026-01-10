@@ -3,16 +3,16 @@
 import { NextRequest } from "next/server"
 import { fetchWithAuth } from "@/lib/api-proxy"
 
-export async function PUT(
+export async function POST(
 	request: NextRequest,
-	context: { params: Promise<{ eventId: string; registrationId: string }> },
+	context: { params: Promise<{ eventId: string }> },
 ) {
 	const params = await context.params
-	const backendPath = `/registration/${params.eventId}/admin-registration/${params.registrationId}`
+	const backendPath = `/registration/${params.eventId}/admin-registration`
 	return fetchWithAuth({
 		request,
 		backendPath,
-		method: "PUT",
+		method: "POST",
 		body: await request.json(),
 	})
 }

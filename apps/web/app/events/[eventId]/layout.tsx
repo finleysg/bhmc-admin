@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
 import { useAuth } from "@/lib/auth-context"
+import { parseLocalDate } from "@repo/domain/functions"
 import { ClubEvent } from "@repo/domain/types"
 
 export default function EventLayout({ children }: { children: React.ReactNode }) {
@@ -64,7 +65,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 	}
 
 	const formatDate = (dateString: string) => {
-		const date = new Date(dateString)
+		const date = parseLocalDate(dateString)
 		return date.toLocaleDateString("en-US", {
 			month: "short",
 			day: "numeric",

@@ -62,7 +62,7 @@ export function PlayerEventFeePicker({
 		<div className="card bg-base-100">
 			<div className="card-body p-1">
 				<div className="flex justify-between items-start">
-					<span className="text-lg text-secondary font-semibold">
+					<span className="text-secondary font-semibold">
 						{player.firstName} {player.lastName}
 					</span>
 					<span className="text-secondary font-semibold">

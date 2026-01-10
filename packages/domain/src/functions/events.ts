@@ -1,4 +1,10 @@
-import { ClubEvent, RegistrationTypeChoices } from "../types"
+import {
+	ClubEvent,
+	EventTypeChoices,
+	RegistrationStatusChoices,
+	RegistrationTypeChoices,
+	StartTypeChoices,
+} from "../types"
 import { format, isValid, isWithinInterval } from "date-fns"
 
 const isoDayFormat = (dt: string) => {
@@ -87,4 +93,76 @@ export function priorityRegistrationIsOpen(event: ClubEvent, now: Date = new Dat
 		start: new Date(event.prioritySignupStart),
 		end: new Date(event.signupStart),
 	})
+}
+
+export function getEventTypeName(code: string) {
+	switch (code) {
+		case EventTypeChoices.WEEKNIGHT:
+			return "Weeknight Event"
+		case EventTypeChoices.WEEKEND_MAJOR:
+			return "Weekend Major"
+		case EventTypeChoices.MATCH_PLAY:
+			return "Season Long Match Play"
+		case EventTypeChoices.MEETING:
+			return "Meeting"
+		case EventTypeChoices.OTHER:
+			return "Other"
+		case EventTypeChoices.EXTERNAL:
+			return "External Event"
+		case EventTypeChoices.SEASON_REGISTRATION:
+			return "Season Registration"
+		case EventTypeChoices.DEADLINE:
+			return "Deadline"
+		case EventTypeChoices.OPEN:
+			return "Open Event"
+		default:
+			return "Unknown"
+	}
+}
+
+// TODO: move to registration file
+export function getStatusName(statusCode: string) {
+	switch (statusCode) {
+		case RegistrationStatusChoices.AVAILABLE:
+			return "Available"
+		case RegistrationStatusChoices.PENDING:
+			return "In Progress"
+		case RegistrationStatusChoices.RESERVED:
+			return "Reserved"
+		case RegistrationStatusChoices.AWAITING_PAYMENT:
+			return "Payment Processing"
+		default:
+			return "Unavailable"
+	}
+}
+
+export function getStartTypeName(startType?: string | null) {
+	if (!startType) {
+		return "Tee Times"
+	}
+	switch (startType) {
+		case StartTypeChoices.SHOTGUN:
+			return "Shotgun"
+		case StartTypeChoices.TEETIMES:
+			return "Tee Times"
+		default:
+			return "N/A"
+	}
+}
+
+export function getRegistrationTypeName(registrationType: string) {
+	switch (registrationType) {
+		case RegistrationTypeChoices.MEMBER:
+			return "Members Only"
+		case RegistrationTypeChoices.MEMBER_GUEST:
+			return "Guests Allowed"
+		case RegistrationTypeChoices.OPEN:
+			return "Open to All"
+		case RegistrationTypeChoices.RETURNING_MEMBER:
+			return "Returning Members Only"
+		case RegistrationTypeChoices.NONE:
+			return "No Signup"
+		default:
+			return ""
+	}
 }
