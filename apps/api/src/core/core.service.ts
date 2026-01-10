@@ -1,6 +1,6 @@
 import { and, asc, eq } from "drizzle-orm"
 
-import { Injectable } from "@nestjs/common"
+import { Injectable, NotFoundException } from "@nestjs/common"
 import { Champion, LowScore } from "@repo/domain/types"
 
 import {
@@ -15,7 +15,7 @@ import {
 import { toChampion, toLowScore } from "./mappers"
 
 @Injectable()
-export class CoreRepository {
+export class CoreService {
 	constructor(private drizzle: DrizzleService) {}
 
 	async findLowScores(season: number, courseName: string, isNet: boolean): Promise<LowScore[]> {
@@ -59,7 +59,7 @@ export class CoreRepository {
 	async findLowScoreById(id: number): Promise<LowScore> {
 		const [row] = await this.drizzle.db.select().from(lowScore).where(eq(lowScore.id, id)).limit(1)
 		if (!row) {
-			throw new Error(`No low score found for id ${id}.`)
+			throw new NotFoundException(`No low score found for id ${id}.`)
 		}
 		return toLowScore(row)
 	}
@@ -100,7 +100,7 @@ export class CoreRepository {
 	async findChampionById(id: number): Promise<Champion> {
 		const [row] = await this.drizzle.db.select().from(champion).where(eq(champion.id, id)).limit(1)
 		if (!row) {
-			throw new Error(`No champion found for id ${id}.`)
+			throw new NotFoundException(`No champion found for id ${id}.`)
 		}
 		return toChampion(row)
 	}

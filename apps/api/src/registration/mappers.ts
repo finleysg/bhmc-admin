@@ -49,6 +49,7 @@ export function toPlayer(row: PlayerRow): Player {
 		tee: row.tee,
 		birthDate: row.birthDate ?? undefined,
 		isMember: Boolean(row.isMember),
+		lastSeason: row.lastSeason ?? undefined,
 		ggId: row.ggId ?? undefined,
 		userId: row.userId ?? undefined,
 		stripeCustomerId: row.stripeCustomerId ?? undefined,

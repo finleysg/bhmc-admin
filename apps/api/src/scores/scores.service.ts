@@ -12,16 +12,9 @@ import {
 	ScoreInsert,
 	ScoreRow,
 } from "../database"
-// import {
-// 	scorecardInsertSchema,
-// 	ScorecardModel,
-// 	scorecardUpdateSchema,
-// 	scoreInsertSchema,
-// 	ScoreModel,
-// } from "../database/models"
 
 @Injectable()
-export class ScoresRepository {
+export class ScoresService {
 	constructor(private drizzle: DrizzleService) {}
 
 	async createScorecard(data: ScorecardInsert): Promise<ScorecardRow> {

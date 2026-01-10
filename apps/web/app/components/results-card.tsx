@@ -1,39 +1,33 @@
 "use client"
 
+import { getEventTypeName, getRegistrationTypeName } from "@repo/domain/functions"
 import { ClubEvent } from "@repo/domain/types"
 
 interface ResultsCardProps {
-	isSearching: boolean
+	isLoading: boolean
 	searchResults: ClubEvent[]
 	selectedEvent: ClubEvent | null
 	onEventSelect: (event: ClubEvent) => void
 	selectedDate: Date
-	showOnlyWhenNotOneResult?: boolean // Optional prop to control visibility
 }
 
 export default function ResultsCard({
-	isSearching,
+	isLoading,
 	searchResults,
 	selectedEvent,
 	onEventSelect,
 	selectedDate,
-	showOnlyWhenNotOneResult = true,
 }: ResultsCardProps) {
-	if (showOnlyWhenNotOneResult && searchResults.length === 1) {
-		return null
-	}
-
 	return (
 		<div className="card bg-base-100 shadow-xl">
 			<div className="card-body">
 				<h2 className="card-title mb-4">Select Tournament</h2>
 
-				{isSearching ? (
+				{isLoading ? (
 					<div className="flex items-center gap-3">
 						<span className="loading loading-spinner loading-md"></span>
 						<div>
-							<p className="font-medium">Searching for tournaments...</p>
-							<p className="text-sm text-base-content/60">Checking Golf Genius API</p>
+							<p className="font-medium">Loading events...</p>
 						</div>
 					</div>
 				) : searchResults.length === 0 ? (
@@ -46,9 +40,11 @@ export default function ResultsCard({
 					</div>
 				) : (
 					<div className="space-y-4">
-						<div className="alert alert-warning">
-							<span>{searchResults.length} tournaments found - please select one</span>
-						</div>
+						{searchResults.length > 1 && (
+							<div className="alert alert-warning">
+								<span>{searchResults.length} tournaments found - please select one</span>
+							</div>
+						)}
 
 						<div className="space-y-3">
 							{searchResults.map((event) => (
@@ -63,11 +59,12 @@ export default function ResultsCard({
 								>
 									<h3 className="font-semibold">{event.name}</h3>
 									<p className="text-sm text-base-content/70">
-										{event.eventType} • {event.registrationType}
+										{getEventTypeName(event.eventType)} •{" "}
+										{getRegistrationTypeName(event.registrationType)}
 									</p>
 									<p className="text-sm text-base-content/60">
 										{event.startDate}
-										{event.startTime && ` at ${event.startTime}`}
+										{event.startTime && ` - ${event.startTime}`}
 									</p>
 								</div>
 							))}

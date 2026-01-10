@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { useRouter } from "next/navigation"
 
+import { parseLocalDate } from "@repo/domain/functions"
 import { ClubEvent } from "@repo/domain/types"
 
 import { useAuth } from "../../lib/auth-context"
@@ -15,16 +16,45 @@ export default function EventsPage() {
 	const router = useRouter()
 
 	const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-	const [isSearching, setIsSearching] = useState(false)
-	const [searchResults, setSearchResults] = useState<ClubEvent[]>([])
+	const [currentSeason, setCurrentSeason] = useState<number>(new Date().getFullYear())
+	const [seasonEvents, setSeasonEvents] = useState<ClubEvent[]>([])
+	const [isLoadingSeason, setIsLoadingSeason] = useState(false)
 	const [selectedEvent, setSelectedEvent] = useState<ClubEvent | null>(null)
 
-	// Auto-search when date changes
+	// Fetch events when season changes
 	useEffect(() => {
 		if (signedIn) {
-			void handleSearch()
+			void fetchSeasonEvents(currentSeason)
 		}
-	}, [selectedDate, signedIn])
+	}, [currentSeason, signedIn])
+
+	const fetchSeasonEvents = async (season: number) => {
+		setIsLoadingSeason(true)
+		try {
+			const response = await fetch(`/api/events?season=${season}`)
+			if (!response.ok) {
+				throw new Error(`API request failed: ${response.status}`)
+			}
+			const events = (await response.json()) as ClubEvent[]
+			setSeasonEvents(events)
+		} catch (error) {
+			console.error("Failed to fetch season events:", error)
+			setSeasonEvents([])
+		} finally {
+			setIsLoadingSeason(false)
+		}
+	}
+
+	// Filter events for selected date
+	const eventsForDate = useMemo(() => {
+		const dateString = selectedDate.toISOString().split("T")[0]
+		return seasonEvents.filter((e) => e.startDate === dateString)
+	}, [selectedDate, seasonEvents])
+
+	// Compute dates that have events for calendar highlighting
+	const eventDates = useMemo(() => {
+		return seasonEvents.map((e) => parseLocalDate(e.startDate))
+	}, [seasonEvents])
 
 	const handleDateSelect = (date: Date | undefined) => {
 		if (date) {
@@ -33,31 +63,10 @@ export default function EventsPage() {
 		}
 	}
 
-	const handleSearch = async () => {
-		setIsSearching(true)
-		setSearchResults([])
-		setSelectedEvent(null)
-
-		try {
-			const dateString = selectedDate.toISOString().split("T")[0]
-			const response = await fetch(`/api/events/search?date=${dateString}`)
-
-			if (!response.ok) {
-				throw new Error(`API request failed: ${response.status}`)
-			}
-
-			const events = (await response.json()) as ClubEvent[]
-			setSearchResults(events)
-
-			// Auto-select if only one event found
-			if (events.length === 1) {
-				handleEventSelect(events[0])
-			}
-		} catch (error) {
-			console.error("Search failed:", error)
-			setSearchResults([])
-		} finally {
-			setIsSearching(false)
+	const handleMonthChange = (date: Date) => {
+		const newSeason = date.getFullYear()
+		if (newSeason !== currentSeason) {
+			setCurrentSeason(newSeason)
 		}
 	}
 
@@ -82,11 +91,16 @@ export default function EventsPage() {
 		<main className="min-h-screen p-0 md:p-8 bg-base-200">
 			<div className="max-w-6xl mx-auto">
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-					<CalendarCard selectedDate={selectedDate} onDateSelect={handleDateSelect} />
+					<CalendarCard
+						selectedDate={selectedDate}
+						onDateSelect={handleDateSelect}
+						eventDates={eventDates}
+						onMonthChange={handleMonthChange}
+					/>
 
 					<ResultsCard
-						isSearching={isSearching}
-						searchResults={searchResults}
+						isLoading={isLoadingSeason}
+						searchResults={eventsForDate}
 						selectedEvent={selectedEvent}
 						onEventSelect={handleEventSelect}
 						selectedDate={selectedDate}

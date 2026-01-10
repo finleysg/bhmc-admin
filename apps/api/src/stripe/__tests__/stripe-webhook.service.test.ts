@@ -106,14 +106,20 @@ const createCompletePayment = (overrides: Partial<CompletePayment> = {}): Comple
 // Mock Factories
 // =============================================================================
 
-const createMockAdminRegistrationService = () => ({
+const createMockPaymentsService = () => ({
 	findPaymentByPaymentCode: jest.fn(),
-	findRefundByRefundCode: jest.fn(),
 	paymentConfirmed: jest.fn(),
-	createRefund: jest.fn(),
-	confirmRefund: jest.fn(),
+})
+
+const createMockAdminRegistrationService = () => ({
 	getCompleteRegistrationAndPayment: jest.fn(),
 	updateMembershipStatus: jest.fn(),
+})
+
+const createMockRefundService = () => ({
+	createRefund: jest.fn(),
+	findRefundByRefundCode: jest.fn(),
+	confirmRefund: jest.fn(),
 })
 
 const createMockDjangoAuthService = () => ({
@@ -141,18 +147,24 @@ const createMockMailService = () => ({
 describe("StripeWebhookService", () => {
 	let service: StripeWebhookService
 	let mockAdminRegistrationService: ReturnType<typeof createMockAdminRegistrationService>
+	let mockPaymentsService: ReturnType<typeof createMockPaymentsService>
+	let mockRefundService: ReturnType<typeof createMockRefundService>
 	let mockDjangoAuthService: ReturnType<typeof createMockDjangoAuthService>
 	let mockEventsService: ReturnType<typeof createMockEventsService>
 	let mockMailService: ReturnType<typeof createMockMailService>
 
 	beforeEach(() => {
 		mockAdminRegistrationService = createMockAdminRegistrationService()
+		mockPaymentsService = createMockPaymentsService()
+		mockRefundService = createMockRefundService()
 		mockDjangoAuthService = createMockDjangoAuthService()
 		mockEventsService = createMockEventsService()
 		mockMailService = createMockMailService()
 
 		service = new StripeWebhookService(
 			mockAdminRegistrationService as never,
+			mockPaymentsService as never,
+			mockRefundService as never,
 			mockDjangoAuthService as never,
 			mockEventsService as never,
 			mockMailService as never,
@@ -165,38 +177,36 @@ describe("StripeWebhookService", () => {
 
 	describe("handlePaymentIntentSucceeded", () => {
 		it("returns early when no payment found for paymentIntentId", async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(null)
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(null)
 			const paymentIntent = createPaymentIntent()
 
 			await service.handlePaymentIntentSucceeded(paymentIntent)
 
-			expect(mockAdminRegistrationService.paymentConfirmed).not.toHaveBeenCalled()
+			expect(mockPaymentsService.paymentConfirmed).not.toHaveBeenCalled()
 		})
 
 		it("returns early when payment already confirmed (idempotency)", async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(
 				createPaymentRecord({ confirmed: true }),
 			)
 			const paymentIntent = createPaymentIntent()
 
 			await service.handlePaymentIntentSucceeded(paymentIntent)
 
-			expect(mockAdminRegistrationService.paymentConfirmed).not.toHaveBeenCalled()
+			expect(mockPaymentsService.paymentConfirmed).not.toHaveBeenCalled()
 		})
 
 		it("returns early when no registrationId in metadata", async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
 			const paymentIntent = createPaymentIntent({ metadata: {} })
 
 			await service.handlePaymentIntentSucceeded(paymentIntent)
 
-			expect(mockAdminRegistrationService.paymentConfirmed).not.toHaveBeenCalled()
+			expect(mockPaymentsService.paymentConfirmed).not.toHaveBeenCalled()
 		})
 
 		it("parses registrationId from string metadata", async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(
-				createPaymentRecord({ id: 5 }),
-			)
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord({ id: 5 }))
 			mockAdminRegistrationService.getCompleteRegistrationAndPayment.mockResolvedValue({
 				registration: createRegistration(),
 				payment: createCompletePayment(),
@@ -210,13 +220,11 @@ describe("StripeWebhookService", () => {
 
 			await service.handlePaymentIntentSucceeded(paymentIntent)
 
-			expect(mockAdminRegistrationService.paymentConfirmed).toHaveBeenCalledWith(42, 5)
+			expect(mockPaymentsService.paymentConfirmed).toHaveBeenCalledWith(42, 5)
 		})
 
 		it("calls paymentConfirmed with correct IDs", async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(
-				createPaymentRecord({ id: 7 }),
-			)
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord({ id: 7 }))
 			mockAdminRegistrationService.getCompleteRegistrationAndPayment.mockResolvedValue({
 				registration: createRegistration(),
 				payment: createCompletePayment(),
@@ -230,7 +238,7 @@ describe("StripeWebhookService", () => {
 
 			await service.handlePaymentIntentSucceeded(paymentIntent)
 
-			expect(mockAdminRegistrationService.paymentConfirmed).toHaveBeenCalledWith(10, 7)
+			expect(mockPaymentsService.paymentConfirmed).toHaveBeenCalledWith(10, 7)
 		})
 	})
 
@@ -240,8 +248,8 @@ describe("StripeWebhookService", () => {
 
 	describe("handleRefundCreated", () => {
 		it("extracts paymentIntentId from string type", async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
-			mockAdminRegistrationService.findRefundByRefundCode.mockResolvedValue(null)
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
 			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(99)
 			mockDjangoAuthService.findById.mockResolvedValue(createUser())
 			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
@@ -250,14 +258,12 @@ describe("StripeWebhookService", () => {
 
 			await service.handleRefundCreated(refund)
 
-			expect(mockAdminRegistrationService.findPaymentByPaymentCode).toHaveBeenCalledWith(
-				"pi_string123",
-			)
+			expect(mockPaymentsService.findPaymentByPaymentCode).toHaveBeenCalledWith("pi_string123")
 		})
 
 		it("extracts paymentIntentId from object type", async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
-			mockAdminRegistrationService.findRefundByRefundCode.mockResolvedValue(null)
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
 			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(99)
 			mockDjangoAuthService.findById.mockResolvedValue(createUser())
 			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
@@ -268,9 +274,7 @@ describe("StripeWebhookService", () => {
 
 			await service.handleRefundCreated(refund)
 
-			expect(mockAdminRegistrationService.findPaymentByPaymentCode).toHaveBeenCalledWith(
-				"pi_object123",
-			)
+			expect(mockPaymentsService.findPaymentByPaymentCode).toHaveBeenCalledWith("pi_object123")
 		})
 
 		it("returns early when no paymentIntentId", async () => {
@@ -278,31 +282,31 @@ describe("StripeWebhookService", () => {
 
 			await service.handleRefundCreated(refund)
 
-			expect(mockAdminRegistrationService.findPaymentByPaymentCode).not.toHaveBeenCalled()
+			expect(mockPaymentsService.findPaymentByPaymentCode).not.toHaveBeenCalled()
 		})
 
 		it("returns early when no payment found", async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(null)
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(null)
 			const refund = createRefund()
 
 			await service.handleRefundCreated(refund)
 
-			expect(mockAdminRegistrationService.createRefund).not.toHaveBeenCalled()
+			expect(mockRefundService.createRefund).not.toHaveBeenCalled()
 		})
 
 		it("returns early when refund already exists (idempotency)", async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
-			mockAdminRegistrationService.findRefundByRefundCode.mockResolvedValue({ id: 1 })
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockRefundService.findRefundByRefundCode.mockResolvedValue({ id: 1 })
 			const refund = createRefund()
 
 			await service.handleRefundCreated(refund)
 
-			expect(mockAdminRegistrationService.createRefund).not.toHaveBeenCalled()
+			expect(mockRefundService.createRefund).not.toHaveBeenCalled()
 		})
 
 		it('uses "requested_by_customer" as default reason', async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
-			mockAdminRegistrationService.findRefundByRefundCode.mockResolvedValue(null)
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
 			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(99)
 			mockDjangoAuthService.findById.mockResolvedValue(createUser())
 			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
@@ -311,7 +315,7 @@ describe("StripeWebhookService", () => {
 
 			await service.handleRefundCreated(refund)
 
-			expect(mockAdminRegistrationService.createRefund).toHaveBeenCalledWith(
+			expect(mockRefundService.createRefund).toHaveBeenCalledWith(
 				expect.objectContaining({
 					notes: "requested_by_customer",
 				}),
@@ -319,8 +323,8 @@ describe("StripeWebhookService", () => {
 		})
 
 		it("converts amount from cents to dollars", async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
-			mockAdminRegistrationService.findRefundByRefundCode.mockResolvedValue(null)
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
 			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(99)
 			mockDjangoAuthService.findById.mockResolvedValue(createUser())
 			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
@@ -329,7 +333,7 @@ describe("StripeWebhookService", () => {
 
 			await service.handleRefundCreated(refund)
 
-			expect(mockAdminRegistrationService.createRefund).toHaveBeenCalledWith(
+			expect(mockRefundService.createRefund).toHaveBeenCalledWith(
 				expect.objectContaining({
 					refundAmount: 50.75,
 				}),
@@ -337,10 +341,8 @@ describe("StripeWebhookService", () => {
 		})
 
 		it("creates refund with systemUserId from djangoAuthService", async () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(
-				createPaymentRecord({ id: 5 }),
-			)
-			mockAdminRegistrationService.findRefundByRefundCode.mockResolvedValue(null)
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord({ id: 5 }))
+			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
 			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(123)
 			mockDjangoAuthService.findById.mockResolvedValue(createUser())
 			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
@@ -350,7 +352,7 @@ describe("StripeWebhookService", () => {
 			await service.handleRefundCreated(refund)
 
 			expect(mockDjangoAuthService.getOrCreateSystemUser).toHaveBeenCalledWith("stripe_system")
-			expect(mockAdminRegistrationService.createRefund).toHaveBeenCalledWith({
+			expect(mockRefundService.createRefund).toHaveBeenCalledWith({
 				refundCode: "re_abc123",
 				refundAmount: 25,
 				notes: "requested_by_customer",
@@ -370,7 +372,7 @@ describe("StripeWebhookService", () => {
 
 			await service.handleRefundUpdated(refund)
 
-			expect(mockAdminRegistrationService.confirmRefund).not.toHaveBeenCalled()
+			expect(mockRefundService.confirmRefund).not.toHaveBeenCalled()
 		})
 
 		it("calls confirmRefund when status is succeeded", async () => {
@@ -378,7 +380,7 @@ describe("StripeWebhookService", () => {
 
 			await service.handleRefundUpdated(refund)
 
-			expect(mockAdminRegistrationService.confirmRefund).toHaveBeenCalledWith("re_success123")
+			expect(mockRefundService.confirmRefund).toHaveBeenCalledWith("re_success123")
 		})
 	})
 
@@ -388,7 +390,7 @@ describe("StripeWebhookService", () => {
 
 	describe("sendConfirmationEmail integration", () => {
 		const setupSuccessfulPayment = () => {
-			mockAdminRegistrationService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
 		}
 
 		it("returns early when user not found", async () => {

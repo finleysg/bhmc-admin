@@ -11,9 +11,10 @@ interface EventFeePickerProps {
 	fees: EventFee[]
 	players: Player[]
 	onChange: (selections: { playerId: number; eventFeeId: number }[]) => void
+	eventDate?: Date
 }
 
-export function EventFeePicker({ fees, players, onChange }: EventFeePickerProps) {
+export function EventFeePicker({ fees, players, onChange, eventDate }: EventFeePickerProps) {
 	const [selections, setSelections] = useState<{ playerId: number; eventFeeId: number }[]>([])
 
 	// Initialize with required fees on mount or when data changes
@@ -70,7 +71,7 @@ export function EventFeePicker({ fees, players, onChange }: EventFeePickerProps)
 			console.warn("Unexpected selection found:", selection)
 			return 0
 		}
-		return getAmount(fee, player)
+		return getAmount(fee, player, eventDate)
 	})
 
 	const amountDue = calculateAmountDue(selectedFees)
@@ -110,6 +111,7 @@ export function EventFeePicker({ fees, players, onChange }: EventFeePickerProps)
 								onToggle={(feeId) => handleToggle(player.id, feeId)}
 								variant="desktop"
 								gridTemplateColumns={gridTemplateColumns}
+								eventDate={eventDate}
 							/>
 						))}
 					</div>
@@ -146,6 +148,7 @@ export function EventFeePicker({ fees, players, onChange }: EventFeePickerProps)
 							.map((s) => s.eventFeeId)}
 						onToggle={(feeId) => handleToggle(player.id, feeId)}
 						variant="mobile"
+						eventDate={eventDate}
 					/>
 				))}
 

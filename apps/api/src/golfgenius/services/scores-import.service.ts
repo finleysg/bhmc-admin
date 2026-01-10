@@ -3,11 +3,11 @@ import { Observable, Subject } from "rxjs"
 import { Injectable, Logger } from "@nestjs/common"
 import { PlayerProgressEvent } from "@repo/domain/types"
 
-import { CoursesRepository } from "../../courses"
+import { CoursesService } from "../../courses"
 import { ScorecardRow, ScoreInsert } from "../../database"
 import { EventsService } from "../../events"
-import { RegistrationRepository } from "../../registration"
-import { ScoresRepository } from "../../scores"
+import { PlayerService, RegistrationService } from "../../registration"
+import { ScoresService } from "../../scores"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import { ProgressTracker } from "./progress-tracker"
@@ -52,11 +52,12 @@ export class ScoresImportService {
 	private readonly logger = new Logger(ScoresImportService.name)
 
 	constructor(
-		private readonly scoresService: ScoresRepository,
+		private readonly scoresService: ScoresService,
 		private readonly apiClient: ApiClient,
-		private readonly registration: RegistrationRepository,
-		private readonly courses: CoursesRepository,
+		private readonly courses: CoursesService,
 		private readonly events: EventsService,
+		private readonly players: PlayerService,
+		private readonly registrations: RegistrationService,
 		private readonly progressTracker: ProgressTracker,
 	) {}
 
@@ -126,18 +127,14 @@ export class ScoresImportService {
 	private async identifyPlayer(playerData: GgPlayer): Promise<number | null> {
 		if (playerData.external_id) {
 			this.logger.debug(`Searching for player by slot id: ${playerData.external_id}`)
-			const slot = await this.registration.findRegistrationSlotById(
-				parseInt(playerData.external_id),
-			)
+			const slot = await this.registrations.findSlotById(parseInt(playerData.external_id))
 			this.logger.verbose("Found registration slot " + JSON.stringify(slot))
 			if (slot?.playerId) return slot.playerId
 		}
 
 		if (playerData.handicap_network_id) {
 			this.logger.debug(`Searching for player by ghin: ${playerData.handicap_network_id}`)
-			const player = await this.registration.findPlayerById(
-				parseInt(playerData.handicap_network_id),
-			)
+			const player = await this.players.findPlayerByGhin(playerData.handicap_network_id)
 			this.logger.verbose("Found player " + JSON.stringify(player))
 			if (player) return player.id
 		}
@@ -146,7 +143,7 @@ export class ScoresImportService {
 			this.logger.debug(
 				`Searching for player by slot's golf genius id: ${playerData.player_roster_id}`,
 			)
-			const slot = await this.registration.findRegistrationSlotByGgId(playerData.player_roster_id)
+			const slot = await this.registrations.findRegistrationSlotByGgId(playerData.player_roster_id)
 			this.logger.verbose("Found registration slot " + JSON.stringify(slot))
 			if (slot?.playerId) return slot.playerId
 		}

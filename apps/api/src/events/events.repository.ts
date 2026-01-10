@@ -47,6 +47,10 @@ export class EventsRepository {
 		return this.drizzle.db.select().from(event).where(eq(event.startDate, date))
 	}
 
+	async findEventsBySeason(season: number): Promise<EventRow[]> {
+		return this.drizzle.db.select().from(event).where(eq(event.season, season))
+	}
+
 	async updateEvent(id: number, data: Partial<EventRow>) {
 		await this.drizzle.db.update(event).set(data).where(eq(event.id, id))
 		return this.findEventById(id)

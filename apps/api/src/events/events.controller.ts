@@ -26,6 +26,11 @@ export class EventsController {
 		private readonly service: EventsService,
 	) {}
 
+	@Get()
+	async getEventsBySeason(@Query("season", ParseIntPipe) season: number): Promise<ClubEvent[]> {
+		return this.service.getEventsBySeason(season)
+	}
+
 	@Get("search")
 	async searchEventsByDate(@Query("date") date: string): Promise<ClubEvent[]> {
 		this.logger.log("Received date: " + date)

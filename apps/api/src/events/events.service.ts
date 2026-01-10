@@ -11,7 +11,7 @@ import {
 	CompleteClubEvent,
 } from "@repo/domain/types"
 
-import { CoursesRepository } from "../courses"
+import { CoursesService } from "../courses"
 import { DrizzleService, player, toDbString, tournamentResult } from "../database"
 import {
 	mapPreparedPointsToTournamentPointsInsert,
@@ -35,7 +35,7 @@ export class EventsService {
 	constructor(
 		private drizzle: DrizzleService,
 		private readonly repository: EventsRepository,
-		private readonly courses: CoursesRepository,
+		private readonly courses: CoursesService,
 	) {}
 
 	async getCompleteClubEventById(
@@ -53,7 +53,7 @@ export class EventsService {
 		const eventFeeRows = await this.repository.listEventFeesByEvent(eventId)
 		const roundRows = await this.repository.findRoundsByEventId(eventId)
 		const tournamentRows = await this.repository.findTournamentsByEventId(eventId)
-		this.logger.log(`Found ${tournamentRows.length} tournaments for event ${eventId}`)
+		this.logger.debug(`Found ${tournamentRows.length} tournaments for event ${eventId}`)
 
 		const clubEvent = toEventWithCompositions(eventRow, {
 			courses: courseRows,
@@ -73,6 +73,11 @@ export class EventsService {
 		const row = await this.repository.findEventById(eventId)
 		if (!row) throw new BadRequestException(`Event ${eventId} not found`)
 		return toEvent(row)
+	}
+
+	async getEventsBySeason(season: number): Promise<ClubEvent[]> {
+		const events = await this.repository.findEventsBySeason(season)
+		return events.map((e) => toEvent(e))
 	}
 
 	async getEventFeesByEventId(eventId: number): Promise<EventFeeWithType[]> {

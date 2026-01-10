@@ -1,4 +1,4 @@
-import { Heading, Link, Text } from "@react-email/components"
+import { Button, Heading, Link, Section, Text } from "@react-email/components"
 
 import { EmailLayout, link, paragraph, signature, subheading } from "./components"
 
@@ -6,9 +6,19 @@ interface WelcomeEmailProps {
 	firstName: string
 	year: string
 	accountUrl: string
+	paymentUrl?: string
 }
 
-export function WelcomeBackEmail({ firstName, year, accountUrl }: WelcomeEmailProps) {
+const buttonStyle = {
+	backgroundColor: "#4f46e5",
+	borderRadius: "4px",
+	color: "#fff",
+	fontWeight: "600" as const,
+	padding: "12px 24px",
+	textDecoration: "none",
+}
+
+export function WelcomeBackEmail({ firstName, year, accountUrl, paymentUrl }: WelcomeEmailProps) {
 	return (
 		<EmailLayout>
 			<Heading as="h3" style={subheading}>
@@ -18,6 +28,16 @@ export function WelcomeBackEmail({ firstName, year, accountUrl }: WelcomeEmailPr
 				Hello, {firstName}. You are receiving this email because you just registered for the {year}{" "}
 				golf season.
 			</Text>
+			{paymentUrl && (
+				<Section style={{ textAlign: "center", margin: "24px 0" }}>
+					<Text style={paragraph}>
+						Please complete your dues payment to finalize your registration:
+					</Text>
+					<Button href={paymentUrl} style={buttonStyle}>
+						Pay Dues
+					</Button>
+				</Section>
+			)}
 			<Text style={paragraph}>
 				Please visit your{" "}
 				<Link href={accountUrl} style={link}>

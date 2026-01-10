@@ -10,6 +10,7 @@ interface PlayerEventFeePickerProps {
 	onToggle: (feeId: number) => void
 	variant: "desktop" | "mobile"
 	gridTemplateColumns?: string
+	eventDate?: Date
 }
 
 export function PlayerEventFeePicker({
@@ -19,10 +20,12 @@ export function PlayerEventFeePicker({
 	onToggle,
 	variant,
 	gridTemplateColumns,
+	eventDate,
 }: PlayerEventFeePickerProps) {
 	const playerTotal = getTotalAmountForPlayer(
 		player,
 		fees.filter((fee) => selectedFeeIds.includes(fee.id)),
+		eventDate,
 	)
 
 	if (variant === "desktop") {
@@ -59,7 +62,7 @@ export function PlayerEventFeePicker({
 		<div className="card bg-base-100">
 			<div className="card-body p-1">
 				<div className="flex justify-between items-start">
-					<span className="text-lg text-secondary font-semibold">
+					<span className="text-secondary font-semibold">
 						{player.firstName} {player.lastName}
 					</span>
 					<span className="text-secondary font-semibold">
@@ -69,12 +72,8 @@ export function PlayerEventFeePicker({
 
 				<div className="space-y-2">
 					{fees.map((fee) => (
-						<label key={fee.id} className="flex items-center justify-between">
-							<span className="text-sm">{fee.feeType?.name || "Fee"}</span>
-							<div className="flex items-center gap-2">
-								<span className="text-sm text-base-content/70">
-									{formatCurrency(getAmount(fee, player))}
-								</span>
+						<label key={fee.id} className="flex justify-between">
+							<div className="flex gap-3">
 								<input
 									type="checkbox"
 									className="checkbox checkbox-sm"
@@ -82,7 +81,11 @@ export function PlayerEventFeePicker({
 									disabled={fee.isRequired}
 									onChange={() => onToggle(fee.id)}
 								/>
+								<span className="text-sm">{fee.feeType?.name || "Fee"}</span>
 							</div>
+							<span className="text-sm text-base-content/70">
+								{formatCurrency(getAmount(fee, player, eventDate))}
+							</span>
 						</label>
 					))}
 				</div>
