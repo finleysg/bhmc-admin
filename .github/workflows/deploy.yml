@@ -15,12 +15,17 @@ jobs:
       - name: Install CapRover CLI
         run: npm install -g caprover
 
+      - name: Create captain-definition
+        run: |
+          echo '{"schemaVersion":2,"dockerfilePath":"./apps/api/Dockerfile"}' > captain-definition
+
       - name: Create deployment tarball
         run: |
           tar -cvf deploy-api.tar \
             --exclude='node_modules' \
             --exclude='.git' \
             --exclude='apps/web' \
+            captain-definition \
             package.json \
             pnpm-lock.yaml \
             pnpm-workspace.yaml \
@@ -44,12 +49,17 @@ jobs:
       - name: Install CapRover CLI
         run: npm install -g caprover
 
+      - name: Create captain-definition
+        run: |
+          echo '{"schemaVersion":2,"dockerfilePath":"./apps/web/Dockerfile"}' > captain-definition
+
       - name: Create deployment tarball
         run: |
           tar -cvf deploy-admin.tar \
             --exclude='node_modules' \
             --exclude='.git' \
             --exclude='apps/api' \
+            captain-definition \
             package.json \
             pnpm-lock.yaml \
             pnpm-workspace.yaml \
