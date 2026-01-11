@@ -44,6 +44,14 @@ function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
 					label = "Reports"
 				} else if (segment === "players") {
 					label = "Players"
+				} else if (segment === "membership") {
+					label = "Membership Report"
+				} else if (segment === "documents") {
+					label = "Club Documents"
+				} else if (segment === "photos") {
+					label = "Photos"
+				} else if (segment === "settings") {
+					label = "Settings"
 				} else {
 					label = segment.charAt(0).toUpperCase() + segment.slice(1)
 				}

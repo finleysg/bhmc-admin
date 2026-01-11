@@ -98,7 +98,7 @@ export class ReportsService {
 	}
 
 	async getPlayers(eventId: number): Promise<EventPlayerSlot[]> {
-		const event = await this.events.getCompleteClubEventById(eventId)
+		const event = await this.events.getCompleteClubEventById(eventId, false)
 		if (!event) {
 			throw new Error("Event not found")
 		}

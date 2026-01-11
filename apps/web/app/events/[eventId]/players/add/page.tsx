@@ -10,7 +10,12 @@ import { PlayerSearch } from "@/app/events/[eventId]/players/components/player-s
 import { SelectAvailable } from "@/app/events/[eventId]/players/components/select-available"
 import { useAuth } from "@/lib/auth-context"
 import { parseLocalDate } from "@repo/domain/functions"
-import type { AvailableSlotGroup, CompleteClubEvent as ClubEvent, Player } from "@repo/domain/types"
+import {
+	RegistrationTypeChoices,
+	type AvailableSlotGroup,
+	type CompleteClubEvent as ClubEvent,
+	type Player,
+} from "@repo/domain/types"
 
 import { reducer, getInitialState } from "./reducer"
 
@@ -122,7 +127,7 @@ export default function AddPlayerPage() {
 		)
 	}
 
-	const membersOnly = state.event?.registrationType === "M"
+	const membersOnly = state.event?.registrationType === RegistrationTypeChoices.MEMBER
 
 	return (
 		<main className="min-h-screen flex justify-center md:p-8">
@@ -172,7 +177,7 @@ export default function AddPlayerPage() {
 						{state.canCompleteRegistration && (
 							<>
 								<div className="mb-6">
-									<h4 className="font-semibold mb-2">Registration Details</h4>
+									<h4 className="font-semibold mb-2">Payment Options</h4>
 									<AdminRegistrationOptions
 										options={state.registrationOptions}
 										onChange={(opts) =>

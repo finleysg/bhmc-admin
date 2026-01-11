@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react"
 
-import { useParams } from "next/navigation"
+import Link from "next/link"
 
 import { Pagination } from "@/components/pagination"
-import { ReportPage } from "@/components/report-page"
 import { useIsMobile } from "@/lib/use-is-mobile"
+import { useAuthenticatedFetch, useExcelExport } from "@/lib/use-report"
 import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
 import { EventReportRow } from "@repo/domain/types"
 import {
@@ -20,7 +20,7 @@ import {
 	useReactTable,
 } from "@tanstack/react-table"
 
-// Fixed columns definition (moved outside component to prevent re-creation)
+// Fixed columns definition
 const fixedColumnDefs: Record<string, ColumnDef<EventReportRow>> = {
 	teamId: {
 		accessorKey: "teamId",
@@ -79,22 +79,19 @@ const fixedColumnDefs: Record<string, ColumnDef<EventReportRow>> = {
 	},
 }
 
-const EventTable = ({ data }: { data: EventReportRow[] | null }) => {
+const MembershipTable = ({ data }: { data: EventReportRow[] | null }) => {
 	const isMobile = useIsMobile()
-	const [sorting, setSorting] = useState<SortingState>([{ id: "teamId", desc: false }])
+	const [sorting, setSorting] = useState<SortingState>([{ id: "fullName", desc: false }])
 	const [globalFilter, setGlobalFilter] = useState("")
 	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 })
 	const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({})
 
-	// Define columns for TanStack Table
 	const columns: ColumnDef<EventReportRow>[] = []
 
-	// Fixed columns
 	Object.keys(fixedColumnDefs).forEach((key) => {
 		columns.push(fixedColumnDefs[key])
 	})
 
-	// Dynamic fee columns
 	if (data && data.length > 0) {
 		const feeKeys = Object.keys(data[0]).filter(
 			(key) => !Object.keys(fixedColumnDefs).includes(key) && key !== "signupDate",
@@ -107,26 +104,19 @@ const EventTable = ({ data }: { data: EventReportRow[] | null }) => {
 		})
 	}
 
-	// Update column visibility based on mobile state
 	useEffect(() => {
 		if (!data || data.length === 0) return
 
 		const visibility: Record<string, boolean> = {}
-
-		// Columns hidden on screen (still in Excel export)
-		const screenHiddenColumns = ["teamId", "fullName"]
-
-		// Define mobile-visible columns
+		const screenHiddenColumns = ["teamId", "fullName", "course", "start"]
 		const mobileVisibleColumns = ["ghin", "tee", "firstName", "lastName"]
 
-		// Get all column keys (fixed + dynamic)
 		const allColumnKeys = Object.keys(fixedColumnDefs)
 		const feeKeys = Object.keys(data[0]).filter(
 			(key) => !Object.keys(fixedColumnDefs).includes(key) && key !== "signupDate",
 		)
 		const allKeys = [...allColumnKeys, ...feeKeys]
 
-		// Set visibility based on mobile state and screen-hidden columns
 		allKeys.forEach((key) => {
 			if (screenHiddenColumns.includes(key)) {
 				visibility[key] = false
@@ -138,7 +128,6 @@ const EventTable = ({ data }: { data: EventReportRow[] | null }) => {
 		setColumnVisibility(visibility)
 	}, [isMobile, data])
 
-	// Create table instance
 	const table = useReactTable({
 		data: data || [],
 		columns,
@@ -160,7 +149,6 @@ const EventTable = ({ data }: { data: EventReportRow[] | null }) => {
 
 	return (
 		<>
-			{/* Global Filter */}
 			<div className="mb-4 flex gap-2 justify-between">
 				<input
 					value={globalFilter ?? ""}
@@ -170,7 +158,6 @@ const EventTable = ({ data }: { data: EventReportRow[] | null }) => {
 				/>
 			</div>
 
-			{/* Table */}
 			<div className="overflow-x-auto bg-base-100">
 				<table className="table table-zebra table-xs">
 					<thead>
@@ -214,25 +201,105 @@ const EventTable = ({ data }: { data: EventReportRow[] | null }) => {
 				</table>
 			</div>
 
-			{/* Pagination */}
 			<Pagination table={table} />
 		</>
 	)
 }
 
-export default function EventReportPage() {
-	const params = useParams()
-	const eventId = params.eventId as string
+export default function MembershipReportPage() {
+	const currentSeason = new Date().getFullYear()
+	const [eventId, setEventId] = useState<number | null>(null)
+	const [eventError, setEventError] = useState<string | null>(null)
+
+	// First fetch the season registration event ID
+	useEffect(() => {
+		async function fetchSeasonEvent() {
+			try {
+				const response = await fetch(`/api/events/season-registration/${currentSeason}`)
+				if (!response.ok) {
+					const errorData = (await response.json()) as { message?: string }
+					throw new Error(errorData.message || "Failed to find season registration event")
+				}
+				const data = (await response.json()) as { eventId: number }
+				setEventId(data.eventId)
+			} catch (err) {
+				setEventError(err instanceof Error ? err.message : "Unknown error")
+			}
+		}
+		void fetchSeasonEvent()
+	}, [currentSeason])
+
+	// Then fetch the event report data
+	const fetchPath = eventId ? `/api/events/${eventId}/reports/event` : null
+	const excelPath = eventId ? `/api/events/${eventId}/reports/event/excel` : ""
+	const { data, loading, error } = useAuthenticatedFetch<EventReportRow[]>(fetchPath)
+	const { download } = useExcelExport(excelPath, `membership-report-${currentSeason}`)
+
+	if (eventError) {
+		return (
+			<main className="min-h-screen flex items-center justify-center p-2">
+				<div className="w-full max-w-3xl text-center">
+					<h2 className="text-3xl font-bold mb-4">Membership Report</h2>
+					<p className="text-error mb-8">{eventError}</p>
+					<Link href="/club" className="btn btn-primary">
+						Back to Club Administration
+					</Link>
+				</div>
+			</main>
+		)
+	}
+
+	if (!eventId || loading) {
+		return (
+			<div className="flex items-center justify-center p-2">
+				<span className="loading loading-spinner loading-lg" />
+			</div>
+		)
+	}
+
+	if (error) {
+		return (
+			<main className="min-h-screen flex items-center justify-center p-2">
+				<div className="w-full max-w-3xl text-center">
+					<h2 className="text-3xl font-bold mb-4">Membership Report</h2>
+					<p className="text-error mb-8">Error loading report: {error}</p>
+					<Link href="/club" className="btn btn-primary">
+						Back to Club Administration
+					</Link>
+				</div>
+			</main>
+		)
+	}
+
+	const recordCount = data ? data.length : 0
+	const hasData = recordCount > 0
 
 	return (
-		<ReportPage<EventReportRow[]>
-			title="Event Report"
-			eventId={eventId}
-			fetchPath={`/api/events/${eventId}/reports/event`}
-			excelPath={`/api/events/${eventId}/reports/event/excel`}
-			filenamePrefix="event-report"
-		>
-			{(data) => <EventTable data={data} />}
-		</ReportPage>
+		<main className="min-h-screen p-2">
+			<div className="w-full">
+				<div className="flex items-center justify-between mb-4">
+					<h1 className="text-xl text-info font-bold">
+						{currentSeason} Membership Report
+						<span>
+							{" "}
+							({recordCount} {recordCount === 1 ? "member" : "members"})
+						</span>
+					</h1>
+					{hasData && (
+						<button onClick={() => void download()} className="btn btn-neutral btn-sm">
+							Export to Excel
+						</button>
+					)}
+				</div>
+
+				{hasData ? (
+					<MembershipTable data={data} />
+				) : (
+					<div className="text-center py-12">
+						<p className="text-muted-foreground">No membership data available.</p>
+					</div>
+				)}
+			</div>
+		</main>
 	)
 }

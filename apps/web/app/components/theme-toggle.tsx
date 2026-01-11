@@ -12,7 +12,7 @@ export default function ThemeToggle() {
 	}, [])
 
 	const toggleTheme = () => {
-		const newTheme = isDark ? "business" : "corporate"
+		const newTheme = isDark ? "corporate" : "business"
 		document.documentElement.setAttribute("data-theme", newTheme)
 		setIsDark(!isDark)
 		localStorage.setItem("theme", newTheme)

@@ -19,7 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 					dangerouslySetInnerHTML={{
 						__html: `
 try {
-const theme = localStorage.getItem('theme') || 'corporate';
+let theme = localStorage.getItem('theme');
+if (!theme) {
+theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'business' : 'corporate';
+}
 if (theme !== 'corporate') {
 document.documentElement.setAttribute('data-theme', theme);
 }

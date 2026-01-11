@@ -80,6 +80,12 @@ export class EventsService {
 		return events.map((e) => toEvent(e))
 	}
 
+	async getSeasonRegistrationEventId(season: number): Promise<number> {
+		const evt = await this.repository.findSeasonRegistrationEvent(season)
+		if (!evt) throw new BadRequestException(`No season registration event found for ${season}`)
+		return evt.id
+	}
+
 	async getEventFeesByEventId(eventId: number): Promise<EventFeeWithType[]> {
 		const result = await this.repository.listEventFeesByEvent(eventId)
 		return result.map(toEventFeeWithType)

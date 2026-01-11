@@ -2,14 +2,14 @@ import { useEffect, useState } from "react"
 
 import { useAuth } from "./auth-context"
 
-export function useAuthenticatedFetch<T>(path: string) {
+export function useAuthenticatedFetch<T>(path: string | null) {
 	const { isAuthenticated, isLoading: isPending } = useAuth()
 	const [data, setData] = useState<T | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
-		if (isPending) return
+		if (isPending || !path) return
 
 		const fetchData = async () => {
 			try {
