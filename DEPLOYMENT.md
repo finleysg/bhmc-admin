@@ -98,6 +98,8 @@ SSH into your droplet:
 ssh root@YOUR_DROPLET_IP
 ```
 
+apt update and apt upgrade, then reboot
+
 Install Docker if not present:
 
 ```bash
@@ -189,7 +191,7 @@ DATABASE_URL=mysql://user:pass@managed-db-host:25060/dbname?ssl={"rejectUnauthor
 ### 2.2 Create Web App
 
 1. Click "Apps" → "Create New App"
-2. App name: `bhmc-web`
+2. App name: `bhmc-admin`
 3. Click "Create New App"
 
 Configure the app:
@@ -201,7 +203,7 @@ Configure the app:
 ```
 NODE_ENV=production
 PORT=3000
-API_URL=https://api.yourdomain.com
+API_URL=https://api.bhmc.org
 # Add other env vars from apps/web/.env.example
 ```
 
@@ -215,12 +217,17 @@ Go to GitHub repo → Settings → Secrets and variables → Actions.
 
 Add these secrets:
 
-| Secret              | Value                            |
-| ------------------- | -------------------------------- |
-| `CAPROVER_URL`      | `https://captain.yourdomain.com` |
-| `CAPROVER_PASSWORD` | Your CapRover password           |
-| `CAPROVER_API_APP`  | `bhmc-api`                       |
-| `CAPROVER_WEB_APP`  | `bhmc-web`                       |
+| Secret              | Value                  |
+| ------------------- | ---------------------- |
+| `CAPROVER_PASSWORD` | Your CapRover password |
+
+Add these variables:
+
+| Secret               | Value                                         |
+| -------------------- | --------------------------------------------- |
+| `CAPROVER_URL`       | `https://captain.captain.mycaptain.bhmc.org/` |
+| `CAPROVER_API_APP`   | `bhmc-api`                                    |
+| `CAPROVER_ADMIN_APP` | `bhmc-admin`                                  |
 
 ### 3.2 Workflow File
 

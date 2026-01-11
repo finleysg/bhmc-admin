@@ -30,9 +30,9 @@ jobs:
       - name: Deploy API to CapRover
         run: |
           caprover deploy \
-            --caproverUrl ${{ secrets.CAPROVER_URL }} \
+            --caproverUrl ${{ vars.CAPROVER_URL }} \
             --caproverPassword ${{ secrets.CAPROVER_PASSWORD }} \
-            --appName ${{ secrets.CAPROVER_API_APP }} \
+            --appName ${{ vars.CAPROVER_API_APP }} \
             --tarFile deploy-api.tar
 
   deploy-web:
@@ -46,7 +46,7 @@ jobs:
 
       - name: Create deployment tarball
         run: |
-          tar -cvf deploy-web.tar \
+          tar -cvf deploy-admin.tar \
             --exclude='node_modules' \
             --exclude='.git' \
             --exclude='apps/api' \
@@ -56,10 +56,10 @@ jobs:
             apps/web \
             packages/domain
 
-      - name: Deploy Web to CapRover
+      - name: Deploy Admin to CapRover
         run: |
           caprover deploy \
-            --caproverUrl ${{ secrets.CAPROVER_URL }} \
+            --caproverUrl ${{ vars.CAPROVER_URL }} \
             --caproverPassword ${{ secrets.CAPROVER_PASSWORD }} \
-            --appName ${{ secrets.CAPROVER_WEB_APP }} \
-            --tarFile deploy-web.tar
+            --appName ${{ vars.CAPROVER_ADMIN_APP }} \
+            --tarFile deploy-admin.tar
