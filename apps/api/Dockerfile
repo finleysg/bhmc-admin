@@ -6,7 +6,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 # Copy workspace config
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
 
 # Copy package.json files for dependency resolution
 COPY apps/api/package.json ./apps/api/
