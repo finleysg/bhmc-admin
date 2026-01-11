@@ -1,13 +1,4 @@
-import {
-	Body,
-	Controller,
-	Get,
-	Logger,
-	Param,
-	ParseIntPipe,
-	Post,
-	Query,
-} from "@nestjs/common"
+import { Body, Controller, Get, Logger, Param, ParseIntPipe, Post, Query } from "@nestjs/common"
 import type {
 	AdminRegistration,
 	AvailableSlotGroup,

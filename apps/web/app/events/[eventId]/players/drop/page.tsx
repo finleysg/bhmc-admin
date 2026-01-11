@@ -19,6 +19,8 @@ export default function DropPlayerPage() {
 	const router = useRouter()
 	const [state, dispatch] = useReducer(reducer, initialState)
 	const abortControllerRef = useRef<AbortController | null>(null)
+	const dialogRef = useRef<HTMLDialogElement>(null)
+	const resultRef = useRef<HTMLDivElement>(null)
 
 	// Cleanup on unmount
 	useEffect(() => {
@@ -28,6 +30,13 @@ export default function DropPlayerPage() {
 			}
 		}
 	}, [])
+
+	// Scroll to result on success or error
+	useEffect(() => {
+		if (state.dropSuccess || state.error) {
+			resultRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
+		}
+	}, [state.dropSuccess, state.error])
 
 	const handleCompleteDrop = (): void => {
 		const { selectedGroup, selectedPlayers, selectedFees } = state
@@ -166,6 +175,7 @@ export default function DropPlayerPage() {
 						<div className="mb-6">
 							<h4 className="font-semibold mb-2">Select Group</h4>
 							<GroupSearch
+								key={state.resetKey}
 								clubEvent={state.clubEvent}
 								onGroupSelected={(group) => dispatch({ type: "SET_GROUP", payload: group })}
 								onError={(err) => dispatch({ type: "SET_ERROR", payload: err })}
@@ -197,8 +207,8 @@ export default function DropPlayerPage() {
 							<div className="mb-6">
 								<button
 									type="button"
-									className="btn btn-primary"
-									onClick={handleCompleteDrop}
+									className="btn btn-primary me-2"
+									onClick={() => dialogRef.current?.showModal()}
 									disabled={state.isProcessing}
 								>
 									{state.isProcessing ? (
@@ -210,47 +220,91 @@ export default function DropPlayerPage() {
 										"Complete Drop"
 									)}
 								</button>
-							</div>
-						)}
-						{state.dropSuccess && (
-							<div className="mt-6">
-								<div className="text-success mb-6">Players dropped and refunds processed!</div>
-								<div>
-									<button
-										className="btn btn-success me-2"
-										onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
-									>
-										Drop More
-									</button>
-									<button
-										className="btn btn-neutral"
-										onClick={() => router.push(`/events/${eventId}/players`)}
-									>
-										Player Menu
-									</button>
-								</div>
-							</div>
-						)}
-
-						{state.error !== undefined && (
-							<div className="mb-6">
-								<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
-								<div className="alert alert-error text-xs mb-2">
-									<span className="text-wrap">
-										Error: {typeof state.error === "string" ? state.error : "Unknown error"}
-									</span>
-								</div>
 								<button
+									type="button"
 									className="btn btn-neutral"
-									onClick={() => dispatch({ type: "RESET_ERROR" })}
+									onClick={() => router.push(`/events/${eventId}/players`)}
+									disabled={state.isProcessing}
 								>
-									Try Again
+									Cancel
 								</button>
 							</div>
 						)}
+						<div ref={resultRef}>
+							{state.dropSuccess && (
+								<div className="mt-6">
+									<div className="text-success mb-6">Players dropped and refunds processed!</div>
+									<div>
+										<button
+											className="btn btn-success me-2"
+											onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
+										>
+											Drop More
+										</button>
+										<button
+											className="btn btn-neutral"
+											onClick={() => router.push(`/events/${eventId}/players`)}
+										>
+											Player Menu
+										</button>
+									</div>
+								</div>
+							)}
+
+							{state.error != null && (
+								<div className="mb-6">
+									<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
+									<div className="alert alert-error text-xs mb-2">
+										<span className="text-wrap">
+											Error: {typeof state.error === "string" ? state.error : "Unknown error"}
+										</span>
+									</div>
+									<button
+										className="btn btn-neutral"
+										onClick={() => dispatch({ type: "RESET_ERROR" })}
+									>
+										Try Again
+									</button>
+								</div>
+							)}
+						</div>
 					</div>
 				</div>
 			</div>
+
+			{/* Confirmation Dialog */}
+			<dialog ref={dialogRef} className="modal">
+				<div className="modal-box">
+					<h3 className="font-bold text-lg mb-4">Confirm Drop</h3>
+					<p className="mb-2">
+						Drop {state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")} from
+						this event?
+					</p>
+					{state.selectedFees.length > 0 && (
+						<p className="text-sm text-base-content/70">
+							{state.selectedFees.reduce((sum, f) => sum + f.registrationFeeIds.length, 0)} fee(s)
+							will be refunded.
+						</p>
+					)}
+					<div className="modal-action">
+						<form method="dialog">
+							<button className="btn">Cancel</button>
+						</form>
+						<button
+							className="btn btn-error"
+							onClick={() => {
+								dialogRef.current?.close()
+								handleCompleteDrop()
+							}}
+						>
+							Confirm Drop
+						</button>
+					</div>
+				</div>
+				<form method="dialog" className="modal-backdrop">
+					<button>close</button>
+				</form>
+			</dialog>
 		</main>
 	)
 }

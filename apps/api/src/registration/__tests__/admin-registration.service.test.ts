@@ -45,7 +45,9 @@ const createDjangoUser = (overrides: Partial<DjangoUser> = {}): DjangoUser => ({
 	...overrides,
 })
 
-const createCompleteClubEvent = (overrides: Partial<CompleteClubEvent> = {}): CompleteClubEvent => ({
+const createCompleteClubEvent = (
+	overrides: Partial<CompleteClubEvent> = {},
+): CompleteClubEvent => ({
 	id: 100,
 	eventType: "W" as any,
 	name: "Test Event",
@@ -533,7 +535,9 @@ describe("AdminRegistrationService", () => {
 			drizzle.mockTx.from.mockReturnValue(drizzle.mockTx)
 			drizzle.mockTx.where.mockReturnValue(drizzle.mockTx)
 			// Return existing registration
-			drizzle.mockTx.then = jest.fn((resolve) => Promise.resolve([createRegistrationRow()]).then(resolve))
+			drizzle.mockTx.then = jest.fn((resolve) =>
+				Promise.resolve([createRegistrationRow()]).then(resolve),
+			)
 			drizzle.mockTx.insert.mockReturnValue(drizzle.mockTx)
 			drizzle.mockTx.values.mockResolvedValue([{ insertId: 1 }, { insertId: 2 }])
 			drizzle.mockTx.update.mockReturnValue(drizzle.mockTx)
@@ -558,9 +562,7 @@ describe("AdminRegistrationService", () => {
 				id: 1,
 				name: "Test Course",
 				numberOfHoles: 18,
-				holes: [
-					{ id: 1, courseId: 1, number: 1, handicap: 3, length: 400, par: 4, tee: "White" },
-				],
+				holes: [{ id: 1, courseId: 1, number: 1, handicap: 3, length: 400, par: 4, tee: "White" }],
 				tees: [],
 			})
 			authService.findById.mockResolvedValue(user)
@@ -579,16 +581,12 @@ describe("AdminRegistrationService", () => {
 			const user = createDjangoUser({ id: 10 })
 
 			eventsService.getCompleteClubEventById.mockResolvedValue(event)
-			repository.findRegistrationFullById.mockResolvedValue(
-				createRegistrationFull({ userId: 10 }),
-			)
+			repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull({ userId: 10 }))
 			coursesService.findCourseWithHolesById.mockResolvedValue({
 				id: 1,
 				name: "Test Course",
 				numberOfHoles: 18,
-				holes: [
-					{ id: 1, courseId: 1, number: 1, handicap: 3, length: 400, par: 4, tee: "White" },
-				],
+				holes: [{ id: 1, courseId: 1, number: 1, handicap: 3, length: 400, par: 4, tee: "White" }],
 				tees: [],
 			})
 			authService.findById.mockResolvedValue(user)
@@ -609,16 +607,14 @@ describe("AdminRegistrationService", () => {
 				id: 1,
 				name: "Test Course",
 				numberOfHoles: 18,
-				holes: [
-					{ id: 1, courseId: 1, number: 1, handicap: 3, length: 400, par: 4, tee: "White" },
-				],
+				holes: [{ id: 1, courseId: 1, number: 1, handicap: 3, length: 400, par: 4, tee: "White" }],
 				tees: [],
 			})
 			authService.findById.mockResolvedValue(null)
 
-			await expect(
-				service.sendAdminRegistrationNotification(100, 1, 1, true),
-			).rejects.toThrow(BadRequestException)
+			await expect(service.sendAdminRegistrationNotification(100, 1, 1, true)).rejects.toThrow(
+				BadRequestException,
+			)
 		})
 	})
 

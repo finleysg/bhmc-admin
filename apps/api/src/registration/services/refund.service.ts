@@ -47,7 +47,7 @@ export class RefundService {
 			try {
 				refundId = await this.drizzle.db.transaction(async (tx) => {
 					const refundRecord = {
-						refundCode: "pending",
+						refundCode: `pending-${Math.random().toString(36).substring(2, 8)}`,
 						refundAmount: refundInDollars.toFixed(2),
 						confirmed: 0,
 						refundDate: toDbString(new Date()),

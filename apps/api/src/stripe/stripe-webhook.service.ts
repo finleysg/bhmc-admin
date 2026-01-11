@@ -99,18 +99,15 @@ export class StripeWebhookService {
 		})
 
 		this.logger.log(`Refund record created: ${refundId}`)
-
-		await this.sendRefundNotificationEmail(
-			paymentRecord.userId,
-			paymentRecord.eventId,
-			amount,
-			refundId,
-		)
 	}
 
 	async handleRefundUpdated(refundEvent: Stripe.Refund): Promise<void> {
 		const refundId = refundEvent.id
-		this.logger.log(`Processing refund.updated: ${refundId}, status: ${String(refundEvent.status)}`)
+		const amount = refundEvent.amount / 100
+
+		this.logger.log(
+			`Processing refund.updated: ${refundId}, status: ${String(refundEvent.status)}, amount: ${amount}`,
+		)
 
 		if (refundEvent.status !== "succeeded") {
 			this.logger.log(`Refund ${refundId} status is ${String(refundEvent.status)}, not confirming`)
@@ -119,6 +116,32 @@ export class StripeWebhookService {
 
 		await this.refundService.confirmRefund(refundId)
 		this.logger.log(`Refund ${refundId} confirmed`)
+
+		const paymentIntentId =
+			typeof refundEvent.payment_intent === "string"
+				? refundEvent.payment_intent
+				: refundEvent.payment_intent?.id
+		if (!paymentIntentId) {
+			this.logger.error(
+				`Refund ${refundId} has no payment_intent, so cannot send notification email.`,
+			)
+			return
+		}
+
+		const paymentRecord = await this.paymentsService.findPaymentByPaymentCode(paymentIntentId)
+		if (!paymentRecord) {
+			this.logger.error(
+				`Refund created but no payment found for ${paymentIntentId}, so cannot send notification email.`,
+			)
+			return
+		}
+
+		await this.sendRefundNotificationEmail(
+			paymentRecord.userId,
+			paymentRecord.eventId,
+			amount,
+			refundId,
+		)
 	}
 
 	private async sendRefundNotificationEmail(
@@ -129,15 +152,16 @@ export class StripeWebhookService {
 	): Promise<void> {
 		try {
 			const user = await this.djangoAuthService.findById(userId)
-
 			if (!user) {
 				this.logger.warn(`User ${userId} not found for refund notification`)
 				return
 			}
 
+			const userName = `${user.firstName} ${user.lastName}`
+			this.logger.log(`Sending refund notification for ${refundCode} to ${userName}`)
+
 			const event = await this.eventsService.getCompleteClubEventById(eventId, false)
 
-			const userName = `${user.firstName} ${user.lastName}`
 			await this.mailService.sendRefundNotification(
 				user.email,
 				userName,

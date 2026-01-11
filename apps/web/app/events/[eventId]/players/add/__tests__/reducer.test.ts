@@ -1,4 +1,9 @@
-import { reducer, getInitialState, generateAdminRegistration, type AddPlayerState } from "../reducer"
+import {
+	reducer,
+	getInitialState,
+	generateAdminRegistration,
+	type AddPlayerState,
+} from "../reducer"
 import {
 	RegistrationStatusChoices,
 	type AdminRegistration,
@@ -60,50 +65,48 @@ const createCompleteEvent = (overrides: Partial<CompleteClubEvent> = {}): Comple
 	ggId: overrides.ggId ?? "GG-1",
 	eventRounds: overrides.eventRounds ?? [],
 	tournaments: overrides.tournaments ?? [],
-	eventFees:
-		overrides.eventFees ?? [
-			{
-				id: EVENT_FEE_ID,
-				eventId: overrides.id ?? 1,
-				amount: 50,
-				isRequired: false,
-				displayOrder: 1,
-				feeTypeId: 1,
-				feeType: {
-					id: 1,
-					name: "Entry",
-					code: "ENT",
-					payout: "Cash",
-					restriction: "None",
-				},
+	eventFees: overrides.eventFees ?? [
+		{
+			id: EVENT_FEE_ID,
+			eventId: overrides.id ?? 1,
+			amount: 50,
+			isRequired: false,
+			displayOrder: 1,
+			feeTypeId: 1,
+			feeType: {
+				id: 1,
+				name: "Entry",
+				code: "ENT",
+				payout: "Cash",
+				restriction: "None",
 			},
-			{
-				id: SECOND_FEE_ID,
-				eventId: overrides.id ?? 1,
-				amount: 25,
-				isRequired: false,
-				displayOrder: 2,
-				feeTypeId: 2,
-				feeType: {
-					id: 2,
-					name: "Skins",
-					code: "SKN",
-					payout: "Cash",
-					restriction: "None",
-				},
+		},
+		{
+			id: SECOND_FEE_ID,
+			eventId: overrides.id ?? 1,
+			amount: 25,
+			isRequired: false,
+			displayOrder: 2,
+			feeTypeId: 2,
+			feeType: {
+				id: 2,
+				name: "Skins",
+				code: "SKN",
+				payout: "Cash",
+				restriction: "None",
 			},
-		],
-	courses:
-		overrides.courses ?? [
-			{
-				id: COURSE_ID,
-				name: "Course",
-				numberOfHoles: 18,
-				ggId: "course",
-				holes: [{ id: HOLE_ID, courseId: COURSE_ID, holeNumber: 1, par: 4 }],
-				tees: [],
-			},
-		],
+		},
+	],
+	courses: overrides.courses ?? [
+		{
+			id: COURSE_ID,
+			name: "Course",
+			numberOfHoles: 18,
+			ggId: "course",
+			holes: [{ id: HOLE_ID, courseId: COURSE_ID, holeNumber: 1, par: 4 }],
+			tees: [],
+		},
+	],
 	...overrides,
 })
 
@@ -145,7 +148,10 @@ const expectRegistration = (registration: AdminRegistration | null): AdminRegist
 describe("AddPlayerReducer - SET actions", () => {
 	it("SET_EVENT stores event and regenerates registration when ready", () => {
 		const player = createPlayer()
-		const slotGroup = createSlotGroup({ holeId: HOLE_ID + 1, slots: [createRegistrationSlot({ id: 11 })] })
+		const slotGroup = createSlotGroup({
+			holeId: HOLE_ID + 1,
+			slots: [createRegistrationSlot({ id: 11 })],
+		})
 		const readyState = createState({
 			event: createCompleteEvent(),
 			selectedPlayers: [player],
@@ -234,10 +240,10 @@ describe("choosable events", () => {
 		const event = createCompleteEvent({ canChoose: true })
 		const slotGroup = createSlotGroup({ slots: [createRegistrationSlot({ id: 5 })] })
 
-		const result = reducer(
-			createState({ event, selectedPlayers: [player], signedUpBy: "Admin" }),
-			{ type: "SELECT_SLOTS", payload: { slotIds: [5], group: slotGroup } },
-		)
+		const result = reducer(createState({ event, selectedPlayers: [player], signedUpBy: "Admin" }), {
+			type: "SELECT_SLOTS",
+			payload: { slotIds: [5], group: slotGroup },
+		})
 
 		expect(result.selectedSlotGroup).toEqual(slotGroup)
 		expect(result.canSelectFees).toBe(true)
@@ -368,10 +374,10 @@ describe("UI flag calculations", () => {
 		const event = createCompleteEvent({ canChoose: true })
 		const slotGroup = createSlotGroup()
 
-		const result = reducer(
-			createState({ event, selectedPlayers: [player] }),
-			{ type: "SELECT_SLOTS", payload: { slotIds: [1], group: slotGroup } },
-		)
+		const result = reducer(createState({ event, selectedPlayers: [player] }), {
+			type: "SELECT_SLOTS",
+			payload: { slotIds: [1], group: slotGroup },
+		})
 
 		expect(result.canSelectFees).toBe(true)
 		expect(result.adminRegistration).not.toBeNull()

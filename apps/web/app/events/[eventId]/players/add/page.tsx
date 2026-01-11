@@ -184,7 +184,7 @@ export default function AddPlayerPage() {
 								<div>
 									<button
 										type="button"
-										className="btn btn-primary"
+										className="btn btn-primary me-2"
 										onClick={() => void handleCompleteRegistration()}
 										disabled={state.isLoading}
 									>
@@ -196,6 +196,14 @@ export default function AddPlayerPage() {
 										) : (
 											"Complete Registration"
 										)}
+									</button>
+									<button
+										type="button"
+										className="btn btn-neutral"
+										onClick={() => router.push(`/events/${eventId}/players`)}
+										disabled={state.isLoading}
+									>
+										Cancel
 									</button>
 								</div>
 							</>

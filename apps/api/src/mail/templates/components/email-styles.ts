@@ -41,11 +41,12 @@ export const labelCell = {
 export const valueCell = {
 	fontSize: "14px",
 	padding: "6px",
+	textAlign: "left" as const,
 }
 
 export const paymentCell = {
 	fontSize: "14px",
 	padding: "6px",
-	textAlign: "right" as const,
+	textAlign: "left" as const,
 	fontWeight: "bold",
 }

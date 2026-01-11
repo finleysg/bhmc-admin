@@ -565,9 +565,7 @@ describe("StripeWebhookService", () => {
 			})
 			mockDjangoAuthService.findById.mockResolvedValue(createUser())
 			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
-			mockMailService.sendRegistrationConfirmation.mockRejectedValue(
-				new Error("Mail service down"),
-			)
+			mockMailService.sendRegistrationConfirmation.mockRejectedValue(new Error("Mail service down"))
 
 			const paymentIntent = createPaymentIntent()
 
@@ -668,9 +666,7 @@ describe("StripeWebhookService", () => {
 		it("handles system user creation failure gracefully", async () => {
 			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
 			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
-			mockDjangoAuthService.getOrCreateSystemUser.mockRejectedValue(
-				new Error("Auth service error"),
-			)
+			mockDjangoAuthService.getOrCreateSystemUser.mockRejectedValue(new Error("Auth service error"))
 
 			const refund = createRefund()
 
@@ -716,9 +712,7 @@ describe("StripeWebhookService", () => {
 			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(99)
 			mockDjangoAuthService.findById.mockResolvedValue(createUser())
 			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
-			mockMailService.sendRefundNotification.mockRejectedValue(
-				new Error("Mail service down"),
-			)
+			mockMailService.sendRefundNotification.mockRejectedValue(new Error("Mail service down"))
 
 			const refund = createRefund()
 
@@ -745,9 +739,7 @@ describe("StripeWebhookService", () => {
 			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
 			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(99)
 			mockDjangoAuthService.findById.mockResolvedValue(createUser())
-			mockEventsService.getCompleteClubEventById.mockRejectedValue(
-				new Error("Event not found"),
-			)
+			mockEventsService.getCompleteClubEventById.mockRejectedValue(new Error("Event not found"))
 
 			const refund = createRefund()
 
