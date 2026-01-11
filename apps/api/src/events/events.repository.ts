@@ -1,4 +1,6 @@
-import { count, eq } from "drizzle-orm"
+import { and, count, eq } from "drizzle-orm"
+
+import { EventTypeChoices } from "@repo/domain/types"
 
 import { Injectable } from "@nestjs/common"
 
@@ -49,6 +51,17 @@ export class EventsRepository {
 
 	async findEventsBySeason(season: number): Promise<EventRow[]> {
 		return this.drizzle.db.select().from(event).where(eq(event.season, season))
+	}
+
+	async findSeasonRegistrationEvent(season: number): Promise<EventRow | undefined> {
+		const [result] = await this.drizzle.db
+			.select()
+			.from(event)
+			.where(
+				and(eq(event.season, season), eq(event.eventType, EventTypeChoices.SEASON_REGISTRATION)),
+			)
+			.limit(1)
+		return result
 	}
 
 	async updateEvent(id: number, data: Partial<EventRow>) {

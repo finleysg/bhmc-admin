@@ -1,26 +1,50 @@
-FROM node:24-alpine
+# Build stage
+FROM node:24-alpine AS builder
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-# Copy workspace files
+# Copy workspace config
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Copy package files
+# Copy package.json files for dependency resolution
 COPY apps/web/package.json ./apps/web/
 COPY packages/domain/package.json ./packages/domain/
 
-# Install dependencies
+# Install all dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy shared domain source (for TypeScript)
+# Copy source code
+COPY apps/web ./apps/web
 COPY packages/domain ./packages/domain
 
-# Source mounted via volume at runtime
+# Build domain package first
+WORKDIR /app/packages/domain
+RUN pnpm build
 
+# Build Next.js app
 WORKDIR /app/apps/web
+RUN pnpm build
 
-EXPOSE 3100
+# Production stage
+FROM node:24-alpine AS runner
 
-CMD ["pnpm", "dev", "-p", "3100"]
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy standalone build
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["node", "apps/web/server.js"]

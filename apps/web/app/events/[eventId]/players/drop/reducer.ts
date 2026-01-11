@@ -16,6 +16,7 @@ export type State = {
 	isLoading: boolean
 	dropSuccess: boolean
 	isProcessing: boolean
+	resetKey: number
 }
 
 export type Action =
@@ -109,6 +110,7 @@ export function reducer(state: State, action: Action): State {
 				dropSuccess: false,
 				isProcessing: false,
 				error: null,
+				resetKey: state.resetKey + 1,
 			}
 		case "RESET_ERROR":
 			return { ...state, error: null }
@@ -126,4 +128,5 @@ export const initialState: State = {
 	isLoading: true,
 	dropSuccess: false,
 	isProcessing: false,
+	resetKey: 0,
 }

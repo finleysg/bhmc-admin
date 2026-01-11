@@ -67,7 +67,7 @@ export function PlayerFeePicker({
 		<div className="card bg-base-100">
 			<div className="card-body p-1">
 				<div className="flex justify-between items-start">
-					<span className="text-lg text-secondary font-semibold">{playerFees.playerName}</span>
+					<span className="text-secondary font-semibold">{playerFees.playerName}</span>
 					<span className="text-secondary font-semibold">
 						{formatCurrency(playerFees.subtotal)}
 					</span>
@@ -75,18 +75,18 @@ export function PlayerFeePicker({
 
 				<div className="space-y-2">
 					{playerFees.fees.map((fee) => (
-						<label key={fee.id} className="flex items-center justify-between">
-							<input
-								type="checkbox"
-								className="checkbox checkbox-sm"
-								checked={fee.isSelected}
-								disabled={!fee.canChange}
-								onChange={() => handleChange(fee)}
-							/>
-							<span className="text-sm">{fee.name || "Fee"}</span>
-							<div className="flex items-center gap-2">
-								<span className="text-sm text-base-content/70">{formatCurrency(fee.amount)}</span>
+						<label key={fee.id} className="flex justify-between">
+							<div className="flex gap-3">
+								<input
+									type="checkbox"
+									className="checkbox checkbox-sm"
+									checked={fee.isSelected}
+									disabled={!fee.canChange}
+									onChange={() => handleChange(fee)}
+								/>
+								<span className="text-sm">{fee.name || "Fee"}</span>
 							</div>
+							<span className="text-sm text-base-content/70">{formatCurrency(fee.amount)}</span>
 						</label>
 					))}
 				</div>

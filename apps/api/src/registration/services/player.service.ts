@@ -13,6 +13,7 @@ import {
 	RegisteredPlayer,
 	CompleteRegistration,
 	CompleteRegistrationFee,
+	EventTypeChoices,
 } from "@repo/domain/types"
 
 import { toCourse, toHole } from "../../courses/mappers"
@@ -441,6 +442,19 @@ export class PlayerService {
 					.where(inArray(registrationSlot.id, slotIds))
 			} else {
 				await tx.delete(registrationSlot).where(inArray(registrationSlot.id, slotIds))
+			}
+
+			// Remove member flag if this is a season registration
+			if (eventRecord.eventType === EventTypeChoices.SEASON_REGISTRATION) {
+				await tx
+					.update(player)
+					.set({ isMember: 0 }) // TODO: last season - good reason to break this out to a separate table
+					.where(
+						inArray(
+							player.id,
+							playerSlots.map((s) => s.player?.id ?? -1),
+						),
+					)
 			}
 		})
 

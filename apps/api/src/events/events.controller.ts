@@ -41,6 +41,14 @@ export class EventsController {
 		return results.map((r) => toEvent(r))
 	}
 
+	@Get("season-registration/:season")
+	async getSeasonRegistrationEventId(
+		@Param("season", ParseIntPipe) season: number,
+	): Promise<{ eventId: number }> {
+		const eventId = await this.service.getSeasonRegistrationEventId(season)
+		return { eventId }
+	}
+
 	@UseInterceptors(ClassSerializerInterceptor)
 	@Get(":eventId")
 	async getEventById(@Param("eventId", ParseIntPipe) eventId: number): Promise<ClubEvent> {

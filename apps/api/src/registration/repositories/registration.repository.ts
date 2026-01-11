@@ -319,7 +319,11 @@ export class RegistrationRepository {
 			.where(
 				and(
 					eq(registrationSlot.eventId, eventId),
-					or(like(player.firstName, search), like(player.lastName, search)),
+					or(
+						like(player.firstName, search),
+						like(player.lastName, search),
+						like(sql`CONCAT(${player.firstName}, ' ', ${player.lastName})`, search),
+					),
 				),
 			)
 

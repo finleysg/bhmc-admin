@@ -168,8 +168,7 @@ function choosableReducer(state: AddPlayerState, action: Action): AddPlayerState
 				selectedSlotGroup: group,
 				completeSuccess: false,
 				canSelectFees: state.selectedPlayers.length > 0 && group !== null,
-				canCompleteRegistration:
-					state.selectedPlayers.length > 0 && group !== null,
+				canCompleteRegistration: state.selectedPlayers.length > 0 && group !== null,
 			}
 			return {
 				...nextState,

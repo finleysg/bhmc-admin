@@ -117,7 +117,7 @@ export function PaidFeePicker({ clubEvent, slots, onChange }: PaidFeePickerProps
 							</span>
 						</div>
 						<div className="flex gap-8 justify-between w-64 pt-2 border-t border-base-300 mt-2">
-							<span className="font-bold text-base">Total:</span>
+							<span className="font-bold text-base">Total Refund:</span>
 							<span className="font-bold text-lg">{formatCurrency(amountDue.total)}</span>
 						</div>
 					</div>
@@ -147,7 +147,7 @@ export function PaidFeePicker({ clubEvent, slots, onChange }: PaidFeePickerProps
 							<span>{formatCurrency(amountDue.transactionFee)}</span>
 						</div>
 						<div className="flex justify-between text-accent font-bold border-t border-base-300 pt-1">
-							<span>Total:</span>
+							<span>Total Refund:</span>
 							<span>{formatCurrency(amountDue.total)}</span>
 						</div>
 					</div>
