@@ -556,5 +556,223 @@ describe("StripeWebhookService", () => {
 			// Should not throw
 			await expect(service.handlePaymentIntentSucceeded(paymentIntent)).resolves.not.toThrow()
 		})
+
+		it("handles mail service error gracefully", async () => {
+			setupSuccessfulPayment()
+			mockAdminRegistrationService.getCompleteRegistrationAndPayment.mockResolvedValue({
+				registration: createRegistration(),
+				payment: createCompletePayment(),
+			})
+			mockDjangoAuthService.findById.mockResolvedValue(createUser())
+			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
+			mockMailService.sendRegistrationConfirmation.mockRejectedValue(
+				new Error("Mail service down"),
+			)
+
+			const paymentIntent = createPaymentIntent()
+
+			// Should not throw even if mail service fails
+			await expect(service.handlePaymentIntentSucceeded(paymentIntent)).resolves.not.toThrow()
+			expect(mockPaymentsService.paymentConfirmed).toHaveBeenCalled()
+		})
+	})
+
+	// =========================================================================
+	// handlePaymentIntentFailed
+	// =========================================================================
+
+	describe("handlePaymentIntentFailed", () => {
+		it("logs payment failure without throwing", () => {
+			const paymentIntent = createPaymentIntent({ status: "requires_payment_method" })
+
+			// Should not throw
+			expect(() => {
+				service.handlePaymentIntentFailed(paymentIntent)
+			}).not.toThrow()
+		})
+	})
+
+	// =========================================================================
+	// handlePaymentIntentSucceeded - Edge Cases
+	// =========================================================================
+
+	describe("handlePaymentIntentSucceeded - edge cases", () => {
+		it("handles non-numeric registrationId gracefully", async () => {
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			const paymentIntent = createPaymentIntent({
+				metadata: { registrationId: "abc", paymentId: "1" },
+			})
+
+			await service.handlePaymentIntentSucceeded(paymentIntent)
+
+			// Should return early because parseInt("abc", 10) returns NaN
+			expect(mockPaymentsService.paymentConfirmed).not.toHaveBeenCalled()
+		})
+
+		it("handles registrationId with leading/trailing spaces", async () => {
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord({ id: 5 }))
+			mockAdminRegistrationService.getCompleteRegistrationAndPayment.mockResolvedValue({
+				registration: createRegistration(),
+				payment: createCompletePayment(),
+			})
+			mockDjangoAuthService.findById.mockResolvedValue(createUser())
+			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
+
+			const paymentIntent = createPaymentIntent({
+				metadata: { registrationId: "  42  ", paymentId: "5" },
+			})
+
+			await service.handlePaymentIntentSucceeded(paymentIntent)
+
+			// parseInt with leading/trailing spaces should work fine
+			expect(mockPaymentsService.paymentConfirmed).toHaveBeenCalledWith(42, 5)
+		})
+
+		it("handles undefined metadata object gracefully", async () => {
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			const paymentIntent = createPaymentIntent({
+				metadata: undefined as any,
+			})
+
+			await service.handlePaymentIntentSucceeded(paymentIntent)
+
+			// Should return early because metadata is undefined
+			expect(mockPaymentsService.paymentConfirmed).not.toHaveBeenCalled()
+		})
+	})
+
+	// =========================================================================
+	// handleRefundCreated - Error Scenarios
+	// =========================================================================
+
+	describe("handleRefundCreated - error scenarios", () => {
+		it("handles very large refund amount conversion correctly", async () => {
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
+			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(99)
+			mockDjangoAuthService.findById.mockResolvedValue(createUser())
+			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
+
+			// $10,000.00 in cents
+			const refund = createRefund({ amount: 1000000 })
+
+			await service.handleRefundCreated(refund)
+
+			expect(mockRefundService.createRefund).toHaveBeenCalledWith(
+				expect.objectContaining({
+					refundAmount: 10000,
+				}),
+			)
+		})
+
+		it("handles system user creation failure gracefully", async () => {
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
+			mockDjangoAuthService.getOrCreateSystemUser.mockRejectedValue(
+				new Error("Auth service error"),
+			)
+
+			const refund = createRefund()
+
+			// Should not throw
+			await expect(service.handleRefundCreated(refund)).rejects.toThrow()
+		})
+
+		it("handles createRefund failure gracefully", async () => {
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
+			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(99)
+			mockRefundService.createRefund.mockRejectedValue(new Error("Database error"))
+
+			const refund = createRefund()
+
+			// Should not throw
+			await expect(service.handleRefundCreated(refund)).rejects.toThrow()
+		})
+	})
+
+	// =========================================================================
+	// handleRefundUpdated - Error Scenarios
+	// =========================================================================
+
+	describe("handleRefundUpdated - error scenarios", () => {
+		it("handles confirmRefund failure gracefully", async () => {
+			mockRefundService.confirmRefund.mockRejectedValue(new Error("Database error"))
+			const refund = createRefund({ id: "re_fail123", status: "succeeded" })
+
+			// Should not throw
+			await expect(service.handleRefundUpdated(refund)).rejects.toThrow()
+		})
+	})
+
+	// =========================================================================
+	// sendRefundNotificationEmail - Error Scenarios
+	// =========================================================================
+
+	describe("sendRefundNotificationEmail - error scenarios", () => {
+		it("handles mail service error gracefully during refund notification", async () => {
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
+			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(99)
+			mockDjangoAuthService.findById.mockResolvedValue(createUser())
+			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
+			mockMailService.sendRefundNotification.mockRejectedValue(
+				new Error("Mail service down"),
+			)
+
+			const refund = createRefund()
+
+			// Should not throw even if mail service fails
+			await expect(service.handleRefundCreated(refund)).resolves.not.toThrow()
+			expect(mockRefundService.createRefund).toHaveBeenCalled()
+		})
+
+		it("handles user not found for refund notification gracefully", async () => {
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
+			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(99)
+			mockDjangoAuthService.findById.mockResolvedValue(null)
+
+			const refund = createRefund()
+
+			// Should not throw, should return early when user not found
+			await expect(service.handleRefundCreated(refund)).resolves.not.toThrow()
+			expect(mockMailService.sendRefundNotification).not.toHaveBeenCalled()
+		})
+
+		it("handles event not found for refund notification gracefully", async () => {
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
+			mockRefundService.findRefundByRefundCode.mockResolvedValue(null)
+			mockDjangoAuthService.getOrCreateSystemUser.mockResolvedValue(99)
+			mockDjangoAuthService.findById.mockResolvedValue(createUser())
+			mockEventsService.getCompleteClubEventById.mockRejectedValue(
+				new Error("Event not found"),
+			)
+
+			const refund = createRefund()
+
+			// Should not throw even if event lookup fails
+			await expect(service.handleRefundCreated(refund)).resolves.not.toThrow()
+		})
+	})
+
+	// =========================================================================
+	// Concurrent/Idempotency Tests
+	// =========================================================================
+
+	describe("idempotency and concurrent handling", () => {
+		it("handles duplicate webhook events idempotently", async () => {
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(
+				createPaymentRecord({ confirmed: true }),
+			)
+			const paymentIntent = createPaymentIntent()
+
+			// Process same event twice
+			await service.handlePaymentIntentSucceeded(paymentIntent)
+			await service.handlePaymentIntentSucceeded(paymentIntent)
+
+			// paymentConfirmed should only be called once (or not at all due to idempotency)
+			expect(mockPaymentsService.paymentConfirmed).not.toHaveBeenCalled()
+		})
 	})
 })
