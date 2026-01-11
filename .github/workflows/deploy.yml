@@ -54,6 +54,10 @@ jobs:
         run: |
           echo '{"schemaVersion":2,"dockerfilePath":"./apps/web/Dockerfile"}' > captain-definition
 
+      - name: Create production env file
+        run: |
+          echo "NEXT_PUBLIC_DJANGO_API_URL=${{ vars.NEXT_PUBLIC_DJANGO_API_URL }}" > apps/web/.env.production
+
       - name: Create deployment tarball
         run: |
           tar -cvf deploy-admin.tar \
