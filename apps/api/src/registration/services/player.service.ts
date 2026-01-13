@@ -59,7 +59,7 @@ export class PlayerService {
 		try {
 			const player = await this.repository.findPlayerById(playerId)
 			return toPlayer(player)
-		} catch (error) {
+		} catch {
 			throw new NotFoundException(`Player ${playerId} not found`)
 		}
 	}

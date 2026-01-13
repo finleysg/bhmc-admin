@@ -81,12 +81,12 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 		<div>
 			{isReportsPage ? (
 				<div className="p-0">
-					<h2 className="text-xl font-bold text-primary">{headerText}</h2>
+					<h2 className="text-xl font-bold text-primary text-center">{headerText}</h2>
 				</div>
 			) : (
 				<div className="flex justify-center md:px-8 pt-4 md:pt-8">
 					<div className="w-full max-w-3xl px-4 md:px-0">
-						<h2 className="text-xl font-bold text-primary">{headerText}</h2>
+						<h2 className="text-xl font-bold text-primary text-center">{headerText}</h2>
 					</div>
 				</div>
 			)}
