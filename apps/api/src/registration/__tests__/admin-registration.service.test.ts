@@ -4,7 +4,6 @@ import {
 	EventTypeChoices,
 	type CompleteClubEvent,
 	type AdminRegistration,
-	type Player,
 	type DjangoUser,
 } from "@repo/domain/types"
 
@@ -12,7 +11,7 @@ import { SlotConflictError, EventFullError } from "../errors"
 import { AdminRegistrationService } from "../services/admin-registration.service"
 
 jest.mock("@repo/domain/functions", () => ({
-	getAmount: jest.fn((eventFee) => 50),
+	getAmount: jest.fn(() => 50),
 	calculateAmountDue: jest.fn((amounts: number[]) => ({
 		total: amounts.reduce((a, b) => a + b, 0),
 		transactionFee: amounts.reduce((a, b) => a + b, 0) * 0.029 + 0.3,
