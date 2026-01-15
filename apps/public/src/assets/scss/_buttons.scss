@@ -1,0 +1,15 @@
+.action-button {
+	padding: 2px;
+	border: 0;
+	cursor: pointer;
+	color: $gray-400;
+	background-color: transparent;
+	font-size: 1.2rem;
+	height: 20px;
+	width: 20px;
+	border-radius: 20px;
+	&:hover {
+		background-color: $gray-100;
+		color: $green;
+	}
+}

@@ -2,6 +2,7 @@ import {
 	ClassSerializerInterceptor,
 	Controller,
 	Get,
+	Inject,
 	Logger,
 	Param,
 	ParseIntPipe,
@@ -22,8 +23,8 @@ export class EventsController {
 	private readonly logger = new Logger(EventsController.name)
 
 	constructor(
-		private readonly events: EventsRepository,
-		private readonly service: EventsService,
+		@Inject(EventsRepository) private readonly events: EventsRepository,
+		@Inject(EventsService) private readonly service: EventsService,
 	) {}
 
 	@Get()

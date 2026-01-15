@@ -1,6 +1,6 @@
 import { Subject } from "rxjs"
 
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 import { PlayerProgressEvent, CompleteClubEvent, RegisteredPlayer } from "@repo/domain/types"
 
 import { EventsService } from "../../events/events.service"
@@ -21,11 +21,11 @@ export class RosterExportService {
 	private readonly logger = new Logger(RosterExportService.name)
 
 	constructor(
-		private readonly events: EventsService,
-		private readonly registration: PlayerService,
-		private readonly apiClient: ApiClient,
-		private readonly progressTracker: ProgressTracker,
-		private readonly playerTransformer: RosterPlayerTransformer,
+		@Inject(EventsService) private readonly events: EventsService,
+		@Inject(PlayerService) private readonly registration: PlayerService,
+		@Inject(ApiClient) private readonly apiClient: ApiClient,
+		@Inject(ProgressTracker) private readonly progressTracker: ProgressTracker,
+		@Inject(RosterPlayerTransformer) private readonly playerTransformer: RosterPlayerTransformer,
 	) {}
 
 	getProgressObservable(eventId: number): Subject<PlayerProgressEvent> | null {

@@ -1,6 +1,6 @@
 import { and, eq, inArray, ne } from "drizzle-orm"
 
-import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common"
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { calculateAmountDue, dummyHole, getAmount } from "@repo/domain/functions"
 import {
 	AdminRegistration,
@@ -48,14 +48,14 @@ export class AdminRegistrationService {
 	private readonly logger = new Logger(AdminRegistrationService.name)
 
 	constructor(
-		private drizzle: DrizzleService,
-		private repository: RegistrationRepository,
-		private paymentsRepository: PaymentsRepository,
-		private readonly auth: DjangoAuthService,
-		private readonly courses: CoursesService,
-		private readonly events: EventsService,
-		private readonly mailService: MailService,
-		private readonly broadcast: RegistrationBroadcastService,
+		@Inject(DrizzleService) private drizzle: DrizzleService,
+		@Inject(RegistrationRepository) private repository: RegistrationRepository,
+		@Inject(PaymentsRepository) private paymentsRepository: PaymentsRepository,
+		@Inject(DjangoAuthService) private readonly auth: DjangoAuthService,
+		@Inject(CoursesService) private readonly courses: CoursesService,
+		@Inject(EventsService) private readonly events: EventsService,
+		@Inject(MailService) private readonly mailService: MailService,
+		@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService,
 	) {}
 
 	/** Create registration on behalf of a user. */

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 import Stripe from "stripe"
 
 import { EventTypeChoices, NotificationTypeChoices } from "@repo/domain/types"
@@ -14,12 +14,12 @@ export class StripeWebhookService {
 	private readonly logger = new Logger(StripeWebhookService.name)
 
 	constructor(
-		private adminRegistrationService: AdminRegistrationService,
-		private paymentsService: PaymentsService,
-		private refundService: RefundService,
-		private djangoAuthService: DjangoAuthService,
-		private eventsService: EventsService,
-		private mailService: MailService,
+		@Inject(AdminRegistrationService) private adminRegistrationService: AdminRegistrationService,
+		@Inject(PaymentsService) private paymentsService: PaymentsService,
+		@Inject(RefundService) private refundService: RefundService,
+		@Inject(DjangoAuthService) private djangoAuthService: DjangoAuthService,
+		@Inject(EventsService) private eventsService: EventsService,
+		@Inject(MailService) private mailService: MailService,
 	) {}
 
 	async handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent): Promise<void> {

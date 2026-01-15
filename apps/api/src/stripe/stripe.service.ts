@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 import Stripe from "stripe"
 
@@ -10,7 +10,7 @@ export class StripeService {
 	private stripe: Stripe
 	private webhookSecret: string
 
-	constructor(private configService: ConfigService) {
+	constructor(@Inject(ConfigService) private configService: ConfigService) {
 		const secretKey = this.configService.get<string>("STRIPE_SECRET_KEY")
 		if (!secretKey) {
 			throw new Error("STRIPE_SECRET_KEY environment variable is required")

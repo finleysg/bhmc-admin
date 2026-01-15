@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm"
 
-import { Injectable } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 import { getAge, getFullName, getPlayerStartName, getPlayerTeamName } from "@repo/domain/functions"
 import {
 	EventReportRow,
@@ -73,10 +73,10 @@ interface EventPlayerSlot {
 @Injectable()
 export class ReportsService {
 	constructor(
-		private readonly courses: CoursesService,
-		private readonly events: EventsService,
-		private readonly players: PlayerService,
-		private readonly drizzle: DrizzleService,
+		@Inject(CoursesService) private readonly courses: CoursesService,
+		@Inject(EventsService) private readonly events: EventsService,
+		@Inject(PlayerService) private readonly players: PlayerService,
+		@Inject(DrizzleService) private readonly drizzle: DrizzleService,
 	) {}
 
 	private async validateEvent(eventId: number): Promise<void> {

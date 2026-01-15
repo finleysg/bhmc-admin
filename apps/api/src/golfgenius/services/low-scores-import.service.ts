@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 
 import { CoreService } from "../../core"
 import { EventsService } from "../../events/events.service"
@@ -7,9 +7,9 @@ import { ScoresService } from "../../scores/scores.service"
 @Injectable()
 export class LowScoresImportService {
 	constructor(
-		private readonly core: CoreService,
-		private readonly scores: ScoresService,
-		private readonly events: EventsService,
+		@Inject(CoreService) private readonly core: CoreService,
+		@Inject(ScoresService) private readonly scores: ScoresService,
+		@Inject(EventsService) private readonly events: EventsService,
 	) {}
 
 	async importLowScores(eventId: number): Promise<Record<string, number>> {

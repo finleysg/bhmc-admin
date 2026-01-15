@@ -1,6 +1,6 @@
 import { Observable, Subject } from "rxjs"
 
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 import {
 	IntegrationActionName,
 	PlayerMap,
@@ -33,10 +33,10 @@ export class PointsImportService {
 	private readonly logger = new Logger(PointsImportService.name)
 
 	constructor(
-		private readonly apiClient: ApiClient,
-		private readonly progressTracker: ProgressTracker,
-		private readonly eventsService: EventsService,
-		private readonly registrationService: PlayerService,
+		@Inject(ApiClient) private readonly apiClient: ApiClient,
+		@Inject(ProgressTracker) private readonly progressTracker: ProgressTracker,
+		@Inject(EventsService) private readonly eventsService: EventsService,
+		@Inject(PlayerService) private readonly registrationService: PlayerService,
 	) {}
 
 	// ============= PUBLIC METHODS =============

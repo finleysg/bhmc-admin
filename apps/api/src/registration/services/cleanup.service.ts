@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 import { RegistrationStatusChoices } from "@repo/domain/types"
 import { RegistrationRepository } from "../repositories/registration.repository"
 import { PaymentsRepository } from "../repositories/payments.repository"
@@ -10,10 +10,10 @@ export class CleanupService {
 	private readonly logger = new Logger(CleanupService.name)
 
 	constructor(
-		private readonly repository: RegistrationRepository,
-		private readonly paymentsRepository: PaymentsRepository,
-		private readonly events: EventsService,
-		private readonly broadcast: RegistrationBroadcastService,
+		@Inject(RegistrationRepository) private readonly repository: RegistrationRepository,
+		@Inject(PaymentsRepository) private readonly paymentsRepository: PaymentsRepository,
+		@Inject(EventsService) private readonly events: EventsService,
+		@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService,
 	) {}
 
 	/**

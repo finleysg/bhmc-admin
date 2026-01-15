@@ -50,6 +50,7 @@ turbo/
 
 # Docker
 docker/*.log
+data/
 
 # Cline / MCP / user-specific
 /*.mcp.json

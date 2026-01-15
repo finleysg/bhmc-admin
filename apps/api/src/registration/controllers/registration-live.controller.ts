@@ -1,4 +1,4 @@
-import { Controller, Logger, Param, ParseIntPipe, Req, Res, Sse } from "@nestjs/common"
+import { Controller, Inject, Logger, Param, ParseIntPipe, Req, Res, Sse } from "@nestjs/common"
 import { Observable, interval, merge, of } from "rxjs"
 import { catchError, map, takeUntil } from "rxjs/operators"
 import type { Request, Response } from "express"
@@ -18,7 +18,7 @@ interface SseMessage {
 export class RegistrationLiveController {
 	private readonly logger = new Logger(RegistrationLiveController.name)
 
-	constructor(private readonly broadcast: RegistrationBroadcastService) {}
+	constructor(@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService) {}
 
 	@Sse(":eventId/live")
 	liveUpdates(

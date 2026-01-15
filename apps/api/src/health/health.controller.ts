@@ -1,4 +1,4 @@
-import { Controller, Get } from "@nestjs/common"
+import { Controller, Get, Inject } from "@nestjs/common"
 
 import { Public } from "../auth"
 import { hole } from "../database"
@@ -6,7 +6,7 @@ import { DrizzleService } from "../database/drizzle.service"
 
 @Controller()
 export class HealthController {
-	constructor(private readonly drizzleService: DrizzleService) {}
+	constructor(@Inject(DrizzleService) private readonly drizzleService: DrizzleService) {}
 
 	@Public()
 	@Get("health")

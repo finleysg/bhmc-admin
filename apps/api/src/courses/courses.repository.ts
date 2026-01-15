@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm"
 
-import { Injectable } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 
 import {
 	course,
@@ -17,7 +17,7 @@ import {
 
 @Injectable()
 export class CoursesRepository {
-	constructor(private drizzle: DrizzleService) {}
+	constructor(@Inject(DrizzleService) private drizzle: DrizzleService) {}
 
 	// Courses
 	async findCourseByGgId(ggId: string): Promise<CourseRow | null> {

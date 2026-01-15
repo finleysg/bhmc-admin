@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 
 import { CoursesService } from "../../courses"
 import { TournamentRow } from "../../database"
@@ -22,9 +22,9 @@ export class EventSyncService {
 	private readonly logger = new Logger(EventSyncService.name)
 
 	constructor(
-		private readonly apiClient: ApiClient,
-		private readonly events: EventsRepository,
-		private readonly courses: CoursesService,
+		@Inject(ApiClient) private readonly apiClient: ApiClient,
+		@Inject(EventsRepository) private readonly events: EventsRepository,
+		@Inject(CoursesService) private readonly courses: CoursesService,
 	) {}
 
 	/**

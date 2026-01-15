@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common"
+import { Inject, Injectable, Logger, OnModuleDestroy } from "@nestjs/common"
 import { Subject, Observable, Subscription, interval } from "rxjs"
 import { debounceTime, share, startWith, switchMap, finalize } from "rxjs/operators"
 import { ClubEvent, RegistrationSlotWithPlayerAndWave } from "@repo/domain/types"
@@ -33,8 +33,8 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 	private readonly eventStreams = new Map<number, EventStreamState>()
 
 	constructor(
-		private readonly dataService: RegistrationDataService,
-		private readonly events: EventsService,
+		@Inject(RegistrationDataService) private readonly dataService: RegistrationDataService,
+		@Inject(EventsService) private readonly events: EventsService,
 	) {}
 
 	/**

@@ -28,6 +28,7 @@ import { ScoresImportService } from "./services/scores-import.service"
 		ConfigModule.forRoot({
 			load: [golfGeniusConfig],
 			validationSchema,
+			isGlobal: true,
 		}),
 		DatabaseModule,
 		RegistrationModule,

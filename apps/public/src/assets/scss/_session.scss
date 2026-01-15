@@ -1,0 +1,58 @@
+.login {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.login__block {
+	width: 330px;
+	text-align: center;
+	padding: 1.2rem;
+	@include animate(fadeInUp, 300ms);
+	@include card();
+}
+
+.login__header {
+	padding: 1.5rem;
+	margin-top: -2.4rem;
+	position: relative;
+	color: $white;
+	border-radius: $border-radius;
+	box-shadow: 0 1px 5px rgba($black, 0.18);
+	font-size: 1.2rem;
+
+	& > i,
+	& > img {
+		display: block;
+		margin-bottom: 0.8rem;
+	}
+
+	& > i {
+		font-size: 3rem;
+		height: 3rem;
+	}
+
+	& > img {
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		margin-left: auto;
+		margin-right: auto;
+		box-shadow: 0 0 0 3px rgba($white, 0.25);
+	}
+}
+
+.login__actions {
+	position: absolute;
+	top: 1rem;
+	right: 0.75rem;
+	display: block;
+	//   .dropdown:not(.show) {
+	//     display: none;
+	//   }
+}
+
+.login__body {
+	padding: 1rem;
+}

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 
 import { calculateAmountDue, deriveNotificationType } from "@repo/domain/functions"
 import {
@@ -29,13 +29,13 @@ export class PaymentsService {
 	private readonly logger = new Logger(PaymentsService.name)
 
 	constructor(
-		private readonly paymentRepository: PaymentsRepository,
-		private readonly registrationRepository: RegistrationRepository,
-		private readonly events: EventsService,
-		private readonly stripe: StripeService,
-		private readonly drizzle: DrizzleService,
-		private readonly broadcast: RegistrationBroadcastService,
-		private readonly slotCleanup: CleanupService,
+		@Inject(PaymentsRepository) private readonly paymentRepository: PaymentsRepository,
+		@Inject(RegistrationRepository) private readonly registrationRepository: RegistrationRepository,
+		@Inject(EventsService) private readonly events: EventsService,
+		@Inject(StripeService) private readonly stripe: StripeService,
+		@Inject(DrizzleService) private readonly drizzle: DrizzleService,
+		@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService,
+		@Inject(CleanupService) private readonly slotCleanup: CleanupService,
 	) {}
 
 	/**

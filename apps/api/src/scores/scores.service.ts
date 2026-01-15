@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm"
 
-import { Injectable } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 
 import {
 	DrizzleService,
@@ -15,7 +15,7 @@ import {
 
 @Injectable()
 export class ScoresService {
-	constructor(private drizzle: DrizzleService) {}
+	constructor(@Inject(DrizzleService) private drizzle: DrizzleService) {}
 
 	async createScorecard(data: ScorecardInsert): Promise<ScorecardRow> {
 		const [result] = await this.drizzle.db.insert(eventScorecard).values(data)

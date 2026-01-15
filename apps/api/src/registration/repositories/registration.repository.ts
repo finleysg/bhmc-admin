@@ -1,7 +1,7 @@
 import { and, eq, inArray, or, like, lt, sql } from "drizzle-orm"
 import type { MySql2Database } from "drizzle-orm/mysql2"
 
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 
 import {
 	course,
@@ -39,7 +39,7 @@ import { RegistrationStatusValue } from "@repo/domain/types"
 export class RegistrationRepository {
 	private readonly logger = new Logger(RegistrationRepository.name)
 
-	constructor(private drizzle: DrizzleService) {}
+	constructor(@Inject(DrizzleService) private drizzle: DrizzleService) {}
 
 	// ==================== PLAYER ====================
 

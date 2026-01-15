@@ -1,0 +1,252 @@
+.reserve-group {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+
+	&__east {
+		color: $red-200;
+	}
+
+	&__north {
+		color: $blue-200;
+	}
+
+	&__west {
+		color: $yellow-400;
+	}
+
+	&__unavailable {
+		color: $gray-400;
+	}
+
+	.reserve-group-name {
+		// flex: 1.5;
+		min-width: 240px;
+		color: $info;
+
+		> span {
+			font-weight: bold;
+			margin-right: 1rem;
+		}
+		> button {
+			margin-right: 0.5rem;
+
+			&:disabled {
+				background-color: $gray-400;
+				border-color: $gray-400;
+			}
+		}
+	}
+	.reserved-group-name {
+		flex: 1 1 10%;
+		min-width: 80px;
+		color: $info;
+		> span {
+			font-weight: bold;
+			margin-right: 2rem;
+		}
+	}
+	.reserve-slot {
+		flex: 1 1 20%;
+		text-align: center;
+		border: 1px solid $gray-300;
+		border-radius: 3px;
+		padding: 5px;
+		margin: 5px;
+
+		&__available {
+			cursor: pointer;
+		}
+
+		&__in-progress {
+			color: $white;
+			background-color: $gray-500;
+		}
+
+		&__payment-processing {
+			font-style: italic;
+			color: $info;
+		}
+
+		&__reserved {
+			font-weight: 400;
+			color: $success;
+		}
+
+		&__selected {
+			cursor: pointer;
+			color: $white;
+			background-color: $warning;
+		}
+
+		&__unavailable {
+			cursor: not-allowed;
+			background-color: $light;
+		}
+	}
+}
+
+.reserve-player {
+	border: 1px solid $gray-300;
+	border-radius: 5px;
+	padding: 5px;
+	margin: 5px;
+	width: 150px;
+	display: inline-block;
+}
+
+.registration-title {
+	color: $white;
+	font-size: 1.2rem;
+}
+
+.hgroup {
+	font-size: 0.9rem;
+	.slot {
+		grid-template-columns: 3fr 4fr 1fr;
+		grid-template-areas: "player fees total";
+	}
+	.fee {
+		.fee-item--description {
+			display: none;
+		}
+		.fee-item--amount {
+			display: none;
+		}
+	}
+}
+
+.vgroup {
+	.slot {
+		grid-template-columns: 1fr 2fr;
+		grid-template-areas: "player fees";
+	}
+	.player {
+		align-self: start;
+		margin: 0.5rem 0 0 0.5rem;
+		> span {
+			display: block;
+		}
+	}
+	.fees {
+		flex-direction: column;
+		.fee {
+			display: flex;
+			.fee-item--amount {
+				flex: 1;
+				text-align: right;
+			}
+		}
+	}
+	.subtotal {
+		display: none;
+	}
+}
+
+.slot {
+	margin: 5px 0;
+	display: grid;
+	grid-row-gap: 10px;
+	grid-column-gap: 10px;
+	align-items: center;
+}
+
+.slot-item {
+	border: 0.5px dotted $success;
+}
+
+.player {
+	grid-area: player;
+}
+
+.fees {
+	grid-area: fees;
+	display: flex;
+	justify-content: space-between;
+}
+.fee {
+	margin: 5px;
+	flex: 1;
+}
+.fee-head {
+	flex: 1;
+	margin: 0 5px;
+	line-height: 1.2rem;
+}
+.subtotal {
+	grid-area: total;
+	text-align: right;
+}
+
+.summary {
+	display: grid;
+	grid-gap: 10px;
+	align-items: center;
+	grid-template-columns: 3fr 4fr 1fr;
+	grid-template-areas: ". item amount";
+	min-height: 30px;
+	&--item {
+		grid-area: item;
+		text-align: right;
+		margin-right: 1rem;
+	}
+	&--amount {
+		grid-area: amount;
+		text-align: right;
+	}
+}
+
+.reservation {
+	> button {
+		margin-right: 1rem;
+
+		&:disabled {
+			background-color: $gray-400;
+			border-color: $gray-400;
+		}
+	}
+}
+
+@media only screen and (max-width: 480px) {
+	.reserve-group {
+		flex-direction: column;
+		align-items: unset;
+	}
+	.hgroup {
+		.slot {
+			grid-template-rows: 24px 30px;
+			grid-template-columns: 5fr 1fr;
+			grid-template-areas:
+				"player player"
+				"fees total";
+			grid-row-gap: 0;
+		}
+	}
+	.vgroup {
+		.slot {
+			grid-template-rows: 30px 1fr;
+			grid-template-columns: 5fr 1fr;
+			grid-template-areas:
+				"player player"
+				"fees fees";
+		}
+		.player {
+			> span {
+				display: inline;
+			}
+		}
+	}
+	.summary {
+		grid-template-columns: 5fr 1fr;
+		grid-template-areas: "item amount";
+		min-height: 24px;
+	}
+	.register-title {
+		color: $gray-100;
+	}
+	.add-player {
+		position: relative;
+		z-index: 10;
+	}
+}

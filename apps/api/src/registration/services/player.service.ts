@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNotNull } from "drizzle-orm"
 
-import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common"
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { dummyCourse, dummyHole, validateRegistration } from "@repo/domain/functions"
 import {
 	AvailableSlotGroup,
@@ -47,11 +47,11 @@ export class PlayerService {
 	private readonly logger = new Logger(PlayerService.name)
 
 	constructor(
-		private drizzle: DrizzleService,
-		private repository: RegistrationRepository,
-		private readonly paymentsRepository: PaymentsRepository,
-		private readonly events: EventsService,
-		private readonly broadcast: RegistrationBroadcastService,
+		@Inject(DrizzleService) private drizzle: DrizzleService,
+		@Inject(RegistrationRepository) private repository: RegistrationRepository,
+		@Inject(PaymentsRepository) private readonly paymentsRepository: PaymentsRepository,
+		@Inject(EventsService) private readonly events: EventsService,
+		@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService,
 	) {}
 
 	/** Find a player by id */

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 import { render } from "@react-email/render"
 import {
@@ -44,7 +44,7 @@ export class MailService {
 	private transporter: nodemailer.Transporter
 	private readonly fromAddress: string
 
-	constructor(private configService: ConfigService) {
+	constructor(@Inject(ConfigService) private configService: ConfigService) {
 		this.fromAddress = this.configService.getOrThrow<string>("MAIL_FROM")
 		const nodeEnv = this.configService.get<string>("NODE_ENV")
 

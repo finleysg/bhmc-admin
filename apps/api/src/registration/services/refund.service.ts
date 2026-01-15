@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common"
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { inArray } from "drizzle-orm"
 
 import { Refund, RefundRequest } from "@repo/domain/types"
@@ -13,9 +13,9 @@ export class RefundService {
 	private readonly logger = new Logger(RefundService.name)
 
 	constructor(
-		private readonly drizzle: DrizzleService,
-		private readonly paymentsRepository: PaymentsRepository,
-		private readonly stripeService: StripeService,
+		@Inject(DrizzleService) private readonly drizzle: DrizzleService,
+		@Inject(PaymentsRepository) private readonly paymentsRepository: PaymentsRepository,
+		@Inject(StripeService) private readonly stripeService: StripeService,
 	) {}
 
 	/** Process Stripe refunds for payments. */

@@ -1,6 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm"
 
-import { BadRequestException, Injectable, Logger } from "@nestjs/common"
+import { BadRequestException, Inject, Injectable, Logger } from "@nestjs/common"
 import { validateClubEvent } from "@repo/domain/functions"
 import {
 	ClubEvent,
@@ -33,9 +33,9 @@ export class EventsService {
 	private readonly logger = new Logger(EventsService.name)
 
 	constructor(
-		private drizzle: DrizzleService,
-		private readonly repository: EventsRepository,
-		private readonly courses: CoursesService,
+		@Inject(DrizzleService) private drizzle: DrizzleService,
+		@Inject(EventsRepository) private readonly repository: EventsRepository,
+		@Inject(CoursesService) private readonly courses: CoursesService,
 	) {}
 
 	async getCompleteClubEventById(

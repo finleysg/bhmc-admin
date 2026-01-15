@@ -1,0 +1,101 @@
+.event-header {
+	display: flex;
+	justify-content: right;
+	margin-bottom: 1.5rem;
+	border-bottom: 2px solid $gray-300;
+
+	&--title {
+		flex: 1 0 35%;
+		justify-self: left;
+	}
+	&--actions {
+		display: flex;
+		justify-content: flex-end;
+		min-width: 320px;
+		max-height: 32px;
+
+		.btn {
+			margin-left: 0.5rem;
+		}
+	}
+}
+
+.fees-points {
+	position: relative;
+}
+
+.fees-points-item {
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+	display: flex;
+	flex: 1;
+
+	.label {
+		order: 1;
+	}
+
+	&::after {
+		content: "";
+		margin: 0 4px;
+		background: radial-gradient(circle at 50% 50%, $gray-600 1%, transparent 10%);
+		background-size: 6px;
+		background-position: 0 4px;
+		background-repeat: repeat-x;
+		flex-grow: 1;
+		order: 2;
+	}
+
+	.value {
+		text-align: right;
+		order: 3;
+	}
+}
+
+.registration-start-item {
+	margin-bottom: 0.2rem;
+	display: flex;
+
+	.label {
+		color: $info;
+		width: 160px;
+	}
+
+	.value {
+		white-space: nowrap;
+		flex-grow: 1;
+	}
+}
+
+@media only screen and (max-width: 845px) {
+	.event-header {
+		display: block;
+		padding-bottom: 0.5rem;
+
+		h3 {
+			font-size: 1.5rem;
+		}
+		&--actions {
+			flex-direction: row-reverse;
+
+			.btn {
+				margin-left: 0;
+				margin-right: 8px;
+			}
+		}
+	}
+
+	.registration-start-item {
+		margin-bottom: 0.2rem;
+
+		.label {
+			color: $info;
+			width: 100px;
+		}
+
+		.value {
+			white-space: nowrap;
+			flex-grow: 1;
+			font-size: 0.9rem;
+		}
+	}
+}

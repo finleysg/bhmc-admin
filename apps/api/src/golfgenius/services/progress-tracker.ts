@@ -1,6 +1,6 @@
 import { Subject } from "rxjs"
 
-import { Injectable, Logger, Optional } from "@nestjs/common"
+import { Inject, Injectable, Logger, Optional } from "@nestjs/common"
 import {
 	IntegrationActionName,
 	PlayerProgressEvent,
@@ -28,7 +28,7 @@ export class ProgressTracker {
 	private readonly config: TrackerConfig
 
 	constructor(
-		private readonly integrationLog: IntegrationLogRepository,
+		@Inject(IntegrationLogRepository) private readonly integrationLog: IntegrationLogRepository,
 		@Optional() config?: Partial<TrackerConfig>,
 	) {
 		this.config = { ...DEFAULT_TRACKER_CONFIG, ...config }

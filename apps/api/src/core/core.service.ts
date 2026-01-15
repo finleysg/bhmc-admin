@@ -1,6 +1,6 @@
 import { and, asc, eq } from "drizzle-orm"
 
-import { Injectable, NotFoundException } from "@nestjs/common"
+import { Inject, Injectable, NotFoundException } from "@nestjs/common"
 import { Champion, LowScore } from "@repo/domain/types"
 
 import {
@@ -16,7 +16,7 @@ import { toChampion, toLowScore } from "./mappers"
 
 @Injectable()
 export class CoreService {
-	constructor(private drizzle: DrizzleService) {}
+	constructor(@Inject(DrizzleService) private drizzle: DrizzleService) {}
 
 	async findLowScores(season: number, courseName: string, isNet: boolean): Promise<LowScore[]> {
 		const results = await this.drizzle.db

@@ -1,0 +1,12 @@
+node_modules
+build
+coverage
+public
+.docz
+.github
+*.md
+*.json
+*.config.ts
+*.config.js
+.prettierrc.cjs
+.eslintrc.cjs

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 import { Cron, CronExpression } from "@nestjs/schedule"
 
 import { CleanupService } from "../services/cleanup.service"
@@ -7,7 +7,7 @@ import { CleanupService } from "../services/cleanup.service"
 export class RegistrationCleanupCron {
 	private readonly logger = new Logger(RegistrationCleanupCron.name)
 
-	constructor(private readonly service: CleanupService) {}
+	constructor(@Inject(CleanupService) private readonly service: CleanupService) {}
 
 	@Cron(CronExpression.EVERY_5_MINUTES)
 	async handleCleanup(): Promise<void> {

@@ -3,6 +3,7 @@ import {
 	Controller,
 	ForbiddenException,
 	Get,
+	Inject,
 	Logger,
 	NotFoundException,
 	Param,
@@ -38,7 +39,7 @@ interface CustomerSessionResponse {
 export class UserPaymentsController {
 	private readonly logger = new Logger(UserPaymentsController.name)
 
-	constructor(private readonly service: PaymentsService) {}
+	constructor(@Inject(PaymentsService) private readonly service: PaymentsService) {}
 
 	/**
 	 * Create a payment record with details.
