@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm"
 
-import { Injectable } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 
 import { DrizzleService } from "../database/drizzle.service"
 import { integrationLog } from "../database/schema/golf-genius.schema"
@@ -8,7 +8,7 @@ import { IntegrationLogInsert, IntegrationLogRow } from "../database"
 
 @Injectable()
 export class IntegrationLogRepository {
-	constructor(private readonly drizzle: DrizzleService) {}
+	constructor(@Inject(DrizzleService) private readonly drizzle: DrizzleService) {}
 
 	async createLogEntry(dto: IntegrationLogInsert): Promise<IntegrationLogRow> {
 		const detailText = dto.details

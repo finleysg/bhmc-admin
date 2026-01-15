@@ -4,7 +4,28 @@ In all interactions and commit messages, be extremely concise and sacrifice gram
 
 ## Project Overview
 
-BHMC Admin is an administrative interface for a golf tournament management site. It's a monorepo containing a NestJS API backend, Next.js frontend, and shared domain package.
+Bunker Hills Men's Club is a group of golf enthusiastics who compete in weekly and monthly competitions throughout 
+the summery. This monorepo contains the websites and services to manage every aspect of the club's online experience:
+- Public facing website for club information and event registration
+- Django backend provides a RESTful layer over club data and django's built-in table administration screens
+- MySQL to store club data
+- Backend nestjs api to orchestrate administration, registration and payments, and integration with the Golf Genius
+  tournament management system
+- Administrative next.js website to manage events, members, players, reports, etc.
+
+```
+bhmc-admin/
+├── apps/
+│   ├── api/        # NestJS (API)
+│   ├── web/        # Next.js (admin website)
+│   └── public/     # React SPA (member site)
+├── backend/        # Django RESTful backend
+├── packages/
+│   ├── domain/     # Shared TS types (used by all TS apps)
+│   └── eslint-config/
+├── pnpm-workspace.yaml
+└── turbo.json
+```
 
 ## Commands
 
@@ -36,24 +57,25 @@ pnpm format:check           # Prettier check
 
 - `apps/api` - NestJS backend with Drizzle ORM + MySQL
 - `apps/web` - Next.js frontend with Tailwind CSS v4 + daisyUI 5
+- `apps/public` - React SPA public frontend with Bootstrap 5 + Tanstack Query
+- `backend` - Django + django-rest-framework, Djoser for auth
 - `packages/domain` - Shared TypeScript types and domain logic
 
-## Key Technical Details
+## API (nestjs)
 
-- **TypeScript**: Strict mode, no `any` in production code
-- **Database**: MySQL via Drizzle ORM (external schema - no migrations)
-- **Validation**: Plain TypeScript validation in domain package, class-validator for NestJS DTOs
-- **Testing**: Jest with `Partial<T>` patterns for type-safe mocks
-- **Environment**: Config via `.env` files, validated with Joi
-
-## Patterns
+### Patterns
 
 - **Barrel Exports**: Each module exports public API via `index.ts`
 - **Domain-Driven Design**: Service/controller/DTO layers per module
 - **API Repositories**: Only accept and return internal models or primitives
 - **API Services**: Only accept and return domain models or primitives
+- **TypeScript**: Strict mode, no `any` in production code
+- **Configuration**: .env files validated with Joi
+- **Database**: MySQL 8
+    - Django owns the schema and migrations, requiring converstion from snake-case to camel-case
+    - API uses Drizzle ORM (external schema - no migrations)
 
-## API Module Structure
+### API Module Structure
 
 ```
 {module}/
@@ -82,7 +104,7 @@ pnpm format:check           # Prettier check
 | Error      | `registration.errors.ts`           | `SlotConflictError`              |
 | Mapper     | `mappers.ts`                       | `toPlayer()`, `toRegistration()` |
 
-## Data Flow
+### Data Flow
 
 ```
 Controller → Service → Repository → Drizzle
@@ -94,7 +116,7 @@ Controller → Service → Repository → Drizzle
 - **Services**: Accept/return domain types, throw `HttpException` subclasses
 - **Mappers**: `to{DomainType}(row)` functions bridge rows → domain types
 
-## Error Handling
+### Error Handling
 
 ```typescript
 // Custom errors extend HttpException
@@ -108,7 +130,7 @@ export class SlotConflictError extends HttpException {
 if (!row) throw new BadRequestException(`Event ${id} not found`)
 ```
 
-## Test Patterns
+### Test Patterns
 
 ```typescript
 // Factory functions with Partial<T> overrides
@@ -141,7 +163,9 @@ const createMockRepository = () => ({
 - Validation: `validateClubEvent()` throws or returns narrowed type
 - Utilities: `formatCurrency()`, `getAge()`, `calculateTeeTime()`
 
-## Web Patterns
+## Web Admin (next.js)
+
+### Patterns
 
 - **Data fetching**: Plain `fetch` + `useState`/`useEffect` (no React Query)
 - **Forms**: `useReducer` for complex state (no form library)
@@ -149,18 +173,120 @@ const createMockRepository = () => ({
 - **Styling**: Tailwind v4 + daisyUI 5 utility classes
 - **API**: Routes in `/app/api/` proxy to backend with Django tokens
 
-## Common Imports
+### Auth
+- **Credentials**: email and password protected accounts, owned by the Django backend
+- **Roles**: roles defined in Django
+    - Admin
+	- Super Admin (no use cases yet)
+
+## Public Web (react spa)
+
+### Patterns
+
+- **Data fetching**: Tanstack Query
+- **Forms**: React Hook Form
+- **State**: React Context for registration and authentication
+- **Styling**: Bootstrap v5 + custom SCSS
+- **Multiple Backends**
+    - apiUrl() to talk to the Django backend
+	- serverUrl() to talk to the nestjs api for registration flows
+- **Types**: zod used to validate api data
+- **Classes**: 
+    - classes used to transform snake_case from Django to camelCase
+	- class methods consolidate functional methods
+
+## Project Structure
+
+```
+src/
+├── components/    # Reusable UI components
+├── screens/       # Page-level route components
+├── hooks/         # Custom React hooks
+├── models/        # TypeScript types + Zod schemas
+├── context/       # Auth, registration, layout state
+├── forms/         # Form handlers + views
+├── layout/        # Main, auth, admin layouts
+└── utils/         # API client, date utils, config
+```
+
+### Testing
+
+Use a flat test structure. No nested `describe` and `it` aliases. Example:
 
 ```typescript
-// Domain types
-import type { ClubEvent, Player, CompleteRegistration } from "@repo/domain/types"
-
-// Domain functions
-import { formatCurrency, validateRegistration } from "@repo/domain/functions"
-
-// Database (API only)
-import { player, registration, DrizzleService, type PlayerRow } from "../../database"
+test("test data is generated correctly", () => {
+	const slots = buildTeetimeSlots(1, 1, 5, 5)
+	const result = RegistrationSlotApiSchema.safeParse(slots[0])
+	if (!result.success) {
+		console.error(result.error.message)
+	}
+	expect(result.success).toBe(true)
+})
 ```
+
+Strive for high coverage of functional code.
+
+If you create UX component tests, do not test implementation details. Test from the point
+of view of a user of a component.
+
+To run a single test file:
+
+```bash
+npx vitest run src/components/buttons/__tests__/register-button.test.tsx
+```
+
+## Backend (django)
+
+### Django Apps
+
+| App | Purpose |
+|-----|---------|
+| core | User management, authentication, season settings |
+| events | Tournaments, event fees, rounds, results |
+| register | Player profiles, registrations, slots, fees |
+| payments | Stripe payments and refunds |
+| courses | Golf courses and hole data |
+| damcup | Season-long points competition |
+| scores | Event scoring and scorecards |
+| documents | Photos and document management |
+| messaging | Announcements and contact messages |
+| policies | Club policies and rules |
+| content | Tags and page content |
+
+### Commands
+
+```bash
+# Install dependencies
+uv sync
+
+# Run server
+uv run python manage.py runserver
+
+# Run tests
+uv run python manage.py test
+
+# Run migrations
+uv run python manage.py migrate
+```
+
+### Environment
+
+Set `DJANGO_ENV` to control configuration:
+- `local` - uses `config/.env.local`
+- `docker` - uses `config/.env.docker`
+- `prod` - uses `config/.env`
+
+### Authentication
+
+Credentials-based authentication via [Djoser](https://djoser.readthedocs.io/).
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /auth/token/login/` | Obtain auth token (email + password) |
+| `POST /auth/token/logout/` | Invalidate current token |
+| `POST /auth/users/` | Register new user |
+| `POST /auth/users/reset_password/` | Request password reset |
+| `POST /auth/users/reset_password_confirm/` | Confirm password reset |
 
 ## General Agent Instructions
 
@@ -174,6 +300,4 @@ Focus on understanding the problem requirements and implementing the correct alg
 
 If the task is unreasonable or infeasible, or if any of the tests are incorrect, please inform me rather than working around them. The solution should be robust, maintainable, and extendable.
 
-## Planning
-
-- At the end of each plan, give me a list of unresolved questions to answer, if any. Make the questions extremely concise.
+**IMPORTANT**: At the end of each plan, give me a list of unresolved questions to answer, if any. Make the questions extremely concise.

@@ -1,6 +1,6 @@
 import { Observable, Subject } from "rxjs"
 
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 import { PlayerProgressEvent } from "@repo/domain/types"
 
 import { CoursesService } from "../../courses"
@@ -52,13 +52,13 @@ export class ScoresImportService {
 	private readonly logger = new Logger(ScoresImportService.name)
 
 	constructor(
-		private readonly scoresService: ScoresService,
-		private readonly apiClient: ApiClient,
-		private readonly courses: CoursesService,
-		private readonly events: EventsService,
-		private readonly players: PlayerService,
-		private readonly registrations: RegistrationService,
-		private readonly progressTracker: ProgressTracker,
+		@Inject(ScoresService) private readonly scoresService: ScoresService,
+		@Inject(ApiClient) private readonly apiClient: ApiClient,
+		@Inject(CoursesService) private readonly courses: CoursesService,
+		@Inject(EventsService) private readonly events: EventsService,
+		@Inject(PlayerService) private readonly players: PlayerService,
+		@Inject(RegistrationService) private readonly registrations: RegistrationService,
+		@Inject(ProgressTracker) private readonly progressTracker: ProgressTracker,
 	) {}
 
 	async importScoresForRound(

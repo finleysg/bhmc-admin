@@ -1,0 +1,13 @@
+.friend {
+	display: inline-block;
+	border: 1px solid lighten($primary, 25%);
+	background-color: $primary-bg-subtle;
+	padding: 0.5rem;
+	margin-bottom: 0.25rem;
+	margin-right: 0.5rem;
+	overflow: hidden;
+	color: $primary;
+	& :hover {
+		color: $primary-text-emphasis;
+	}
+}

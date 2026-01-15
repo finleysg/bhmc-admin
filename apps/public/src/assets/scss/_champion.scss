@@ -1,0 +1,54 @@
+.champion-card {
+	display: grid;
+	grid-template-rows: 1fr 2fr;
+	grid-template-columns: 1fr 3fr;
+	background-color: lighten($secondary, 15%);
+
+	&__header {
+		grid-column: 1 / 3;
+		padding: 0.25rem;
+	}
+
+	&__gross {
+		background-color: lighten($primary, 10%);
+	}
+
+	&__net {
+		background-color: lighten($primary, 30%);
+	}
+
+	&__icon {
+		color: yellow;
+		font-size: 1.4rem;
+		margin: 0 0.5rem;
+		vertical-align: middle;
+	}
+
+	&__event {
+		color: $white;
+		font-size: 1.1rem;
+		font-weight: bolder;
+		margin: 0.25rem;
+	}
+
+	&__flight {
+		color: $white;
+		font-size: 1rem;
+		font-weight: 400;
+		margin: 0.25rem;
+	}
+
+	&__score {
+		margin: auto;
+		text-align: center;
+		font-size: 2rem;
+		font-weight: bold;
+		color: $primary;
+	}
+
+	&__player {
+		font-size: 1.2rem;
+		padding: 0.5rem 0;
+		min-height: 50px;
+	}
+}

@@ -1,12 +1,12 @@
 import { eq } from "drizzle-orm"
 
-import { Injectable } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 
 import { authUser, DrizzleService, AuthUserRow, AuthUserInsert } from "../database"
 
 @Injectable()
 export class AuthUserRepository {
-	constructor(private drizzle: DrizzleService) {}
+	constructor(@Inject(DrizzleService) private drizzle: DrizzleService) {}
 
 	async findById(id: number): Promise<AuthUserRow | null> {
 		const [user] = await this.drizzle.db.select().from(authUser).where(eq(authUser.id, id)).limit(1)

@@ -1,0 +1,148 @@
+// Options
+$enable-transitions: true;
+$enable-shadows: false;
+$min-contrast-ratio: 3;
+
+// Grays (no different than defaults)
+$white: #fff;
+$gray-100: #f8f9fa;
+$gray-200: #e9ecef;
+$gray-300: #dee2e6;
+$gray-400: #ced4da;
+$gray-500: #adb5bd;
+$gray-600: #6c757d;
+$gray-700: #495057;
+$gray-800: #343a40;
+$gray-900: #212529;
+$black: #000;
+
+// Variants
+$primary: #164886;
+$secondary: #bdc6cd;
+$success: #52912f;
+$info: #276f1f;
+$warning: #861680;
+$danger: #865416;
+$light: $gray-300;
+$dark: $gray-600;
+
+$theme-colors: (
+	primary: $primary,
+	secondary: $secondary,
+	success: $success,
+	info: $info,
+	warning: $warning,
+	danger: $danger,
+	light: $light,
+	dark: $dark,
+);
+
+// $yiq-text-dark: #525a62;
+
+// Typography
+$font-family-sans-serif: "Roboto", sans-serif;
+$text-muted: $gray-600;
+$text-muted-hover: darken($text-muted, 15%);
+$headings-color: $gray-800;
+$font-weight-bold: 500;
+$font-family-icon: "Material-Design-Iconic-Font";
+$font-size-root: 14px;
+
+// Links
+$link-color: $success;
+$link-hover-decoration: none;
+
+// Body
+// $body-bg: $white;
+// $body-color: $gray-700;
+
+// Form
+$input-bg: transparent;
+$input-disabled-bg: transparent;
+$input-box-shadow: rgba($black, 0);
+$input-border-color: lighten($gray-200, 1%);
+$input-focus-border-color: $input-border-color;
+$input-border-radius: 0;
+$input-border-radius-lg: 0;
+$input-border-radius-sm: 0;
+$form-group-margin-bottom: 2rem;
+$input-focus-box-shadow: none;
+$input-padding-x: 0;
+$input-padding-x-lg: $input-padding-x;
+$input-padding-x-sm: $input-padding-x;
+
+// Checbox and Radio
+$checkbox-radio-size: 18px;
+$checkbox-radio-background-color: transparent;
+$checkbox-radio-checked-background-color: $success;
+$checkbox-radio-border-color: $gray-500;
+$checkbox-radio-checked-border-color: $checkbox-radio-checked-background-color;
+
+// Layout
+$content-title-heading-color: $gray-700;
+
+// Header
+$header-height: 72px;
+$header-shadow: 0 5px 5px -3px rgba($black, 0.15);
+$header-z-index: 20;
+
+// Footer
+$footer-text-color: $text-muted;
+$footer-text-hover-color: $text-muted-hover;
+
+// Dropdown
+$dropdown-border-width: 0;
+$dropdown-border-color: transparent;
+$dropdown-box-shadow: 0 4px 18px rgba($black, 0.11);
+$dropdown-link-color: $gray-700;
+$dropdown-link-active-color: $dropdown-link-color;
+$dropdown-link-active-bg: $gray-100;
+$dropdown-link-disabled-color: $gray-500;
+$dropdown-link-hover-bg: $gray-100;
+$dropdown-padding-y: 0.8rem;
+$dropdown-item-padding-x: 1.5rem;
+$dropdown-item-padding-y: 0.5rem;
+$dropdown-spacer: 0;
+$dropdown-divider-bg: $gray-100;
+$dropdown-header-color: $gray-500;
+
+// Card
+$card-inner-border-radius: 2px;
+$card-border-color: $gray-200;
+$card-border-radius: 2px;
+$card-spacer-x: 2.2rem;
+$card-spacer-y: 2.1rem;
+$card-cap-bg: $primary;
+$card-img-overlay-padding: 0;
+$card-shadow: 0 1px 2px rgba($black, 0.075);
+$card-columns-margin: 2.3rem;
+$card-bg: $gray-100;
+$card-header-bg: $gray-800;
+
+// Sidebars
+$sidebar-width: 280px;
+$sidebar-z-index: $header-z-index - 1;
+$navigation-link-color: $gray-100;
+$navigation-link-active-color: $success;
+$navigation-link-hover-bg: rgba($black, 0.04);
+
+// Listview
+$listview-item-active-bg: $gray-100;
+$listview-item-hover-bg: $listview-item-active-bg;
+$listview-item-striped-bg: $gray-200;
+$listview-invert-item-active-bg: rgba($white, 0.025);
+$listview-invert-item-hover-bg: rgba($white, 0.025);
+$listview-invert-item-striped-bg: rgba($white, 0.1);
+$listview-border-color: $gray-100;
+
+// Tables
+$table-striped-bg: $gray-200;
+$table-border-color: tint-color($gray-200, 3%);
+$table-dark-bg: $gray-700;
+$table-dark-border-color: shade-color($gray-700, 3%);
+$table-dark-color: $gray-100;
+$table-accent-bg: $table-border-color;
+$table-hover-bg: $table-accent-bg;
+$table-cell-padding: 1rem 1.5rem;
+$table-cell-padding-sm: 0.75rem 1rem;
+$table-head-bg: tint-color($gray-200, 3%);

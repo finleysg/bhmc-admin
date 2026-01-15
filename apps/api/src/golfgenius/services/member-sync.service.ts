@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 import { Player } from "@repo/domain/types"
 
 import { PlayerService } from "../../registration"
@@ -12,8 +12,8 @@ export class MemberSyncService {
 	private readonly logger = new Logger(MemberSyncService.name)
 
 	constructor(
-		private readonly players: PlayerService,
-		private readonly apiClient: ApiClient,
+		@Inject(PlayerService) private readonly players: PlayerService,
+		@Inject(ApiClient) private readonly apiClient: ApiClient,
 	) {}
 
 	// ---------- Helpers for master roster sync (original functionality) ----------

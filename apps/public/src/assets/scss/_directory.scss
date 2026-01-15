@@ -1,0 +1,36 @@
+.friend {
+	vertical-align: middle;
+	color: $success;
+}
+.acquantaince {
+	vertical-align: middle;
+}
+
+.player-row {
+	display: flex;
+}
+
+.player-name {
+	display: flex;
+	> h6 {
+		flex: 1;
+		display: inline-block;
+	}
+	> a {
+		flex: 1;
+		display: inline-block;
+	}
+}
+
+.player-email {
+	display: inline;
+}
+
+@media only screen and (max-width: 480px) {
+	.player-profile {
+		display: block;
+	}
+	.player-email {
+		display: block;
+	}
+}

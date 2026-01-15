@@ -4,6 +4,7 @@ import { map } from "rxjs/operators"
 import {
 	Controller,
 	Get,
+	Inject,
 	Logger,
 	Param,
 	ParseIntPipe,
@@ -34,16 +35,16 @@ export class GolfgeniusController {
 	private readonly logger = new Logger(GolfgeniusController.name)
 
 	constructor(
-		private readonly memberSync: MemberSyncService,
-		private readonly eventSync: EventSyncService,
-		private readonly scoresImport: ScoresImportService,
-		private readonly rosterExport: RosterExportService,
-		private readonly pointsImport: PointsImportService,
-		private readonly importAllResults: ImportAllResultsService,
-		private readonly champions: ImportChampionsService,
-		private readonly lowScoresImport: LowScoresImportService,
-		private readonly integrationLog: IntegrationLogRepository,
-		private readonly events: EventsService,
+		@Inject(MemberSyncService) private readonly memberSync: MemberSyncService,
+		@Inject(EventSyncService) private readonly eventSync: EventSyncService,
+		@Inject(ScoresImportService) private readonly scoresImport: ScoresImportService,
+		@Inject(RosterExportService) private readonly rosterExport: RosterExportService,
+		@Inject(PointsImportService) private readonly pointsImport: PointsImportService,
+		@Inject(ImportAllResultsService) private readonly importAllResults: ImportAllResultsService,
+		@Inject(ImportChampionsService) private readonly champions: ImportChampionsService,
+		@Inject(LowScoresImportService) private readonly lowScoresImport: LowScoresImportService,
+		@Inject(IntegrationLogRepository) private readonly integrationLog: IntegrationLogRepository,
+		@Inject(EventsService) private readonly events: EventsService,
 	) {}
 
 	@Post("/roster/sync")

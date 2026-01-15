@@ -2,7 +2,7 @@ import { and, count, eq } from "drizzle-orm"
 
 import { EventTypeChoices } from "@repo/domain/types"
 
-import { Injectable } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 
 import {
 	DrizzleService,
@@ -26,7 +26,7 @@ import {
 
 @Injectable()
 export class EventsRepository {
-	constructor(private drizzle: DrizzleService) {}
+	constructor(@Inject(DrizzleService) private drizzle: DrizzleService) {}
 
 	// events_event
 	async findEventById(eventId: number): Promise<EventRow> {

@@ -1,6 +1,6 @@
 import type { Response } from "express"
 
-import { Controller, Get, Param, ParseIntPipe, Res } from "@nestjs/common"
+import { Controller, Get, Inject, Param, ParseIntPipe, Res } from "@nestjs/common"
 
 import { Admin } from "../auth"
 import { ReportsService } from "./reports.service"
@@ -8,7 +8,7 @@ import { ReportsService } from "./reports.service"
 @Controller("reports")
 @Admin()
 export class ReportsController {
-	constructor(private readonly reports: ReportsService) {}
+	constructor(@Inject(ReportsService) private readonly reports: ReportsService) {}
 
 	@Get(":season/membership")
 	async getMembershipReport(@Param("season", ParseIntPipe) season: number) {

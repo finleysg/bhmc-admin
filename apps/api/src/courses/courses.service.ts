@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 import { Course, Hole, Tee } from "@repo/domain/types"
 
 import { toCourse, toCourseWithCompositions, toCourseWithHoles, toHole, toTee } from "./mappers"
@@ -7,7 +7,7 @@ import { CourseWithHoles } from "../database"
 
 @Injectable()
 export class CoursesService {
-	constructor(private repository: CoursesRepository) {}
+	constructor(@Inject(CoursesRepository) private repository: CoursesRepository) {}
 
 	async findCourseByGgId(ggId: string): Promise<Course | null> {
 		const course = await this.repository.findCourseByGgId(ggId)

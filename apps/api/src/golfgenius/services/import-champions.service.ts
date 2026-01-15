@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 
 import { CoreService, mapTournamentWinnerToChampionInsert } from "../../core"
 import { EventsService } from "../../events"
@@ -14,8 +14,8 @@ export class ImportChampionsService {
 	private readonly logger = new Logger(ImportChampionsService.name)
 
 	constructor(
-		private readonly coreRepository: CoreService,
-		private readonly eventsService: EventsService,
+		@Inject(CoreService) private readonly coreRepository: CoreService,
+		@Inject(EventsService) private readonly eventsService: EventsService,
 	) {}
 
 	async importChampions(eventId: number): Promise<ImportChampionsResult> {

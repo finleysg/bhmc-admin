@@ -1,0 +1,98 @@
+// Variables
+// @import "./assets/scss/variables";
+// Grays (no different than defaults)
+$white: #fff;
+$gray-100: #f8f9fa;
+$gray-200: #e9ecef;
+$gray-300: #dee2e6;
+$gray-400: #ced4da;
+$gray-500: #adb5bd;
+$gray-600: #6c757d;
+$gray-700: #495057;
+$gray-800: #343a40;
+$gray-900: #212529;
+$black: #000;
+
+// Variants
+$primary: #164886;
+$secondary: #bdc6cd;
+$success: #52912f;
+$info: #276f1f;
+$warning: #ff9800;
+$danger: #ff6b68;
+$light: $gray-300;
+$dark: $gray-600;
+
+$theme-colors: (
+	primary: $primary,
+	secondary: $secondary,
+	success: $success,
+	info: $info,
+	warning: $warning,
+	danger: $danger,
+	light: $light,
+	dark: $dark,
+);
+
+// Dark
+$body-bg-dark: $gray-800;
+
+// General
+$header-height: 72px;
+$sidebar-width: 280px;
+$header-z-index: 20;
+$sidebar-z-index: $header-z-index - 1;
+$font-family-sans-serif: "Roboto", sans-serif;
+$font-family-icon: "Material-Design-Iconic-Font";
+$body-color: $gray-800;
+
+// Cards
+$card-cap-color: $primary;
+$card-cap-bg: $gray-100;
+$card-cap-padding-x: 0;
+$card-bg: $gray-100;
+
+// Tabs
+$nav-tabs-link-active-color: $success;
+
+// Dropdowns
+$dropdown-link-hover-color: $gray-100;
+$dropdown-link-hover-bg: lighten($success, 25%);
+$dropdown-link-active-color: $gray-100;
+$dropdown-link-active-bg: $success;
+
+// Checbox and Radio
+$checkbox-radio-size: 18px;
+$checkbox-radio-background-color: transparent;
+$checkbox-radio-checked-background-color: $success;
+$checkbox-radio-border-color: $gray-500;
+$checkbox-radio-checked-border-color: $checkbox-radio-checked-background-color;
+
+@import "./assets/scss/mixins";
+
+// Bootstrap
+@import "~bootstrap/scss/bootstrap";
+
+// Site Styles
+@import "./assets/scss/account";
+@import "./assets/scss/admin";
+@import "./assets/scss/base";
+@import "./assets/scss/buttons";
+@import "./assets/scss/calendar";
+@import "./assets/scss/champion";
+@import "./assets/scss/contacts";
+@import "./assets/scss/creditcard";
+@import "./assets/scss/directory";
+@import "./assets/scss/documents";
+@import "./assets/scss/events";
+@import "./assets/scss/fonts";
+@import "./assets/scss/forms";
+@import "./assets/scss/layout";
+@import "./assets/scss/listview";
+@import "./assets/scss/misc";
+@import "./assets/scss/modals";
+@import "./assets/scss/photos";
+@import "./assets/scss/registration";
+@import "./assets/scss/scores";
+@import "./assets/scss/session";
+@import "./assets/scss/utilities";

@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Django stuff:
+logs/
+*.log
+*.pot
+var/
+bhmc/settings_production.py
+bhmc/settings_docker.py
+bhmc/settings_development.py
+bhmc/wsgi.py
+.env
+.env.*
+
+# Intellij
+.idea/
+bhmc-api.iml
+
+db-backup.sh
+venv/
+
+# SQL
+data/
+files/

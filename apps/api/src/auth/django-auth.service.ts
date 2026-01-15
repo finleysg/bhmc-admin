@@ -1,6 +1,7 @@
 import axios from "axios"
 
 import {
+	Inject,
 	Injectable,
 	InternalServerErrorException,
 	Logger,
@@ -18,7 +19,7 @@ export class DjangoAuthService {
 	private readonly logger = new Logger(DjangoAuthService.name)
 	private readonly djangoApiUrl: string
 
-	constructor(private readonly authUserRepository: AuthUserRepository) {
+	constructor(@Inject(AuthUserRepository) private readonly authUserRepository: AuthUserRepository) {
 		this.djangoApiUrl = process.env.DJANGO_API_URL || "http://localhost:8000"
 	}
 

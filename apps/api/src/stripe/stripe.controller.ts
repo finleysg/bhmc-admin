@@ -6,6 +6,7 @@ import {
 	HttpCode,
 	HttpStatus,
 	BadRequestException,
+	Inject,
 	Logger,
 } from "@nestjs/common"
 import Stripe from "stripe"
@@ -20,8 +21,8 @@ export class StripeController {
 	private readonly logger = new Logger(StripeController.name)
 
 	constructor(
-		private readonly stripeService: StripeService,
-		private readonly webhookService: StripeWebhookService,
+		@Inject(StripeService) private readonly stripeService: StripeService,
+		@Inject(StripeWebhookService) private readonly webhookService: StripeWebhookService,
 	) {}
 
 	@Public()

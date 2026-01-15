@@ -4,6 +4,7 @@ import {
 	CanActivate,
 	ExecutionContext,
 	ForbiddenException,
+	Inject,
 	Injectable,
 	Logger,
 	ServiceUnavailableException,
@@ -22,8 +23,8 @@ export class JwtAuthGuard implements CanActivate {
 	private readonly logger = new Logger(JwtAuthGuard.name)
 
 	constructor(
-		private readonly reflector: Reflector,
-		private readonly authService: DjangoAuthService,
+		@Inject(Reflector) private readonly reflector: Reflector,
+		@Inject(DjangoAuthService) private readonly authService: DjangoAuthService,
 	) {}
 
 	async canActivate(context: ExecutionContext): Promise<boolean> {

@@ -61,6 +61,7 @@ export default [
 			"**/*.log",
 			"**/*.config.js",
 			"**/*.config.mjs",
+			"apps/public/**", // Uses own ESLint 8 config
 		],
 	},
 ]

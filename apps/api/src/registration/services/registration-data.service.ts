@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 import { ClubEvent, RegistrationSlotWithPlayerAndWave, WaveInfo } from "@repo/domain/types"
 
 import { EventsService } from "../../events"
@@ -10,8 +10,8 @@ import { toHole } from "../../courses/mappers"
 @Injectable()
 export class RegistrationDataService {
 	constructor(
-		private readonly repository: RegistrationRepository,
-		private readonly events: EventsService,
+		@Inject(RegistrationRepository) private readonly repository: RegistrationRepository,
+		@Inject(EventsService) private readonly events: EventsService,
 	) {}
 
 	async getSlotsWithWaveInfo(

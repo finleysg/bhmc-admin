@@ -1,0 +1,31 @@
+$admin-spacer: 20px;
+
+.admin-content {
+	&:not(.content--boxed):not(.content--full) {
+		@include media-breakpoint-up(xl) {
+			padding: ($header-height + $admin-spacer) $admin-spacer 0;
+		}
+
+		@include media-breakpoint-between(sm, lg) {
+			padding: ($header-height + $admin-spacer) $admin-spacer 0;
+		}
+
+		@include media-breakpoint-down(xs) {
+			padding: ($header-height + calc($admin-spacer/2)) calc($admin-spacer/2) 0;
+		}
+	}
+}
+
+.admin-content__inner {
+	position: relative;
+	margin: auto;
+	min-height: calc(100vh - 216px);
+}
+
+.report-cell {
+	font-size: 0.9rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 240px;
+}

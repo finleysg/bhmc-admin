@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Param, ParseIntPipe, Post, Query } from "@nestjs/common"
+import { Body, Controller, Get, Inject, Logger, Param, ParseIntPipe, Post, Query } from "@nestjs/common"
 import type {
 	AdminRegistration,
 	AvailableSlotGroup,
@@ -19,9 +19,9 @@ export class AdminRegistrationController {
 	private readonly logger = new Logger(AdminRegistrationController.name)
 
 	constructor(
-		private readonly adminRegistrationService: AdminRegistrationService,
-		private readonly adminRegisterService: PlayerService,
-		private readonly refundService: RefundService,
+		@Inject(AdminRegistrationService) private readonly adminRegistrationService: AdminRegistrationService,
+		@Inject(PlayerService) private readonly adminRegisterService: PlayerService,
+		@Inject(RefundService) private readonly refundService: RefundService,
 	) {}
 
 	@Get("players")

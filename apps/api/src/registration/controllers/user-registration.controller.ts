@@ -2,6 +2,7 @@ import {
 	Body,
 	Controller,
 	Get,
+	Inject,
 	Logger,
 	NotFoundException,
 	Param,
@@ -28,7 +29,7 @@ import type { AuthenticatedRequest } from "../../auth"
 export class UserRegistrationController {
 	private readonly logger = new Logger(UserRegistrationController.name)
 
-	constructor(private readonly flowService: RegistrationService) {}
+	constructor(@Inject(RegistrationService) private readonly flowService: RegistrationService) {}
 
 	/**
 	 * Create a registration and reserve slots.

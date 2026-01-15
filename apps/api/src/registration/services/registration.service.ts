@@ -1,6 +1,7 @@
 import {
 	BadRequestException,
 	ForbiddenException,
+	Inject,
 	Injectable,
 	Logger,
 	NotFoundException,
@@ -44,12 +45,12 @@ export class RegistrationService {
 	private readonly logger = new Logger(RegistrationService.name)
 
 	constructor(
-		private readonly repository: RegistrationRepository,
-		private readonly payments: PaymentsService,
-		private readonly events: EventsService,
-		private readonly drizzle: DrizzleService,
-		private readonly broadcast: RegistrationBroadcastService,
-		private readonly slotCleanup: CleanupService,
+		@Inject(RegistrationRepository) private readonly repository: RegistrationRepository,
+		@Inject(PaymentsService) private readonly payments: PaymentsService,
+		@Inject(EventsService) private readonly events: EventsService,
+		@Inject(DrizzleService) private readonly drizzle: DrizzleService,
+		@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService,
+		@Inject(CleanupService) private readonly slotCleanup: CleanupService,
 	) {}
 
 	/**

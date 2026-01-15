@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios"
 import { type ZodSchema } from "zod"
 
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 
 import {
@@ -53,7 +53,7 @@ export class ApiClient {
 	private readonly retryDelayBase = 1000 // ms
 	private readonly retryDelayMax = 60000 // ms
 
-	constructor(private configService: ConfigService) {
+	constructor(@Inject(ConfigService) private configService: ConfigService) {
 		this.apiKey = this.configService.get<string>("golfGenius.apiKey") || ""
 		this.baseUrl =
 			this.configService.get<string>("golfGenius.baseUrl") || "https://www.golfgenius.com"

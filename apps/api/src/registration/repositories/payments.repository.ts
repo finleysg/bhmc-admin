@@ -1,6 +1,6 @@
 import { eq, inArray } from "drizzle-orm"
 
-import { Injectable } from "@nestjs/common"
+import { Inject, Injectable } from "@nestjs/common"
 
 import {
 	DrizzleService,
@@ -19,7 +19,7 @@ import {
 
 @Injectable()
 export class PaymentsRepository {
-	constructor(private drizzle: DrizzleService) {}
+	constructor(@Inject(DrizzleService) private drizzle: DrizzleService) {}
 
 	// ==================== PAYMENT ====================
 
