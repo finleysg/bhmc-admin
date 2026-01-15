@@ -77,8 +77,10 @@ services:
     volumes:
       - ./apps/web/app:/app/apps/web/app
       - ./apps/web/components:/app/apps/web/components
+      - ./apps/web/lib:/app/apps/web/lib
+      - ./apps/web/types:/app/apps/web/types
     ports:
-      - "3100:3100"
+      - "3100:3300"
     env_file:
      - ./apps/web/.env.development
     depends_on:

@@ -13,6 +13,8 @@ RUN pnpm install --frozen-lockfile
 COPY packages/domain ./packages/domain
 RUN pnpm --filter @repo/domain build
 
+COPY apps/web ./apps/web
+
 WORKDIR /app/apps/web
 
 EXPOSE 3100

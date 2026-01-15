@@ -36,6 +36,8 @@ const routeConfig = [
 
 const routes = createBrowserRouter(routeConfig)
 
+const authProvider = new DefaultAuthenticationProvider()
+
 const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
@@ -66,7 +68,7 @@ export function App() {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<LayoutProvider>
-				<AuthProvider authenticationProvider={new DefaultAuthenticationProvider()}>
+				<AuthProvider authenticationProvider={authProvider}>
 					<React.Suspense fallback={<FullPageSpinner />}>
 						<RouterProvider router={routes} />
 					</React.Suspense>

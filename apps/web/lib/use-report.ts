@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
 
 import { useAuth } from "./auth-context"
 
 export function useAuthenticatedFetch<T>(path: string | null) {
-	const { isAuthenticated, isLoading: isPending } = useAuth()
+	const { isAuthenticated, isLoading: isPending, logout } = useAuth()
+	const router = useRouter()
+	const pathname = usePathname()
 	const [data, setData] = useState<T | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -16,6 +19,11 @@ export function useAuthenticatedFetch<T>(path: string | null) {
 				setLoading(true)
 				setError(null)
 				const res = await fetch(path)
+				if (res.status === 401) {
+					await logout()
+					router.push(`/sign-in?returnUrl=${encodeURIComponent(pathname)}`)
+					return
+				}
 				if (!res.ok) {
 					throw new Error(`Failed to fetch report: ${res.statusText}`)
 				}
@@ -29,15 +37,24 @@ export function useAuthenticatedFetch<T>(path: string | null) {
 		}
 
 		void fetchData()
-	}, [isAuthenticated, isPending, path])
+	}, [isAuthenticated, isPending, path, logout, router, pathname])
 
 	return { data, loading, error }
 }
 
 export function useExcelExport(excelPath: string, filenamePrefix: string) {
+	const { logout } = useAuth()
+	const router = useRouter()
+	const pathname = usePathname()
+
 	const download = async () => {
 		try {
 			const response = await fetch(excelPath)
+			if (response.status === 401) {
+				await logout()
+				router.push(`/sign-in?returnUrl=${encodeURIComponent(pathname)}`)
+				return
+			}
 			if (!response.ok) {
 				throw new Error(`Failed to download Excel: ${response.statusText}`)
 			}
