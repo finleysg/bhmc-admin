@@ -16,6 +16,9 @@ on:
         required: false
         type: string
 
+      permissions:
+        contents: write
+
 jobs:
   create-tag:
     runs-on: ubuntu-latest
