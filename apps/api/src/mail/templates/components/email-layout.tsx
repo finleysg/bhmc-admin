@@ -35,12 +35,12 @@ export function EmailLayout({ children }: EmailLayoutProps) {
 					<Row>
 						<Column style={logoColumn}>
 							<Link href="https://bhmc.org/home">
-								<Img src={LOGO} alt="Bunker Hills Logo" style={logo} />
+								<Img src={LOGO} alt="Bunker Hills Men's Club" style={logo} />
 							</Link>
 						</Column>
-						<Column>
+						{/* <Column>
 							<Heading style={heading}>Bunker Hills Men's Club</Heading>
-						</Column>
+						</Column> */}
 					</Row>
 					<Section style={content}>{children}</Section>
 				</Container>
@@ -70,7 +70,7 @@ const logoColumn = {
 }
 
 const logo = {
-	height: "4em",
+	height: "6em",
 	width: "auto",
 }
 

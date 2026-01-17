@@ -47,6 +47,6 @@ export const valueCell = {
 export const paymentCell = {
 	fontSize: "14px",
 	padding: "6px",
-	textAlign: "left" as const,
+	textAlign: "right" as const,
 	fontWeight: "bold",
 }

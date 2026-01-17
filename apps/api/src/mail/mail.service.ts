@@ -217,9 +217,10 @@ export class MailService {
 	) {
 		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
 		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
-		const eventHoleOrStart = registration.course
+		const startValue = registration.course
 			? getStart(event, registration.slots[0], registration.course.holes)
 			: undefined
+		const eventHoleOrStart = startValue === "N/A" ? undefined : startValue
 
 		const players = registration.slots.map((slot) => ({
 			name: `${slot.player.firstName} ${slot.player.lastName}`,
@@ -362,9 +363,10 @@ export class MailService {
 
 		// Non-SEASON_REGISTRATION: send admin registration notification
 		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
-		const eventHoleOrStart = registration.course
+		const startValue = registration.course
 			? getStart(event, registration.slots[0], registration.course.holes)
 			: undefined
+		const eventHoleOrStart = startValue === "N/A" ? undefined : startValue
 
 		const players = registration.slots.map((slot) => ({
 			name: `${slot.player.firstName} ${slot.player.lastName}`,
