@@ -16,8 +16,8 @@ on:
         required: false
         type: string
 
-      permissions:
-        contents: write
+permissions:
+  contents: write
 
 jobs:
   create-tag:
