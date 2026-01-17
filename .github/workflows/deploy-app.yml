@@ -1,4 +1,5 @@
 name: Deploy App
+run-name: "Deploy ${{ inputs.app }} ${{ inputs.date_prefix }}"
 
 on:
   workflow_dispatch:
@@ -15,6 +16,11 @@ on:
         description: "Version tag (auto-generated if empty)"
         required: false
         type: string
+      date_prefix:
+        description: "Date prefix for display (auto-computed by skill)"
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: write

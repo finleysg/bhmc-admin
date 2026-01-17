@@ -23,9 +23,10 @@ Where `<app>` is one of: `api`, `public`, `web`
 
 1. Validate the app argument is one of: api, public, web
 2. If invalid, show error with valid options
-3. Trigger the workflow:
+3. Trigger the workflow with date prefix:
    ```bash
-   gh workflow run deploy-app.yml -f app=<app>
+   DATE_PREFIX="v$(date +%Y.%m.%d)"
+   gh workflow run deploy-app.yml -f app=<app> -f date_prefix=$DATE_PREFIX
    ```
 4. Get the run ID and show progress link:
    ```bash
