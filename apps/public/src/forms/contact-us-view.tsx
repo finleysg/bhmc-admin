@@ -1,4 +1,5 @@
-import { UseFormReturn } from "react-hook-form"
+import { FormEvent } from "react"
+
 import { z } from "zod"
 
 import { InputControl } from "../components/forms/input-control"
@@ -12,44 +13,46 @@ export const ContactMessageSchema = z.object({
 export type ContactMessageData = z.infer<typeof ContactMessageSchema>
 
 interface ContactUsViewProps {
-	form: UseFormReturn<ContactMessageData>
+	formData: ContactMessageData
+	errors: Record<string, string>
+	isSubmitting: boolean
+	onChange: (field: keyof ContactMessageData, value: string) => void
+	onSubmit: (e: FormEvent) => void
 	onCancel: () => void
-	onSubmit: (args: ContactMessageData) => void
 }
 
-export function ContactUsView({ form, onCancel, onSubmit }: ContactUsViewProps) {
-	const { register, handleSubmit, formState } = form
-	const { errors: formErrors, isSubmitting } = formState
-
-	const submit = (data: ContactMessageData) => {
-		// formState.isValid is always false
-		if (formErrors.full_name || formErrors.email || formErrors.message_text) {
-			return
-		}
-		onSubmit(data)
-	}
-
+export function ContactUsView({
+	formData,
+	errors,
+	isSubmitting,
+	onChange,
+	onSubmit,
+	onCancel,
+}: ContactUsViewProps) {
 	return (
-		<form onSubmit={handleSubmit(submit)}>
+		<form onSubmit={onSubmit}>
 			<InputControl
 				name="full_name"
 				type="text"
 				label="Name"
-				register={register("full_name")}
-				error={formErrors.full_name}
+				value={formData.full_name}
+				onChange={(e) => onChange("full_name", e.target.value)}
+				error={errors.full_name}
 			/>
 			<InputControl
 				name="email"
 				type="email"
 				label="Email"
-				register={register("email")}
-				error={formErrors.email}
+				value={formData.email}
+				onChange={(e) => onChange("email", e.target.value)}
+				error={errors.email}
 			/>
 			<TextareaControl
 				name="message_text"
 				label="Message"
-				register={register("message_text")}
-				error={formErrors.message_text}
+				value={formData.message_text}
+				onChange={(e) => onChange("message_text", e.target.value)}
+				error={errors.message_text}
 			/>
 			<div className="mt-4">
 				<button type="submit" className="btn btn-primary btn-sm me-2" disabled={isSubmitting}>

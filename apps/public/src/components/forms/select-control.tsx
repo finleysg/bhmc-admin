@@ -1,30 +1,27 @@
 import { ComponentPropsWithoutRef } from "react"
 
-import { FieldError, FieldValues, Path, UseFormRegisterReturn } from "react-hook-form"
-
 export interface SelectOption {
 	name: string
 	value: string | number
 }
 
-interface SelectControlProps<TData extends FieldValues> extends ComponentPropsWithoutRef<"select"> {
+interface SelectControlProps extends ComponentPropsWithoutRef<"select"> {
 	name: string
 	label?: string
 	options: SelectOption[]
-	error?: FieldError
-	register: UseFormRegisterReturn<Path<TData>>
+	error?: string
 }
 
-export function SelectControl<TData extends FieldValues>(props: SelectControlProps<TData>) {
-	const { name, label, error, register, options, ...rest } = props
+export function SelectControl(props: SelectControlProps) {
+	const { name, label, error, options, ...rest } = props
 
 	return (
 		<div className="form-group mb-2">
 			{label && <label htmlFor={name}>{label}</label>}
 			<select
-				{...register}
 				{...rest}
 				id={name}
+				name={name}
 				className="form-control"
 				aria-invalid={Boolean(error)}
 			>
@@ -41,8 +38,8 @@ export function SelectControl<TData extends FieldValues>(props: SelectControlPro
 			</select>
 			<i className="form-group__bar"></i>
 			{error && (
-				<div className="invalid-feedback" aria-errormessage={error.message}>
-					{error.message as string}
+				<div className="invalid-feedback" aria-errormessage={error}>
+					{error}
 				</div>
 			)}
 		</div>

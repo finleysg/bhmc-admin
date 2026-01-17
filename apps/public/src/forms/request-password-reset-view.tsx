@@ -1,25 +1,32 @@
-import { UseFormReturn } from "react-hook-form"
+import { FormEvent } from "react"
 
 import { InputControl } from "../components/forms/input-control"
 import { RequestPasswordData } from "../models/auth"
 
-interface IRequestPasswordReset {
-	form: UseFormReturn<RequestPasswordData>
-	onSubmit: (args: RequestPasswordData) => void
+interface RequestPasswordResetViewProps {
+	formData: RequestPasswordData
+	errors: Record<string, string>
+	isSubmitting: boolean
+	onChange: (field: keyof RequestPasswordData, value: string) => void
+	onSubmit: (e: FormEvent) => void
 }
 
-export function RequestPasswordResetView({ form, onSubmit }: IRequestPasswordReset) {
-	const { register, handleSubmit, formState } = form
-	const { errors: formErrors, isSubmitting } = formState
-
+export function RequestPasswordResetView({
+	formData,
+	errors,
+	isSubmitting,
+	onChange,
+	onSubmit,
+}: RequestPasswordResetViewProps) {
 	return (
-		<form onSubmit={handleSubmit(onSubmit)}>
+		<form onSubmit={onSubmit}>
 			<InputControl
 				name="email"
 				label="Email"
-				register={register("email")}
-				error={formErrors.email}
 				type="text"
+				value={formData.email}
+				onChange={(e) => onChange("email", e.target.value)}
+				error={errors.email}
 			/>
 			<button type="submit" className="btn btn-primary" disabled={isSubmitting}>
 				Request Password Reset

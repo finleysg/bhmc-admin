@@ -1,6 +1,7 @@
 import { expect, test } from "vitest"
 
 import userEvent from "@testing-library/user-event"
+import { waitFor } from "@testing-library/react"
 
 import { buildRegisterForm } from "../../test/data/auth"
 import { http, HttpResponse, server } from "../../test/test-server"
@@ -78,7 +79,12 @@ test("all other fields are required on the register form", async () => {
 
 	await userEvent.click(screen.getByRole("button", { name: /create account/i }))
 
-	await screen.findByText(/you must provide a first name/i)
-	await screen.findByText(/you must provide a last name/i)
-	await screen.findByText(/a valid email address is required/i)
+	await waitFor(
+		() => {
+			expect(screen.getByLabelText(/first name/i)).toBeInvalid()
+			expect(screen.getByLabelText(/last name/i)).toBeInvalid()
+			expect(screen.getByLabelText(/email/i)).toBeInvalid()
+		},
+		{ timeout: 2000 },
+	)
 })

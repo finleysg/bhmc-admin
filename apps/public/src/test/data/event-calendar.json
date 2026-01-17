@@ -1,916 +1,916 @@
 [
-  {
-    "id": 486,
-    "name": "2023 Season Registration",
-    "rounds": null,
-    "ghin_required": false,
-    "total_groups": null,
-    "status": "S",
-    "minimum_signup_group_size": 1,
-    "maximum_signup_group_size": 1,
-    "group_size": null,
-    "start_type": "NA",
-    "can_choose": false,
-    "registration_window": "registration",
-    "external_url": null,
-    "season": 2023,
-    "tee_time_splits": null,
-    "notes": "#### Thank you for considering our club for the 2023 season!\r\n\r\nAll member information is private and its use is strictly limited to events or functions directly related to the Bunker Hills Men’s Golf Club (BHMGC).\r\n\r\nNo membership refunds without Board approval.  (Membership refunds are subject to prorated refund based on a case by case basis).\r\n\r\nIf you qualify for the senior patron card rate (62 and over), make sure you select that rate in the sign-up screens.\r\n\r\n**IMPORTANT** If you wish to start playing forward tees (Gold/White Combination) for the ENTIRE season, please indicate that in the notes when you register. If you are already playing the forward tees, you don't have to do anything to continue there.\r\n\r\nEligibility to play forward tees for all BHMGC league events must fall within the **\"rule of 78.\"** If your age plus handicap equals or is greater than 78, you are eligible to select those tees to play for the entire year. The determination is made one time at the beginning of the season. If the player falls below 78 during the season, he is still eligible to play the forward tees.\r\n\r\n##### Registration deadline is April 15.\r\n\r\nAfter this date, the rate goes up to $150 for the season.",
-    "event_type": "R",
-    "skins_type": null,
-    "season_points": null,
-    "portal_url": null,
-    "start_date": "2023-01-15",
-    "start_time": "Open Registration Period",
-    "registration_type": "O",
-    "signup_start": "2023-01-15T06:00:00-06:00",
-    "signup_end": "2023-04-15T00:00:00-05:00",
-    "payments_end": null,
-    "registration_maximum": null,
-    "courses": [],
-    "fees": [
-      {
-        "id": 388,
-        "event": 486,
-        "fee_type": { "id": 16, "name": "Member Dues", "code": "MD", "restriction": "None" },
-        "amount": "130.00",
-        "is_required": true,
-        "display_order": 1
-      },
-      {
-        "id": 390,
-        "event": 486,
-        "fee_type": { "id": 3, "name": "Patron Card", "code": "PC", "restriction": "Non-Seniors" },
-        "amount": "60.00",
-        "is_required": false,
-        "display_order": 3
-      },
-      {
-        "id": 391,
-        "event": 486,
-        "fee_type": { "id": 4, "name": "Sr. Patron Card", "code": "SPC", "restriction": "Seniors" },
-        "amount": "40.00",
-        "is_required": false,
-        "display_order": 4
-      }
-    ],
-    "default_tag": null,
-    "starter_time_interval": 0
-  },
-  {
-    "id": 538,
-    "name": "2022 Pro Shop Winnings Expire",
-    "rounds": null,
-    "ghin_required": false,
-    "total_groups": null,
-    "status": "S",
-    "minimum_signup_group_size": null,
-    "maximum_signup_group_size": null,
-    "group_size": null,
-    "start_type": null,
-    "can_choose": false,
-    "registration_window": "n/a",
-    "external_url": null,
-    "season": 2023,
-    "tee_time_splits": null,
-    "notes": "Your winnings from last season expire on this date. Spend that money!",
-    "event_type": "D",
-    "skins_type": null,
-    "season_points": null,
-    "portal_url": null,
-    "start_date": "2023-04-01",
-    "start_time": null,
-    "registration_type": "N",
-    "signup_start": null,
-    "signup_end": null,
-    "payments_end": null,
-    "registration_maximum": null,
-    "courses": [],
-    "fees": [],
-    "default_tag": null,
-    "starter_time_interval": 0
-  },
-  {
-    "id": 487,
-    "name": "Season Long Match Play",
-    "rounds": null,
-    "ghin_required": true,
-    "total_groups": null,
-    "status": "S",
-    "minimum_signup_group_size": 1,
-    "maximum_signup_group_size": 1,
-    "group_size": null,
-    "start_type": "NA",
-    "can_choose": false,
-    "registration_window": "registration",
-    "external_url": null,
-    "season": 2023,
-    "tee_time_splits": null,
-    "notes": "##### Sign Up\r\n\r\nPlease select the division where you want to compete. Gross Division is for low-handicap players who want to play scratch. There will be only a single gross division.\r\n\r\nNet Division is for players who want to play **with** their handicaps in a flighted bracket. **Net flight winners qualify for the 2023 Dam Cup! **\r\n\r\nIf you do not select a division, we will default to the Net Division.\r\n\r\n##### Rules\r\n\r\nParticipants **must** be available to play on weekends. It's perfectly ok to schedule matches during the week, but please register only if you also have weekends available to play.\r\n\r\nFlights and brackets will be drawn after entries close and posted online on the Match Play page.\r\n\r\nPlayers may elect to play in the scratch flight (select gross at signup) or handicapped flights (select net at signup). Scratch flight will play from the **blue** tees. Handicap flights will play from the **club** tees (the new white/blue combination). Players who signed up to play from the forward tees for the season will play from the **gold/white combination** tees.\r\n\r\nHandicap flights will be established based on handicap at the time of entry. Every entrant must have an established USGA handicap. Handicaps used for a given match will be each player's course handicap on the day of the match.\r\n\r\nFormat is individual Match Play. Scratch Flight will play their matches without handicaps. The Handicapped Flights will play their matches using each player’s course handicap at the time that each match is played. After determining current handicaps, the player with the lowest handicap will play at zero and other players will receive strokes based on the difference between their respective handicaps. Strokes are allocated equally between the two nines, with any odd numbered strokes applied to the more difficult course.\r\n\r\nAny player(s) receiving round 1 byes (in unfilled divisions) must win one match in order to be eligible for prize money.\r\n\r\n##### Scheduling Matches\r\n\r\nIt is **YOUR** responsibility as a player in this event to schedule your match. **DO NOT** wait for your opponent to contact you. Contact your opponent as soon as pairings are assigned.\r\n\r\nThe Match Play kickoff day is in May (date TBD). We encourage all participants to play that morning if possible. If you do intend to play that morning, make your tee time with the pro shop at least a week in advance.\r\n\r\nDeadlines for each round will be posted on the tournament pairings board and the event schedule on the BHMC website. Matches must be played prior to the deadline for that round. Players who fail to schedule a match or make other arrangements prior to the posted deadline are subject to be disqualified. In the event both players fail to schedule a match before the deadline, the tournament chairman shall have the right to determine the match by a coin flip.\r\n\r\n##### Match Deadlines\r\n\r\n1. Round 1: May 29\r\n2. Round 2: June 25\r\n3. Round 3: July 23\r\n4. Round 4: August 13\r\n\r\nIt is important that you get your match completed on time because there is a cascade effect to the next rounds when that happens. We also need the flighted brackets completed in time to make Dam Cup selections.\r\n\r\nIf you have any difficulty scheduling your match prior to the established deadline, please contact the Season Long Match Play Tournament Chairs.\r\n\r\n##### Ties\r\n\r\nIn the event a match ends up “all square” after 18 holes of play, a sudden death playoff should be arranged with the pro-shop. Should a sudden death playoff not be possible (due to darkness, weather or course business) another form of tie-breaker may be substituted if both players agree (chip off, coin flip, etc.)\r\n\r\n##### 2023 Chairmen\r\n - Ben Manthey\r\n - Rob Owen\r\n - Mike Earle\r\n\r\n##### Posting Results\r\n\r\nAt the end of each match, send an email or text to Rob, Ben, or Mike.\r\n\r\n##### Payouts\r\n\r\n* Winner - 25%\r\n* 2nd - 19%\r\n* 3rd - 12%- (2 players or 24% of total)\r\n* 4th - 8% (4 players or 32% of total\r\n\r\nThe actual dollar amount depends on the size of your flight.",
-    "event_type": "O",
-    "skins_type": null,
-    "season_points": null,
-    "portal_url": null,
-    "start_date": "2023-05-01",
-    "start_time": "Make Your Own Tee Times",
-    "registration_type": "M",
-    "signup_start": "2023-01-15T06:00:00-06:00",
-    "signup_end": "2023-04-23T00:00:00-05:00",
-    "payments_end": null,
-    "registration_maximum": null,
-    "courses": [],
-    "fees": [
-      {
-        "id": 392,
-        "event": 487,
-        "fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
-        "amount": "30.00",
-        "is_required": true,
-        "display_order": 1
-      },
-      {
-        "id": 393,
-        "event": 487,
-        "fee_type": {
-          "id": 10,
-          "name": "Gross Division (no handicap)",
-          "code": "GD",
-          "restriction": "None"
-        },
-        "amount": "0.00",
-        "is_required": false,
-        "display_order": 2
-      },
-      {
-        "id": 394,
-        "event": 487,
-        "fee_type": {
-          "id": 11,
-          "name": "Net Division (with handicap)",
-          "code": "ND",
-          "restriction": "None"
-        },
-        "amount": "0.00",
-        "is_required": false,
-        "display_order": 3
-      }
-    ],
-    "default_tag": null,
-    "starter_time_interval": 0
-  },
-  {
-    "id": 493,
-    "name": "Individual LG/LN",
-    "rounds": 1,
-    "ghin_required": true,
-    "total_groups": 24,
-    "status": "S",
-    "minimum_signup_group_size": 1,
-    "maximum_signup_group_size": 5,
-    "group_size": 5,
-    "start_type": "TT",
-    "can_choose": true,
-    "registration_window": "future",
-    "external_url": null,
-    "season": 2023,
-    "tee_time_splits": "8",
-    "notes": "- Play is individual stroke play.\r\n - Each player will receive handicap strokes based on their current USGA index and the course played.\r\n - Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n - Prizes will be awarded in both Gross and Net categories. A player may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified. \r\n - **Do not enter your score into the computer.** Golf Genius will submit your scores automatically.\r\n - All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n - This event qualifies for the Season Long Points Competition.\r\n - USGA rules govern all play.  Local rules and policies as posted on the BHMC website apply.\r\n - Help maintain our course.  Please replace divots and fix ball marks even if they are not yours.",
-    "event_type": "N",
-    "skins_type": "I",
-    "season_points": 30,
-    "portal_url": null,
-    "start_date": "2023-05-03",
-    "start_time": "2:30 PM",
-    "registration_type": "M",
-    "signup_start": "2023-04-30T06:00:00-05:00",
-    "signup_end": "2023-05-02T18:00:00-05:00",
-    "payments_end": "2023-05-03T11:00:00-05:00",
-    "registration_maximum": 0,
-    "courses": [
-      {
-        "id": 1,
-        "name": "East",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 1, "course": 1, "hole_number": 1, "par": 4 },
-          { "id": 2, "course": 1, "hole_number": 2, "par": 4 },
-          { "id": 3, "course": 1, "hole_number": 3, "par": 3 },
-          { "id": 4, "course": 1, "hole_number": 4, "par": 5 },
-          { "id": 5, "course": 1, "hole_number": 5, "par": 4 },
-          { "id": 6, "course": 1, "hole_number": 6, "par": 5 },
-          { "id": 7, "course": 1, "hole_number": 7, "par": 3 },
-          { "id": 8, "course": 1, "hole_number": 8, "par": 4 },
-          { "id": 9, "course": 1, "hole_number": 9, "par": 4 }
-        ]
-      },
-      {
-        "id": 2,
-        "name": "North",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 10, "course": 2, "hole_number": 1, "par": 4 },
-          { "id": 11, "course": 2, "hole_number": 2, "par": 4 },
-          { "id": 12, "course": 2, "hole_number": 3, "par": 4 },
-          { "id": 13, "course": 2, "hole_number": 4, "par": 5 },
-          { "id": 14, "course": 2, "hole_number": 5, "par": 4 },
-          { "id": 15, "course": 2, "hole_number": 6, "par": 3 },
-          { "id": 16, "course": 2, "hole_number": 7, "par": 4 },
-          { "id": 17, "course": 2, "hole_number": 8, "par": 3 },
-          { "id": 18, "course": 2, "hole_number": 9, "par": 5 }
-        ]
-      },
-      {
-        "id": 3,
-        "name": "West",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 19, "course": 3, "hole_number": 1, "par": 4 },
-          { "id": 20, "course": 3, "hole_number": 2, "par": 5 },
-          { "id": 21, "course": 3, "hole_number": 3, "par": 3 },
-          { "id": 22, "course": 3, "hole_number": 4, "par": 4 },
-          { "id": 23, "course": 3, "hole_number": 5, "par": 5 },
-          { "id": 24, "course": 3, "hole_number": 6, "par": 4 },
-          { "id": 25, "course": 3, "hole_number": 7, "par": 4 },
-          { "id": 26, "course": 3, "hole_number": 8, "par": 3 },
-          { "id": 27, "course": 3, "hole_number": 9, "par": 4 }
-        ]
-      }
-    ],
-    "fees": [
-      {
-        "id": 420,
-        "event": 493,
-        "fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": true,
-        "display_order": 1
-      },
-      {
-        "id": 421,
-        "event": 493,
-        "fee_type": { "id": 6, "name": "Gross Skins", "code": "S", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": false,
-        "display_order": 2
-      },
-      {
-        "id": 422,
-        "event": 493,
-        "fee_type": { "id": 7, "name": "Net Skins", "code": "S", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": false,
-        "display_order": 3
-      },
-      {
-        "id": 423,
-        "event": 493,
-        "fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
-        "amount": "21.00",
-        "is_required": false,
-        "display_order": 4
-      },
-      {
-        "id": 424,
-        "event": 493,
-        "fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
-        "amount": "12.00",
-        "is_required": false,
-        "display_order": 5
-      }
-    ],
-    "default_tag": null,
-    "starter_time_interval": 8
-  },
-  {
-    "id": 494,
-    "name": "2-3-4 Fivesome",
-    "rounds": 1,
-    "ghin_required": true,
-    "total_groups": 24,
-    "status": "S",
-    "minimum_signup_group_size": 1,
-    "maximum_signup_group_size": 5,
-    "group_size": 5,
-    "start_type": "TT",
-    "can_choose": true,
-    "registration_window": "future",
-    "external_url": null,
-    "season": 2023,
-    "tee_time_splits": "8",
-    "notes": "- Teams will consist of 5 players. \r\n - Blind draw score will be assigned in the event a team has less than 5 players\r\n - Each player will receive handicap strokes based on their current USGA index and the course played.\r\n - Record each player’s individual gross score for each hole.\r\n - The team score will be calculated by Golf Genius. On Par 3’s the best 2 scores out of the 5 players’ scores will count, on Par 4’s the best 3 of 5 will count, and on Par 5’s the best 4 of 5 will count. \r\n - Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n - Prizes will be awarded in both Gross and Net categories. A team may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified. \r\n - There will be a single gross and net division per nine.\r\n - **Do not enter your score into the computer. ** Golf Genius will submit your scores automatically.\r\n - All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n - This event qualifies for the Season Long Points Competition.\r\n - USGA rules govern all play.  Local rules and policies as posted on the BHMC website apply.\r\n - Help maintain our course.  Please replace divots and fix ball marks even if they are not yours.",
-    "event_type": "N",
-    "skins_type": "I",
-    "season_points": 30,
-    "portal_url": null,
-    "start_date": "2023-05-10",
-    "start_time": "2:30 PM",
-    "registration_type": "M",
-    "signup_start": "2023-05-07T06:00:00-05:00",
-    "signup_end": "2023-05-09T18:00:00-05:00",
-    "payments_end": "2023-05-10T11:00:00-05:00",
-    "registration_maximum": 0,
-    "courses": [
-      {
-        "id": 1,
-        "name": "East",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 1, "course": 1, "hole_number": 1, "par": 4 },
-          { "id": 2, "course": 1, "hole_number": 2, "par": 4 },
-          { "id": 3, "course": 1, "hole_number": 3, "par": 3 },
-          { "id": 4, "course": 1, "hole_number": 4, "par": 5 },
-          { "id": 5, "course": 1, "hole_number": 5, "par": 4 },
-          { "id": 6, "course": 1, "hole_number": 6, "par": 5 },
-          { "id": 7, "course": 1, "hole_number": 7, "par": 3 },
-          { "id": 8, "course": 1, "hole_number": 8, "par": 4 },
-          { "id": 9, "course": 1, "hole_number": 9, "par": 4 }
-        ]
-      },
-      {
-        "id": 2,
-        "name": "North",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 10, "course": 2, "hole_number": 1, "par": 4 },
-          { "id": 11, "course": 2, "hole_number": 2, "par": 4 },
-          { "id": 12, "course": 2, "hole_number": 3, "par": 4 },
-          { "id": 13, "course": 2, "hole_number": 4, "par": 5 },
-          { "id": 14, "course": 2, "hole_number": 5, "par": 4 },
-          { "id": 15, "course": 2, "hole_number": 6, "par": 3 },
-          { "id": 16, "course": 2, "hole_number": 7, "par": 4 },
-          { "id": 17, "course": 2, "hole_number": 8, "par": 3 },
-          { "id": 18, "course": 2, "hole_number": 9, "par": 5 }
-        ]
-      },
-      {
-        "id": 3,
-        "name": "West",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 19, "course": 3, "hole_number": 1, "par": 4 },
-          { "id": 20, "course": 3, "hole_number": 2, "par": 5 },
-          { "id": 21, "course": 3, "hole_number": 3, "par": 3 },
-          { "id": 22, "course": 3, "hole_number": 4, "par": 4 },
-          { "id": 23, "course": 3, "hole_number": 5, "par": 5 },
-          { "id": 24, "course": 3, "hole_number": 6, "par": 4 },
-          { "id": 25, "course": 3, "hole_number": 7, "par": 4 },
-          { "id": 26, "course": 3, "hole_number": 8, "par": 3 },
-          { "id": 27, "course": 3, "hole_number": 9, "par": 4 }
-        ]
-      }
-    ],
-    "fees": [
-      {
-        "id": 425,
-        "event": 494,
-        "fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": true,
-        "display_order": 1
-      },
-      {
-        "id": 426,
-        "event": 494,
-        "fee_type": { "id": 6, "name": "Gross Skins", "code": "S", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": false,
-        "display_order": 2
-      },
-      {
-        "id": 427,
-        "event": 494,
-        "fee_type": { "id": 7, "name": "Net Skins", "code": "S", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": false,
-        "display_order": 3
-      },
-      {
-        "id": 428,
-        "event": 494,
-        "fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
-        "amount": "21.00",
-        "is_required": false,
-        "display_order": 4
-      },
-      {
-        "id": 429,
-        "event": 494,
-        "fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
-        "amount": "12.00",
-        "is_required": false,
-        "display_order": 5
-      }
-    ],
-    "default_tag": null,
-    "starter_time_interval": 8
-  },
-  {
-    "id": 495,
-    "name": "2 Man Best Ball",
-    "rounds": 1,
-    "ghin_required": true,
-    "total_groups": 0,
-    "status": "S",
-    "minimum_signup_group_size": 1,
-    "maximum_signup_group_size": 4,
-    "group_size": 4,
-    "start_type": "TT",
-    "can_choose": false,
-    "registration_window": "future",
-    "external_url": null,
-    "season": 2023,
-    "tee_time_splits": null,
-    "notes": "* Teams will be comprised of 2 players, each player playing his own ball.\r\n* A team may be represented by either partner for all or any part of the stipulated round. A late arriving competitor may join his partner between holes, but not during the play of a hole.\r\n* In the interest of speeding play, a player who cannot better his partner’s score on a hole should pick up his ball and post the score he most likely would have achieved on the hole or his maximum allowable.\r\n* Play will be 18 holes individual stroke play using 85% of each player's 18-hole playing handicap. See https://www.usga.org/content/usga/home-page/handicapping/roh/Content/rules/Appendix%20C%20Handicap%20Allowances.htm. \r\n* The team score will be the accumulation of the lower individual score on a hole-by-hole basis.\r\n* The difference in playing handicap between the partners is capped at 8 shots. If the difference is greater than 8, the higher handicap player's handicap will be reduced. (Example: playing handicaps calculated to be 3 and 14. The 14 will be reduced to 11.)\r\n* Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n* Prizes will be awarded in both Gross and Net categories. A team may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified.\r\n* Scores will be posted to GHIN. See the note above about recording the most likely score when a player picks up.\r\n* All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n* This event qualifies for the Season Long Points Competition.\r\n* USGA rules govern all play. Local rules and policies as posted on the BHMC website apply.\r\n* Help maintain our course. Please replace divots and fix ball marks even if they are not yours.\r\n\r\n**The tournament committee reserves the right to make changes in event flighting due to tee time availability and/or participation. It is our intention to protect the field and make each event/major as competitive as well as enjoyable as possible for all BHMC members. All questions and concerns should be brought to the attention of the tournament committee.**",
-    "event_type": "W",
-    "skins_type": "T",
-    "season_points": 60,
-    "portal_url": null,
-    "start_date": "2023-05-13",
-    "start_time": "Morning Swing",
-    "registration_type": "M",
-    "signup_start": "2023-04-30T06:00:00-05:00",
-    "signup_end": "2023-05-09T18:00:00-05:00",
-    "payments_end": "2023-05-12T18:00:00-05:00",
-    "registration_maximum": 156,
-    "courses": [],
-    "fees": [
-      {
-        "id": 430,
-        "event": 495,
-        "fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
-        "amount": "10.00",
-        "is_required": true,
-        "display_order": 1
-      },
-      {
-        "id": 431,
-        "event": 495,
-        "fee_type": { "id": 12, "name": "Team Gross Skins", "code": "TS", "restriction": "None" },
-        "amount": "20.00",
-        "is_required": false,
-        "display_order": 2
-      },
-      {
-        "id": 432,
-        "event": 495,
-        "fee_type": { "id": 13, "name": "Team Net Skins", "code": "TS", "restriction": "None" },
-        "amount": "20.00",
-        "is_required": false,
-        "display_order": 3
-      },
-      {
-        "id": 433,
-        "event": 495,
-        "fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
-        "amount": "41.00",
-        "is_required": false,
-        "display_order": 4
-      },
-      {
-        "id": 434,
-        "event": 495,
-        "fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
-        "amount": "22.00",
-        "is_required": false,
-        "display_order": 5
-      }
-    ],
-    "default_tag": null,
-    "starter_time_interval": 0
-  },
-  {
-    "id": 496,
-    "name": "Individual LG/LN",
-    "rounds": 1,
-    "ghin_required": true,
-    "total_groups": 24,
-    "status": "S",
-    "minimum_signup_group_size": 1,
-    "maximum_signup_group_size": 5,
-    "group_size": 5,
-    "start_type": "TT",
-    "can_choose": true,
-    "registration_window": "future",
-    "external_url": null,
-    "season": 2023,
-    "tee_time_splits": "8",
-    "notes": "- Play is individual stroke play.\r\n - Each player will receive handicap strokes based on their current USGA index and the course played.\r\n - Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n - Prizes will be awarded in both Gross and Net categories. A player may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified. \r\n - **Do not enter your score into the computer.** Golf Genius will submit your scores automatically.\r\n - All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n - This event qualifies for the Season Long Points Competition.\r\n - USGA rules govern all play.  Local rules and policies as posted on the BHMC website apply.\r\n - Help maintain our course.  Please replace divots and fix ball marks even if they are not yours.",
-    "event_type": "N",
-    "skins_type": "I",
-    "season_points": 30,
-    "portal_url": null,
-    "start_date": "2023-05-17",
-    "start_time": "2:30 PM",
-    "registration_type": "M",
-    "signup_start": "2023-05-14T06:00:00-05:00",
-    "signup_end": "2023-05-16T18:00:00-05:00",
-    "payments_end": "2023-05-17T11:00:00-05:00",
-    "registration_maximum": 0,
-    "courses": [
-      {
-        "id": 1,
-        "name": "East",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 1, "course": 1, "hole_number": 1, "par": 4 },
-          { "id": 2, "course": 1, "hole_number": 2, "par": 4 },
-          { "id": 3, "course": 1, "hole_number": 3, "par": 3 },
-          { "id": 4, "course": 1, "hole_number": 4, "par": 5 },
-          { "id": 5, "course": 1, "hole_number": 5, "par": 4 },
-          { "id": 6, "course": 1, "hole_number": 6, "par": 5 },
-          { "id": 7, "course": 1, "hole_number": 7, "par": 3 },
-          { "id": 8, "course": 1, "hole_number": 8, "par": 4 },
-          { "id": 9, "course": 1, "hole_number": 9, "par": 4 }
-        ]
-      },
-      {
-        "id": 2,
-        "name": "North",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 10, "course": 2, "hole_number": 1, "par": 4 },
-          { "id": 11, "course": 2, "hole_number": 2, "par": 4 },
-          { "id": 12, "course": 2, "hole_number": 3, "par": 4 },
-          { "id": 13, "course": 2, "hole_number": 4, "par": 5 },
-          { "id": 14, "course": 2, "hole_number": 5, "par": 4 },
-          { "id": 15, "course": 2, "hole_number": 6, "par": 3 },
-          { "id": 16, "course": 2, "hole_number": 7, "par": 4 },
-          { "id": 17, "course": 2, "hole_number": 8, "par": 3 },
-          { "id": 18, "course": 2, "hole_number": 9, "par": 5 }
-        ]
-      },
-      {
-        "id": 3,
-        "name": "West",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 19, "course": 3, "hole_number": 1, "par": 4 },
-          { "id": 20, "course": 3, "hole_number": 2, "par": 5 },
-          { "id": 21, "course": 3, "hole_number": 3, "par": 3 },
-          { "id": 22, "course": 3, "hole_number": 4, "par": 4 },
-          { "id": 23, "course": 3, "hole_number": 5, "par": 5 },
-          { "id": 24, "course": 3, "hole_number": 6, "par": 4 },
-          { "id": 25, "course": 3, "hole_number": 7, "par": 4 },
-          { "id": 26, "course": 3, "hole_number": 8, "par": 3 },
-          { "id": 27, "course": 3, "hole_number": 9, "par": 4 }
-        ]
-      }
-    ],
-    "fees": [
-      {
-        "id": 435,
-        "event": 496,
-        "fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": true,
-        "display_order": 1
-      },
-      {
-        "id": 436,
-        "event": 496,
-        "fee_type": { "id": 6, "name": "Gross Skins", "code": "S", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": false,
-        "display_order": 2
-      },
-      {
-        "id": 437,
-        "event": 496,
-        "fee_type": { "id": 7, "name": "Net Skins", "code": "S", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": false,
-        "display_order": 3
-      },
-      {
-        "id": 438,
-        "event": 496,
-        "fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
-        "amount": "21.00",
-        "is_required": false,
-        "display_order": 4
-      },
-      {
-        "id": 439,
-        "event": 496,
-        "fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
-        "amount": "12.00",
-        "is_required": false,
-        "display_order": 5
-      }
-    ],
-    "default_tag": null,
-    "starter_time_interval": 8
-  },
-  {
-    "id": 527,
-    "name": "MPGA Four Ball",
-    "rounds": 2,
-    "ghin_required": false,
-    "total_groups": null,
-    "status": "S",
-    "minimum_signup_group_size": null,
-    "maximum_signup_group_size": null,
-    "group_size": null,
-    "start_type": "NA",
-    "can_choose": false,
-    "registration_window": "n/a",
-    "external_url": "https://mpga.net/tournaments/detail/four-ball/2023",
-    "season": 2023,
-    "tee_time_splits": null,
-    "notes": "",
-    "event_type": "E",
-    "skins_type": null,
-    "season_points": null,
-    "portal_url": null,
-    "start_date": "2023-05-20",
-    "start_time": "Monticello GC",
-    "registration_type": "N",
-    "signup_start": null,
-    "signup_end": null,
-    "payments_end": null,
-    "registration_maximum": null,
-    "courses": [],
-    "fees": [],
-    "default_tag": null,
-    "starter_time_interval": 0
-  },
-  {
-    "id": 497,
-    "name": "Individual LG/LN",
-    "rounds": 1,
-    "ghin_required": true,
-    "total_groups": 27,
-    "status": "S",
-    "minimum_signup_group_size": 1,
-    "maximum_signup_group_size": 5,
-    "group_size": 5,
-    "start_type": "TT",
-    "can_choose": true,
-    "registration_window": "future",
-    "external_url": null,
-    "season": 2023,
-    "tee_time_splits": "8",
-    "notes": "- Play is individual stroke play.\r\n - Each player will receive handicap strokes based on their current USGA index and the course played.\r\n - Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n - Prizes will be awarded in both Gross and Net categories. A player may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified. \r\n - **Do not enter your score into the computer.** Golf Genius will submit your scores automatically.\r\n - All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n - This event qualifies for the Season Long Points Competition.\r\n - USGA rules govern all play.  Local rules and policies as posted on the BHMC website apply.\r\n - Help maintain our course.  Please replace divots and fix ball marks even if they are not yours.",
-    "event_type": "N",
-    "skins_type": "I",
-    "season_points": 30,
-    "portal_url": null,
-    "start_date": "2023-05-24",
-    "start_time": "2:30 PM",
-    "registration_type": "M",
-    "signup_start": "2023-05-21T06:00:00-05:00",
-    "signup_end": "2023-05-23T18:00:00-05:00",
-    "payments_end": "2023-05-24T11:00:00-05:00",
-    "registration_maximum": 0,
-    "courses": [
-      {
-        "id": 1,
-        "name": "East",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 1, "course": 1, "hole_number": 1, "par": 4 },
-          { "id": 2, "course": 1, "hole_number": 2, "par": 4 },
-          { "id": 3, "course": 1, "hole_number": 3, "par": 3 },
-          { "id": 4, "course": 1, "hole_number": 4, "par": 5 },
-          { "id": 5, "course": 1, "hole_number": 5, "par": 4 },
-          { "id": 6, "course": 1, "hole_number": 6, "par": 5 },
-          { "id": 7, "course": 1, "hole_number": 7, "par": 3 },
-          { "id": 8, "course": 1, "hole_number": 8, "par": 4 },
-          { "id": 9, "course": 1, "hole_number": 9, "par": 4 }
-        ]
-      },
-      {
-        "id": 2,
-        "name": "North",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 10, "course": 2, "hole_number": 1, "par": 4 },
-          { "id": 11, "course": 2, "hole_number": 2, "par": 4 },
-          { "id": 12, "course": 2, "hole_number": 3, "par": 4 },
-          { "id": 13, "course": 2, "hole_number": 4, "par": 5 },
-          { "id": 14, "course": 2, "hole_number": 5, "par": 4 },
-          { "id": 15, "course": 2, "hole_number": 6, "par": 3 },
-          { "id": 16, "course": 2, "hole_number": 7, "par": 4 },
-          { "id": 17, "course": 2, "hole_number": 8, "par": 3 },
-          { "id": 18, "course": 2, "hole_number": 9, "par": 5 }
-        ]
-      },
-      {
-        "id": 3,
-        "name": "West",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 19, "course": 3, "hole_number": 1, "par": 4 },
-          { "id": 20, "course": 3, "hole_number": 2, "par": 5 },
-          { "id": 21, "course": 3, "hole_number": 3, "par": 3 },
-          { "id": 22, "course": 3, "hole_number": 4, "par": 4 },
-          { "id": 23, "course": 3, "hole_number": 5, "par": 5 },
-          { "id": 24, "course": 3, "hole_number": 6, "par": 4 },
-          { "id": 25, "course": 3, "hole_number": 7, "par": 4 },
-          { "id": 26, "course": 3, "hole_number": 8, "par": 3 },
-          { "id": 27, "course": 3, "hole_number": 9, "par": 4 }
-        ]
-      }
-    ],
-    "fees": [
-      {
-        "id": 440,
-        "event": 497,
-        "fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": true,
-        "display_order": 1
-      },
-      {
-        "id": 441,
-        "event": 497,
-        "fee_type": { "id": 6, "name": "Gross Skins", "code": "S", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": false,
-        "display_order": 2
-      },
-      {
-        "id": 442,
-        "event": 497,
-        "fee_type": { "id": 7, "name": "Net Skins", "code": "S", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": false,
-        "display_order": 3
-      },
-      {
-        "id": 443,
-        "event": 497,
-        "fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
-        "amount": "21.00",
-        "is_required": false,
-        "display_order": 4
-      },
-      {
-        "id": 444,
-        "event": 497,
-        "fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
-        "amount": "12.00",
-        "is_required": false,
-        "display_order": 5
-      }
-    ],
-    "default_tag": null,
-    "starter_time_interval": 9
-  },
-  {
-    "id": 532,
-    "name": "MN Senior Open",
-    "rounds": 2,
-    "ghin_required": false,
-    "total_groups": null,
-    "status": "S",
-    "minimum_signup_group_size": null,
-    "maximum_signup_group_size": null,
-    "group_size": null,
-    "start_type": "NA",
-    "can_choose": false,
-    "registration_window": "n/a",
-    "external_url": "https://mnpga.bluegolf.com/bluegolf/mnpga23/event/mnpga2316/index.htm",
-    "season": 2023,
-    "tee_time_splits": null,
-    "notes": "",
-    "event_type": "E",
-    "skins_type": null,
-    "season_points": null,
-    "portal_url": null,
-    "start_date": "2023-05-30",
-    "start_time": "Keller GC",
-    "registration_type": "N",
-    "signup_start": null,
-    "signup_end": null,
-    "payments_end": null,
-    "registration_maximum": null,
-    "courses": [],
-    "fees": [],
-    "default_tag": null,
-    "starter_time_interval": 0
-  },
-  {
-    "id": 498,
-    "name": "3 Ball Fivesome",
-    "rounds": 1,
-    "ghin_required": true,
-    "total_groups": 27,
-    "status": "S",
-    "minimum_signup_group_size": 1,
-    "maximum_signup_group_size": 5,
-    "group_size": 5,
-    "start_type": "TT",
-    "can_choose": true,
-    "registration_window": "future",
-    "external_url": null,
-    "season": 2023,
-    "tee_time_splits": "8",
-    "notes": "- Teams will consist of 5 players.\r\n - Blind draw score will be assigned in the event a team has less than 5 players.\r\n - Each player will receive handicap strokes based on their current USGA index and the course played.\r\n - Record each player’s individual gross score for each hole.\r\n - The team score will be calculated by Golf Genius, and will be the best 3 scores out of the 5 players’ scores for each hole.\r\n - Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n - Prizes will be awarded in both Gross and Net categories. A team may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified. \r\n - There will be a single gross and net division per nine.\r\n - **Do not enter your score into the computer. ** Golf Genius will submit your scores automatically.\r\n - All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n - This event qualifies for the Season Long Points Competition.\r\n - USGA rules govern all play.  Local rules and policies as posted on the BHMC website apply.\r\n - Help maintain our course.  Please replace divots and fix ball marks even if they are not yours.",
-    "event_type": "N",
-    "skins_type": "I",
-    "season_points": 30,
-    "portal_url": null,
-    "start_date": "2023-05-31",
-    "start_time": "2:30 PM",
-    "registration_type": "M",
-    "signup_start": "2023-05-28T06:00:00-05:00",
-    "signup_end": "2023-05-30T18:00:00-05:00",
-    "payments_end": "2023-05-31T11:00:00-05:00",
-    "registration_maximum": 0,
-    "courses": [
-      {
-        "id": 1,
-        "name": "East",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 1, "course": 1, "hole_number": 1, "par": 4 },
-          { "id": 2, "course": 1, "hole_number": 2, "par": 4 },
-          { "id": 3, "course": 1, "hole_number": 3, "par": 3 },
-          { "id": 4, "course": 1, "hole_number": 4, "par": 5 },
-          { "id": 5, "course": 1, "hole_number": 5, "par": 4 },
-          { "id": 6, "course": 1, "hole_number": 6, "par": 5 },
-          { "id": 7, "course": 1, "hole_number": 7, "par": 3 },
-          { "id": 8, "course": 1, "hole_number": 8, "par": 4 },
-          { "id": 9, "course": 1, "hole_number": 9, "par": 4 }
-        ]
-      },
-      {
-        "id": 2,
-        "name": "North",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 10, "course": 2, "hole_number": 1, "par": 4 },
-          { "id": 11, "course": 2, "hole_number": 2, "par": 4 },
-          { "id": 12, "course": 2, "hole_number": 3, "par": 4 },
-          { "id": 13, "course": 2, "hole_number": 4, "par": 5 },
-          { "id": 14, "course": 2, "hole_number": 5, "par": 4 },
-          { "id": 15, "course": 2, "hole_number": 6, "par": 3 },
-          { "id": 16, "course": 2, "hole_number": 7, "par": 4 },
-          { "id": 17, "course": 2, "hole_number": 8, "par": 3 },
-          { "id": 18, "course": 2, "hole_number": 9, "par": 5 }
-        ]
-      },
-      {
-        "id": 3,
-        "name": "West",
-        "number_of_holes": 9,
-        "holes": [
-          { "id": 19, "course": 3, "hole_number": 1, "par": 4 },
-          { "id": 20, "course": 3, "hole_number": 2, "par": 5 },
-          { "id": 21, "course": 3, "hole_number": 3, "par": 3 },
-          { "id": 22, "course": 3, "hole_number": 4, "par": 4 },
-          { "id": 23, "course": 3, "hole_number": 5, "par": 5 },
-          { "id": 24, "course": 3, "hole_number": 6, "par": 4 },
-          { "id": 25, "course": 3, "hole_number": 7, "par": 4 },
-          { "id": 26, "course": 3, "hole_number": 8, "par": 3 },
-          { "id": 27, "course": 3, "hole_number": 9, "par": 4 }
-        ]
-      }
-    ],
-    "fees": [
-      {
-        "id": 445,
-        "event": 498,
-        "fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": true,
-        "display_order": 1
-      },
-      {
-        "id": 446,
-        "event": 498,
-        "fee_type": { "id": 6, "name": "Gross Skins", "code": "S", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": false,
-        "display_order": 2
-      },
-      {
-        "id": 447,
-        "event": 498,
-        "fee_type": { "id": 7, "name": "Net Skins", "code": "S", "restriction": "None" },
-        "amount": "5.00",
-        "is_required": false,
-        "display_order": 3
-      },
-      {
-        "id": 448,
-        "event": 498,
-        "fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
-        "amount": "21.00",
-        "is_required": false,
-        "display_order": 4
-      },
-      {
-        "id": 449,
-        "event": 498,
-        "fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
-        "amount": "12.00",
-        "is_required": false,
-        "display_order": 5
-      }
-    ],
-    "default_tag": null,
-    "starter_time_interval": 9
-  }
+	{
+		"id": 486,
+		"name": "2023 Season Registration",
+		"rounds": null,
+		"ghin_required": false,
+		"total_groups": null,
+		"status": "S",
+		"minimum_signup_group_size": 1,
+		"maximum_signup_group_size": 1,
+		"group_size": null,
+		"start_type": "NA",
+		"can_choose": false,
+		"registration_window": "registration",
+		"external_url": null,
+		"season": 2023,
+		"tee_time_splits": null,
+		"notes": "#### Thank you for considering our club for the 2023 season!\r\n\r\nAll member information is private and its use is strictly limited to events or functions directly related to the Bunker Hills Men’s Golf Club (BHMGC).\r\n\r\nNo membership refunds without Board approval.  (Membership refunds are subject to prorated refund based on a case by case basis).\r\n\r\nIf you qualify for the senior patron card rate (62 and over), make sure you select that rate in the sign-up screens.\r\n\r\n**IMPORTANT** If you wish to start playing forward tees (Gold/White Combination) for the ENTIRE season, please indicate that in the notes when you register. If you are already playing the forward tees, you don't have to do anything to continue there.\r\n\r\nEligibility to play forward tees for all BHMGC league events must fall within the **\"rule of 78.\"** If your age plus handicap equals or is greater than 78, you are eligible to select those tees to play for the entire year. The determination is made one time at the beginning of the season. If the player falls below 78 during the season, he is still eligible to play the forward tees.\r\n\r\n##### Registration deadline is April 15.\r\n\r\nAfter this date, the rate goes up to $150 for the season.",
+		"event_type": "R",
+		"skins_type": null,
+		"season_points": null,
+		"portal_url": null,
+		"start_date": "2023-01-15",
+		"start_time": "Open Registration Period",
+		"registration_type": "O",
+		"signup_start": "2023-01-15T06:00:00-06:00",
+		"signup_end": "2023-04-15T00:00:00-05:00",
+		"payments_end": null,
+		"registration_maximum": null,
+		"courses": [],
+		"fees": [
+			{
+				"id": 388,
+				"event": 486,
+				"fee_type": { "id": 16, "name": "Member Dues", "code": "MD", "restriction": "None" },
+				"amount": "130.00",
+				"is_required": true,
+				"display_order": 1
+			},
+			{
+				"id": 390,
+				"event": 486,
+				"fee_type": { "id": 3, "name": "Patron Card", "code": "PC", "restriction": "Non-Seniors" },
+				"amount": "60.00",
+				"is_required": false,
+				"display_order": 3
+			},
+			{
+				"id": 391,
+				"event": 486,
+				"fee_type": { "id": 4, "name": "Sr. Patron Card", "code": "SPC", "restriction": "Seniors" },
+				"amount": "40.00",
+				"is_required": false,
+				"display_order": 4
+			}
+		],
+		"default_tag": null,
+		"starter_time_interval": 0
+	},
+	{
+		"id": 538,
+		"name": "2022 Pro Shop Winnings Expire",
+		"rounds": null,
+		"ghin_required": false,
+		"total_groups": null,
+		"status": "S",
+		"minimum_signup_group_size": null,
+		"maximum_signup_group_size": null,
+		"group_size": null,
+		"start_type": null,
+		"can_choose": false,
+		"registration_window": "n/a",
+		"external_url": null,
+		"season": 2023,
+		"tee_time_splits": null,
+		"notes": "Your winnings from last season expire on this date. Spend that money!",
+		"event_type": "D",
+		"skins_type": null,
+		"season_points": null,
+		"portal_url": null,
+		"start_date": "2023-04-01",
+		"start_time": null,
+		"registration_type": "N",
+		"signup_start": null,
+		"signup_end": null,
+		"payments_end": null,
+		"registration_maximum": null,
+		"courses": [],
+		"fees": [],
+		"default_tag": null,
+		"starter_time_interval": 0
+	},
+	{
+		"id": 487,
+		"name": "Season Long Match Play",
+		"rounds": null,
+		"ghin_required": true,
+		"total_groups": null,
+		"status": "S",
+		"minimum_signup_group_size": 1,
+		"maximum_signup_group_size": 1,
+		"group_size": null,
+		"start_type": "NA",
+		"can_choose": false,
+		"registration_window": "registration",
+		"external_url": null,
+		"season": 2023,
+		"tee_time_splits": null,
+		"notes": "##### Sign Up\r\n\r\nPlease select the division where you want to compete. Gross Division is for low-handicap players who want to play scratch. There will be only a single gross division.\r\n\r\nNet Division is for players who want to play **with** their handicaps in a flighted bracket. **Net flight winners qualify for the 2023 Dam Cup! **\r\n\r\nIf you do not select a division, we will default to the Net Division.\r\n\r\n##### Rules\r\n\r\nParticipants **must** be available to play on weekends. It's perfectly ok to schedule matches during the week, but please register only if you also have weekends available to play.\r\n\r\nFlights and brackets will be drawn after entries close and posted online on the Match Play page.\r\n\r\nPlayers may elect to play in the scratch flight (select gross at signup) or handicapped flights (select net at signup). Scratch flight will play from the **blue** tees. Handicap flights will play from the **club** tees (the new white/blue combination). Players who signed up to play from the forward tees for the season will play from the **gold/white combination** tees.\r\n\r\nHandicap flights will be established based on handicap at the time of entry. Every entrant must have an established USGA handicap. Handicaps used for a given match will be each player's course handicap on the day of the match.\r\n\r\nFormat is individual Match Play. Scratch Flight will play their matches without handicaps. The Handicapped Flights will play their matches using each player’s course handicap at the time that each match is played. After determining current handicaps, the player with the lowest handicap will play at zero and other players will receive strokes based on the difference between their respective handicaps. Strokes are allocated equally between the two nines, with any odd numbered strokes applied to the more difficult course.\r\n\r\nAny player(s) receiving round 1 byes (in unfilled divisions) must win one match in order to be eligible for prize money.\r\n\r\n##### Scheduling Matches\r\n\r\nIt is **YOUR** responsibility as a player in this event to schedule your match. **DO NOT** wait for your opponent to contact you. Contact your opponent as soon as pairings are assigned.\r\n\r\nThe Match Play kickoff day is in May (date TBD). We encourage all participants to play that morning if possible. If you do intend to play that morning, make your tee time with the pro shop at least a week in advance.\r\n\r\nDeadlines for each round will be posted on the tournament pairings board and the event schedule on the BHMC website. Matches must be played prior to the deadline for that round. Players who fail to schedule a match or make other arrangements prior to the posted deadline are subject to be disqualified. In the event both players fail to schedule a match before the deadline, the tournament chairman shall have the right to determine the match by a coin flip.\r\n\r\n##### Match Deadlines\r\n\r\n1. Round 1: May 29\r\n2. Round 2: June 25\r\n3. Round 3: July 23\r\n4. Round 4: August 13\r\n\r\nIt is important that you get your match completed on time because there is a cascade effect to the next rounds when that happens. We also need the flighted brackets completed in time to make Dam Cup selections.\r\n\r\nIf you have any difficulty scheduling your match prior to the established deadline, please contact the Season Long Match Play Tournament Chairs.\r\n\r\n##### Ties\r\n\r\nIn the event a match ends up “all square” after 18 holes of play, a sudden death playoff should be arranged with the pro-shop. Should a sudden death playoff not be possible (due to darkness, weather or course business) another form of tie-breaker may be substituted if both players agree (chip off, coin flip, etc.)\r\n\r\n##### 2023 Chairmen\r\n - Ben Manthey\r\n - Rob Owen\r\n - Mike Earle\r\n\r\n##### Posting Results\r\n\r\nAt the end of each match, send an email or text to Rob, Ben, or Mike.\r\n\r\n##### Payouts\r\n\r\n* Winner - 25%\r\n* 2nd - 19%\r\n* 3rd - 12%- (2 players or 24% of total)\r\n* 4th - 8% (4 players or 32% of total\r\n\r\nThe actual dollar amount depends on the size of your flight.",
+		"event_type": "O",
+		"skins_type": null,
+		"season_points": null,
+		"portal_url": null,
+		"start_date": "2023-05-01",
+		"start_time": "Make Your Own Tee Times",
+		"registration_type": "M",
+		"signup_start": "2023-01-15T06:00:00-06:00",
+		"signup_end": "2023-04-23T00:00:00-05:00",
+		"payments_end": null,
+		"registration_maximum": null,
+		"courses": [],
+		"fees": [
+			{
+				"id": 392,
+				"event": 487,
+				"fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
+				"amount": "30.00",
+				"is_required": true,
+				"display_order": 1
+			},
+			{
+				"id": 393,
+				"event": 487,
+				"fee_type": {
+					"id": 10,
+					"name": "Gross Division (no handicap)",
+					"code": "GD",
+					"restriction": "None"
+				},
+				"amount": "0.00",
+				"is_required": false,
+				"display_order": 2
+			},
+			{
+				"id": 394,
+				"event": 487,
+				"fee_type": {
+					"id": 11,
+					"name": "Net Division (with handicap)",
+					"code": "ND",
+					"restriction": "None"
+				},
+				"amount": "0.00",
+				"is_required": false,
+				"display_order": 3
+			}
+		],
+		"default_tag": null,
+		"starter_time_interval": 0
+	},
+	{
+		"id": 493,
+		"name": "Individual LG/LN",
+		"rounds": 1,
+		"ghin_required": true,
+		"total_groups": 24,
+		"status": "S",
+		"minimum_signup_group_size": 1,
+		"maximum_signup_group_size": 5,
+		"group_size": 5,
+		"start_type": "TT",
+		"can_choose": true,
+		"registration_window": "future",
+		"external_url": null,
+		"season": 2023,
+		"tee_time_splits": "8",
+		"notes": "- Play is individual stroke play.\r\n - Each player will receive handicap strokes based on their current USGA index and the course played.\r\n - Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n - Prizes will be awarded in both Gross and Net categories. A player may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified. \r\n - **Do not enter your score into the computer.** Golf Genius will submit your scores automatically.\r\n - All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n - This event qualifies for the Season Long Points Competition.\r\n - USGA rules govern all play.  Local rules and policies as posted on the BHMC website apply.\r\n - Help maintain our course.  Please replace divots and fix ball marks even if they are not yours.",
+		"event_type": "N",
+		"skins_type": "I",
+		"season_points": 30,
+		"portal_url": null,
+		"start_date": "2023-05-03",
+		"start_time": "2:30 PM",
+		"registration_type": "M",
+		"signup_start": "2023-04-30T06:00:00-05:00",
+		"signup_end": "2023-05-02T18:00:00-05:00",
+		"payments_end": "2023-05-03T11:00:00-05:00",
+		"registration_maximum": 0,
+		"courses": [
+			{
+				"id": 1,
+				"name": "East",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 1, "course": 1, "hole_number": 1, "par": 4 },
+					{ "id": 2, "course": 1, "hole_number": 2, "par": 4 },
+					{ "id": 3, "course": 1, "hole_number": 3, "par": 3 },
+					{ "id": 4, "course": 1, "hole_number": 4, "par": 5 },
+					{ "id": 5, "course": 1, "hole_number": 5, "par": 4 },
+					{ "id": 6, "course": 1, "hole_number": 6, "par": 5 },
+					{ "id": 7, "course": 1, "hole_number": 7, "par": 3 },
+					{ "id": 8, "course": 1, "hole_number": 8, "par": 4 },
+					{ "id": 9, "course": 1, "hole_number": 9, "par": 4 }
+				]
+			},
+			{
+				"id": 2,
+				"name": "North",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 10, "course": 2, "hole_number": 1, "par": 4 },
+					{ "id": 11, "course": 2, "hole_number": 2, "par": 4 },
+					{ "id": 12, "course": 2, "hole_number": 3, "par": 4 },
+					{ "id": 13, "course": 2, "hole_number": 4, "par": 5 },
+					{ "id": 14, "course": 2, "hole_number": 5, "par": 4 },
+					{ "id": 15, "course": 2, "hole_number": 6, "par": 3 },
+					{ "id": 16, "course": 2, "hole_number": 7, "par": 4 },
+					{ "id": 17, "course": 2, "hole_number": 8, "par": 3 },
+					{ "id": 18, "course": 2, "hole_number": 9, "par": 5 }
+				]
+			},
+			{
+				"id": 3,
+				"name": "West",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 19, "course": 3, "hole_number": 1, "par": 4 },
+					{ "id": 20, "course": 3, "hole_number": 2, "par": 5 },
+					{ "id": 21, "course": 3, "hole_number": 3, "par": 3 },
+					{ "id": 22, "course": 3, "hole_number": 4, "par": 4 },
+					{ "id": 23, "course": 3, "hole_number": 5, "par": 5 },
+					{ "id": 24, "course": 3, "hole_number": 6, "par": 4 },
+					{ "id": 25, "course": 3, "hole_number": 7, "par": 4 },
+					{ "id": 26, "course": 3, "hole_number": 8, "par": 3 },
+					{ "id": 27, "course": 3, "hole_number": 9, "par": 4 }
+				]
+			}
+		],
+		"fees": [
+			{
+				"id": 420,
+				"event": 493,
+				"fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": true,
+				"display_order": 1
+			},
+			{
+				"id": 421,
+				"event": 493,
+				"fee_type": { "id": 6, "name": "Gross Skins", "code": "S", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": false,
+				"display_order": 2
+			},
+			{
+				"id": 422,
+				"event": 493,
+				"fee_type": { "id": 7, "name": "Net Skins", "code": "S", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": false,
+				"display_order": 3
+			},
+			{
+				"id": 423,
+				"event": 493,
+				"fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
+				"amount": "21.00",
+				"is_required": false,
+				"display_order": 4
+			},
+			{
+				"id": 424,
+				"event": 493,
+				"fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
+				"amount": "12.00",
+				"is_required": false,
+				"display_order": 5
+			}
+		],
+		"default_tag": null,
+		"starter_time_interval": 8
+	},
+	{
+		"id": 494,
+		"name": "2-3-4 Fivesome",
+		"rounds": 1,
+		"ghin_required": true,
+		"total_groups": 24,
+		"status": "S",
+		"minimum_signup_group_size": 1,
+		"maximum_signup_group_size": 5,
+		"group_size": 5,
+		"start_type": "TT",
+		"can_choose": true,
+		"registration_window": "future",
+		"external_url": null,
+		"season": 2023,
+		"tee_time_splits": "8",
+		"notes": "- Teams will consist of 5 players. \r\n - Blind draw score will be assigned in the event a team has less than 5 players\r\n - Each player will receive handicap strokes based on their current USGA index and the course played.\r\n - Record each player’s individual gross score for each hole.\r\n - The team score will be calculated by Golf Genius. On Par 3’s the best 2 scores out of the 5 players’ scores will count, on Par 4’s the best 3 of 5 will count, and on Par 5’s the best 4 of 5 will count. \r\n - Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n - Prizes will be awarded in both Gross and Net categories. A team may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified. \r\n - There will be a single gross and net division per nine.\r\n - **Do not enter your score into the computer. ** Golf Genius will submit your scores automatically.\r\n - All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n - This event qualifies for the Season Long Points Competition.\r\n - USGA rules govern all play.  Local rules and policies as posted on the BHMC website apply.\r\n - Help maintain our course.  Please replace divots and fix ball marks even if they are not yours.",
+		"event_type": "N",
+		"skins_type": "I",
+		"season_points": 30,
+		"portal_url": null,
+		"start_date": "2023-05-10",
+		"start_time": "2:30 PM",
+		"registration_type": "M",
+		"signup_start": "2023-05-07T06:00:00-05:00",
+		"signup_end": "2023-05-09T18:00:00-05:00",
+		"payments_end": "2023-05-10T11:00:00-05:00",
+		"registration_maximum": 0,
+		"courses": [
+			{
+				"id": 1,
+				"name": "East",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 1, "course": 1, "hole_number": 1, "par": 4 },
+					{ "id": 2, "course": 1, "hole_number": 2, "par": 4 },
+					{ "id": 3, "course": 1, "hole_number": 3, "par": 3 },
+					{ "id": 4, "course": 1, "hole_number": 4, "par": 5 },
+					{ "id": 5, "course": 1, "hole_number": 5, "par": 4 },
+					{ "id": 6, "course": 1, "hole_number": 6, "par": 5 },
+					{ "id": 7, "course": 1, "hole_number": 7, "par": 3 },
+					{ "id": 8, "course": 1, "hole_number": 8, "par": 4 },
+					{ "id": 9, "course": 1, "hole_number": 9, "par": 4 }
+				]
+			},
+			{
+				"id": 2,
+				"name": "North",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 10, "course": 2, "hole_number": 1, "par": 4 },
+					{ "id": 11, "course": 2, "hole_number": 2, "par": 4 },
+					{ "id": 12, "course": 2, "hole_number": 3, "par": 4 },
+					{ "id": 13, "course": 2, "hole_number": 4, "par": 5 },
+					{ "id": 14, "course": 2, "hole_number": 5, "par": 4 },
+					{ "id": 15, "course": 2, "hole_number": 6, "par": 3 },
+					{ "id": 16, "course": 2, "hole_number": 7, "par": 4 },
+					{ "id": 17, "course": 2, "hole_number": 8, "par": 3 },
+					{ "id": 18, "course": 2, "hole_number": 9, "par": 5 }
+				]
+			},
+			{
+				"id": 3,
+				"name": "West",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 19, "course": 3, "hole_number": 1, "par": 4 },
+					{ "id": 20, "course": 3, "hole_number": 2, "par": 5 },
+					{ "id": 21, "course": 3, "hole_number": 3, "par": 3 },
+					{ "id": 22, "course": 3, "hole_number": 4, "par": 4 },
+					{ "id": 23, "course": 3, "hole_number": 5, "par": 5 },
+					{ "id": 24, "course": 3, "hole_number": 6, "par": 4 },
+					{ "id": 25, "course": 3, "hole_number": 7, "par": 4 },
+					{ "id": 26, "course": 3, "hole_number": 8, "par": 3 },
+					{ "id": 27, "course": 3, "hole_number": 9, "par": 4 }
+				]
+			}
+		],
+		"fees": [
+			{
+				"id": 425,
+				"event": 494,
+				"fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": true,
+				"display_order": 1
+			},
+			{
+				"id": 426,
+				"event": 494,
+				"fee_type": { "id": 6, "name": "Gross Skins", "code": "S", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": false,
+				"display_order": 2
+			},
+			{
+				"id": 427,
+				"event": 494,
+				"fee_type": { "id": 7, "name": "Net Skins", "code": "S", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": false,
+				"display_order": 3
+			},
+			{
+				"id": 428,
+				"event": 494,
+				"fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
+				"amount": "21.00",
+				"is_required": false,
+				"display_order": 4
+			},
+			{
+				"id": 429,
+				"event": 494,
+				"fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
+				"amount": "12.00",
+				"is_required": false,
+				"display_order": 5
+			}
+		],
+		"default_tag": null,
+		"starter_time_interval": 8
+	},
+	{
+		"id": 495,
+		"name": "2 Man Best Ball",
+		"rounds": 1,
+		"ghin_required": true,
+		"total_groups": 0,
+		"status": "S",
+		"minimum_signup_group_size": 1,
+		"maximum_signup_group_size": 4,
+		"group_size": 4,
+		"start_type": "TT",
+		"can_choose": false,
+		"registration_window": "future",
+		"external_url": null,
+		"season": 2023,
+		"tee_time_splits": null,
+		"notes": "* Teams will be comprised of 2 players, each player playing his own ball.\r\n* A team may be represented by either partner for all or any part of the stipulated round. A late arriving competitor may join his partner between holes, but not during the play of a hole.\r\n* In the interest of speeding play, a player who cannot better his partner’s score on a hole should pick up his ball and post the score he most likely would have achieved on the hole or his maximum allowable.\r\n* Play will be 18 holes individual stroke play using 85% of each player's 18-hole playing handicap. See https://www.usga.org/content/usga/home-page/handicapping/roh/Content/rules/Appendix%20C%20Handicap%20Allowances.htm. \r\n* The team score will be the accumulation of the lower individual score on a hole-by-hole basis.\r\n* The difference in playing handicap between the partners is capped at 8 shots. If the difference is greater than 8, the higher handicap player's handicap will be reduced. (Example: playing handicaps calculated to be 3 and 14. The 14 will be reduced to 11.)\r\n* Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n* Prizes will be awarded in both Gross and Net categories. A team may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified.\r\n* Scores will be posted to GHIN. See the note above about recording the most likely score when a player picks up.\r\n* All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n* This event qualifies for the Season Long Points Competition.\r\n* USGA rules govern all play. Local rules and policies as posted on the BHMC website apply.\r\n* Help maintain our course. Please replace divots and fix ball marks even if they are not yours.\r\n\r\n**The tournament committee reserves the right to make changes in event flighting due to tee time availability and/or participation. It is our intention to protect the field and make each event/major as competitive as well as enjoyable as possible for all BHMC members. All questions and concerns should be brought to the attention of the tournament committee.**",
+		"event_type": "W",
+		"skins_type": "T",
+		"season_points": 60,
+		"portal_url": null,
+		"start_date": "2023-05-13",
+		"start_time": "Morning Swing",
+		"registration_type": "M",
+		"signup_start": "2023-04-30T06:00:00-05:00",
+		"signup_end": "2023-05-09T18:00:00-05:00",
+		"payments_end": "2023-05-12T18:00:00-05:00",
+		"registration_maximum": 156,
+		"courses": [],
+		"fees": [
+			{
+				"id": 430,
+				"event": 495,
+				"fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
+				"amount": "10.00",
+				"is_required": true,
+				"display_order": 1
+			},
+			{
+				"id": 431,
+				"event": 495,
+				"fee_type": { "id": 12, "name": "Team Gross Skins", "code": "TS", "restriction": "None" },
+				"amount": "20.00",
+				"is_required": false,
+				"display_order": 2
+			},
+			{
+				"id": 432,
+				"event": 495,
+				"fee_type": { "id": 13, "name": "Team Net Skins", "code": "TS", "restriction": "None" },
+				"amount": "20.00",
+				"is_required": false,
+				"display_order": 3
+			},
+			{
+				"id": 433,
+				"event": 495,
+				"fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
+				"amount": "41.00",
+				"is_required": false,
+				"display_order": 4
+			},
+			{
+				"id": 434,
+				"event": 495,
+				"fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
+				"amount": "22.00",
+				"is_required": false,
+				"display_order": 5
+			}
+		],
+		"default_tag": null,
+		"starter_time_interval": 0
+	},
+	{
+		"id": 496,
+		"name": "Individual LG/LN",
+		"rounds": 1,
+		"ghin_required": true,
+		"total_groups": 24,
+		"status": "S",
+		"minimum_signup_group_size": 1,
+		"maximum_signup_group_size": 5,
+		"group_size": 5,
+		"start_type": "TT",
+		"can_choose": true,
+		"registration_window": "future",
+		"external_url": null,
+		"season": 2023,
+		"tee_time_splits": "8",
+		"notes": "- Play is individual stroke play.\r\n - Each player will receive handicap strokes based on their current USGA index and the course played.\r\n - Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n - Prizes will be awarded in both Gross and Net categories. A player may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified. \r\n - **Do not enter your score into the computer.** Golf Genius will submit your scores automatically.\r\n - All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n - This event qualifies for the Season Long Points Competition.\r\n - USGA rules govern all play.  Local rules and policies as posted on the BHMC website apply.\r\n - Help maintain our course.  Please replace divots and fix ball marks even if they are not yours.",
+		"event_type": "N",
+		"skins_type": "I",
+		"season_points": 30,
+		"portal_url": null,
+		"start_date": "2023-05-17",
+		"start_time": "2:30 PM",
+		"registration_type": "M",
+		"signup_start": "2023-05-14T06:00:00-05:00",
+		"signup_end": "2023-05-16T18:00:00-05:00",
+		"payments_end": "2023-05-17T11:00:00-05:00",
+		"registration_maximum": 0,
+		"courses": [
+			{
+				"id": 1,
+				"name": "East",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 1, "course": 1, "hole_number": 1, "par": 4 },
+					{ "id": 2, "course": 1, "hole_number": 2, "par": 4 },
+					{ "id": 3, "course": 1, "hole_number": 3, "par": 3 },
+					{ "id": 4, "course": 1, "hole_number": 4, "par": 5 },
+					{ "id": 5, "course": 1, "hole_number": 5, "par": 4 },
+					{ "id": 6, "course": 1, "hole_number": 6, "par": 5 },
+					{ "id": 7, "course": 1, "hole_number": 7, "par": 3 },
+					{ "id": 8, "course": 1, "hole_number": 8, "par": 4 },
+					{ "id": 9, "course": 1, "hole_number": 9, "par": 4 }
+				]
+			},
+			{
+				"id": 2,
+				"name": "North",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 10, "course": 2, "hole_number": 1, "par": 4 },
+					{ "id": 11, "course": 2, "hole_number": 2, "par": 4 },
+					{ "id": 12, "course": 2, "hole_number": 3, "par": 4 },
+					{ "id": 13, "course": 2, "hole_number": 4, "par": 5 },
+					{ "id": 14, "course": 2, "hole_number": 5, "par": 4 },
+					{ "id": 15, "course": 2, "hole_number": 6, "par": 3 },
+					{ "id": 16, "course": 2, "hole_number": 7, "par": 4 },
+					{ "id": 17, "course": 2, "hole_number": 8, "par": 3 },
+					{ "id": 18, "course": 2, "hole_number": 9, "par": 5 }
+				]
+			},
+			{
+				"id": 3,
+				"name": "West",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 19, "course": 3, "hole_number": 1, "par": 4 },
+					{ "id": 20, "course": 3, "hole_number": 2, "par": 5 },
+					{ "id": 21, "course": 3, "hole_number": 3, "par": 3 },
+					{ "id": 22, "course": 3, "hole_number": 4, "par": 4 },
+					{ "id": 23, "course": 3, "hole_number": 5, "par": 5 },
+					{ "id": 24, "course": 3, "hole_number": 6, "par": 4 },
+					{ "id": 25, "course": 3, "hole_number": 7, "par": 4 },
+					{ "id": 26, "course": 3, "hole_number": 8, "par": 3 },
+					{ "id": 27, "course": 3, "hole_number": 9, "par": 4 }
+				]
+			}
+		],
+		"fees": [
+			{
+				"id": 435,
+				"event": 496,
+				"fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": true,
+				"display_order": 1
+			},
+			{
+				"id": 436,
+				"event": 496,
+				"fee_type": { "id": 6, "name": "Gross Skins", "code": "S", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": false,
+				"display_order": 2
+			},
+			{
+				"id": 437,
+				"event": 496,
+				"fee_type": { "id": 7, "name": "Net Skins", "code": "S", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": false,
+				"display_order": 3
+			},
+			{
+				"id": 438,
+				"event": 496,
+				"fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
+				"amount": "21.00",
+				"is_required": false,
+				"display_order": 4
+			},
+			{
+				"id": 439,
+				"event": 496,
+				"fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
+				"amount": "12.00",
+				"is_required": false,
+				"display_order": 5
+			}
+		],
+		"default_tag": null,
+		"starter_time_interval": 8
+	},
+	{
+		"id": 527,
+		"name": "MPGA Four Ball",
+		"rounds": 2,
+		"ghin_required": false,
+		"total_groups": null,
+		"status": "S",
+		"minimum_signup_group_size": null,
+		"maximum_signup_group_size": null,
+		"group_size": null,
+		"start_type": "NA",
+		"can_choose": false,
+		"registration_window": "n/a",
+		"external_url": "https://mpga.net/tournaments/detail/four-ball/2023",
+		"season": 2023,
+		"tee_time_splits": null,
+		"notes": "",
+		"event_type": "E",
+		"skins_type": null,
+		"season_points": null,
+		"portal_url": null,
+		"start_date": "2023-05-20",
+		"start_time": "Monticello GC",
+		"registration_type": "N",
+		"signup_start": null,
+		"signup_end": null,
+		"payments_end": null,
+		"registration_maximum": null,
+		"courses": [],
+		"fees": [],
+		"default_tag": null,
+		"starter_time_interval": 0
+	},
+	{
+		"id": 497,
+		"name": "Individual LG/LN",
+		"rounds": 1,
+		"ghin_required": true,
+		"total_groups": 27,
+		"status": "S",
+		"minimum_signup_group_size": 1,
+		"maximum_signup_group_size": 5,
+		"group_size": 5,
+		"start_type": "TT",
+		"can_choose": true,
+		"registration_window": "future",
+		"external_url": null,
+		"season": 2023,
+		"tee_time_splits": "8",
+		"notes": "- Play is individual stroke play.\r\n - Each player will receive handicap strokes based on their current USGA index and the course played.\r\n - Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n - Prizes will be awarded in both Gross and Net categories. A player may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified. \r\n - **Do not enter your score into the computer.** Golf Genius will submit your scores automatically.\r\n - All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n - This event qualifies for the Season Long Points Competition.\r\n - USGA rules govern all play.  Local rules and policies as posted on the BHMC website apply.\r\n - Help maintain our course.  Please replace divots and fix ball marks even if they are not yours.",
+		"event_type": "N",
+		"skins_type": "I",
+		"season_points": 30,
+		"portal_url": null,
+		"start_date": "2023-05-24",
+		"start_time": "2:30 PM",
+		"registration_type": "M",
+		"signup_start": "2023-05-21T06:00:00-05:00",
+		"signup_end": "2023-05-23T18:00:00-05:00",
+		"payments_end": "2023-05-24T11:00:00-05:00",
+		"registration_maximum": 0,
+		"courses": [
+			{
+				"id": 1,
+				"name": "East",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 1, "course": 1, "hole_number": 1, "par": 4 },
+					{ "id": 2, "course": 1, "hole_number": 2, "par": 4 },
+					{ "id": 3, "course": 1, "hole_number": 3, "par": 3 },
+					{ "id": 4, "course": 1, "hole_number": 4, "par": 5 },
+					{ "id": 5, "course": 1, "hole_number": 5, "par": 4 },
+					{ "id": 6, "course": 1, "hole_number": 6, "par": 5 },
+					{ "id": 7, "course": 1, "hole_number": 7, "par": 3 },
+					{ "id": 8, "course": 1, "hole_number": 8, "par": 4 },
+					{ "id": 9, "course": 1, "hole_number": 9, "par": 4 }
+				]
+			},
+			{
+				"id": 2,
+				"name": "North",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 10, "course": 2, "hole_number": 1, "par": 4 },
+					{ "id": 11, "course": 2, "hole_number": 2, "par": 4 },
+					{ "id": 12, "course": 2, "hole_number": 3, "par": 4 },
+					{ "id": 13, "course": 2, "hole_number": 4, "par": 5 },
+					{ "id": 14, "course": 2, "hole_number": 5, "par": 4 },
+					{ "id": 15, "course": 2, "hole_number": 6, "par": 3 },
+					{ "id": 16, "course": 2, "hole_number": 7, "par": 4 },
+					{ "id": 17, "course": 2, "hole_number": 8, "par": 3 },
+					{ "id": 18, "course": 2, "hole_number": 9, "par": 5 }
+				]
+			},
+			{
+				"id": 3,
+				"name": "West",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 19, "course": 3, "hole_number": 1, "par": 4 },
+					{ "id": 20, "course": 3, "hole_number": 2, "par": 5 },
+					{ "id": 21, "course": 3, "hole_number": 3, "par": 3 },
+					{ "id": 22, "course": 3, "hole_number": 4, "par": 4 },
+					{ "id": 23, "course": 3, "hole_number": 5, "par": 5 },
+					{ "id": 24, "course": 3, "hole_number": 6, "par": 4 },
+					{ "id": 25, "course": 3, "hole_number": 7, "par": 4 },
+					{ "id": 26, "course": 3, "hole_number": 8, "par": 3 },
+					{ "id": 27, "course": 3, "hole_number": 9, "par": 4 }
+				]
+			}
+		],
+		"fees": [
+			{
+				"id": 440,
+				"event": 497,
+				"fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": true,
+				"display_order": 1
+			},
+			{
+				"id": 441,
+				"event": 497,
+				"fee_type": { "id": 6, "name": "Gross Skins", "code": "S", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": false,
+				"display_order": 2
+			},
+			{
+				"id": 442,
+				"event": 497,
+				"fee_type": { "id": 7, "name": "Net Skins", "code": "S", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": false,
+				"display_order": 3
+			},
+			{
+				"id": 443,
+				"event": 497,
+				"fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
+				"amount": "21.00",
+				"is_required": false,
+				"display_order": 4
+			},
+			{
+				"id": 444,
+				"event": 497,
+				"fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
+				"amount": "12.00",
+				"is_required": false,
+				"display_order": 5
+			}
+		],
+		"default_tag": null,
+		"starter_time_interval": 9
+	},
+	{
+		"id": 532,
+		"name": "MN Senior Open",
+		"rounds": 2,
+		"ghin_required": false,
+		"total_groups": null,
+		"status": "S",
+		"minimum_signup_group_size": null,
+		"maximum_signup_group_size": null,
+		"group_size": null,
+		"start_type": "NA",
+		"can_choose": false,
+		"registration_window": "n/a",
+		"external_url": "https://mnpga.bluegolf.com/bluegolf/mnpga23/event/mnpga2316/index.htm",
+		"season": 2023,
+		"tee_time_splits": null,
+		"notes": "",
+		"event_type": "E",
+		"skins_type": null,
+		"season_points": null,
+		"portal_url": null,
+		"start_date": "2023-05-30",
+		"start_time": "Keller GC",
+		"registration_type": "N",
+		"signup_start": null,
+		"signup_end": null,
+		"payments_end": null,
+		"registration_maximum": null,
+		"courses": [],
+		"fees": [],
+		"default_tag": null,
+		"starter_time_interval": 0
+	},
+	{
+		"id": 498,
+		"name": "3 Ball Fivesome",
+		"rounds": 1,
+		"ghin_required": true,
+		"total_groups": 27,
+		"status": "S",
+		"minimum_signup_group_size": 1,
+		"maximum_signup_group_size": 5,
+		"group_size": 5,
+		"start_type": "TT",
+		"can_choose": true,
+		"registration_window": "future",
+		"external_url": null,
+		"season": 2023,
+		"tee_time_splits": "8",
+		"notes": "- Teams will consist of 5 players.\r\n - Blind draw score will be assigned in the event a team has less than 5 players.\r\n - Each player will receive handicap strokes based on their current USGA index and the course played.\r\n - Record each player’s individual gross score for each hole.\r\n - The team score will be calculated by Golf Genius, and will be the best 3 scores out of the 5 players’ scores for each hole.\r\n - Play will be from the club markers, unless you signed up to play the forward tee (Gold) at the beginning of the year.\r\n - Prizes will be awarded in both Gross and Net categories. A team may only win in one category. The Golf Genius program will calculate results with official winners posted once those results are verified. \r\n - There will be a single gross and net division per nine.\r\n - **Do not enter your score into the computer. ** Golf Genius will submit your scores automatically.\r\n - All scoring will be done with the mobile scoring app. GGIDs for your groups will be posted on the event tee sheet after close of entries.\r\n - This event qualifies for the Season Long Points Competition.\r\n - USGA rules govern all play.  Local rules and policies as posted on the BHMC website apply.\r\n - Help maintain our course.  Please replace divots and fix ball marks even if they are not yours.",
+		"event_type": "N",
+		"skins_type": "I",
+		"season_points": 30,
+		"portal_url": null,
+		"start_date": "2023-05-31",
+		"start_time": "2:30 PM",
+		"registration_type": "M",
+		"signup_start": "2023-05-28T06:00:00-05:00",
+		"signup_end": "2023-05-30T18:00:00-05:00",
+		"payments_end": "2023-05-31T11:00:00-05:00",
+		"registration_maximum": 0,
+		"courses": [
+			{
+				"id": 1,
+				"name": "East",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 1, "course": 1, "hole_number": 1, "par": 4 },
+					{ "id": 2, "course": 1, "hole_number": 2, "par": 4 },
+					{ "id": 3, "course": 1, "hole_number": 3, "par": 3 },
+					{ "id": 4, "course": 1, "hole_number": 4, "par": 5 },
+					{ "id": 5, "course": 1, "hole_number": 5, "par": 4 },
+					{ "id": 6, "course": 1, "hole_number": 6, "par": 5 },
+					{ "id": 7, "course": 1, "hole_number": 7, "par": 3 },
+					{ "id": 8, "course": 1, "hole_number": 8, "par": 4 },
+					{ "id": 9, "course": 1, "hole_number": 9, "par": 4 }
+				]
+			},
+			{
+				"id": 2,
+				"name": "North",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 10, "course": 2, "hole_number": 1, "par": 4 },
+					{ "id": 11, "course": 2, "hole_number": 2, "par": 4 },
+					{ "id": 12, "course": 2, "hole_number": 3, "par": 4 },
+					{ "id": 13, "course": 2, "hole_number": 4, "par": 5 },
+					{ "id": 14, "course": 2, "hole_number": 5, "par": 4 },
+					{ "id": 15, "course": 2, "hole_number": 6, "par": 3 },
+					{ "id": 16, "course": 2, "hole_number": 7, "par": 4 },
+					{ "id": 17, "course": 2, "hole_number": 8, "par": 3 },
+					{ "id": 18, "course": 2, "hole_number": 9, "par": 5 }
+				]
+			},
+			{
+				"id": 3,
+				"name": "West",
+				"number_of_holes": 9,
+				"holes": [
+					{ "id": 19, "course": 3, "hole_number": 1, "par": 4 },
+					{ "id": 20, "course": 3, "hole_number": 2, "par": 5 },
+					{ "id": 21, "course": 3, "hole_number": 3, "par": 3 },
+					{ "id": 22, "course": 3, "hole_number": 4, "par": 4 },
+					{ "id": 23, "course": 3, "hole_number": 5, "par": 5 },
+					{ "id": 24, "course": 3, "hole_number": 6, "par": 4 },
+					{ "id": 25, "course": 3, "hole_number": 7, "par": 4 },
+					{ "id": 26, "course": 3, "hole_number": 8, "par": 3 },
+					{ "id": 27, "course": 3, "hole_number": 9, "par": 4 }
+				]
+			}
+		],
+		"fees": [
+			{
+				"id": 445,
+				"event": 498,
+				"fee_type": { "id": 5, "name": "Event Fee", "code": "E", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": true,
+				"display_order": 1
+			},
+			{
+				"id": 446,
+				"event": 498,
+				"fee_type": { "id": 6, "name": "Gross Skins", "code": "S", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": false,
+				"display_order": 2
+			},
+			{
+				"id": 447,
+				"event": 498,
+				"fee_type": { "id": 7, "name": "Net Skins", "code": "S", "restriction": "None" },
+				"amount": "5.00",
+				"is_required": false,
+				"display_order": 3
+			},
+			{
+				"id": 448,
+				"event": 498,
+				"fee_type": { "id": 8, "name": "Greens Fee", "code": "G", "restriction": "None" },
+				"amount": "21.00",
+				"is_required": false,
+				"display_order": 4
+			},
+			{
+				"id": 449,
+				"event": 498,
+				"fee_type": { "id": 9, "name": "Cart Fee", "code": "C", "restriction": "None" },
+				"amount": "12.00",
+				"is_required": false,
+				"display_order": 5
+			}
+		],
+		"default_tag": null,
+		"starter_time_interval": 9
+	}
 ]

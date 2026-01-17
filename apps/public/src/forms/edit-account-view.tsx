@@ -1,68 +1,79 @@
-import { UseFormReturn } from "react-hook-form"
+import { FormEvent } from "react"
 
 import { InputControl } from "../components/forms/input-control"
 import { Spinner } from "../components/spinners/spinner"
 import { PlayerApiData } from "../models/player"
 
+type EditAccountData = Omit<PlayerApiData, "profile_picture">
+
 interface EditAccountViewProps {
-	form: UseFormReturn<PlayerApiData>
+	formData: EditAccountData
+	errors: Record<string, string>
+	isSubmitting: boolean
+	onChange: (field: keyof EditAccountData, value: string) => void
+	onSubmit: (e: FormEvent) => void
 	onCancel: () => void
-	onSubmit: (args: PlayerApiData) => void
 }
 
-export function EditAccountView({ form, onCancel, onSubmit }: EditAccountViewProps) {
-	const { register, handleSubmit, formState } = form
-	const { errors: formErrors, isSubmitting } = formState
-
-	const submitForm = (args: PlayerApiData) => {
-		onSubmit(args)
-	}
-
+export function EditAccountView({
+	formData,
+	errors,
+	isSubmitting,
+	onChange,
+	onSubmit,
+	onCancel,
+}: EditAccountViewProps) {
 	return (
-		<form onSubmit={handleSubmit(submitForm)}>
+		<form onSubmit={onSubmit}>
 			<InputControl
 				name="first_name"
 				type="text"
 				label="First name"
-				register={register("first_name")}
-				error={formErrors.first_name}
+				value={formData.first_name}
+				onChange={(e) => onChange("first_name", e.target.value)}
+				error={errors.first_name}
 			/>
 			<InputControl
 				name="last_name"
 				type="text"
 				label="Last name"
-				register={register("last_name")}
-				error={formErrors.last_name}
+				value={formData.last_name}
+				onChange={(e) => onChange("last_name", e.target.value)}
+				error={errors.last_name}
 			/>
 			<InputControl
 				name="email"
 				type="email"
 				label="Email"
-				register={register("email")}
-				error={formErrors.email}
+				value={formData.email ?? ""}
+				onChange={(e) => onChange("email", e.target.value)}
+				error={errors.email}
 			/>
 			<InputControl
 				name="ghin"
 				type="text"
 				label="GHIN"
-				register={register("ghin")}
-				error={formErrors.ghin}
+				value={formData.ghin ?? ""}
+				onChange={(e) => onChange("ghin", e.target.value)}
+				error={errors.ghin}
 			/>
 			<InputControl
 				name="birth_date"
 				type="date"
 				label="Birthday"
-				register={register("birth_date")}
-				error={formErrors.birth_date}
+				value={formData.birth_date ?? ""}
+				onChange={(e) => onChange("birth_date", e.target.value)}
+				error={errors.birth_date}
 			/>
 			<InputControl
 				name="phone_number"
 				type="text"
 				label="Phone number"
-				register={register("phone_number")}
-				error={formErrors.phone_number}
+				value={formData.phone_number ?? ""}
+				onChange={(e) => onChange("phone_number", e.target.value)}
+				error={errors.phone_number}
 			/>
-			<button type="submit" className="btn btn-primary btn-sm me-2" disabled={false}>
+			<button type="submit" className="btn btn-primary btn-sm me-2" disabled={isSubmitting}>
 				Save Changes
 			</button>
 			<button

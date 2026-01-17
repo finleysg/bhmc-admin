@@ -1,8 +1,7 @@
 import { ComponentPropsWithoutRef, PropsWithChildren } from "react"
 
-interface IndexTabProps extends PropsWithChildren<
-	Omit<ComponentPropsWithoutRef<"li">, "onSelect">
-> {
+interface IndexTabProps
+	extends PropsWithChildren<Omit<ComponentPropsWithoutRef<"li">, "onSelect">> {
 	index: number
 	selectedIndex: number
 	onSelect: (index: number) => void

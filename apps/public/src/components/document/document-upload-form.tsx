@@ -1,14 +1,12 @@
-import { ChangeEvent, useState } from "react"
+import { ChangeEvent, FormEvent, useState } from "react"
 
-import { useForm } from "react-hook-form"
 import { z } from "zod"
-
-import { zodResolver } from "@hookform/resolvers/zod"
 
 import { ClubEvent } from "../../models/club-event"
 import { documentTypeMap } from "../../models/codes"
 import { BhmcDocument } from "../../models/document"
 import { currentSeason } from "../../utils/app-config"
+import { formatZodErrors } from "../../utils/form-utils"
 import { InputControl } from "../forms/input-control"
 import { SelectControl, SelectOption } from "../forms/select-control"
 import { FilePicker } from "./file-picker"
@@ -33,7 +31,7 @@ interface DocumentUploadFormProps {
 	document?: BhmcDocument | null
 	documentTypeFilter?: string[]
 	onCancel: () => void
-	onSubmit: (values: DocumentUploadData, file: File) => void
+	onSubmit: (values: DocumentUploadData, file: File) => Promise<void>
 }
 
 export function DocumentUploadForm({
@@ -44,63 +42,78 @@ export function DocumentUploadForm({
 	documentTypeFilter,
 }: DocumentUploadFormProps) {
 	const [files, setFiles] = useState<File[]>([])
-	const form = useForm<DocumentUploadData>({
-		resolver: zodResolver(DocumentUploadSchema),
-		defaultValues: {
-			year: currentSeason.toString(),
-			title: document?.title,
-			document_type: document?.documentType,
-		},
+	const [formData, setFormData] = useState<DocumentUploadData>({
+		year: currentSeason.toString(),
+		title: document?.title ?? "",
+		document_type: document?.documentType ?? "",
 	})
-	const { register, handleSubmit, formState } = form
-	const { errors: formErrors, isSubmitting } = formState
+	const [errors, setErrors] = useState<Record<string, string>>({})
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	const documentTypeOptions = documentTypeFilter
 		? getDocumentTypeOptions().filter((o) => documentTypeFilter.includes(o.value.toString()))
 		: getDocumentTypeOptions()
 
-	const handleFileSelected = (files: File[]) => {
-		setFiles(files)
+	const handleFileSelected = (selectedFiles: File[]) => {
+		setFiles(selectedFiles)
 	}
 
-	const handleFileSubmit = (values: DocumentUploadData) => {
-		onSubmit(values, files[0])
+	const handleChange = (field: keyof DocumentUploadData, value: string) => {
+		setFormData((prev) => ({ ...prev, [field]: value }))
+		setErrors((prev) => ({ ...prev, [field]: "" }))
 	}
 
 	const handleDocumentTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
 		const code = e.target.value
-		const { title } = form.getValues()
-		if (clubEvent && (!title || title.trim().length === 0)) {
+		handleChange("document_type", code)
+		if (clubEvent && (!formData.title || formData.title.trim().length === 0)) {
 			const documentTypeName = documentTypeMap.get(code)?.replace("Event ", "")
 			const title = `${clubEvent.name} ${documentTypeName}`
-			form.setValue("title", title)
+			setFormData((prev) => ({ ...prev, title }))
+		}
+	}
+
+	const handleSubmit = async (e: FormEvent) => {
+		e.preventDefault()
+		const result = DocumentUploadSchema.safeParse(formData)
+		if (!result.success) {
+			setErrors(formatZodErrors(result.error))
+			return
+		}
+		setIsSubmitting(true)
+		try {
+			await onSubmit(result.data, files[0])
+		} finally {
+			setIsSubmitting(false)
 		}
 	}
 
 	return (
 		<div>
-			<form onSubmit={handleSubmit(handleFileSubmit)}>
+			<form onSubmit={handleSubmit}>
 				<SelectControl
 					name="document_type"
 					label="Type"
-					register={register("document_type")}
-					options={documentTypeOptions}
-					error={formErrors.document_type}
+					value={formData.document_type}
 					onChange={handleDocumentTypeChange}
+					options={documentTypeOptions}
+					error={errors.document_type}
 				/>
 				<InputControl
 					name="year"
 					label="Year"
-					register={register("year")}
-					error={formErrors.year}
 					type="text"
+					value={formData.year}
+					onChange={(e) => handleChange("year", e.target.value)}
+					error={errors.year}
 				/>
 				<InputControl
 					name="title"
 					label="Title"
-					register={register("title")}
-					error={formErrors.title}
 					type="text"
+					value={formData.title}
+					onChange={(e) => handleChange("title", e.target.value)}
+					error={errors.title}
 				/>
 				<FilePicker onSelected={handleFileSelected} onDrop={handleFileSelected} />
 				<div className="d-flex justify-content-end">
