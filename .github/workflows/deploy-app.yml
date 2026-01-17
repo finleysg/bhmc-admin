@@ -150,7 +150,7 @@ jobs:
           VITE_CURRENT_ENVIRONMENT=production
           VITE_STRIPE_PUBLIC_KEY=${{ secrets.VITE_STRIPE_PUBLIC_KEY }}
           VITE_GIPHY_API_KEY=${{ secrets.VITE_GIPHY_API_KEY }}
-          VITE_SENIOR_AGE=55
+          VITE_SENIOR_AGE=62
           VITE_SENIOR_COMPETITION_AGE=50
           VITE_VERSION=${{ needs.create-tag.outputs.version }}
           VITE_MODE=Live
