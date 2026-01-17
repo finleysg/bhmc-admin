@@ -4,7 +4,6 @@ import {
 	Column,
 	Container,
 	Head,
-	Heading,
 	Html,
 	Img,
 	Link,
@@ -38,9 +37,6 @@ export function EmailLayout({ children }: EmailLayoutProps) {
 								<Img src={LOGO} alt="Bunker Hills Men's Club" style={logo} />
 							</Link>
 						</Column>
-						{/* <Column>
-							<Heading style={heading}>Bunker Hills Men's Club</Heading>
-						</Column> */}
 					</Row>
 					<Section style={content}>{children}</Section>
 				</Container>
@@ -72,13 +68,6 @@ const logoColumn = {
 const logo = {
 	height: "6em",
 	width: "auto",
-}
-
-const heading = {
-	color: colors.heading,
-	fontSize: "1.5em",
-	margin: 0,
-	verticalAlign: "top" as const,
 }
 
 const content = {
