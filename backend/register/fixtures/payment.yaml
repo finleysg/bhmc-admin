@@ -1,12 +1,12 @@
--   model: payments.payment
-    pk: 35
-    fields:
-        payment_code: pi_1Hu67RG3m1mtgUwuNrrtBUNw
-        payment_key: pi_1Hu67RG3m1mtgUwuNrrtBUNw_secret_u3M3lv5Ein5yWwe7bJ1i5v6DB
-        payment_amount: '149.64'
-        transaction_fee: '4.64'
-        event: 1
-        user: 1
-        notification_type: R
-        confirmed: false
-        payment_date: 2021-02-19 00:32:49+00:00
+- model: payments.payment
+  pk: 35
+  fields:
+    payment_code: pi_1Hu67RG3m1mtgUwuNrrtBUNw
+    payment_key: pi_1Hu67RG3m1mtgUwuNrrtBUNw_secret_u3M3lv5Ein5yWwe7bJ1i5v6DB
+    payment_amount: "149.64"
+    transaction_fee: "4.64"
+    event: 1
+    user: 1
+    notification_type: R
+    confirmed: false
+    payment_date: 2021-02-19 00:32:49+00:00

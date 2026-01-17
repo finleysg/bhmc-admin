@@ -43,8 +43,8 @@ if (operationTracker.cancelled) return
 
 // CRITICAL: After Stripe confirmation (even though call completed)
 if (operationTracker.cancelled) {
-  console.log("Ignoring Stripe result - operation was cancelled")
-  return
+	console.log("Ignoring Stripe result - operation was cancelled")
+	return
 }
 ```
 
@@ -68,19 +68,19 @@ with our local registration completion if cancelled.
 
 ```typescript
 const handleForceCancel = async () => {
-  // Mark operation as cancelled
-  if (paymentOperationRef.current) {
-    paymentOperationRef.current.cancelled = true
-  }
+	// Mark operation as cancelled
+	if (paymentOperationRef.current) {
+		paymentOperationRef.current.cancelled = true
+	}
 
-  // Abort network requests
-  if (abortControllerRef.current) {
-    abortControllerRef.current.abort()
-  }
+	// Abort network requests
+	if (abortControllerRef.current) {
+		abortControllerRef.current.abort()
+	}
 
-  // Clean up server state
-  await cancelRegistration("user", mode)
-  handlePaymentCanceled()
+	// Clean up server state
+	await cancelRegistration("user", mode)
+	handlePaymentCanceled()
 }
 ```
 
@@ -137,10 +137,10 @@ We provide clear messaging:
 
 ```typescript
 setError(
-  new Error(
-    "Payment processing timed out. This may be due to network issues or bank verification delays. " +
-      "Please check if the payment was processed in your bank account before trying again.",
-  ),
+	new Error(
+		"Payment processing timed out. This may be due to network issues or bank verification delays. " +
+			"Please check if the payment was processed in your bank account before trying again.",
+	),
 )
 ```
 
@@ -159,8 +159,8 @@ const { error: confirmError } = await confirmPaymentPromise
 
 // CRITICAL: Check cancellation AFTER Stripe call
 if (operationTracker.cancelled) {
-  // Ignore result, don't complete registration
-  return
+	// Ignore result, don't complete registration
+	return
 }
 ```
 

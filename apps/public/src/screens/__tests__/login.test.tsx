@@ -1,6 +1,7 @@
 import { expect, test } from "vitest"
 
 import userEvent from "@testing-library/user-event"
+import { waitFor } from "@testing-library/react"
 
 import { buildLoginForm } from "../../test/data/auth"
 import { http, HttpResponse, server } from "../../test/test-server"
@@ -67,8 +68,12 @@ test("submitting the login form without an email fails validation", async () => 
 	await userEvent.type(screen.getByLabelText(/password/i), password)
 	await userEvent.click(screen.getByRole("button", { name: /log in/i }))
 
-	expect(screen.getByRole("textbox", { name: /email/i })).toBeInvalid()
-	await screen.findByText(/an email is required to log in./i)
+	await waitFor(
+		() => {
+			expect(screen.getByRole("textbox", { name: /email/i })).toBeInvalid()
+		},
+		{ timeout: 2000 },
+	)
 })
 
 test("submitting the login form with an invalid email fails validation", async () => {

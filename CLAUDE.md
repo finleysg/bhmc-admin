@@ -4,8 +4,9 @@ In all interactions and commit messages, be extremely concise and sacrifice gram
 
 ## Project Overview
 
-Bunker Hills Men's Club is a group of golf enthusiastics who compete in weekly and monthly competitions throughout 
+Bunker Hills Men's Club is a group of golf enthusiastics who compete in weekly and monthly competitions throughout
 the summery. This monorepo contains the websites and services to manage every aspect of the club's online experience:
+
 - Public facing website for club information and event registration
 - Django backend provides a RESTful layer over club data and django's built-in table administration screens
 - MySQL to store club data
@@ -72,8 +73,8 @@ pnpm format:check           # Prettier check
 - **TypeScript**: Strict mode, no `any` in production code
 - **Configuration**: .env files validated with Joi
 - **Database**: MySQL 8
-    - Django owns the schema and migrations, requiring converstion from snake-case to camel-case
-    - API uses Drizzle ORM (external schema - no migrations)
+  - Django owns the schema and migrations, requiring converstion from snake-case to camel-case
+  - API uses Drizzle ORM (external schema - no migrations)
 
 ### API Module Structure
 
@@ -174,10 +175,11 @@ const createMockRepository = () => ({
 - **API**: Routes in `/app/api/` proxy to backend with Django tokens
 
 ### Auth
+
 - **Credentials**: email and password protected accounts, owned by the Django backend
 - **Roles**: roles defined in Django
-    - Admin
-	- Super Admin (no use cases yet)
+  - Admin
+  - Super Admin (no use cases yet)
 
 ## Public Web (react spa)
 
@@ -188,12 +190,12 @@ const createMockRepository = () => ({
 - **State**: React Context for registration and authentication
 - **Styling**: Bootstrap v5 + custom SCSS
 - **Multiple Backends**
-    - apiUrl() to talk to the Django backend
-	- serverUrl() to talk to the nestjs api for registration flows
+  - apiUrl() to talk to the Django backend
+  - serverUrl() to talk to the nestjs api for registration flows
 - **Types**: zod used to validate api data
-- **Classes**: 
-    - classes used to transform snake_case from Django to camelCase
-	- class methods consolidate functional methods
+- **Classes**:
+  - classes used to transform snake_case from Django to camelCase
+  - class methods consolidate functional methods
 
 ## Project Structure
 
@@ -239,19 +241,19 @@ npx vitest run src/components/buttons/__tests__/register-button.test.tsx
 
 ### Django Apps
 
-| App | Purpose |
-|-----|---------|
-| core | User management, authentication, season settings |
-| events | Tournaments, event fees, rounds, results |
-| register | Player profiles, registrations, slots, fees |
-| payments | Stripe payments and refunds |
-| courses | Golf courses and hole data |
-| damcup | Season-long points competition |
-| scores | Event scoring and scorecards |
-| documents | Photos and document management |
-| messaging | Announcements and contact messages |
-| policies | Club policies and rules |
-| content | Tags and page content |
+| App       | Purpose                                          |
+| --------- | ------------------------------------------------ |
+| core      | User management, authentication, season settings |
+| events    | Tournaments, event fees, rounds, results         |
+| register  | Player profiles, registrations, slots, fees      |
+| payments  | Stripe payments and refunds                      |
+| courses   | Golf courses and hole data                       |
+| damcup    | Season-long points competition                   |
+| scores    | Event scoring and scorecards                     |
+| documents | Photos and document management                   |
+| messaging | Announcements and contact messages               |
+| policies  | Club policies and rules                          |
+| content   | Tags and page content                            |
 
 ### Commands
 
@@ -272,6 +274,7 @@ uv run python manage.py migrate
 ### Environment
 
 Set `DJANGO_ENV` to control configuration:
+
 - `local` - uses `config/.env.local`
 - `docker` - uses `config/.env.docker`
 - `prod` - uses `config/.env`
@@ -280,13 +283,13 @@ Set `DJANGO_ENV` to control configuration:
 
 Credentials-based authentication via [Djoser](https://djoser.readthedocs.io/).
 
-| Endpoint | Description |
-|----------|-------------|
-| `POST /auth/token/login/` | Obtain auth token (email + password) |
-| `POST /auth/token/logout/` | Invalidate current token |
-| `POST /auth/users/` | Register new user |
-| `POST /auth/users/reset_password/` | Request password reset |
-| `POST /auth/users/reset_password_confirm/` | Confirm password reset |
+| Endpoint                                   | Description                          |
+| ------------------------------------------ | ------------------------------------ |
+| `POST /auth/token/login/`                  | Obtain auth token (email + password) |
+| `POST /auth/token/logout/`                 | Invalidate current token             |
+| `POST /auth/users/`                        | Register new user                    |
+| `POST /auth/users/reset_password/`         | Request password reset               |
+| `POST /auth/users/reset_password_confirm/` | Confirm password reset               |
 
 ## General Agent Instructions
 

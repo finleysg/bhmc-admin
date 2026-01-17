@@ -18,7 +18,9 @@ interface SseMessage {
 export class RegistrationLiveController {
 	private readonly logger = new Logger(RegistrationLiveController.name)
 
-	constructor(@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService) {}
+	constructor(
+		@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService,
+	) {}
 
 	@Sse(":eventId/live")
 	liveUpdates(

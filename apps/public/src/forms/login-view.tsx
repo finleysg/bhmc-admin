@@ -1,32 +1,34 @@
-import { UseFormReturn } from "react-hook-form"
+import { FormEvent } from "react"
 
 import { InputControl } from "../components/forms/input-control"
 import { LoginData } from "../models/auth"
 
-interface ILoginView {
-	form: UseFormReturn<LoginData>
-	onSubmit: (args: LoginData) => void
+interface LoginViewProps {
+	formData: LoginData
+	errors: Record<string, string>
+	isSubmitting: boolean
+	onChange: (field: keyof LoginData, value: string) => void
+	onSubmit: (e: FormEvent) => void
 }
 
-export function LoginView({ form, onSubmit }: ILoginView) {
-	const { register, handleSubmit, formState } = form
-	const { errors: formErrors, isSubmitting } = formState
-
+export function LoginView({ formData, errors, isSubmitting, onChange, onSubmit }: LoginViewProps) {
 	return (
-		<form onSubmit={handleSubmit(onSubmit)}>
+		<form onSubmit={onSubmit}>
 			<InputControl
 				name="email"
 				label="Email"
-				register={register("email")}
-				error={formErrors.email}
 				type="text"
+				value={formData.email}
+				onChange={(e) => onChange("email", e.target.value)}
+				error={errors.email}
 			/>
 			<InputControl
 				name="password"
 				label="Password"
-				register={register("password")}
-				error={formErrors.password}
 				type="password"
+				value={formData.password}
+				onChange={(e) => onChange("password", e.target.value)}
+				error={errors.password}
 			/>
 			<button type="submit" className="btn btn-primary" disabled={isSubmitting}>
 				Log In

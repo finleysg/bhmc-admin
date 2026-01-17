@@ -1,8 +1,8 @@
-import { useForm } from "react-hook-form"
+import { FormEvent, useState } from "react"
+
 import { z } from "zod"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-
+import { formatZodErrors } from "../../utils/form-utils"
 import { InputControl } from "../forms/input-control"
 
 const EventPortalSchema = z.object({
@@ -15,26 +15,38 @@ interface EventPortalFormProps {
 }
 
 export function EventPortalForm({ onSubmit }: EventPortalFormProps) {
-	const form = useForm<EventPortalData>({
-		resolver: zodResolver(EventPortalSchema),
-	})
-	const { reset, register, handleSubmit, formState } = form
-	const { errors: formErrors, isSubmitting } = formState
+	const [formData, setFormData] = useState<EventPortalData>({ portal_url: "" })
+	const [errors, setErrors] = useState<Record<string, string>>({})
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
-	const handleUrlSubmit = (values: EventPortalData) => {
-		onSubmit(values.portal_url)
-		reset()
+	const handleChange = (field: keyof EventPortalData, value: string) => {
+		setFormData((prev) => ({ ...prev, [field]: value }))
+		setErrors((prev) => ({ ...prev, [field]: "" }))
+	}
+
+	const handleSubmit = (e: FormEvent) => {
+		e.preventDefault()
+		const result = EventPortalSchema.safeParse(formData)
+		if (!result.success) {
+			setErrors(formatZodErrors(result.error))
+			return
+		}
+		setIsSubmitting(true)
+		onSubmit(result.data.portal_url)
+		setFormData({ portal_url: "" })
+		setIsSubmitting(false)
 	}
 
 	return (
 		<div>
-			<form onSubmit={handleSubmit(handleUrlSubmit)}>
+			<form onSubmit={handleSubmit}>
 				<InputControl
 					name="portal_url"
 					label="Portal Url"
-					register={register("portal_url")}
-					error={formErrors.portal_url}
 					type="text"
+					value={formData.portal_url}
+					onChange={(e) => handleChange("portal_url", e.target.value)}
+					error={errors.portal_url}
 				/>
 				<div className="d-flex justify-content-end mt-2">
 					<button type="submit" className="btn btn-primary ms-2" disabled={isSubmitting}>

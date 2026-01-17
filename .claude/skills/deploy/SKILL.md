@@ -39,6 +39,7 @@ Where `<app>` is one of: `api`, `public`, `web`
 User: `/deploy api`
 
 Response:
+
 ```
 Triggered deploy-app.yml for api
 Workflow: https://github.com/finleysg/bhmc-admin/actions/runs/12345

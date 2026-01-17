@@ -1,10 +1,8 @@
-import { useState } from "react"
+import { FormEvent, useState } from "react"
 
-import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-
+import { formatZodErrors } from "../../utils/form-utils"
 import { ErrorDisplay } from "../feedback/error-display"
 import { InputControl } from "../forms/input-control"
 import { PhotoPicker } from "./photo-picker"
@@ -28,63 +26,71 @@ interface PhotoUploadFormProps {
 
 export function PhotoUploadForm({ onSubmit, season, error, defaultTags }: PhotoUploadFormProps) {
 	const [files, setFiles] = useState<File[]>([])
-
-	const form = useForm<PhotoUploadData>({
-		resolver: zodResolver(PhotoUploadSchema),
-		defaultValues: {
-			year: season,
-			tags: defaultTags,
-		},
+	const [formData, setFormData] = useState<PhotoUploadData>({
+		year: season ?? new Date().getFullYear(),
+		caption: "",
+		tags: defaultTags,
 	})
-	const { register, reset, handleSubmit, formState } = form
-	const { errors: formErrors, isSubmitting } = formState
+	const [errors, setErrors] = useState<Record<string, string>>({})
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
-	const handleFileSelected = (files: File[]) => {
-		setFiles(files)
+	const handleFileSelected = (selectedFiles: File[]) => {
+		setFiles(selectedFiles)
 	}
 
-	const handleFileSubmit = (values: PhotoUploadData) => {
-		onSubmit(values, files[0], () => {
-			reset()
+	const handleChange = (field: keyof PhotoUploadData, value: string | number) => {
+		setFormData((prev) => ({ ...prev, [field]: value }))
+		setErrors((prev) => ({ ...prev, [field]: "" }))
+	}
+
+	const handleTagChange = (tags: { tag: string }[]) => {
+		setFormData((prev) => ({ ...prev, tags: tags.map((t) => t.tag) }))
+		setErrors((prev) => ({ ...prev, tags: "" }))
+	}
+
+	const handleSubmit = (e: FormEvent) => {
+		e.preventDefault()
+		const result = PhotoUploadSchema.safeParse(formData)
+		if (!result.success) {
+			setErrors(formatZodErrors(result.error))
+			return
+		}
+		setIsSubmitting(true)
+		onSubmit(result.data, files[0], () => {
+			setFormData({ year: season ?? new Date().getFullYear(), caption: "", tags: defaultTags })
 			setFiles([])
+			setIsSubmitting(false)
 		})
 	}
 
 	return (
 		<div>
-			<form onSubmit={handleSubmit(handleFileSubmit)}>
+			<form onSubmit={handleSubmit}>
 				<PhotoPicker onSelect={handleFileSelected} />
 				<InputControl
 					name="year"
 					label="Year"
-					register={register("year")}
-					error={formErrors.year}
 					type="text"
+					value={formData.year}
+					onChange={(e) => handleChange("year", parseInt(e.target.value) || 0)}
+					error={errors.year}
 				/>
 				<InputControl
 					name="caption"
 					label="Caption"
-					register={register("caption")}
-					error={formErrors.caption}
 					type="text"
+					value={formData.caption}
+					onChange={(e) => handleChange("caption", e.target.value)}
+					error={errors.caption}
 				/>
-				<TagPicker
-					defaultTags={defaultTags}
-					onChange={(tags) => {
-						form.setValue(
-							"tags",
-							tags.map((t) => t.tag),
-						)
-						form.clearErrors("tags")
-					}}
-				/>
-				{formErrors.tags && (
+				<TagPicker defaultTags={defaultTags} onChange={handleTagChange} />
+				{errors.tags && (
 					<div
 						className="invalid-feedback"
 						style={{ display: "block" }}
-						aria-errormessage={formErrors.tags.message}
+						aria-errormessage={errors.tags}
 					>
-						{formErrors.tags.message as string}
+						{errors.tags}
 					</div>
 				)}
 				<div className="d-flex justify-content-end">

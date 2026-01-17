@@ -1,17 +1,14 @@
 import { InputHTMLAttributes } from "react"
 
-import { FieldValues, Path, UseFormRegisterReturn } from "react-hook-form"
-
 import { Checkbox } from "./checkbox"
 
-type CheckboxControlProps<TData extends FieldValues> = {
+type CheckboxControlProps = {
 	name: string
 	label: string
-	register: UseFormRegisterReturn<Path<TData>>
 } & InputHTMLAttributes<HTMLInputElement>
 
-export function CheckboxControl<TData extends FieldValues>(props: CheckboxControlProps<TData>) {
-	const { name, label, register, ...rest } = props
+export function CheckboxControl(props: CheckboxControlProps) {
+	const { name, label, ...rest } = props
 
-	return <Checkbox id={name} label={label} {...register} {...rest} />
+	return <Checkbox id={name} label={label} {...rest} />
 }

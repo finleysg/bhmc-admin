@@ -1,6 +1,13 @@
 import { catchError, from, Observable, tap } from "rxjs"
 
-import { CallHandler, ExecutionContext, Inject, Injectable, Logger, NestInterceptor } from "@nestjs/common"
+import {
+	CallHandler,
+	ExecutionContext,
+	Inject,
+	Injectable,
+	Logger,
+	NestInterceptor,
+} from "@nestjs/common"
 import { IntegrationActionName } from "@repo/domain/types"
 
 import { IntegrationLogRepository } from "../integration-log.repository"
@@ -16,7 +23,8 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 	private readonly logger = new Logger(LogIntegrationInterceptor.name)
 
 	constructor(
-		@Inject(IntegrationLogRepository) private readonly integrationLogService: IntegrationLogRepository,
+		@Inject(IntegrationLogRepository)
+		private readonly integrationLogService: IntegrationLogRepository,
 		@Inject(RosterExportService) private readonly rosterExportService: RosterExportService,
 	) {}
 

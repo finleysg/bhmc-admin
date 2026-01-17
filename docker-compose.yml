@@ -82,7 +82,7 @@ services:
     ports:
       - "3100:3300"
     env_file:
-     - ./apps/web/.env.development
+      - ./apps/web/.env.development
     depends_on:
       - api
     restart: unless-stopped

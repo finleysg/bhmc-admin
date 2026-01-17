@@ -5,6 +5,7 @@ Language-agnostic spec for creating event registrations. The frontend is impleme
 ## Data Models
 
 ### Player
+
 ```
 Player {
   id: int (primary key)
@@ -22,6 +23,7 @@ Player {
 ```
 
 ### Registration
+
 ```
 Registration {
   id: int (primary key)
@@ -36,6 +38,7 @@ Registration {
 ```
 
 ### RegistrationSlot
+
 ```
 RegistrationSlot {
   id: int (primary key)
@@ -53,6 +56,7 @@ Constraints:
 ```
 
 ### RegistrationFee
+
 ```
 RegistrationFee {
   id: int (primary key)
@@ -111,12 +115,14 @@ Event {
 ### Event Types by `can_choose`
 
 **Choosable Events** (`can_choose=true`):
+
 - Slots pre-created when event is set up
 - Player selects specific slot(s) to reserve
 - Slot status managed: A -> P -> X -> R
 - Expired slots return to Available status
 
 **Non-Choosable Events** (`can_choose=false`):
+
 - Slots created on-demand during registration
 - System assigns slots automatically
 - `maximum_signup_group_size` slots created per registration
@@ -205,13 +211,15 @@ Success (201 Created):
 
 ### Pre-Conditions (checked in order)
 
-1. **Registration Window Open** 
+1. **Registration Window Open**
+
    ```
    if event.registration_window not in ["registration", "priority"]:
      ERROR 400: "The event is not currently open for registration"
    ```
 
 2. **Wave Availability** (priority window, choosable events with waves)
+
    ```
    if event.registration_window == "priority" && event.can_choose && event.signup_waves:
      requested_wave = get_starting_wave(event, starting_order, hole_number)
@@ -221,6 +229,7 @@ Success (201 Created):
    ```
 
 3. **Event Capacity**
+
    ```
    if event.registration_maximum > 0:
      reserved_count = count slots where event=event AND status="R"
@@ -229,6 +238,7 @@ Success (201 Created):
    ```
 
 4. **No Duplicate Registration**
+
    ```
    existing = find registration where user=current_user AND event=event
    if existing has slots with status in ["R", "X"]:
@@ -236,6 +246,7 @@ Success (201 Created):
    ```
 
 5. **Slots Exist** (choosable events)
+
    ```
    requested_ids = [slot.id for slot in request.slots]
    found_slots = query slots where id in requested_ids (with row lock)
@@ -246,6 +257,7 @@ Success (201 Created):
    ```
 
 6. **Slots Available** (choosable events)
+
    ```
    for slot in found_slots:
      if slot.status != "A":
@@ -413,16 +425,16 @@ function clean_up_expired():
 
 ## Error Codes
 
-| Error | HTTP | Message |
-|-------|------|---------|
-| SlotConflictError | 409 | "One or more of the slots you requested have already been reserved" |
-| MissingSlotsError | 409 | "One or more of the slots you requested are not available" |
-| PlayerConflictError | 409 | "The player selected has already signed up or is in the process of signing up" |
-| AlreadyRegisteredError | 400 | "You already have a completed registration for this event" |
-| EventFullError | 400 | "The event field is full" |
-| EventRegistrationNotOpenError | 400 | "The event is not currently open for registration" |
-| EventRegistrationWaveError | 400 | "Wave {N} times are not yet open for registration" |
-| CourseRequiredError | 400 | "A course must be included when registering for this event" |
+| Error                         | HTTP | Message                                                                        |
+| ----------------------------- | ---- | ------------------------------------------------------------------------------ |
+| SlotConflictError             | 409  | "One or more of the slots you requested have already been reserved"            |
+| MissingSlotsError             | 409  | "One or more of the slots you requested are not available"                     |
+| PlayerConflictError           | 409  | "The player selected has already signed up or is in the process of signing up" |
+| AlreadyRegisteredError        | 400  | "You already have a completed registration for this event"                     |
+| EventFullError                | 400  | "The event field is full"                                                      |
+| EventRegistrationNotOpenError | 400  | "The event is not currently open for registration"                             |
+| EventRegistrationWaveError    | 400  | "Wave {N} times are not yet open for registration"                             |
+| CourseRequiredError           | 400  | "A course must be included when registering for this event"                    |
 
 ## Concurrency Handling
 
@@ -437,6 +449,7 @@ function clean_up_expired():
 After registration creation, payment must be collected before slots are confirmed.
 
 ### Payment Model
+
 ```
 Payment {
   id: int (primary key)
@@ -454,6 +467,7 @@ Payment {
 ```
 
 ### Refund Model
+
 ```
 Refund {
   id: int (primary key)
@@ -730,7 +744,7 @@ class RegistrationManager(models.Manager):
 
         """
         Reserve one or more signup slots for a user’s registration on an event.
-        
+
         Parameters:
         	user: The Django User who owns the registration.
         	player: The Player to assign to the first reserved slot (or slot 0 for non-choosable events).
@@ -738,10 +752,10 @@ class RegistrationManager(models.Manager):
         	course: The Course instance associated with the reservation.
         	registration_slots (list[dict] | iterable): For choosable events, an iterable of slot descriptors containing at least an "id" key identifying slots to reserve.
         	signed_up_by: The user performing the signup action (may differ from `user`).
-        
+
         Returns:
         	registration: The created or updated Registration instance linked to the reserved slots.
-        
+
         Raises:
         	MissingSlotsError: If none of the requested slot IDs exist.
         	SlotConflictError: If some requested slots are missing or any requested slot is not available ("A").
@@ -823,10 +837,10 @@ class RegistrationManager(models.Manager):
     def payment_confirmed(self, registration_id):
         """
         Mark a registration's payment as confirmed by updating its pending slots to confirmed and return the registration.
-        
+
         Parameters:
             registration_id (int): Primary key of the registration to confirm.
-        
+
         Returns:
             Registration or None: The Registration instance whose slots with status `"X"` were updated to `"R"`, or `None` if no registration with the given id exists.
         """
@@ -836,7 +850,7 @@ class RegistrationManager(models.Manager):
             return reg
         except ObjectDoesNotExist:
             pass
-        
+
     # Not currently used
     def undo_payment_processing(self, registration_id):
         try:
@@ -979,7 +993,7 @@ class RegistrationManager(models.Manager):
 
 ## Frontend (React) Registration Context
 
-All registration context API activity will transition from calling the Django backend to 
+All registration context API activity will transition from calling the Django backend to
 the NestJs API.
 
 ```typescript

@@ -1,13 +1,12 @@
 import { format } from "date-fns"
-import { useForm } from "react-hook-form"
-
-import { zodResolver } from "@hookform/resolvers/zod"
+import { FormEvent, useState } from "react"
 
 import { ErrorDisplay } from "../components/feedback/error-display"
 import { OverlaySpinner } from "../components/spinners/overlay-spinner"
 import { useCopyEvent } from "../hooks/use-event-copy"
 import { ClubEvent, ClubEventData } from "../models/club-event"
 import { getEventTypeName } from "../models/codes"
+import { formatZodErrors } from "../utils/form-utils"
 import { CopyEventData, CopyEventSchema, CopyEventView } from "./copy-event-view"
 
 interface CopyEventProps {
@@ -18,13 +17,12 @@ interface CopyEventProps {
 
 export function CopyEventHandler({ events, season, onComplete }: CopyEventProps) {
 	const { mutate: copy, error, status } = useCopyEvent()
-	const form = useForm<CopyEventData>({
-		resolver: zodResolver(CopyEventSchema),
-		defaultValues: {
-			eventId: "0",
-			startDate: format(new Date(), "yyyy-MM-dd"),
-		},
+
+	const [formData, setFormData] = useState<CopyEventData>({
+		eventId: "0",
+		startDate: format(new Date(), "yyyy-MM-dd"),
 	})
+	const [errors, setErrors] = useState<Record<string, string>>({})
 
 	const selectOptions = events.map((e) => {
 		return {
@@ -33,20 +31,41 @@ export function CopyEventHandler({ events, season, onComplete }: CopyEventProps)
 		}
 	})
 
-	const submitHandler = (values: CopyEventData) => {
-		const copyArgs = { ...values, season, eventId: +values.eventId }
+	const handleChange = (field: keyof CopyEventData, value: string) => {
+		setFormData((prev) => ({ ...prev, [field]: value }))
+		setErrors((prev) => ({ ...prev, [field]: "" }))
+	}
+
+	const handleSubmit = (e: FormEvent) => {
+		e.preventDefault()
+		const result = CopyEventSchema.safeParse(formData)
+		if (!result.success) {
+			setErrors(formatZodErrors(result.error))
+			return
+		}
+		const copyArgs = { ...result.data, season, eventId: +result.data.eventId }
 		copy(copyArgs, {
 			onSuccess: (data: ClubEventData) => {
-				form.reset()
+				setFormData({ eventId: "0", startDate: format(new Date(), "yyyy-MM-dd") })
 				onComplete(new ClubEvent(data))
 			},
 		})
 	}
 
+	const isDirty = formData.eventId !== "0"
+
 	return (
 		<div>
 			<OverlaySpinner loading={status === "pending"} />
-			<CopyEventView eventOptions={selectOptions} form={form} onSubmit={submitHandler} />
+			<CopyEventView
+				eventOptions={selectOptions}
+				formData={formData}
+				errors={errors}
+				isSubmitting={status === "pending"}
+				isDirty={isDirty}
+				onChange={handleChange}
+				onSubmit={handleSubmit}
+			/>
 			{error && <ErrorDisplay error={error.message} delay={10000} onClose={() => void 0} />}
 		</div>
 	)
