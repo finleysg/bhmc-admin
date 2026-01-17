@@ -1,3 +1,4 @@
+import React from "react"
 import { Heading, Link, Row, Column, Text } from "@react-email/components"
 
 import {

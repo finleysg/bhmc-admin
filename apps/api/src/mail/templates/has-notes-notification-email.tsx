@@ -1,3 +1,4 @@
+import React from "react"
 import { Heading, Row, Column, Text } from "@react-email/components"
 
 import { EmailLayout, labelCell, paragraph, subheading, tableRow, valueCell } from "./components"

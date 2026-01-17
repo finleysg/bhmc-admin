@@ -19,7 +19,7 @@ services:
     image: stripe/stripe-cli:v1.34.0
     environment:
       STRIPE_DEVICE_NAME: docker
-    command: listen --forward-to nestjs:3333/stripe/webhook/clover/
+    command: listen --forward-to api:3333/stripe/webhook/clover/
     restart: unless-stopped
     depends_on:
       - api

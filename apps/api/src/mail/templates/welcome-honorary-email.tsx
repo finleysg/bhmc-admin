@@ -1,3 +1,4 @@
+import React from "react"
 import { Heading, Link, Text } from "@react-email/components"
 
 import { EmailLayout, link, paragraph, signature, subheading } from "./components"

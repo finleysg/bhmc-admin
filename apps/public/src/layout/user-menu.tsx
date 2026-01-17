@@ -37,10 +37,10 @@ export function UserMenu() {
 					{user.name}
 				</button>
 				<div className={`dropdown-menu dropdown-menu-right ${showMenu ? "show" : ""}`}>
-					<Link onClick={() => setShowMenu(false)} to="my-account" className="dropdown-item">
+					<Link onClick={() => setShowMenu(false)} to="/my-account" className="dropdown-item">
 						My Account
 					</Link>
-					<Link onClick={() => setShowMenu(false)} to="my-activity" className="dropdown-item">
+					<Link onClick={() => setShowMenu(false)} to="/my-activity" className="dropdown-item">
 						My Activity
 					</Link>
 					<div className="dropdown-divider"></div>
