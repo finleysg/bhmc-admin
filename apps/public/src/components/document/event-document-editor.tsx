@@ -24,7 +24,7 @@ export function EventDocumentEditor({
 }: EventDocumentEditorProps) {
 	const { mutate: save, status, error } = useEventDocumentSave(clubEvent.id)
 
-	const handleUpload = (values: DocumentUploadData, file?: File) => {
+	const handleUpload = (values: DocumentUploadData, file?: File): Promise<void> => {
 		const form = new FormData()
 		form.append("document_type", values.document_type)
 		form.append("event", clubEvent.id.toString())
@@ -34,18 +34,24 @@ export function EventDocumentEditor({
 			form.append("file", file, clubEvent.normalizeFilename(file.name))
 		}
 
-		save(
-			{
-				formData: form,
-				documentId: document?.id,
-			},
-			{
-				onSuccess: () => {
-					toast.success(`${values.title} has been saved.`)
-					onComplete()
+		return new Promise((resolve, reject) => {
+			save(
+				{
+					formData: form,
+					documentId: document?.id,
 				},
-			},
-		)
+				{
+					onSuccess: () => {
+						toast.success(`${values.title} has been saved.`)
+						onComplete()
+						resolve()
+					},
+					onError: (err) => {
+						reject(err)
+					},
+				},
+			)
+		})
 	}
 
 	return (

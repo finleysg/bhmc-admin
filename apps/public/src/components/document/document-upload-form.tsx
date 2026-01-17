@@ -31,7 +31,7 @@ interface DocumentUploadFormProps {
 	document?: BhmcDocument | null
 	documentTypeFilter?: string[]
 	onCancel: () => void
-	onSubmit: (values: DocumentUploadData, file: File) => void
+	onSubmit: (values: DocumentUploadData, file: File) => Promise<void>
 }
 
 export function DocumentUploadForm({
@@ -73,7 +73,7 @@ export function DocumentUploadForm({
 		}
 	}
 
-	const handleSubmit = (e: FormEvent) => {
+	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault()
 		const result = DocumentUploadSchema.safeParse(formData)
 		if (!result.success) {
@@ -81,7 +81,11 @@ export function DocumentUploadForm({
 			return
 		}
 		setIsSubmitting(true)
-		onSubmit(result.data, files[0])
+		try {
+			await onSubmit(result.data, files[0])
+		} finally {
+			setIsSubmitting(false)
+		}
 	}
 
 	return (
