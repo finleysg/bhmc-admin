@@ -1,6 +1,8 @@
 // Set test env vars before any module imports
-process.env.NODE_ENV = "test"
+process.env.NODE_ENV = "development"
 process.env.MAIL_FROM = "test@example.com"
+process.env.MAIL_HOST = "localhost"
+process.env.MAIL_PORT = "1025"
 process.env.WEBSITE_URL = "https://test.example.com"
 process.env.STRIPE_SECRET_KEY = "sk_test_fake"
 process.env.STRIPE_WEBHOOK_SECRET = "whsec_test_fake"
