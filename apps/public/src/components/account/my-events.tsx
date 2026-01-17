@@ -54,9 +54,12 @@ export function MyEvents() {
 	const { data: registrations } = usePlayerRegistrations(player?.id, currentSeason)
 
 	const eventList = () => {
-		if (registrations && registrations.length > 0) {
-			return registrations.map((r) => {
-				const clubEvent = events?.find((e) => e.id === r.eventId)
+		if (!events || !registrations || registrations.length === 0) {
+			return []
+		}
+		return registrations
+			.map((r) => {
+				const clubEvent = events.find((e) => e.id === r.eventId)
 				if (clubEvent) {
 					return {
 						id: clubEvent.id,
@@ -69,8 +72,7 @@ export function MyEvents() {
 					}
 				}
 			})
-		}
-		return []
+			.filter((evt): evt is EventRegistration => evt !== undefined)
 	}
 
 	return (
@@ -81,7 +83,7 @@ export function MyEvents() {
 					<div className="row p-1">
 						<div className="col-12">
 							{eventList().map((evt) => {
-								return <EventCard key={evt!.id} registration={evt!} />
+								return <EventCard key={evt.id} registration={evt} />
 							})}
 						</div>
 					</div>
