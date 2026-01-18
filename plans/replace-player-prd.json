@@ -1,0 +1,234 @@
+[
+	{
+		"id": 1,
+		"category": "domain",
+		"description": "Create ReplacePlayerRequest and ReplacePlayerResponse types",
+		"file": "packages/domain/src/types/register/replace-player.ts",
+		"acceptance": [
+			"ReplacePlayerRequest has slotId, originalPlayerId, replacementPlayerId, notes? fields",
+			"ReplacePlayerResponse has slotId has greenFeeDifference? fields",
+			"Types exported from packages/domain/src/types/register/index.ts"
+		],
+		"verify": ["pnpm build succeeds", "Types importable from @repo/domain"],
+		"passes": true
+	},
+	{
+		"id": 2,
+		"category": "api",
+		"description": "Create replacePlayer stub with validation logic",
+		"file": "apps/api/src/registration/services/player.service.ts",
+		"acceptance": [
+			"replacePlayer method throws BadRequestException if slot not found",
+			"replacePlayer method throws BadRequestException if slot status is not R (Reserved)",
+			"replacePlayer method throws BadRequestException if slot.playerId !== originalPlayerId",
+			"replacePlayer method throws BadRequestException if replacement already registered for event"
+		],
+		"verify": ["Unit tests pass for each validation case"],
+		"passes": true
+	},
+	{
+		"id": 3,
+		"category": "api",
+		"description": "Add slot update and notes append logic to replacePlayer",
+		"file": "apps/api/src/registration/services/player.service.ts",
+		"acceptance": [
+			"Updates registrationSlot.playerId to replacementPlayerId in transaction",
+			"Appends 'Replaced {original name} with {replacement name} on {date}' to registration.notes",
+			"Appends user-provided notes if present"
+		],
+		"verify": [
+			"Unit test: slot.playerId updated after replace",
+			"Unit test: registration.notes contains replacement audit trail"
+		],
+		"passes": true
+	},
+	{
+		"id": 4,
+		"category": "api",
+		"description": "Add green fee difference calculation to PlayerService",
+		"file": "apps/api/src/registration/services/player.service.ts",
+		"acceptance": [
+			"Calculates green fee for original player based on their age/tee",
+			"Calculates green fee for replacement player based on their age/tee",
+			"Returns difference in ReplacePlayerResponse.greenFeeDifference",
+			"Uses existing fee calculation logic from AdminRegistrationService"
+		],
+		"verify": [
+			"Unit test: same-rate players return greenFeeDifference=0",
+			"Unit test: junior replacing adult returns negative difference",
+			"Unit test: adult replacing junior returns positive difference"
+		],
+		"passes": true
+	},
+	{
+		"id": 5,
+		"category": "api",
+		"description": "Record payment difference in the registration notes in replacePlayer method",
+		"file": "apps/api/src/registration/services/player.service.ts",
+		"acceptance": [
+			"If greenFeeDifference > 0: update registration notes with additional amount to collect",
+			"If greenFeeDifference < 0: update registration notes with the amount to refund",
+			"If greenFeeDifference == 0: no update"
+		],
+		"verify": [
+			"Unit test: positive difference updates registration notes",
+			"Unit test: negative difference updates registration notes",
+			"Unit test: zero difference does neither"
+		],
+		"passes": true
+	},
+	{
+		"id": 6,
+		"category": "api",
+		"description": "Add controller endpoint for replacePlayer",
+		"file": "apps/api/src/registration/controllers/admin-registration.controller.ts",
+		"acceptance": [
+			"POST /:eventId/replace-player endpoint added",
+			"@Admin() decorator applied",
+			"Accepts ReplacePlayerRequest body",
+			"Returns ReplacePlayerResponse",
+			"Calls ReplacePlayerService.replacePlayer"
+		],
+		"verify": ["curl POST /registration/1/replace-player returns expected shape"],
+		"passes": true
+	},
+	{
+		"id": 8,
+		"category": "api",
+		"description": "Send notification email to replacement player",
+		"file": "apps/api/src/registration/services/player.service.ts",
+		"acceptance": [
+			"After successful replace, sends email to replacement player",
+			"Email includes event name, date, tee time details",
+			"If greenFeeDifference > 0, email includes payment request"
+		],
+		"verify": [
+			"Manual test: replacement player receives email",
+			"Email content matches expected format"
+		],
+		"passes": true
+	},
+	{
+		"id": 9,
+		"category": "web",
+		"description": "Create Next.js API proxy route for replace-player",
+		"file": "apps/web/app/api/registration/replace-player/route.ts",
+		"acceptance": [
+			"POST handler that proxies to NestJS /registration/:eventId/replace-player",
+			"Uses fetchWithAuth pattern from other routes",
+			"Passes eventId as query param"
+		],
+		"verify": ["Route accessible at /api/registration/replace-player"],
+		"passes": true
+	},
+	{
+		"id": 10,
+		"category": "web",
+		"description": "Create replace player reducer with state and actions",
+		"file": "apps/web/app/events/[eventId]/players/replace/reducer.ts",
+		"acceptance": [
+			"State includes: clubEvent, selectedGroup, originalPlayer, originalSlot, replacementPlayer, notes, step, isLoading, isProcessing, error, replaceSuccess",
+			"Actions: SET_EVENT, SET_GROUP, SET_ORIGINAL_PLAYER, SET_REPLACEMENT_PLAYER, SET_NOTES, SET_PROCESSING, SET_SUCCESS, SET_ERROR, RESET",
+			"step transitions: group -> player -> replacement -> confirm",
+			"initialState exported"
+		],
+		"verify": ["TypeScript compiles without errors"],
+		"passes": true
+	},
+	{
+		"id": 11,
+		"category": "web",
+		"description": "Create replace player page with group search step",
+		"file": "apps/web/app/events/[eventId]/players/replace/page.tsx",
+		"acceptance": [
+			"Client component with useReducer",
+			"Fetches event on mount",
+			"Step 1: Renders GroupSearch component",
+			"On group selection: dispatches SET_GROUP, advances to player step"
+		],
+		"verify": ["Navigate to /events/1/players/replace", "GroupSearch renders and is functional"],
+		"passes": true
+	},
+	{
+		"id": 12,
+		"category": "web",
+		"description": "Add player selection step (single-select)",
+		"file": "apps/web/app/events/[eventId]/players/replace/page.tsx",
+		"acceptance": [
+			"Step 2: Renders list of players in selected group",
+			"Uses radio buttons (single-select, not checkboxes)",
+			"On player selection: dispatches SET_ORIGINAL_PLAYER with player and slot",
+			"Continue button advances to replacement step"
+		],
+		"verify": [
+			"After selecting group, player list appears",
+			"Only one player can be selected at a time"
+		],
+		"passes": true
+	},
+	{
+		"id": 13,
+		"category": "web",
+		"description": "Add replacement player search step",
+		"file": "apps/web/app/events/[eventId]/players/replace/page.tsx",
+		"acceptance": [
+			"Step 3: Renders PlayerSearch component",
+			"PlayerSearch configured with eventId and excludeRegistered=true",
+			"On player selection: dispatches SET_REPLACEMENT_PLAYER, advances to confirm step"
+		],
+		"verify": [
+			"PlayerSearch filters out already-registered players",
+			"Selecting replacement advances to confirm"
+		],
+		"passes": true
+	},
+	{
+		"id": 14,
+		"category": "web",
+		"description": "Add confirmation step with summary and submit",
+		"file": "apps/web/app/events/[eventId]/players/replace/page.tsx",
+		"acceptance": [
+			"Step 4: Shows original player name, replacement player name",
+			"Shows slot details (hole, starting order)",
+			"Textarea for optional notes",
+			"Confirm button calls POST /api/registration/replace-player",
+			"On success: shows success message, reset button",
+			"On error: shows error message"
+		],
+		"verify": [
+			"Summary displays correct information",
+			"Submit creates replacement in database",
+			"Success/error states render correctly"
+		],
+		"passes": true
+	},
+	{
+		"id": 15,
+		"category": "web",
+		"description": "Add navigation link to Replace in players menu",
+		"file": "apps/web/app/events/[eventId]/players/page.tsx",
+		"acceptance": [
+			"Replace link added alongside Add and Drop links",
+			"Links to /events/{eventId}/players/replace"
+		],
+		"verify": ["Replace link visible on players page", "Clicking navigates to replace page"],
+		"passes": true
+	},
+	{
+		"id": 16,
+		"category": "test",
+		"description": "Create unit tests for ReplacePlayerService",
+		"file": "apps/api/src/registration/__tests__/player.service.test.ts",
+		"acceptance": [
+			"Test: throws if slot not found",
+			"Test: throws if slot status not Reserved",
+			"Test: throws if originalPlayerId mismatch",
+			"Test: throws if replacement already registered",
+			"Test: successful replace updates slot.playerId",
+			"Test: notes appended with replacement audit",
+			"Test: green fee difference calculated correctly"
+		],
+		"verify": ["pnpm --filter api test -- --testPathPattern=replace-player passes"],
+		"passes": true
+	}
+]

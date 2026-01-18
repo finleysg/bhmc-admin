@@ -24,6 +24,7 @@ import type { ReactElement } from "react"
 import {
 	AdminRegistrationNotificationEmail,
 	MatchPlayEmail,
+	PlayerReplacementNotificationEmail,
 	RefundNotificationEmail,
 	RegistrationConfirmationEmail,
 	RegistrationUpdateEmail,
@@ -431,5 +432,46 @@ export class MailService {
 				// Continue sending to other players
 			}
 		}
+	}
+
+	async sendPlayerReplacementNotification(
+		player: Pick<Player, "firstName" | "email">,
+		event: ClubEvent,
+		registration: CompleteRegistration,
+		greenFeeDifference?: number,
+		paymentId?: number,
+	): Promise<void> {
+		const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL")
+		const eventUrl = `${websiteUrl}${getEventUrl(event)}`
+		const paymentUrl = paymentId
+			? `${websiteUrl}/registration/${registration.id}/payment/${paymentId}`
+			: undefined
+
+		const startValue = registration.course
+			? getStart(event, registration.slots[0], registration.course.holes)
+			: undefined
+		const eventHoleOrStart = startValue === "N/A" ? undefined : startValue
+
+		const eventDate = new Date(event.startDate).toLocaleDateString("en-US", {
+			weekday: "long",
+			month: "long",
+			day: "numeric",
+			year: "numeric",
+		})
+
+		await this.sendEmail({
+			to: player.email,
+			subject: `Replacement Player Registration: ${event.name}`,
+			template: PlayerReplacementNotificationEmail({
+				recipientName: player.firstName,
+				eventName: event.name,
+				eventUrl,
+				eventDate,
+				eventHoleOrStart,
+				greenFeeDifference,
+				paymentUrl:
+					greenFeeDifference !== undefined && greenFeeDifference > 0 ? paymentUrl : undefined,
+			}),
+		})
 	}
 }

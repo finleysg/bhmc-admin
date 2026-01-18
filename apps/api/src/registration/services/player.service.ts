@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNotNull } from "drizzle-orm"
 
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
-import { dummyCourse, dummyHole, validateRegistration } from "@repo/domain/functions"
+import { dummyCourse, dummyHole, getAmount, validateRegistration } from "@repo/domain/functions"
 import {
 	AvailableSlotGroup,
 	Player,
@@ -14,6 +14,8 @@ import {
 	CompleteRegistration,
 	CompleteRegistrationFee,
 	EventTypeChoices,
+	ReplacePlayerRequest,
+	ReplacePlayerResponse,
 } from "@repo/domain/types"
 
 import { toCourse, toHole } from "../../courses/mappers"
@@ -30,6 +32,7 @@ import {
 	toDbString,
 } from "../../database"
 import { EventsService } from "../../events"
+import { MailService } from "../../mail/mail.service"
 import {
 	attachFeesToSlots,
 	hydrateSlotsWithPlayerAndHole,
@@ -52,6 +55,7 @@ export class PlayerService {
 		@Inject(PaymentsRepository) private readonly paymentsRepository: PaymentsRepository,
 		@Inject(EventsService) private readonly events: EventsService,
 		@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService,
+		@Inject(MailService) private readonly mail: MailService,
 	) {}
 
 	/** Find a player by id */
@@ -463,5 +467,157 @@ export class PlayerService {
 		}
 
 		return slotIds.length
+	}
+
+	/** Replace a player in a registration slot. */
+	async replacePlayer(
+		eventId: number,
+		request: ReplacePlayerRequest,
+	): Promise<ReplacePlayerResponse> {
+		const { slotId, originalPlayerId, replacementPlayerId } = request
+
+		// Validate slot exists
+		let slotRow
+		try {
+			slotRow = await this.repository.findRegistrationSlotById(slotId)
+		} catch {
+			throw new BadRequestException(`Slot ${slotId} not found`)
+		}
+
+		// Validate slot belongs to this event
+		if (slotRow.eventId !== eventId) {
+			throw new BadRequestException(`Slot ${slotId} does not belong to event ${eventId}`)
+		}
+
+		// Validate slot status is Reserved
+		if (slotRow.status !== RegistrationStatusChoices.RESERVED) {
+			throw new BadRequestException(
+				`Slot ${slotId} status must be Reserved, but is ${slotRow.status}`,
+			)
+		}
+
+		// Validate original player matches slot
+		if (slotRow.playerId !== originalPlayerId) {
+			throw new BadRequestException(
+				`Slot ${slotId} is assigned to player ${slotRow.playerId}, not ${originalPlayerId}`,
+			)
+		}
+
+		// Validate replacement player is not already registered for event
+		const registeredPlayers = await this.repository.findRegisteredPlayers(eventId)
+		const isAlreadyRegistered = registeredPlayers.some((p) => p.id === replacementPlayerId)
+		if (isAlreadyRegistered) {
+			throw new BadRequestException(
+				`Player ${replacementPlayerId} is already registered for event ${eventId}`,
+			)
+		}
+
+		// Fetch player and registration records for audit trail
+		const originalPlayer = await this.repository.findPlayerById(originalPlayerId)
+		const replacementPlayer = await this.repository.findPlayerById(replacementPlayerId)
+		const registrationRecord = await this.repository.findRegistrationById(slotRow.registrationId!)
+
+		if (!registrationRecord) {
+			throw new BadRequestException(
+				`Registration ${slotRow.registrationId} not found for slot ${slotId}`,
+			)
+		}
+
+		// Calculate green fee difference: TODO - generalize to all fees
+		const eventRecord = await this.events.getCompleteClubEventById(eventId, false)
+		const greenFeeEventFee = eventRecord.eventFees.find((ef) => ef.feeType?.code === "GREENS")
+		let greenFeeDifference: number | undefined = undefined
+
+		if (greenFeeEventFee) {
+			const eventDate = new Date(eventRecord.startDate)
+			const originalFee = getAmount(greenFeeEventFee, toPlayer(originalPlayer), eventDate)
+			const replacementFee = getAmount(greenFeeEventFee, toPlayer(replacementPlayer), eventDate)
+			greenFeeDifference = replacementFee - originalFee
+		}
+
+		// Build audit notes
+		const originalName = `${originalPlayer.firstName} ${originalPlayer.lastName}`.trim()
+		const replacementName = `${replacementPlayer.firstName} ${replacementPlayer.lastName}`.trim()
+		const replaceDate = new Date().toISOString().split("T")[0]
+		const currentNotes = registrationRecord.notes || ""
+
+		let auditNotes = `Replaced ${originalName} with ${replacementName} on ${replaceDate}`
+		if (request.notes) {
+			auditNotes += ` - ${request.notes}`
+		}
+
+		// Add payment difference notes if applicable
+		if (greenFeeDifference !== undefined && greenFeeDifference !== 0) {
+			if (greenFeeDifference > 0) {
+				auditNotes += `\nAdditional amount to collect: $${greenFeeDifference.toFixed(2)}`
+			} else {
+				auditNotes += `\nAmount to refund: $${Math.abs(greenFeeDifference).toFixed(2)}`
+			}
+		}
+
+		const newNotes = `${currentNotes}\n${auditNotes}`.trim()
+
+		// Execute replacement in transaction
+		await this.drizzle.db.transaction(async (tx) => {
+			await this.repository.updateRegistrationSlot(slotId, { playerId: replacementPlayerId }, tx)
+			await tx
+				.update(registration)
+				.set({ notes: newNotes })
+				.where(eq(registration.id, slotRow.registrationId!))
+		})
+
+		// Send notification email to replacement player
+		try {
+			const regWithCourse = await this.repository.findRegistrationWithCourse(
+				slotRow.registrationId!,
+			)
+			if (regWithCourse) {
+				const completeReg = toRegistration(regWithCourse.registration)
+				if (regWithCourse.course) {
+					completeReg.course = toCourse(regWithCourse.course)
+				}
+
+				const slotRows = await this.repository.findSlotsWithPlayerAndHole(slotRow.registrationId!)
+				const slots = hydrateSlotsWithPlayerAndHole(slotRows)
+				const slotIds = slots
+					.filter((s): s is RegistrationSlot & { id: number } => s.id !== undefined)
+					.map((s) => s.id)
+				const feeRows = await this.repository.findFeesWithEventFeeAndFeeType(slotIds)
+				attachFeesToSlots(slots, feeRows)
+				completeReg.slots = slots
+
+				// Validate registration
+				const validatedReg = validateRegistration(completeReg)
+
+				// Determine if payment is needed
+				let paymentId: number | undefined
+				if (greenFeeDifference !== undefined && greenFeeDifference > 0) {
+					// Check if there's an unpaid payment for this registration
+					const payments = await this.paymentsRepository.findPaymentsForRegistration(
+						slotRow.registrationId!,
+					)
+					const unpaidPayment = payments.find((p) => p.confirmed === 0)
+					paymentId = unpaidPayment?.id
+				}
+
+				await this.mail.sendPlayerReplacementNotification(
+					toPlayer(replacementPlayer),
+					eventRecord,
+					validatedReg,
+					greenFeeDifference,
+					paymentId,
+				)
+			}
+		} catch (error) {
+			this.logger.error(
+				`Failed to send replacement notification to ${replacementPlayer.email}: ${error instanceof Error ? error.message : "Unknown error"}`,
+			)
+			// Continue - don't fail the replacement if email fails
+		}
+
+		return {
+			slotId,
+			greenFeeDifference,
+		}
 	}
 }

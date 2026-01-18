@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ralph.sh - courtesy of Matt Pocock: https://www.aihero.dev/tips-for-ai-coding-with-ralph-wiggum
+# ralph.sh - modified from Matt Pocock: https://www.aihero.dev/tips-for-ai-coding-with-ralph-wiggum
 # Usage: ./ralph.sh <iterations>
 
 set -e
@@ -9,31 +9,27 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
+# Temp file for capturing output while streaming
+tmpfile=$(mktemp)
+trap "rm -f $tmpfile" EXIT
+
 # For each iteration, run Claude Code with the following prompt.
 # This prompt is basic, we'll expand it later.
 for ((i=1; i<=$1; i++)); do
   echo "Iteration $i"
   echo "============================================================="
-  result=$(docker sandbox run claude -p "@replace-player.json @progress.txt \
-1. Find the highest priority feature to work on from the plan file and work ONLY on that feature. \
-This should be the one YOU decide has the highest priority, not necessarily the first in the list. \
-2. Decide if you need one or more tests for your feature and write the tests as needed. \
-3. Check your feedback loops: pnpm typecheck, pnpm lint, pnpm test. \
-4. Make a git commit of that feature. \
-ONLY WORK ON A SINGLE FEATURE. \
-5. After completing each task, append to progress.txt: \
-- Task completed and PRD item reference \
-- Key decisions made and reasoning \
-- Files changed \
-- Any blockers or notes for next iteration \
-Keep entries concise. Sacrifice grammar for the sake of concision. This file helps future iterations skip exploration. \
-If, while implementing the feature, you notice that all work \
-is complete, output <promise>COMPLETE</promise>. \
-")
+  docker sandbox run claude -p --model sonnet "@plans/replace-player-prd.json @progress.txt \
+CRITICAL: Complete exactly ONE PRD item, make ONE commit, then STOP. \
+1. Pick the highest priority incomplete PRD item (one item = one feature). \
+2. Write tests if needed. \
+3. Run feedback loops: pnpm typecheck, pnpm lint, pnpm test. \
+4. Make ONE git commit for this single PRD item. \
+5. Update the PRD item status to true. Append to progress.txt: task completed, PRD ref, decisions, files changed, blockers. Keep concise. \
+6. STOP HERE. Do not continue to other PRD items. \
+Only if ALL PRD items are already complete, output <promise>COMPLETE</promise>. \
+" 2>&1 | tee "$tmpfile"
 
-  echo "$result"
-
-  if [[ "$result" == *"<promise>COMPLETE</promise>"* ]]; then
+  if grep -q "<promise>COMPLETE</promise>" "$tmpfile"; then
     echo "PRD complete, exiting."
     exit 0
   fi

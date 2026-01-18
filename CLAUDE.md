@@ -211,6 +211,14 @@ src/
 └── utils/         # API client, date utils, config
 ```
 
+### Development
+
+We always run and test locally using the `docker-compose.yml` file at the root:
+
+`docker compose up -d`
+
+Inspect the logs from these containers when troubleshooting.
+
 ### Testing
 
 Use a flat test structure. No nested `describe` and `it` aliases. Example:
