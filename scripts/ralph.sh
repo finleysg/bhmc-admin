@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # ralph.sh - courtesy of Matt Pocock: https://www.aihero.dev/tips-for-ai-coding-with-ralph-wiggum
 # Usage: ./ralph.sh <iterations>
 
