@@ -19,7 +19,6 @@ export default function DropPlayerPage() {
 	const router = useRouter()
 	const [state, dispatch] = useReducer(reducer, initialState)
 	const abortControllerRef = useRef<AbortController | null>(null)
-	const dialogRef = useRef<HTMLDialogElement>(null)
 	const resultRef = useRef<HTMLDivElement>(null)
 
 	// Cleanup on unmount
@@ -172,64 +171,133 @@ export default function DropPlayerPage() {
 				<div className="card bg-base-100 shadow-xs">
 					<div className="card-body">
 						<h3 className="card-title text-secondary font-semibold mb-4">Drop Player</h3>
-						<div className="mb-6">
-							<h4 className="font-semibold mb-2">Select Group</h4>
-							<GroupSearch
-								key={state.resetKey}
-								clubEvent={state.clubEvent}
-								onGroupSelected={(group) => dispatch({ type: "SET_GROUP", payload: group })}
-								onError={(err) => dispatch({ type: "SET_ERROR", payload: err })}
-							/>
-						</div>
-						{state.selectedGroup && (
+
+						{/* Step 1: Select Group */}
+						{state.step === "group" && (
 							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Select Player(s) to Drop</h4>
+								<h4 className="font-semibold mb-2">Step 1 of 4: Select Group</h4>
+								<GroupSearch
+									key={state.resetKey}
+									clubEvent={state.clubEvent}
+									onGroupSelected={(group) => dispatch({ type: "SET_GROUP", payload: group })}
+									onError={(err) => dispatch({ type: "SET_ERROR", payload: err })}
+								/>
+							</div>
+						)}
+
+						{/* Step 2: Select Players */}
+						{state.step === "player" && state.selectedGroup && (
+							<div className="mb-6">
+								<h4 className="font-semibold mb-2">Step 2 of 4: Select Player(s) to Drop</h4>
 								<SelectPlayers
 									group={state.selectedGroup}
 									selectedPlayers={state.selectedPlayers}
 									onSelect={(player) => dispatch({ type: "SELECT_PLAYER", payload: player })}
 									onRemove={(player) => dispatch({ type: "REMOVE_PLAYER", payload: player })}
 								/>
+								<div className="flex justify-around gap-2 mt-4">
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "GO_BACK" })}
+									>
+										← Back
+									</button>
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
+									>
+										Start Over
+									</button>
+									<button
+										className="btn btn-primary btn-sm"
+										disabled={state.selectedPlayers.length === 0}
+										onClick={() => dispatch({ type: "NEXT_STEP" })}
+									>
+										Continue →
+									</button>
+								</div>
 							</div>
 						)}
-						{state.selectedPlayers.length > 0 && (
+
+						{/* Step 3: Select Fees */}
+						{state.step === "fee" && (
 							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Select Fees to Refund</h4>
+								<h4 className="font-semibold mb-2">Step 3 of 4: Select Fees to Refund</h4>
 								<PaidFeePicker
 									clubEvent={state.clubEvent}
 									slots={slots}
 									onChange={handleFeesChange}
 								/>
+								<div className="flex gap-2 mt-4 justify-between">
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "GO_BACK" })}
+									>
+										← Back
+									</button>
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
+									>
+										Start Over
+									</button>
+									<button
+										className="btn btn-primary btn-sm"
+										onClick={() => dispatch({ type: "NEXT_STEP" })}
+									>
+										Continue →
+									</button>
+								</div>
 							</div>
 						)}
 
-						{state.selectedPlayers.length > 0 && !state.dropSuccess && (
+						{/* Step 4: Confirm */}
+						{state.step === "confirm" && !state.dropSuccess && (
 							<div className="mb-6">
-								<button
-									type="button"
-									className="btn btn-primary me-2"
-									onClick={() => dialogRef.current?.showModal()}
-									disabled={state.isProcessing}
-								>
-									{state.isProcessing ? (
-										<>
-											<span className="loading loading-spinner loading-sm"></span>
-											Processing...
-										</>
-									) : (
-										"Complete Drop"
-									)}
-								</button>
-								<button
-									type="button"
-									className="btn btn-neutral"
-									onClick={() => router.push(`/events/${eventId}/players`)}
-									disabled={state.isProcessing}
-								>
-									Cancel
-								</button>
+								<h4 className="font-semibold mb-2">Step 4 of 4: Confirm Drop</h4>
+								<p className="mb-2">
+									Drop {state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}{" "}
+									from this event?
+								</p>
+								{state.selectedFees.length > 0 && (
+									<p className="text-sm text-base-content/70 mb-4">
+										{state.selectedFees.reduce((sum, f) => sum + f.registrationFeeIds.length, 0)}{" "}
+										fee(s) will be refunded.
+									</p>
+								)}
+								<div className="flex gap-2 mt-4 justify-between">
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "GO_BACK" })}
+										disabled={state.isProcessing}
+									>
+										← Back
+									</button>
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
+										disabled={state.isProcessing}
+									>
+										Start Over
+									</button>
+									<button
+										className="btn btn-error btn-sm"
+										onClick={handleCompleteDrop}
+										disabled={state.isProcessing}
+									>
+										{state.isProcessing ? (
+											<>
+												<span className="loading loading-spinner loading-sm"></span>
+												Processing...
+											</>
+										) : (
+											"Complete Drop"
+										)}
+									</button>
+								</div>
 							</div>
 						)}
+
 						<div ref={resultRef}>
 							{state.dropSuccess && (
 								<div className="mt-6">
@@ -271,40 +339,6 @@ export default function DropPlayerPage() {
 					</div>
 				</div>
 			</div>
-
-			{/* Confirmation Dialog */}
-			<dialog ref={dialogRef} className="modal">
-				<div className="modal-box">
-					<h3 className="font-bold text-lg mb-4">Confirm Drop</h3>
-					<p className="mb-2">
-						Drop {state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")} from
-						this event?
-					</p>
-					{state.selectedFees.length > 0 && (
-						<p className="text-sm text-base-content/70">
-							{state.selectedFees.reduce((sum, f) => sum + f.registrationFeeIds.length, 0)} fee(s)
-							will be refunded.
-						</p>
-					)}
-					<div className="modal-action">
-						<form method="dialog">
-							<button className="btn">Cancel</button>
-						</form>
-						<button
-							className="btn btn-error"
-							onClick={() => {
-								dialogRef.current?.close()
-								handleCompleteDrop()
-							}}
-						>
-							Confirm Drop
-						</button>
-					</div>
-				</div>
-				<form method="dialog" className="modal-backdrop">
-					<button>close</button>
-				</form>
-			</dialog>
 		</main>
 	)
 }

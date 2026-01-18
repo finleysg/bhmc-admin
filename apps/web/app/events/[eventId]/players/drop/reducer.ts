@@ -7,6 +7,8 @@ import type {
 	RefundRequest,
 } from "@repo/domain/types"
 
+export type DropPlayerStep = "group" | "player" | "fee" | "confirm"
+
 export type State = {
 	clubEvent: CompleteClubEvent | null
 	selectedGroup: CompleteRegistration | undefined
@@ -17,6 +19,7 @@ export type State = {
 	dropSuccess: boolean
 	isProcessing: boolean
 	resetKey: number
+	step: DropPlayerStep
 }
 
 export type Action =
@@ -32,6 +35,8 @@ export type Action =
 	| { type: "RESET_STATE" }
 	| { type: "RESET_SELECTIONS" }
 	| { type: "RESET_ERROR" }
+	| { type: "NEXT_STEP" }
+	| { type: "GO_BACK" }
 
 export function translateRefundRequests(state: State): RefundRequest[] {
 	const refundRequests: RefundRequest[] = []
@@ -78,6 +83,7 @@ export function reducer(state: State, action: Action): State {
 				...state,
 				selectedGroup: action.payload,
 				selectedPlayers: action.payload.slots.map((s) => s.player).filter((p): p is Player => !!p),
+				step: "player",
 			}
 		case "SET_ERROR":
 			return { ...state, error: action.payload }
@@ -111,9 +117,30 @@ export function reducer(state: State, action: Action): State {
 				isProcessing: false,
 				error: null,
 				resetKey: state.resetKey + 1,
+				step: "group",
 			}
 		case "RESET_ERROR":
 			return { ...state, error: null }
+		case "NEXT_STEP":
+			switch (state.step) {
+				case "player":
+					return { ...state, step: "fee" }
+				case "fee":
+					return { ...state, step: "confirm" }
+				default:
+					return state
+			}
+		case "GO_BACK":
+			switch (state.step) {
+				case "player":
+					return { ...state, step: "group", selectedGroup: undefined, selectedPlayers: [] }
+				case "fee":
+					return { ...state, step: "player", selectedFees: [] }
+				case "confirm":
+					return { ...state, step: "fee" }
+				default:
+					return state
+			}
 		default:
 			return state
 	}
@@ -129,4 +156,5 @@ export const initialState: State = {
 	dropSuccess: false,
 	isProcessing: false,
 	resetKey: 0,
+	step: "group",
 }

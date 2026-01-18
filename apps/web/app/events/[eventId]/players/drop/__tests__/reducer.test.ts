@@ -72,6 +72,7 @@ describe("RESET_STATE", () => {
 			dropSuccess: true,
 			isProcessing: true,
 			resetKey: 0,
+			step: "confirm",
 		}
 		const state = reducer(dirtyState, { type: "RESET_STATE" })
 		expect(state).toEqual(initialState)
@@ -90,6 +91,7 @@ describe("RESET_SELECTIONS", () => {
 			dropSuccess: true,
 			isProcessing: true,
 			resetKey: 0,
+			step: "confirm",
 		}
 		const state = reducer(dirtyState, { type: "RESET_SELECTIONS" })
 		// Preserved fields
