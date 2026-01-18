@@ -28,6 +28,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 1,
 			startingOrder: 1,
 			slot: 1,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const result = convertSlotsToPlayerFees([slot], [])
 		expect(result).toEqual([
@@ -48,7 +49,7 @@ describe("convertSlotsToPlayerFees", () => {
 			isRequired: true,
 			displayOrder: 1,
 			feeTypeId: 1,
-			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
+			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "None", restriction: "None" },
 		}
 		const slot: CompleteRegistrationSlot = {
 			id: 1,
@@ -79,6 +80,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 1,
 			startingOrder: 1,
 			slot: 1,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const result = convertSlotsToPlayerFees([slot], [eventFee])
 		expect(result[0].fees[0]).toMatchObject({
@@ -104,7 +106,7 @@ describe("convertSlotsToPlayerFees", () => {
 			isRequired: true,
 			displayOrder: 1,
 			feeTypeId: 1,
-			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
+			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "None", restriction: "None" },
 		}
 		const slot: CompleteRegistrationSlot = {
 			id: 1,
@@ -135,6 +137,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 1,
 			startingOrder: 1,
 			slot: 1,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const result = convertSlotsToPlayerFees([slot], [eventFee])
 		expect(result[0].fees[0].isSelected).toBe(false)
@@ -150,7 +153,7 @@ describe("convertSlotsToPlayerFees", () => {
 				isRequired: true,
 				displayOrder: 1,
 				feeTypeId: 1,
-				feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
+				feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "None", restriction: "None" },
 			},
 			{
 				id: 3,
@@ -159,7 +162,7 @@ describe("convertSlotsToPlayerFees", () => {
 				isRequired: false,
 				displayOrder: 2,
 				feeTypeId: 2,
-				feeType: { id: 2, name: "Other", code: "OTHER", payout: "none", restriction: "none" },
+				feeType: { id: 2, name: "Other", code: "OTHER", payout: "None", restriction: "None" },
 			},
 		]
 		const slot: CompleteRegistrationSlot = {
@@ -200,6 +203,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 1,
 			startingOrder: 1,
 			slot: 1,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const result = convertSlotsToPlayerFees([slot], eventFees)
 		expect(result[0].fees[0].isSelected).toBe(true)
@@ -215,7 +219,7 @@ describe("convertSlotsToPlayerFees", () => {
 			isRequired: true,
 			displayOrder: 1,
 			feeTypeId: 1,
-			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
+			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "None", restriction: "None" },
 		}
 		const slotA: CompleteRegistrationSlot = {
 			id: 1,
@@ -246,6 +250,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 1,
 			startingOrder: 1,
 			slot: 1,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const slotB: CompleteRegistrationSlot = {
 			id: 2,
@@ -266,6 +271,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 2,
 			startingOrder: 2,
 			slot: 2,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const result = convertSlotsToPlayerFees([slotA, slotB], [eventFee])
 		expect(result[0].playerId).toBe(10)
@@ -283,7 +289,7 @@ describe("convertSlotsToPlayerFees", () => {
 			isRequired: true,
 			displayOrder: 1,
 			feeTypeId: 1,
-			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
+			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "None", restriction: "None" },
 		}
 		const slot: CompleteRegistrationSlot = {
 			id: 1,
@@ -304,6 +310,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 1,
 			startingOrder: 1,
 			slot: 1,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const result = convertSlotsToPlayerFees([slot], [eventFee])
 		expect(result[0].fees[0].amount).toBe(50)
@@ -317,7 +324,7 @@ describe("convertSlotsToPlayerFees", () => {
 			isRequired: true,
 			displayOrder: 1,
 			feeTypeId: 1,
-			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
+			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "None", restriction: "None" },
 		}
 		const slot: CompleteRegistrationSlot = {
 			id: 1,
@@ -338,6 +345,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 1,
 			startingOrder: 1,
 			slot: 1,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const result = convertSlotsToPlayerFees([slot], [eventFee])
 		expect(result[0].fees[0].amount).toBe(0)
@@ -352,7 +360,7 @@ describe("convertSlotsToPlayerFees", () => {
 				isRequired: true,
 				displayOrder: 1,
 				feeTypeId: 1,
-				feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
+				feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "None", restriction: "None" },
 			},
 			{
 				id: 3,
@@ -361,7 +369,7 @@ describe("convertSlotsToPlayerFees", () => {
 				isRequired: false,
 				displayOrder: 2,
 				feeTypeId: 2,
-				feeType: { id: 2, name: "Other", code: "OTHER", payout: "none", restriction: "none" },
+				feeType: { id: 2, name: "Other", code: "OTHER", payout: "None", restriction: "None" },
 			},
 		]
 		const slot: CompleteRegistrationSlot = {
@@ -383,6 +391,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 1,
 			startingOrder: 1,
 			slot: 1,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const result = convertSlotsToPlayerFees([slot], eventFees)
 		expect(result[0].fees.length).toBe(2)
@@ -399,7 +408,7 @@ describe("convertSlotsToPlayerFees", () => {
 				isRequired: true,
 				displayOrder: 2,
 				feeTypeId: 1,
-				feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
+				feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "None", restriction: "None" },
 			},
 			{
 				id: 3,
@@ -408,7 +417,7 @@ describe("convertSlotsToPlayerFees", () => {
 				isRequired: false,
 				displayOrder: 1,
 				feeTypeId: 2,
-				feeType: { id: 2, name: "Other", code: "OTHER", payout: "none", restriction: "none" },
+				feeType: { id: 2, name: "Other", code: "OTHER", payout: "None", restriction: "None" },
 			},
 		]
 		const slot: CompleteRegistrationSlot = {
@@ -430,6 +439,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 1,
 			startingOrder: 1,
 			slot: 1,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const result = convertSlotsToPlayerFees([slot], eventFees)
 		expect(result[0].fees[0].displayOrder).toBe(2)
@@ -444,7 +454,7 @@ describe("convertSlotsToPlayerFees", () => {
 			isRequired: true,
 			displayOrder: 1,
 			feeTypeId: 1,
-			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
+			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "None", restriction: "None" },
 		}
 		const slot: CompleteRegistrationSlot = {
 			id: 1,
@@ -465,6 +475,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 1,
 			startingOrder: 1,
 			slot: 1,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const result = convertSlotsToPlayerFees([slot], [eventFee])
 		expect(result[0].playerName).toBe("Alpha Beta")
@@ -478,7 +489,7 @@ describe("convertSlotsToPlayerFees", () => {
 			isRequired: true,
 			displayOrder: 1,
 			feeTypeId: 1,
-			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "none", restriction: "none" },
+			feeType: { id: 1, name: "Entry", code: "ENTRY", payout: "None", restriction: "None" },
 		}
 		const slot: CompleteRegistrationSlot = {
 			id: 1,
@@ -509,6 +520,7 @@ describe("convertSlotsToPlayerFees", () => {
 			registrationId: 1,
 			startingOrder: 1,
 			slot: 1,
+			hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 		}
 		const result = convertSlotsToPlayerFees([slot], [eventFee])
 		expect(result[0].fees[0].registrationFeeId).toBe(100)

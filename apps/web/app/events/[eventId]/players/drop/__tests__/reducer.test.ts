@@ -25,8 +25,6 @@ const mockClubEvent: CompleteClubEvent = {
 const mockRegistration = (playerIds: Array<number | null>): CompleteRegistration => ({
 	id: 10,
 	eventId: 1,
-	startingHole: 1,
-	startingOrder: 0,
 	signedUpBy: "test user",
 	createdDate: Date.now().toString(),
 	userId: 1,
@@ -39,6 +37,7 @@ const mockRegistration = (playerIds: Array<number | null>): CompleteRegistration
 		startingOrder: 1,
 		slot: 0,
 		status: RegistrationStatusChoices.RESERVED,
+		hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
 	})),
 })
 
@@ -72,6 +71,7 @@ describe("RESET_STATE", () => {
 			isLoading: false,
 			dropSuccess: true,
 			isProcessing: true,
+			resetKey: 0,
 		}
 		const state = reducer(dirtyState, { type: "RESET_STATE" })
 		expect(state).toEqual(initialState)
@@ -89,6 +89,7 @@ describe("RESET_SELECTIONS", () => {
 			isLoading: false,
 			dropSuccess: true,
 			isProcessing: true,
+			resetKey: 0,
 		}
 		const state = reducer(dirtyState, { type: "RESET_SELECTIONS" })
 		// Preserved fields
