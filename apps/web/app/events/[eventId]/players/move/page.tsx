@@ -16,6 +16,16 @@ export default function MovePlayerPage() {
 	const router = useRouter()
 	const [state, dispatch] = useReducer(reducer, initialState)
 	const resultRef = useRef<HTMLDivElement>(null)
+	const abortControllerRef = useRef<AbortController | null>(null)
+
+	// Cleanup on unmount
+	useEffect(() => {
+		return () => {
+			if (abortControllerRef.current) {
+				abortControllerRef.current.abort()
+			}
+		}
+	}, [])
 
 	// Scroll to result on success or error
 	useEffect(() => {
@@ -23,6 +33,60 @@ export default function MovePlayerPage() {
 			resultRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
 		}
 	}, [state.moveSuccess, state.error])
+
+	const handleConfirmMove = (): void => {
+		const destGroup = state.destinationSlotGroup
+		if (!destGroup || state.selectedSourceSlots.length === 0) return
+
+		// Cancel any ongoing request
+		if (abortControllerRef.current) {
+			abortControllerRef.current.abort()
+		}
+
+		const controller = new AbortController()
+		abortControllerRef.current = controller
+
+		dispatch({ type: "SET_PROCESSING", payload: true })
+
+		void (async () => {
+			try {
+				const response = await fetch(`/api/registration/move-players?eventId=${eventId}`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						sourceSlotIds: state.selectedSourceSlots.map((s) => s.id),
+						destinationStartingHoleId: destGroup.holeId,
+						destinationStartingOrder: destGroup.startingOrder,
+						notes: state.notes || undefined,
+					}),
+					signal: controller.signal,
+				})
+
+				if (!response.ok) {
+					const errorBody = await response.text()
+					throw new Error(`Failed to move players: ${errorBody}`)
+				}
+
+				if (!controller.signal.aborted) {
+					dispatch({ type: "SET_SUCCESS", payload: true })
+				}
+			} catch (err) {
+				if (err instanceof Error && err.name === "AbortError") {
+					return
+				}
+				if (!controller.signal.aborted) {
+					dispatch({
+						type: "SET_ERROR",
+						payload: err instanceof Error ? err.message : "Unknown error",
+					})
+				}
+			} finally {
+				if (!controller.signal.aborted) {
+					dispatch({ type: "SET_PROCESSING", payload: false })
+				}
+			}
+		})()
+	}
 
 	useEffect(() => {
 		const fetchEvent = async () => {
@@ -174,18 +238,78 @@ export default function MovePlayerPage() {
 							</div>
 						)}
 
-						{/* Placeholder for confirm step */}
-						{state.step === "confirm" && (
-							<div className="mb-6">
-								<p className="text-sm text-base-content/70">Step confirm - Coming soon</p>
-								<button
-									className="btn btn-ghost btn-sm mt-4"
-									onClick={() => dispatch({ type: "GO_BACK" })}
-								>
-									← Back
-								</button>
-							</div>
-						)}
+						{/* Step 4: Confirm */}
+						{state.step === "confirm" &&
+							!state.moveSuccess &&
+							state.sourceGroup &&
+							state.destinationSlotGroup && (
+								<div className="mb-6">
+									<h4 className="font-semibold mb-2">Step 4 of 4: Confirm Move</h4>
+
+									{/* Summary */}
+									<div className="mb-4">
+										<p className="mb-2">
+											<strong>Players:</strong>{" "}
+											{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
+										</p>
+										<p className="mb-2">
+											<strong>From:</strong>{" "}
+											{state.sourceGroup.course?.name || `Course ${state.sourceGroup.courseId}`} -{" "}
+											Hole {state.sourceGroup.slots[0]?.hole?.holeNumber || "Unknown"} (
+											{state.sourceGroup.slots[0]?.startingOrder === 0 ? "A" : "B"})
+										</p>
+										<p className="mb-2">
+											<strong>To:</strong> Hole {state.destinationSlotGroup.holeNumber} (
+											{state.destinationSlotGroup.startingOrder === 0 ? "A" : "B"})
+										</p>
+									</div>
+
+									{/* Optional notes */}
+									<div className="form-control mb-4">
+										<label className="label">
+											<span className="label-text">Notes (optional)</span>
+										</label>
+										<textarea
+											className="textarea textarea-bordered"
+											placeholder="Add any notes about this move..."
+											value={state.notes}
+											onChange={(e) => dispatch({ type: "SET_NOTES", payload: e.target.value })}
+											disabled={state.isProcessing}
+										/>
+									</div>
+
+									<div className="flex gap-2 mt-4 justify-between">
+										<button
+											className="btn btn-ghost btn-sm"
+											onClick={() => dispatch({ type: "GO_BACK" })}
+											disabled={state.isProcessing}
+										>
+											← Back
+										</button>
+										<button
+											className="btn btn-ghost btn-sm"
+											onClick={() => dispatch({ type: "RESET" })}
+											disabled={state.isProcessing}
+										>
+											Start Over
+										</button>
+										<button
+											className="btn btn-primary btn-sm"
+											onClick={handleConfirmMove}
+											disabled={state.isProcessing}
+										>
+											{state.isProcessing ? (
+												<>
+													<span className="loading loading-spinner loading-sm"></span>
+													Processing...
+												</>
+											) : (
+												"Confirm Move"
+											)}
+										</button>
+									</div>
+								</div>
+							)}
 
 						<div ref={resultRef}>
 							{state.moveSuccess && (
