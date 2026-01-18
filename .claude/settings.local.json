@@ -32,7 +32,9 @@
 			"Bash(docker exec bhmc-admin-backend-1 /app/.venv/bin/python -c \"\nimport django.views.debug\nimport os\npath = os.path.join\\(os.path.dirname\\(django.views.debug.__file__\\), ''templates'', ''technical_500.html''\\)\nwith open\\(path\\) as f:\n    lines = f.readlines\\(\\)\n    # Print lines around 370-390 to see the full context\n    for i in range\\(365, 395\\):\n        print\\(f''{i+1}: {lines[i].rstrip\\(\\)}''\\)\n\")",
 			"Bash(docker exec:*)",
 			"WebSearch",
-			"WebFetch(domain:docs.docker.com)"
+			"WebFetch(domain:docs.docker.com)",
+			"Bash(lsof:*)",
+			"Bash(pgrep:*)"
 		]
 	},
 	"hooks": {

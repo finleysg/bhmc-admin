@@ -33,6 +33,7 @@ export type Action =
 	| { type: "SET_SUCCESS"; payload: boolean }
 	| { type: "SET_ERROR"; payload: unknown }
 	| { type: "RESET" }
+	| { type: "GO_BACK" }
 
 /**
  * Reducer for replace player page with stepped workflow.
@@ -56,13 +57,28 @@ export function reducer(state: State, action: Action): State {
 		case "SET_NOTES":
 			return { ...state, notes: action.payload }
 		case "SET_PROCESSING":
-			return { ...state, isProcessing: action.payload }
+			return {
+				...state,
+				isProcessing: action.payload,
+				...(action.payload ? { error: null, replaceSuccess: false } : {}),
+			}
 		case "SET_SUCCESS":
 			return { ...state, replaceSuccess: action.payload, isProcessing: false }
 		case "SET_ERROR":
 			return { ...state, error: action.payload, isProcessing: false }
 		case "RESET":
 			return { ...initialState, clubEvent: state.clubEvent, isLoading: false }
+		case "GO_BACK":
+			switch (state.step) {
+				case "player":
+					return { ...state, selectedGroup: undefined, step: "group" }
+				case "replacement":
+					return { ...state, originalPlayer: null, originalSlot: null, step: "player" }
+				case "confirm":
+					return { ...state, replacementPlayer: null, step: "replacement" }
+				default:
+					return state
+			}
 		default:
 			return state
 	}

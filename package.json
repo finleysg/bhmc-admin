@@ -15,7 +15,7 @@
 		"lint:fix": "turbo run lint:fix",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
-		"test": "turbo run test && cd backend && uv run python manage.py test",
+		"test": "turbo run test",
 		"test:watch": "turbo run test:watch",
 		"test:coverage": "turbo run test:coverage",
 		"typecheck": "turbo run typecheck",

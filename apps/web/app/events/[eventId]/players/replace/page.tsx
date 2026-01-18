@@ -118,7 +118,7 @@ export default function ReplacePlayerPage() {
 
 						{state.step === "group" && (
 							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 1: Select Group</h4>
+								<h4 className="font-semibold mb-2">Step 1 of 4: Select Group</h4>
 								<GroupSearch
 									clubEvent={state.clubEvent}
 									onGroupSelected={(group) => dispatch({ type: "SET_GROUP", payload: group })}
@@ -129,7 +129,7 @@ export default function ReplacePlayerPage() {
 
 						{state.step === "player" && state.selectedGroup && (
 							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 2: Select Player to Replace</h4>
+								<h4 className="font-semibold mb-2">Step 2 of 4: Select Player to Replace</h4>
 								<p className="text-sm text-base-content/70 mb-4">
 									Selected group: {state.selectedGroup.slots[0]?.player?.firstName}{" "}
 									{state.selectedGroup.slots[0]?.player?.lastName}
@@ -138,7 +138,10 @@ export default function ReplacePlayerPage() {
 									{state.selectedGroup.slots
 										.filter((slot) => slot.player && slot.status === "R")
 										.map((slot) => (
-											<label key={slot.id} className="flex items-center gap-3 p-3 border rounded cursor-pointer hover:bg-base-200">
+											<label
+												key={slot.id}
+												className="flex items-center gap-3 p-3 border rounded cursor-pointer hover:bg-base-200"
+											>
 												<input
 													type="radio"
 													name="originalPlayer"
@@ -162,12 +165,26 @@ export default function ReplacePlayerPage() {
 											</label>
 										))}
 								</div>
+								<div className="flex gap-2 mt-4">
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "GO_BACK" })}
+									>
+										← Back
+									</button>
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "RESET" })}
+									>
+										Start Over
+									</button>
+								</div>
 							</div>
 						)}
 
 						{state.step === "replacement" && state.originalPlayer && (
 							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 3: Select Replacement Player</h4>
+								<h4 className="font-semibold mb-2">Step 3 of 4: Select Replacement Player</h4>
 								<p className="text-sm text-base-content/70 mb-4">
 									Replacing: {state.originalPlayer.firstName} {state.originalPlayer.lastName}
 								</p>
@@ -180,60 +197,93 @@ export default function ReplacePlayerPage() {
 									onPlayerRemoved={() => {}}
 									onError={(err) => dispatch({ type: "SET_ERROR", payload: err })}
 								/>
+								<div className="flex gap-2 mt-4">
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "GO_BACK" })}
+									>
+										← Back
+									</button>
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "RESET" })}
+									>
+										Start Over
+									</button>
+								</div>
 							</div>
 						)}
 
-						{state.step === "confirm" && state.originalPlayer && state.replacementPlayer && state.originalSlot && (
-							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 4: Confirm Replacement</h4>
-								<div className="bg-base-200 p-4 rounded mb-4">
-									<div className="grid grid-cols-2 gap-4">
-										<div>
-											<div className="text-sm text-base-content/70">Original Player</div>
-											<div className="font-medium">
-												{state.originalPlayer.firstName} {state.originalPlayer.lastName}
+						{state.step === "confirm" &&
+							state.originalPlayer &&
+							state.replacementPlayer &&
+							state.originalSlot && (
+								<div className="mb-6">
+									<h4 className="font-semibold mb-2">Step 4 of 4: Confirm Replacement</h4>
+									<div className="bg-base-200 p-4 rounded mb-4">
+										<div className="grid grid-cols-2 gap-4">
+											<div>
+												<div className="text-sm text-base-content/70">Original Player</div>
+												<div className="font-medium">
+													{state.originalPlayer.firstName} {state.originalPlayer.lastName}
+												</div>
 											</div>
-										</div>
-										<div>
-											<div className="text-sm text-base-content/70">Replacement Player</div>
-											<div className="font-medium">
-												{state.replacementPlayer.firstName} {state.replacementPlayer.lastName}
+											<div>
+												<div className="text-sm text-base-content/70">Replacement Player</div>
+												<div className="font-medium">
+													{state.replacementPlayer.firstName} {state.replacementPlayer.lastName}
+												</div>
 											</div>
 										</div>
 									</div>
-									<div className="mt-3 text-sm text-base-content/70">
-										Slot: Hole {state.selectedGroup?.slots.find((s) => s.id === state.originalSlot?.id)?.slot}, Starting Order {state.originalSlot.startingOrder}
+
+									<div className="form-control mb-4">
+										<label className="label">
+											<span className="label-text">Notes (optional)</span>
+										</label>
+										<textarea
+											className="textarea textarea-bordered"
+											placeholder="Add any notes about this replacement..."
+											value={state.notes}
+											onChange={(e) => dispatch({ type: "SET_NOTES", payload: e.target.value })}
+											disabled={state.isProcessing}
+										/>
+									</div>
+
+									<div className="flex gap-2 items-center">
+										<button
+											className="btn btn-primary"
+											onClick={() => void handleReplace()}
+											disabled={state.isProcessing}
+										>
+											{state.isProcessing && <span className="loading loading-spinner"></span>}
+											Confirm
+										</button>
+										<button
+											className="btn btn-ghost btn-sm"
+											onClick={() => dispatch({ type: "GO_BACK" })}
+											disabled={state.isProcessing}
+										>
+											← Back
+										</button>
+										<button
+											className="btn btn-ghost btn-sm"
+											onClick={() => dispatch({ type: "RESET" })}
+											disabled={state.isProcessing}
+										>
+											Start Over
+										</button>
 									</div>
 								</div>
-
-								<div className="form-control mb-4">
-									<label className="label">
-										<span className="label-text">Notes (optional)</span>
-									</label>
-									<textarea
-										className="textarea textarea-bordered"
-										placeholder="Add any notes about this replacement..."
-										value={state.notes}
-										onChange={(e) => dispatch({ type: "SET_NOTES", payload: e.target.value })}
-										disabled={state.isProcessing}
-									/>
-								</div>
-
-								<button
-									className="btn btn-primary"
-									onClick={() => void handleReplace()}
-									disabled={state.isProcessing}
-								>
-									{state.isProcessing && <span className="loading loading-spinner"></span>}
-									Confirm Replacement
-								</button>
-							</div>
-						)}
+							)}
 
 						{state.replaceSuccess && (
 							<div ref={resultRef} className="alert alert-success mb-4">
 								Player replaced successfully!
-								<button className="btn btn-sm" onClick={() => dispatch({ type: "RESET" })}>
+								<button
+									className="btn btn-ghost btn-sm"
+									onClick={() => dispatch({ type: "RESET" })}
+								>
 									Replace Another
 								</button>
 							</div>
@@ -241,7 +291,14 @@ export default function ReplacePlayerPage() {
 
 						{state.error ? (
 							<div ref={resultRef} className="alert alert-error mb-4">
-								<span>Error: {state.error instanceof Error ? state.error.message : typeof state.error === "string" ? state.error : "Unknown error"}</span>
+								<span>
+									Error:{" "}
+									{state.error instanceof Error
+										? state.error.message
+										: typeof state.error === "string"
+											? state.error
+											: "Unknown error"}
+								</span>
 							</div>
 						) : null}
 					</div>
