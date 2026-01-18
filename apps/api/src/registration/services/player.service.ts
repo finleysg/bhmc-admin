@@ -510,7 +510,37 @@ export class PlayerService {
 			)
 		}
 
-		// TODO: Implement actual replacement logic (PRD #3)
+		// Fetch player and registration records for audit trail
+		const originalPlayer = await this.repository.findPlayerById(originalPlayerId)
+		const replacementPlayer = await this.repository.findPlayerById(replacementPlayerId)
+		const registrationRecord = await this.repository.findRegistrationById(slotRow.registrationId!)
+
+		if (!registrationRecord) {
+			throw new BadRequestException(
+				`Registration ${slotRow.registrationId} not found for slot ${slotId}`,
+			)
+		}
+
+		// Build audit notes
+		const originalName = `${originalPlayer.firstName} ${originalPlayer.lastName}`.trim()
+		const replacementName = `${replacementPlayer.firstName} ${replacementPlayer.lastName}`.trim()
+		const replaceDate = new Date().toISOString().split("T")[0]
+		const currentNotes = registrationRecord.notes || ""
+
+		let auditNotes = `Replaced ${originalName} with ${replacementName} on ${replaceDate}`
+		if (request.notes) {
+			auditNotes += ` - ${request.notes}`
+		}
+		const newNotes = `${currentNotes}\n${auditNotes}`.trim()
+
+		// Execute replacement in transaction
+		await this.drizzle.db.transaction(async (tx) => {
+			await this.repository.updateRegistrationSlot(slotId, { playerId: replacementPlayerId }, tx)
+			await tx
+				.update(registration)
+				.set({ notes: newNotes })
+				.where(eq(registration.id, slotRow.registrationId!))
+		})
 
 		return {
 			slotId,

@@ -46,10 +46,28 @@ const createRegistrationSlotRow = (
 // Mock Setup
 // =============================================================================
 
-const createMockDrizzleService = () => ({
-	db: {
-		transaction: jest.fn(),
-	},
+const createMockDrizzleService = () => {
+	const mockUpdateBuilder = {
+		set: jest.fn().mockReturnThis(),
+		where: jest.fn().mockResolvedValue(undefined),
+	}
+	return {
+		db: {
+			transaction: jest.fn(),
+			update: jest.fn().mockReturnValue(mockUpdateBuilder),
+		},
+	}
+}
+
+const createRegistrationRow = (overrides: Partial<any> = {}): any => ({
+	id: 1,
+	eventId: 100,
+	createdDate: "2024-01-01",
+	notes: "",
+	courseId: null,
+	paymentConfirmation: null,
+	paymentAmount: null,
+	...overrides,
 })
 
 const createMockRegistrationRepository = () => ({
@@ -70,6 +88,7 @@ const createMockRegistrationRepository = () => ({
 	findAvailableSlots: jest.fn(),
 	findRegistrationById: jest.fn(),
 	findSlotsWithStatusByRegistration: jest.fn(),
+	updateRegistration: jest.fn(),
 })
 
 const createMockPaymentsRepository = () => ({
@@ -232,10 +251,23 @@ describe("PlayerService.replacePlayer", () => {
 	})
 
 	test("returns slotId when all validations pass", async () => {
-		const { service, repository } = createService()
+		const { service, repository, drizzle } = createService()
 
-		repository.findRegistrationSlotById.mockResolvedValue(createRegistrationSlotRow())
+		const slotRow = createRegistrationSlotRow({ id: 1, playerId: 1, registrationId: 10 })
+		const originalPlayer = createPlayerRow({ id: 1, firstName: "John", lastName: "Doe" })
+		const replacementPlayer = createPlayerRow({ id: 2, firstName: "Jane", lastName: "Smith" })
+		const registrationRecord = createRegistrationRow({ id: 10, notes: "" })
+
+		repository.findRegistrationSlotById.mockResolvedValue(slotRow)
 		repository.findRegisteredPlayers.mockResolvedValue([createPlayerRow({ id: 5 })])
+		repository.findPlayerById
+			.mockResolvedValueOnce(originalPlayer)
+			.mockResolvedValueOnce(replacementPlayer)
+		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+
+		drizzle.db.transaction.mockImplementation(async (callback: any) => {
+			return await callback(drizzle.db)
+		})
 
 		const result = await service.replacePlayer(100, {
 			slotId: 1,
@@ -244,5 +276,106 @@ describe("PlayerService.replacePlayer", () => {
 		})
 
 		expect(result.slotId).toBe(1)
+	})
+
+	test("updates slot.playerId after successful replace", async () => {
+		const { service, repository, drizzle } = createService()
+
+		const slotRow = createRegistrationSlotRow({ id: 1, playerId: 1, registrationId: 10 })
+		const originalPlayer = createPlayerRow({ id: 1, firstName: "John", lastName: "Doe" })
+		const replacementPlayer = createPlayerRow({ id: 2, firstName: "Jane", lastName: "Smith" })
+		const registrationRecord = createRegistrationRow({ id: 10, notes: "" })
+
+		repository.findRegistrationSlotById.mockResolvedValue(slotRow)
+		repository.findRegisteredPlayers.mockResolvedValue([])
+		repository.findPlayerById
+			.mockResolvedValueOnce(originalPlayer)
+			.mockResolvedValueOnce(replacementPlayer)
+		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+
+		drizzle.db.transaction.mockImplementation(async (callback: any) => {
+			return await callback(drizzle.db)
+		})
+
+		await service.replacePlayer(100, {
+			slotId: 1,
+			originalPlayerId: 1,
+			replacementPlayerId: 2,
+		})
+
+		expect(repository.updateRegistrationSlot).toHaveBeenCalledWith(
+			1,
+			{ playerId: 2 },
+			expect.anything(),
+		)
+	})
+
+	test("appends replacement audit trail to registration.notes", async () => {
+		const { service, repository, drizzle } = createService()
+
+		const slotRow = createRegistrationSlotRow({ id: 1, playerId: 1, registrationId: 10 })
+		const originalPlayer = createPlayerRow({ id: 1, firstName: "John", lastName: "Doe" })
+		const replacementPlayer = createPlayerRow({ id: 2, firstName: "Jane", lastName: "Smith" })
+		const registrationRecord = createRegistrationRow({ id: 10, notes: "Previous notes" })
+
+		repository.findRegistrationSlotById.mockResolvedValue(slotRow)
+		repository.findRegisteredPlayers.mockResolvedValue([])
+		repository.findPlayerById
+			.mockResolvedValueOnce(originalPlayer)
+			.mockResolvedValueOnce(replacementPlayer)
+		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+
+		drizzle.db.transaction.mockImplementation(async (callback: any) => {
+			return await callback(drizzle.db)
+		})
+
+		await service.replacePlayer(100, {
+			slotId: 1,
+			originalPlayerId: 1,
+			replacementPlayerId: 2,
+		})
+
+		// Verify the transaction update was called with correct notes
+		const mockUpdateBuilder = drizzle.db.update()
+		expect(mockUpdateBuilder.set).toHaveBeenCalledWith(
+			expect.objectContaining({
+				notes: expect.stringContaining("Replaced John Doe with Jane Smith"),
+			}),
+		)
+	})
+
+	test("appends user-provided notes when present", async () => {
+		const { service, repository, drizzle } = createService()
+
+		const slotRow = createRegistrationSlotRow({ id: 1, playerId: 1, registrationId: 10 })
+		const originalPlayer = createPlayerRow({ id: 1, firstName: "John", lastName: "Doe" })
+		const replacementPlayer = createPlayerRow({ id: 2, firstName: "Jane", lastName: "Smith" })
+		const registrationRecord = createRegistrationRow({ id: 10, notes: "" })
+
+		repository.findRegistrationSlotById.mockResolvedValue(slotRow)
+		repository.findRegisteredPlayers.mockResolvedValue([])
+		repository.findPlayerById
+			.mockResolvedValueOnce(originalPlayer)
+			.mockResolvedValueOnce(replacementPlayer)
+		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+
+		drizzle.db.transaction.mockImplementation(async (callback: any) => {
+			return await callback(drizzle.db)
+		})
+
+		await service.replacePlayer(100, {
+			slotId: 1,
+			originalPlayerId: 1,
+			replacementPlayerId: 2,
+			notes: "Player injured",
+		})
+
+		// Verify the transaction update was called with correct notes including user notes
+		const mockUpdateBuilder = drizzle.db.update()
+		expect(mockUpdateBuilder.set).toHaveBeenCalledWith(
+			expect.objectContaining({
+				notes: expect.stringContaining("Player injured"),
+			}),
+		)
 	})
 })
