@@ -543,6 +543,16 @@ export class PlayerService {
 		if (request.notes) {
 			auditNotes += ` - ${request.notes}`
 		}
+
+		// Add payment difference notes if applicable
+		if (greenFeeDifference !== undefined && greenFeeDifference !== 0) {
+			if (greenFeeDifference > 0) {
+				auditNotes += `\nAdditional amount to collect: $${greenFeeDifference.toFixed(2)}`
+			} else {
+				auditNotes += `\nAmount to refund: $${Math.abs(greenFeeDifference).toFixed(2)}`
+			}
+		}
+
 		const newNotes = `${currentNotes}\n${auditNotes}`.trim()
 
 		// Execute replacement in transaction
