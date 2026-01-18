@@ -17,7 +17,7 @@ import {
 	type Player,
 } from "@repo/domain/types"
 
-import { reducer, getInitialState } from "./reducer"
+import { reducer, getInitialState, type AddPlayerStep } from "./reducer"
 
 export default function AddPlayerPage() {
 	const { user, isAuthenticated: signedIn, isLoading: isPending } = useAuth()
@@ -128,6 +128,19 @@ export default function AddPlayerPage() {
 	}
 
 	const membersOnly = state.event?.registrationType === RegistrationTypeChoices.MEMBER
+	const canChoose = state.event?.canChoose ?? false
+	const totalSteps = canChoose ? 4 : 3
+
+	const getStepNumber = (step: AddPlayerStep): number => {
+		if (canChoose) {
+			const stepOrder: AddPlayerStep[] = ["player", "slot", "fee", "confirm"]
+			return stepOrder.indexOf(step) + 1
+		}
+		const stepOrder: AddPlayerStep[] = ["player", "fee", "confirm"]
+		return stepOrder.indexOf(step) + 1
+	}
+
+	const stepNumber = getStepNumber(state.step)
 
 	return (
 		<main className="min-h-screen flex justify-center md:p-8">
@@ -135,34 +148,84 @@ export default function AddPlayerPage() {
 				<div className="card bg-base-100 shadow-xs">
 					<div className="card-body">
 						<h3 className="card-title text-secondary font-semibold mb-4">Add Player</h3>
-						<div className="mb-6">
-							<h4 className="font-semibold mb-2">Select Players</h4>
-							<PlayerSearch
-								eventId={Number(eventId)}
-								initialSelectedPlayers={state.selectedPlayers}
-								membersOnly={membersOnly}
-								onPlayerSelected={handlePlayerSelected}
-								onPlayerRemoved={handlePlayerRemoved}
-								onError={handleError}
-							/>
-						</div>
 
-						{state.canSelectGroup && state.event && (
+						{state.step === "player" && (
 							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Find an Open Spot</h4>
+								<h4 className="font-semibold mb-2">
+									Step {stepNumber} of {totalSteps}: Select Players
+								</h4>
+								<PlayerSearch
+									eventId={Number(eventId)}
+									initialSelectedPlayers={state.selectedPlayers}
+									membersOnly={membersOnly}
+									onPlayerSelected={handlePlayerSelected}
+									onPlayerRemoved={handlePlayerRemoved}
+									onError={handleError}
+								/>
+								<div className="flex gap-2 mt-4 justify-end">
+									<button
+										type="button"
+										className="btn btn-primary btn-sm"
+										disabled={state.selectedPlayers.length === 0}
+										onClick={() => dispatch({ type: "NEXT_STEP" })}
+									>
+										Continue →
+									</button>
+								</div>
+							</div>
+						)}
+
+						{state.step === "slot" && state.event && (
+							<div className="mb-6">
+								<h4 className="font-semibold mb-2">
+									Step {stepNumber} of {totalSteps}: Find an Open Spot
+								</h4>
+								<p className="text-sm text-base-content/70 mb-4">
+									Players:{" "}
+									{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
+								</p>
 								<SelectAvailable
 									players={state.selectedPlayers.length}
-									courses={state.event?.courses ?? []}
+									courses={state.event.courses ?? []}
 									clubEvent={state.event}
 									onError={handleError}
 									onSlotSelect={handleSlotSelect}
 								/>
+								<div className="flex gap-2 mt-4 justify-between">
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "GO_BACK" })}
+									>
+										← Back
+									</button>
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "RESET" })}
+									>
+										Start Over
+									</button>{" "}
+									{state.selectedSlotGroup && (
+										<button
+											type="button"
+											className="btn btn-primary btn-sm"
+											onClick={() => dispatch({ type: "NEXT_STEP" })}
+										>
+											Continue →
+										</button>
+									)}
+								</div>
 							</div>
 						)}
 
-						{state.canSelectFees && (
+						{state.step === "fee" && (
 							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Select Fees</h4>
+								<h4 className="font-semibold mb-2">
+									Step {stepNumber} of {totalSteps}: Select Fees
+								</h4>
+								<p className="text-sm text-base-content/70 mb-4">
+									Players:{" "}
+									{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
+								</p>
 								{state.event?.eventFees && (
 									<EventFeePicker
 										fees={state.event.eventFees}
@@ -171,25 +234,62 @@ export default function AddPlayerPage() {
 										eventDate={parseLocalDate(state.event.startDate)}
 									/>
 								)}
+								<div className="flex gap-2 mt-4 justify-between">
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "GO_BACK" })}
+									>
+										← Back
+									</button>
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "RESET" })}
+									>
+										Start Over
+									</button>
+									<button
+										type="button"
+										className="btn btn-primary btn-sm"
+										onClick={() => dispatch({ type: "NEXT_STEP" })}
+									>
+										Continue →
+									</button>
+								</div>
 							</div>
 						)}
 
-						{state.canCompleteRegistration && (
-							<>
-								<div className="mb-6">
-									<h4 className="font-semibold mb-2">Payment Options</h4>
-									<AdminRegistrationOptions
-										options={state.registrationOptions}
-										onChange={(opts) =>
-											dispatch({ type: "SET_REGISTRATION_OPTIONS", payload: opts })
-										}
-									/>
-								</div>
+						{state.step === "confirm" && (
+							<div className="mb-6">
+								<h4 className="font-semibold mb-2">
+									Step {stepNumber} of {totalSteps}: Payment Options
+								</h4>
+								<p className="text-sm text-base-content/70 mb-4">
+									Players:{" "}
+									{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
+								</p>
+								<AdminRegistrationOptions
+									options={state.registrationOptions}
+									onChange={(opts) => dispatch({ type: "SET_REGISTRATION_OPTIONS", payload: opts })}
+								/>
 
-								<div>
+								<div className="flex gap-2 items-center mt-4 justify-between">
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "GO_BACK" })}
+										disabled={state.isLoading}
+									>
+										← Back
+									</button>
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "RESET" })}
+										disabled={state.isLoading}
+									>
+										Start Over
+									</button>
 									<button
 										type="button"
-										className="btn btn-primary me-2"
+										className="btn btn-primary"
 										onClick={() => void handleCompleteRegistration()}
 										disabled={state.isLoading}
 									>
@@ -199,19 +299,11 @@ export default function AddPlayerPage() {
 												Completing...
 											</>
 										) : (
-											"Complete Registration"
+											"Complete →"
 										)}
 									</button>
-									<button
-										type="button"
-										className="btn btn-neutral"
-										onClick={() => router.push(`/events/${eventId}/players`)}
-										disabled={state.isLoading}
-									>
-										Cancel
-									</button>
 								</div>
-							</>
+							</div>
 						)}
 
 						<div ref={resultRef}>
@@ -221,9 +313,7 @@ export default function AddPlayerPage() {
 									<div>
 										<button
 											className="btn btn-success me-2"
-											onClick={() => {
-												window.location.reload()
-											}}
+											onClick={() => dispatch({ type: "RESET" })}
 										>
 											Add More
 										</button>

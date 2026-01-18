@@ -11,7 +11,10 @@ import {
 	RegistrationStatusChoices,
 } from "@repo/domain/types"
 
+export type AddPlayerStep = "player" | "slot" | "fee" | "confirm"
+
 export interface AddPlayerState {
+	step: AddPlayerStep
 	signedUpBy: string
 	event: ClubEvent | null
 	selectedPlayers: Player[]
@@ -39,9 +42,13 @@ export type Action =
 	| { type: "SET_ERROR"; payload: unknown }
 	| { type: "RESET_ERROR" }
 	| { type: "SET_USER"; payload: { signedUpBy: string } }
+	| { type: "NEXT_STEP" }
+	| { type: "GO_BACK" }
+	| { type: "RESET" }
 
 export function getInitialState(): AddPlayerState {
 	return {
+		step: "player",
 		event: null,
 		selectedPlayers: [],
 		selectedSlotGroup: null,
@@ -259,6 +266,40 @@ function nonChoosableReducer(state: AddPlayerState, action: Action): AddPlayerSt
 	}
 }
 
+function getNextStep(state: AddPlayerState): AddPlayerStep {
+	const canChoose = state.event?.canChoose ?? false
+	switch (state.step) {
+		case "player":
+			return canChoose ? "slot" : "fee"
+		case "slot":
+			return "fee"
+		case "fee":
+			return "confirm"
+		default:
+			return state.step
+	}
+}
+
+function getPreviousStep(state: AddPlayerState): {
+	step: AddPlayerStep
+	clearData: Partial<AddPlayerState>
+} {
+	const canChoose = state.event?.canChoose ?? false
+	switch (state.step) {
+		case "slot":
+			return { step: "player", clearData: { selectedSlotGroup: null } }
+		case "fee":
+			return {
+				step: canChoose ? "slot" : "player",
+				clearData: { selectedFees: [] },
+			}
+		case "confirm":
+			return { step: "fee", clearData: {} }
+		default:
+			return { step: state.step, clearData: {} }
+	}
+}
+
 export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 	switch (action.type) {
 		case "SET_EVENT": {
@@ -297,6 +338,25 @@ export function reducer(state: AddPlayerState, action: Action): AddPlayerState {
 			return {
 				...state,
 				signedUpBy,
+			}
+		}
+		case "NEXT_STEP":
+			return { ...state, step: getNextStep(state) }
+		case "GO_BACK": {
+			const { step, clearData } = getPreviousStep(state)
+			const nextState = { ...state, ...clearData, step }
+			return {
+				...nextState,
+				adminRegistration: generateAdminRegistration(nextState),
+			}
+		}
+		case "RESET": {
+			const initial = getInitialState()
+			return {
+				...initial,
+				event: state.event,
+				signedUpBy: state.signedUpBy,
+				isLoading: false,
 			}
 		}
 		default:
