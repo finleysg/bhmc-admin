@@ -64,3 +64,14 @@ PRD item 7 complete.
 - Imports SelectAvailable and AvailableSlotGroup types.
 - All reducer tests pass. Typecheck/lint pass.
 - Commit c64a95d.
+
+PRD item 8 complete.
+- Added step 4 (confirm) to move player page.
+- Summary shows players, source location (course, hole number, starting order A/B), destination location (hole number, starting order A/B).
+- Optional notes textarea for move details.
+- Confirm button calls POST /api/registration/move-players with sourceSlotIds, destinationStartingHoleId, destinationStartingOrder, notes.
+- Success shows message with Move More and Player Menu buttons.
+- Error shows alert with Try Again button.
+- Abort controller for cleanup on unmount, processing state shows spinner during API call.
+- All 17 reducer tests pass. Typecheck/lint pass.
+- Commit 157858c.
