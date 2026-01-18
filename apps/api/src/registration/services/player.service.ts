@@ -16,6 +16,8 @@ import {
 	EventTypeChoices,
 	ReplacePlayerRequest,
 	ReplacePlayerResponse,
+	MovePlayersRequest,
+	MovePlayersResponse,
 } from "@repo/domain/types"
 
 import { toCourse, toHole } from "../../courses/mappers"
@@ -619,5 +621,17 @@ export class PlayerService {
 			slotId,
 			greenFeeDifference,
 		}
+	}
+
+	/**
+	 * Move players from source slots to destination slot group.
+	 * @param eventId - The event ID (unused until implementation)
+	 * @param request - The move players request (unused until implementation)
+	 */
+	movePlayers(eventId: number, request: MovePlayersRequest): Promise<MovePlayersResponse> {
+		void eventId
+		void request
+		// TODO: Implement movePlayers business logic in PRD item 10
+		throw new BadRequestException("movePlayers not yet implemented")
 	}
 }
