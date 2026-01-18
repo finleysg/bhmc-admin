@@ -106,7 +106,7 @@
 			"Manual test: replacement player receives email",
 			"Email content matches expected format"
 		],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": 9,

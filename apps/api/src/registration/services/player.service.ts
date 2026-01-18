@@ -32,6 +32,7 @@ import {
 	toDbString,
 } from "../../database"
 import { EventsService } from "../../events"
+import { MailService } from "../../mail/mail.service"
 import {
 	attachFeesToSlots,
 	hydrateSlotsWithPlayerAndHole,
@@ -54,6 +55,7 @@ export class PlayerService {
 		@Inject(PaymentsRepository) private readonly paymentsRepository: PaymentsRepository,
 		@Inject(EventsService) private readonly events: EventsService,
 		@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService,
+		@Inject(MailService) private readonly mail: MailService,
 	) {}
 
 	/** Find a player by id */
@@ -563,6 +565,55 @@ export class PlayerService {
 				.set({ notes: newNotes })
 				.where(eq(registration.id, slotRow.registrationId!))
 		})
+
+		// Send notification email to replacement player
+		try {
+			const regWithCourse = await this.repository.findRegistrationWithCourse(
+				slotRow.registrationId!,
+			)
+			if (regWithCourse) {
+				const completeReg = toRegistration(regWithCourse.registration)
+				if (regWithCourse.course) {
+					completeReg.course = toCourse(regWithCourse.course)
+				}
+
+				const slotRows = await this.repository.findSlotsWithPlayerAndHole(slotRow.registrationId!)
+				const slots = hydrateSlotsWithPlayerAndHole(slotRows)
+				const slotIds = slots
+					.filter((s): s is RegistrationSlot & { id: number } => s.id !== undefined)
+					.map((s) => s.id)
+				const feeRows = await this.repository.findFeesWithEventFeeAndFeeType(slotIds)
+				attachFeesToSlots(slots, feeRows)
+				completeReg.slots = slots
+
+				// Validate registration
+				const validatedReg = validateRegistration(completeReg)
+
+				// Determine if payment is needed
+				let paymentId: number | undefined
+				if (greenFeeDifference !== undefined && greenFeeDifference > 0) {
+					// Check if there's an unpaid payment for this registration
+					const payments = await this.paymentsRepository.findPaymentsForRegistration(
+						slotRow.registrationId!,
+					)
+					const unpaidPayment = payments.find((p) => p.confirmed === 0)
+					paymentId = unpaidPayment?.id
+				}
+
+				await this.mail.sendPlayerReplacementNotification(
+					toPlayer(replacementPlayer),
+					eventRecord,
+					validatedReg,
+					greenFeeDifference,
+					paymentId,
+				)
+			}
+		} catch (error) {
+			this.logger.error(
+				`Failed to send replacement notification to ${replacementPlayer.email}: ${error instanceof Error ? error.message : "Unknown error"}`,
+			)
+			// Continue - don't fail the replacement if email fails
+		}
 
 		return {
 			slotId,

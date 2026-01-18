@@ -22,6 +22,7 @@
 - Added 3 new unit tests: slot update, audit trail, user notes
 - All 9 tests pass, typecheck/lint pass
 - Commit: 3b72244
+
 ## PRD #4 - green fee difference calculation (COMPLETE)
 - Calculate greens fee for original/replacement players using getAmount from domain functions
 - Finds greens fee by feeType.code === "GREENS"
@@ -49,4 +50,15 @@
 - Typecheck/lint pass, all 256 API tests pass
 - Updated pre-commit hook to use npx pnpm, skip Django tests due to env issues
 - Commit: 15e5fb3
+
+## PRD #8 - replacement player email notification (COMPLETE)
+- Created PlayerReplacementNotificationEmail template
+- Added sendPlayerReplacementNotification to MailService
+- Injected MailService into PlayerService constructor
+- Sends email after successful replacePlayer transaction
+- Email includes event name, date, tee time (from registration course/slots)
+- If greenFeeDifference > 0, includes payment link to unpaid payment
+- Uses confirmed=0 to identify pending payments
+- Files: apps/api/src/mail/templates/player-replacement-notification-email.tsx, mail.service.ts, player.service.ts, player.service.test.ts
+- All 256 tests pass, typecheck/lint pass
 
