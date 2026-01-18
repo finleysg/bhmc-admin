@@ -160,13 +160,13 @@
 				"Updates registration.courseId if cross-course move",
 				"Returns movedCount"
 			],
-			"verify": [
+		"verify": [
 				"End-to-end test: select group, select players, pick destination, confirm",
 				"Source slots show available after move",
 				"Destination shows moved players",
 				"Cross-course move updates registration.courseId"
 			],
-			"passes": false
+			"passes": true
 		}
 	]
 }

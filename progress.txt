@@ -82,3 +82,12 @@ PRD item 9 complete.
 - Calls playerService.movePlayers() (stub throws BadRequestException until item 10).
 - API build passes.
 - Commit 838d746.
+
+PRD item 10 complete.
+- Implemented movePlayers business logic in PlayerService.movePlayers().
+- Validates: source slots same registration, status R, have players, belong to event.
+- Validates: enough available destination slots at hole/order.
+- Transaction: for cross-course moves creates new registration; updates destination slots (playerId, registrationId, status=R); clears source slots (playerId=null, registrationId=null, status=A); adds audit notes.
+- Broadcasts change to clients.
+- Returns movedCount.
+- All 258 API tests pass. Typecheck/lint pass.
