@@ -3,9 +3,9 @@
 import type {
 	AvailableSlotGroup,
 	CompleteClubEvent as ClubEvent,
+	CompleteRegistration,
+	CompleteRegistrationSlot,
 	Player,
-	Registration,
-	RegistrationSlot,
 } from "@repo/domain/types"
 
 export type MovePlayerStep = "group" | "player" | "destination" | "confirm"
@@ -13,9 +13,9 @@ export type MovePlayerStep = "group" | "player" | "destination" | "confirm"
 export interface MovePlayerState {
 	step: MovePlayerStep
 	clubEvent: ClubEvent | null
-	sourceGroup: Registration | null
+	sourceGroup: CompleteRegistration | null
 	selectedPlayers: Player[]
-	selectedSourceSlots: RegistrationSlot[]
+	selectedSourceSlots: CompleteRegistrationSlot[]
 	destinationCourseId: number | null
 	destinationSlotGroup: AvailableSlotGroup | null
 	notes: string
@@ -28,8 +28,8 @@ export interface MovePlayerState {
 
 export type Action =
 	| { type: "SET_EVENT"; payload: ClubEvent }
-	| { type: "SET_GROUP"; payload: Registration }
-	| { type: "SELECT_PLAYER"; payload: { player: Player; slot: RegistrationSlot } }
+	| { type: "SET_GROUP"; payload: CompleteRegistration }
+	| { type: "SELECT_PLAYER"; payload: { player: Player; slot: CompleteRegistrationSlot } }
 	| { type: "REMOVE_PLAYER"; payload: number } // playerId
 	| { type: "SET_DESTINATION_COURSE"; payload: number }
 	| { type: "SET_DESTINATION_SLOTS"; payload: AvailableSlotGroup }
@@ -108,6 +108,7 @@ export function reducer(state: MovePlayerState, action: Action): MovePlayerState
 				...state,
 				destinationCourseId: action.payload,
 				destinationSlotGroup: null,
+				step: "destination",
 			}
 
 		case "SET_DESTINATION_SLOTS":

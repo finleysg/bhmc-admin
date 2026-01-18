@@ -3,7 +3,8 @@
 import { useReducer, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { GroupSearch } from "../components/group-search"
-import type { CompleteClubEvent } from "@repo/domain/types"
+import { SelectPlayers } from "../components/select-players"
+import type { CompleteClubEvent, Player } from "@repo/domain/types"
 import { reducer, initialState } from "./reducer"
 
 /**
@@ -85,8 +86,54 @@ export default function MovePlayerPage() {
 							</div>
 						)}
 
+						{/* Step 2: Select Players */}
+						{state.step === "player" && state.sourceGroup && (
+							<div className="mb-6">
+								<h4 className="font-semibold mb-2">Step 2 of 4: Select Player(s) to Move</h4>
+								<SelectPlayers
+									group={state.sourceGroup}
+									selectedPlayers={state.selectedPlayers}
+									onSelect={(player: Player) => {
+										const slot = state.sourceGroup?.slots.find((s) => s.playerId === player.id)
+										if (slot) {
+											dispatch({ type: "SELECT_PLAYER", payload: { player, slot } })
+										}
+									}}
+									onRemove={(player: Player) => {
+										dispatch({ type: "REMOVE_PLAYER", payload: player.id })
+									}}
+								/>
+								<div className="flex justify-around gap-2 mt-4">
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "GO_BACK" })}
+									>
+										← Back
+									</button>
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "RESET" })}
+									>
+										Start Over
+									</button>
+									<button
+										className="btn btn-primary btn-sm"
+										disabled={state.selectedPlayers.length === 0}
+										onClick={() =>
+											dispatch({
+												type: "SET_DESTINATION_COURSE",
+												payload: state.sourceGroup?.courseId ?? 0,
+											})
+										}
+									>
+										Continue →
+									</button>
+								</div>
+							</div>
+						)}
+
 						{/* Placeholder for future steps */}
-						{state.step !== "group" && (
+						{(state.step === "destination" || state.step === "confirm") && (
 							<div className="mb-6">
 								<p className="text-sm text-base-content/70">Step {state.step} - Coming soon</p>
 								<button

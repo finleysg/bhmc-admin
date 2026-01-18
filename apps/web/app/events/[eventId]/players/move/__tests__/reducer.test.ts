@@ -1,11 +1,12 @@
 import { reducer, initialState, type MovePlayerState } from "../reducer"
 import type {
 	CompleteClubEvent,
+	CompleteRegistration,
+	CompleteRegistrationSlot,
 	Player,
-	Registration,
-	RegistrationSlot,
 	AvailableSlotGroup,
 } from "@repo/domain/types"
+import { RegistrationStatusChoices } from "@repo/domain/types"
 
 const HOLE_ID = 101
 const COURSE_ID = 10
@@ -71,7 +72,9 @@ const createEvent = (overrides: Partial<CompleteClubEvent> = {}): CompleteClubEv
 	...overrides,
 })
 
-const createRegistration = (overrides: Partial<Registration> = {}): Registration => ({
+const createRegistration = (
+	overrides: Partial<CompleteRegistration> = {},
+): CompleteRegistration => ({
 	id: overrides.id ?? 10,
 	eventId: overrides.eventId ?? 1,
 	courseId: overrides.courseId ?? COURSE_ID,
@@ -85,16 +88,20 @@ const createRegistration = (overrides: Partial<Registration> = {}): Registration
 	...overrides,
 })
 
-const createSlot = (overrides: Partial<RegistrationSlot> = {}): RegistrationSlot => ({
+const createSlot = (
+	overrides: Partial<CompleteRegistrationSlot> = {},
+): CompleteRegistrationSlot => ({
 	id: overrides.id ?? 1,
 	registrationId: overrides.registrationId ?? 10,
 	eventId: overrides.eventId ?? 1,
 	startingOrder: overrides.startingOrder ?? 1,
 	slot: overrides.slot ?? 1,
-	status: overrides.status ?? "R",
+	status: overrides.status ?? RegistrationStatusChoices.RESERVED,
 	holeId: overrides.holeId ?? HOLE_ID,
-	playerId: overrides.playerId,
-	player: overrides.player,
+	playerId: overrides.playerId ?? 1,
+	player: overrides.player ?? createPlayer({ id: overrides.playerId ?? 1 }),
+	hole: overrides.hole ?? { id: HOLE_ID, courseId: COURSE_ID, holeNumber: 1, par: 4 },
+	fees: overrides.fees ?? [],
 	...overrides,
 })
 
