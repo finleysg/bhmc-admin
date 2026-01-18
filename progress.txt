@@ -75,3 +75,10 @@ PRD item 8 complete.
 - Abort controller for cleanup on unmount, processing state shows spinner during API call.
 - All 17 reducer tests pass. Typecheck/lint pass.
 - Commit 157858c.
+
+PRD item 9 complete.
+- POST /:eventId/move-players endpoint in admin-registration.controller.ts.
+- Accepts MovePlayersRequest body, returns MovePlayersResponse.
+- Calls playerService.movePlayers() (stub throws BadRequestException until item 10).
+- API build passes.
+- Commit 838d746.

@@ -147,7 +147,7 @@
 				"Calls playerService.movePlayers()"
 			],
 			"verify": ["pnpm --filter api build passes", "Endpoint registered in controller"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 10,
