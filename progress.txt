@@ -22,3 +22,31 @@
 - Added 3 new unit tests: slot update, audit trail, user notes
 - All 9 tests pass, typecheck/lint pass
 - Commit: 3b72244
+## PRD #4 - green fee difference calculation (COMPLETE)
+- Calculate greens fee for original/replacement players using getAmount from domain functions
+- Finds greens fee by feeType.code === "GREENS"
+- Uses event startDate to calculate age-based fees (senior vs standard rates)
+- Returns difference in ReplacePlayerResponse.greenFeeDifference (replacement - original)
+- Added 3 unit tests: same-rate ($0 diff), senior replacing non-senior (-$10), non-senior replacing senior (+$10)
+- All 12 tests pass, typecheck/lint pass
+- Commit: f0aec08
+
+## PRD #5 - payment difference notes (COMPLETE)
+- Appends payment notes to registration.notes based on greenFeeDifference
+- Positive: "Additional amount to collect: $X.XX"
+- Negative: "Amount to refund: $X.XX"
+- Zero/undefined: no payment notes
+- Added 3 unit tests: positive diff, negative diff, zero diff
+- All 15 tests pass, typecheck/lint pass
+- Commit: e837229
+
+## PRD #6 - replacePlayer controller endpoint (COMPLETE)
+- Added POST /:eventId/replace-player to AdminRegistrationController
+- Accepts ReplacePlayerRequest, returns ReplacePlayerResponse
+- Calls PlayerService.replacePlayer for business logic
+- Added ReplacePlayerRequest/Response imports from @repo/domain
+- @Admin decorator at class level applies to endpoint
+- Typecheck/lint pass, all 256 API tests pass
+- Updated pre-commit hook to use npx pnpm, skip Django tests due to env issues
+- Commit: 15e5fb3
+

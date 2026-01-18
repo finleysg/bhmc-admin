@@ -58,7 +58,7 @@
 			"Unit test: junior replacing adult returns negative difference",
 			"Unit test: adult replacing junior returns positive difference"
 		],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": 5,
@@ -75,7 +75,7 @@
 			"Unit test: negative difference updates registration notes",
 			"Unit test: zero difference does neither"
 		],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": 6,
@@ -90,7 +90,7 @@
 			"Calls ReplacePlayerService.replacePlayer"
 		],
 		"verify": ["curl POST /registration/1/replace-player returns expected shape"],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": 8,
