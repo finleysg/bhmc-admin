@@ -14,6 +14,8 @@ import {
 	CompleteRegistration,
 	CompleteRegistrationFee,
 	EventTypeChoices,
+	ReplacePlayerRequest,
+	ReplacePlayerResponse,
 } from "@repo/domain/types"
 
 import { toCourse, toHole } from "../../courses/mappers"
@@ -463,5 +465,55 @@ export class PlayerService {
 		}
 
 		return slotIds.length
+	}
+
+	/** Replace a player in a registration slot. */
+	async replacePlayer(
+		eventId: number,
+		request: ReplacePlayerRequest,
+	): Promise<ReplacePlayerResponse> {
+		const { slotId, originalPlayerId, replacementPlayerId } = request
+
+		// Validate slot exists
+		let slotRow
+		try {
+			slotRow = await this.repository.findRegistrationSlotById(slotId)
+		} catch {
+			throw new BadRequestException(`Slot ${slotId} not found`)
+		}
+
+		// Validate slot belongs to this event
+		if (slotRow.eventId !== eventId) {
+			throw new BadRequestException(`Slot ${slotId} does not belong to event ${eventId}`)
+		}
+
+		// Validate slot status is Reserved
+		if (slotRow.status !== RegistrationStatusChoices.RESERVED) {
+			throw new BadRequestException(
+				`Slot ${slotId} status must be Reserved, but is ${slotRow.status}`,
+			)
+		}
+
+		// Validate original player matches slot
+		if (slotRow.playerId !== originalPlayerId) {
+			throw new BadRequestException(
+				`Slot ${slotId} is assigned to player ${slotRow.playerId}, not ${originalPlayerId}`,
+			)
+		}
+
+		// Validate replacement player is not already registered for event
+		const registeredPlayers = await this.repository.findRegisteredPlayers(eventId)
+		const isAlreadyRegistered = registeredPlayers.some((p) => p.id === replacementPlayerId)
+		if (isAlreadyRegistered) {
+			throw new BadRequestException(
+				`Player ${replacementPlayerId} is already registered for event ${eventId}`,
+			)
+		}
+
+		// TODO: Implement actual replacement logic (PRD #3)
+
+		return {
+			slotId,
+		}
 	}
 }
