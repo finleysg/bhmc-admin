@@ -74,3 +74,20 @@ export interface UpdateNotesRequest {
 export interface AddPlayersRequest {
 	players: { id: number }[]
 }
+
+/**
+ * Request model for moving players from source slots to a destination slot group.
+ */
+export interface MovePlayersRequest {
+	sourceSlotIds: number[]
+	destinationStartingHoleId: number
+	destinationStartingOrder: number
+	notes?: string
+}
+
+/**
+ * Response model for move players operation.
+ */
+export interface MovePlayersResponse {
+	movedCount: number
+}
