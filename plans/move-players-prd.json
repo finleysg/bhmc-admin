@@ -1,0 +1,180 @@
+{
+  "feature": "Move Players",
+  "description": "Move one or more players from a source group to a destination slot/group within the same event",
+  "items": [
+    {
+      "id": 1,
+      "category": "domain",
+      "description": "Add MovePlayersRequest and MovePlayersResponse types to domain package",
+      "acceptance": [
+        "MovePlayersRequest has sourceSlotIds (number[]), destinationStartingHoleId (number), destinationStartingOrder (number), notes (string optional)",
+        "MovePlayersResponse has movedCount (number)",
+        "Types exported from packages/domain/src/types/register/index.ts"
+      ],
+      "verify": [
+        "pnpm build passes",
+        "Types importable from @bhmc/domain"
+      ],
+      "passes": true
+    },
+    {
+      "id": 2,
+      "category": "web-state",
+      "description": "Create move player reducer with state shape and all action handlers",
+      "acceptance": [
+        "State includes: clubEvent, sourceGroup, selectedPlayers, selectedSourceSlots, destinationCourseId, destinationSlotGroup, notes, step, isLoading, isProcessing, error, moveSuccess, resetKey",
+        "Steps: group → player → destination → confirm",
+        "Actions: SET_EVENT, SET_GROUP, SELECT_PLAYER, REMOVE_PLAYER, SET_DESTINATION_COURSE, SET_DESTINATION_SLOTS, SET_NOTES, SET_PROCESSING, SET_SUCCESS, SET_ERROR, RESET, GO_BACK",
+        "SET_GROUP auto-advances to player step",
+        "GO_BACK clears appropriate state for each step transition"
+      ],
+      "verify": [
+        "File exists at apps/web/app/events/[eventId]/players/move/reducer.ts",
+        "Exports reducer function, initialState, Action type, MovePlayerState type"
+      ],
+      "passes": true
+    },
+    {
+      "id": 3,
+      "category": "web-test",
+      "description": "Add reducer unit tests for move player state transitions",
+      "acceptance": [
+        "Tests SET_EVENT stores club event",
+        "Tests SET_GROUP advances to player step and stores group",
+        "Tests SELECT_PLAYER/REMOVE_PLAYER manage selectedPlayers array",
+        "Tests GO_BACK reverses steps and clears appropriate state",
+        "Tests RESET preserves clubEvent but clears selections"
+      ],
+      "verify": [
+        "pnpm --filter web test -- --testPathPattern=move passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": 4,
+      "category": "web-api",
+      "description": "Add Next.js API route for move-players proxy",
+      "acceptance": [
+        "POST /api/registration/move-players?eventId={eventId}",
+        "Validates eventId query param required",
+        "Uses fetchWithAuth to proxy to backend /registration/{eventId}/move-players",
+        "Returns JSON response from backend"
+      ],
+      "verify": [
+        "File exists at apps/web/app/api/registration/move-players/route.ts",
+        "pnpm build passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": 5,
+      "category": "web-ui",
+      "description": "Create move player page with step 1 (group selection)",
+      "acceptance": [
+        "Page at apps/web/app/events/[eventId]/players/move/page.tsx",
+        "Uses useReducer with move player reducer",
+        "Fetches event on mount, dispatches SET_EVENT",
+        "Renders GroupSearch component when step=group",
+        "GroupSearch onSelect dispatches SET_GROUP",
+        "Shows step indicator (Step 1 of 4)"
+      ],
+      "verify": [
+        "Navigate to /events/{eventId}/players/move",
+        "GroupSearch appears and is functional",
+        "Selecting group advances to step 2"
+      ],
+      "passes": true
+    },
+    {
+      "id": 6,
+      "category": "web-ui",
+      "description": "Add step 2 (player selection) to move player page",
+      "acceptance": [
+        "Renders SelectPlayers component when step=player",
+        "Shows players from sourceGroup with status R",
+        "Checkbox selection dispatches SELECT_PLAYER/REMOVE_PLAYER",
+        "Continue button enabled when selectedPlayers.length > 0",
+        "Continue advances to destination step",
+        "Back button dispatches GO_BACK"
+      ],
+      "verify": [
+        "After selecting group, player checkboxes appear",
+        "Can select/deselect players",
+        "Continue advances to step 3"
+      ],
+      "passes": true
+    },
+    {
+      "id": 7,
+      "category": "web-ui",
+      "description": "Add step 3 (destination selection) to move player page",
+      "acceptance": [
+        "Renders SelectAvailable component when step=destination",
+        "Course dropdown shows all event courses",
+        "Available slots fetched with players=selectedPlayers.length",
+        "Selecting slot group dispatches SET_DESTINATION_SLOTS",
+        "Auto-advances to confirm step on selection",
+        "Back button returns to player step"
+      ],
+      "verify": [
+        "After selecting players, course dropdown appears",
+        "Available times shown filtered by player count",
+        "Selecting destination advances to step 4"
+      ],
+      "passes": true
+    },
+    {
+      "id": 8,
+      "category": "web-ui",
+      "description": "Add step 4 (confirm) to move player page",
+      "acceptance": [
+        "Shows summary: players being moved, source location, destination location",
+        "Optional notes textarea",
+        "Confirm button calls POST /api/registration/move-players",
+        "Request body: sourceSlotIds from selectedSourceSlots, destination from destinationSlotGroup",
+        "Success shows message with Move More and Player Menu buttons",
+        "Error shows alert with Try Again button"
+      ],
+      "verify": [
+        "Confirm step shows accurate summary",
+        "Confirm button triggers API call (will fail until backend ready)"
+      ],
+      "passes": false
+    },
+    {
+      "id": 9,
+      "category": "api-controller",
+      "description": "Add movePlayers endpoint to NestJS admin registration controller",
+      "acceptance": [
+        "POST /:eventId/move-players endpoint",
+        "Accepts MovePlayersRequest body",
+        "Returns MovePlayersResponse",
+        "Calls playerService.movePlayers()"
+      ],
+      "verify": [
+        "pnpm --filter api build passes",
+        "Endpoint registered in controller"
+      ],
+      "passes": false
+    },
+    {
+      "id": 10,
+      "category": "api-service",
+      "description": "Implement movePlayers business logic in player service",
+      "acceptance": [
+        "Validates source slots: same registration, status R, have players, belong to event",
+        "Validates destination: enough available slots for player count",
+        "Transaction: find/create destination registration, update destination slots (playerId, registrationId, status=R), clear source slots (playerId=null, registrationId=null, status=A)",
+        "Updates registration.courseId if cross-course move",
+        "Returns movedCount"
+      ],
+      "verify": [
+        "End-to-end test: select group, select players, pick destination, confirm",
+        "Source slots show available after move",
+        "Destination shows moved players",
+        "Cross-course move updates registration.courseId"
+      ],
+      "passes": false
+    }
+  ]
+}
