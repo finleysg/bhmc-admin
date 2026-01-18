@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNotNull } from "drizzle-orm"
 
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
-import { dummyCourse, dummyHole, validateRegistration } from "@repo/domain/functions"
+import { dummyCourse, dummyHole, getAmount, validateRegistration } from "@repo/domain/functions"
 import {
 	AvailableSlotGroup,
 	Player,
@@ -521,6 +521,18 @@ export class PlayerService {
 			)
 		}
 
+		// Calculate green fee difference
+		const eventRecord = await this.events.getCompleteClubEventById(eventId, false)
+		const greenFeeEventFee = eventRecord.eventFees.find((ef) => ef.feeType?.code === "GREENS")
+		let greenFeeDifference: number | undefined = undefined
+
+		if (greenFeeEventFee) {
+			const eventDate = new Date(eventRecord.startDate)
+			const originalFee = getAmount(greenFeeEventFee, toPlayer(originalPlayer), eventDate)
+			const replacementFee = getAmount(greenFeeEventFee, toPlayer(replacementPlayer), eventDate)
+			greenFeeDifference = replacementFee - originalFee
+		}
+
 		// Build audit notes
 		const originalName = `${originalPlayer.firstName} ${originalPlayer.lastName}`.trim()
 		const replacementName = `${replacementPlayer.firstName} ${replacementPlayer.lastName}`.trim()
@@ -544,6 +556,7 @@ export class PlayerService {
 
 		return {
 			slotId,
+			greenFeeDifference,
 		}
 	}
 }

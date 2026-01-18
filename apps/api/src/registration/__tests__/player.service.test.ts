@@ -251,7 +251,7 @@ describe("PlayerService.replacePlayer", () => {
 	})
 
 	test("returns slotId when all validations pass", async () => {
-		const { service, repository, drizzle } = createService()
+		const { service, repository, drizzle, eventsService } = createService()
 
 		const slotRow = createRegistrationSlotRow({ id: 1, playerId: 1, registrationId: 10 })
 		const originalPlayer = createPlayerRow({ id: 1, firstName: "John", lastName: "Doe" })
@@ -264,6 +264,7 @@ describe("PlayerService.replacePlayer", () => {
 			.mockResolvedValueOnce(originalPlayer)
 			.mockResolvedValueOnce(replacementPlayer)
 		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+		eventsService.getCompleteClubEventById.mockResolvedValue({ eventFees: [] })
 
 		drizzle.db.transaction.mockImplementation(async (callback: any) => {
 			return await callback(drizzle.db)
@@ -279,7 +280,7 @@ describe("PlayerService.replacePlayer", () => {
 	})
 
 	test("updates slot.playerId after successful replace", async () => {
-		const { service, repository, drizzle } = createService()
+		const { service, repository, drizzle, eventsService } = createService()
 
 		const slotRow = createRegistrationSlotRow({ id: 1, playerId: 1, registrationId: 10 })
 		const originalPlayer = createPlayerRow({ id: 1, firstName: "John", lastName: "Doe" })
@@ -292,6 +293,7 @@ describe("PlayerService.replacePlayer", () => {
 			.mockResolvedValueOnce(originalPlayer)
 			.mockResolvedValueOnce(replacementPlayer)
 		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+		eventsService.getCompleteClubEventById.mockResolvedValue({ eventFees: [] })
 
 		drizzle.db.transaction.mockImplementation(async (callback: any) => {
 			return await callback(drizzle.db)
@@ -311,7 +313,7 @@ describe("PlayerService.replacePlayer", () => {
 	})
 
 	test("appends replacement audit trail to registration.notes", async () => {
-		const { service, repository, drizzle } = createService()
+		const { service, repository, drizzle, eventsService } = createService()
 
 		const slotRow = createRegistrationSlotRow({ id: 1, playerId: 1, registrationId: 10 })
 		const originalPlayer = createPlayerRow({ id: 1, firstName: "John", lastName: "Doe" })
@@ -324,6 +326,7 @@ describe("PlayerService.replacePlayer", () => {
 			.mockResolvedValueOnce(originalPlayer)
 			.mockResolvedValueOnce(replacementPlayer)
 		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+		eventsService.getCompleteClubEventById.mockResolvedValue({ eventFees: [] })
 
 		drizzle.db.transaction.mockImplementation(async (callback: any) => {
 			return await callback(drizzle.db)
@@ -345,7 +348,7 @@ describe("PlayerService.replacePlayer", () => {
 	})
 
 	test("appends user-provided notes when present", async () => {
-		const { service, repository, drizzle } = createService()
+		const { service, repository, drizzle, eventsService } = createService()
 
 		const slotRow = createRegistrationSlotRow({ id: 1, playerId: 1, registrationId: 10 })
 		const originalPlayer = createPlayerRow({ id: 1, firstName: "John", lastName: "Doe" })
@@ -358,6 +361,7 @@ describe("PlayerService.replacePlayer", () => {
 			.mockResolvedValueOnce(originalPlayer)
 			.mockResolvedValueOnce(replacementPlayer)
 		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+		eventsService.getCompleteClubEventById.mockResolvedValue({ eventFees: [] })
 
 		drizzle.db.transaction.mockImplementation(async (callback: any) => {
 			return await callback(drizzle.db)
@@ -377,5 +381,188 @@ describe("PlayerService.replacePlayer", () => {
 				notes: expect.stringContaining("Player injured"),
 			}),
 		)
+	})
+
+	test("same-rate players return greenFeeDifference=0", async () => {
+		const { service, repository, drizzle, eventsService } = createService()
+
+		const slotRow = createRegistrationSlotRow({ id: 1, playerId: 1, registrationId: 10 })
+		const originalPlayer = createPlayerRow({ id: 1, firstName: "John", lastName: "Doe" })
+		const replacementPlayer = createPlayerRow({ id: 2, firstName: "Jane", lastName: "Smith" })
+		const registrationRecord = createRegistrationRow({ id: 10, notes: "" })
+
+		const greensFeeType = {
+			id: 1,
+			name: "Greens Fee",
+			code: "GREENS",
+			payout: "passthru",
+			restriction: "none",
+		}
+
+		const eventRecord = {
+			id: 100,
+			startDate: "2024-06-15",
+			eventFees: [
+				{
+					id: 1,
+					eventId: 100,
+					amount: 50,
+					isRequired: true,
+					displayOrder: 1,
+					feeTypeId: 1,
+					feeType: greensFeeType,
+				},
+			],
+		}
+
+		repository.findRegistrationSlotById.mockResolvedValue(slotRow)
+		repository.findRegisteredPlayers.mockResolvedValue([])
+		repository.findPlayerById
+			.mockResolvedValueOnce(originalPlayer)
+			.mockResolvedValueOnce(replacementPlayer)
+		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+		eventsService.getCompleteClubEventById.mockResolvedValue(eventRecord)
+
+		drizzle.db.transaction.mockImplementation(async (callback: any) => {
+			return await callback(drizzle.db)
+		})
+
+		const result = await service.replacePlayer(100, {
+			slotId: 1,
+			originalPlayerId: 1,
+			replacementPlayerId: 2,
+		})
+
+		expect(result.greenFeeDifference).toBe(0)
+	})
+
+	test("senior replacing non-senior returns negative difference", async () => {
+		const { service, repository, drizzle, eventsService } = createService()
+
+		const slotRow = createRegistrationSlotRow({ id: 1, playerId: 1, registrationId: 10 })
+		const originalPlayer = createPlayerRow({
+			id: 1,
+			firstName: "John",
+			lastName: "Doe",
+			birthDate: "1970-01-01",
+		})
+		const replacementPlayer = createPlayerRow({
+			id: 2,
+			firstName: "Jane",
+			lastName: "Smith",
+			birthDate: "1950-01-01",
+		})
+		const registrationRecord = createRegistrationRow({ id: 10, notes: "" })
+
+		const greensFeeType = {
+			id: 1,
+			name: "Greens Fee",
+			code: "GREENS",
+			payout: "passthru",
+			restriction: "none",
+		}
+
+		const eventRecord = {
+			id: 100,
+			startDate: "2024-06-15",
+			eventFees: [
+				{
+					id: 1,
+					eventId: 100,
+					amount: 50,
+					isRequired: true,
+					displayOrder: 1,
+					feeTypeId: 1,
+					feeType: greensFeeType,
+					overrideAmount: 40,
+					overrideRestriction: "Seniors",
+				},
+			],
+		}
+
+		repository.findRegistrationSlotById.mockResolvedValue(slotRow)
+		repository.findRegisteredPlayers.mockResolvedValue([])
+		repository.findPlayerById
+			.mockResolvedValueOnce(originalPlayer)
+			.mockResolvedValueOnce(replacementPlayer)
+		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+		eventsService.getCompleteClubEventById.mockResolvedValue(eventRecord)
+
+		drizzle.db.transaction.mockImplementation(async (callback: any) => {
+			return await callback(drizzle.db)
+		})
+
+		const result = await service.replacePlayer(100, {
+			slotId: 1,
+			originalPlayerId: 1,
+			replacementPlayerId: 2,
+		})
+
+		expect(result.greenFeeDifference).toBe(-10)
+	})
+
+	test("non-senior replacing senior returns positive difference", async () => {
+		const { service, repository, drizzle, eventsService } = createService()
+
+		const slotRow = createRegistrationSlotRow({ id: 1, playerId: 1, registrationId: 10 })
+		const originalPlayer = createPlayerRow({
+			id: 1,
+			firstName: "John",
+			lastName: "Doe",
+			birthDate: "1950-01-01",
+		})
+		const replacementPlayer = createPlayerRow({
+			id: 2,
+			firstName: "Jane",
+			lastName: "Smith",
+			birthDate: "1970-01-01",
+		})
+		const registrationRecord = createRegistrationRow({ id: 10, notes: "" })
+
+		const greensFeeType = {
+			id: 1,
+			name: "Greens Fee",
+			code: "GREENS",
+			payout: "passthru",
+			restriction: "none",
+		}
+
+		const eventRecord = {
+			id: 100,
+			startDate: "2024-06-15",
+			eventFees: [
+				{
+					id: 1,
+					eventId: 100,
+					amount: 50,
+					isRequired: true,
+					displayOrder: 1,
+					feeTypeId: 1,
+					feeType: greensFeeType,
+					overrideAmount: 40,
+					overrideRestriction: "Seniors",
+				},
+			],
+		}
+
+		repository.findRegistrationSlotById.mockResolvedValue(slotRow)
+		repository.findRegisteredPlayers.mockResolvedValue([])
+		repository.findPlayerById
+			.mockResolvedValueOnce(originalPlayer)
+			.mockResolvedValueOnce(replacementPlayer)
+		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+		eventsService.getCompleteClubEventById.mockResolvedValue(eventRecord)
+
+		drizzle.db.transaction.mockImplementation(async (callback: any) => {
+			return await callback(drizzle.db)
+		})
+
+		const result = await service.replacePlayer(100, {
+			slotId: 1,
+			originalPlayerId: 1,
+			replacementPlayerId: 2,
+		})
+
+		expect(result.greenFeeDifference).toBe(10)
 	})
 })
