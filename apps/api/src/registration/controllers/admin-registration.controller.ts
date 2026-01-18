@@ -16,6 +16,8 @@ import type {
 	PlayerQuery,
 	RegisteredPlayer,
 	CompleteRegistration,
+	ReplacePlayerRequest,
+	ReplacePlayerResponse,
 } from "@repo/domain/types"
 
 import { Admin } from "../../auth"
@@ -118,6 +120,17 @@ export class AdminRegistrationController {
 	) {
 		const droppedCount = await this.adminRegisterService.dropPlayers(registrationId, slotIds)
 		return { droppedCount }
+	}
+
+	@Post(":eventId/replace-player")
+	async replacePlayer(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Body() request: ReplacePlayerRequest,
+	): Promise<ReplacePlayerResponse> {
+		this.logger.log(
+			`Replacing player ${request.originalPlayerId} with ${request.replacementPlayerId} in slot ${request.slotId} for event ${eventId}`,
+		)
+		return this.adminRegisterService.replacePlayer(eventId, request)
 	}
 
 	@Post("refund")
