@@ -58,6 +58,31 @@ describe("Boolean flag setters", () => {
 		const state = reducer(initialState, { type: "SET_DROP_SUCCESS", payload: true })
 		expect(state.dropSuccess).toBe(true)
 	})
+	it("should populate droppedPlayers from selectedPlayers on SET_DROP_SUCCESS", () => {
+		const players = [mockPlayer(1), mockPlayer(2)]
+		const stateWithPlayers: State = { ...initialState, selectedPlayers: players }
+		const state = reducer(stateWithPlayers, { type: "SET_DROP_SUCCESS", payload: true })
+		expect(state.droppedPlayers).toEqual(players)
+	})
+	it("should populate droppedRefundCount from selectedFees on SET_DROP_SUCCESS", () => {
+		const fees = [
+			{ slotId: 1, registrationFeeIds: [101, 102] },
+			{ slotId: 2, registrationFeeIds: [201] },
+		]
+		const stateWithFees: State = { ...initialState, selectedFees: fees }
+		const state = reducer(stateWithFees, { type: "SET_DROP_SUCCESS", payload: true })
+		expect(state.droppedRefundCount).toBe(3)
+	})
+	it("should clear droppedPlayers and droppedRefundCount when SET_DROP_SUCCESS is false", () => {
+		const stateWithDropped: State = {
+			...initialState,
+			droppedPlayers: [mockPlayer(1)],
+			droppedRefundCount: 2,
+		}
+		const state = reducer(stateWithDropped, { type: "SET_DROP_SUCCESS", payload: false })
+		expect(state.droppedPlayers).toEqual([])
+		expect(state.droppedRefundCount).toBe(0)
+	})
 })
 
 describe("RESET_STATE", () => {
@@ -70,6 +95,8 @@ describe("RESET_STATE", () => {
 			error: "err",
 			isLoading: false,
 			dropSuccess: true,
+			droppedPlayers: [mockPlayer(1)],
+			droppedRefundCount: 2,
 			isProcessing: true,
 			resetKey: 0,
 			step: "confirm",
@@ -89,6 +116,8 @@ describe("RESET_SELECTIONS", () => {
 			error: "err",
 			isLoading: false,
 			dropSuccess: true,
+			droppedPlayers: [mockPlayer(1)],
+			droppedRefundCount: 2,
 			isProcessing: true,
 			resetKey: 0,
 			step: "confirm",
@@ -102,6 +131,8 @@ describe("RESET_SELECTIONS", () => {
 		expect(state.selectedPlayers).toEqual([])
 		expect(state.selectedFees).toEqual([])
 		expect(state.dropSuccess).toBe(false)
+		expect(state.droppedPlayers).toEqual([])
+		expect(state.droppedRefundCount).toBe(0)
 		expect(state.isProcessing).toBe(false)
 		expect(state.error).toBeNull()
 	})
@@ -124,6 +155,8 @@ describe("initialState", () => {
 		expect(initialState.error).toBeNull()
 		expect(initialState.isLoading).toBe(true)
 		expect(initialState.dropSuccess).toBe(false)
+		expect(initialState.droppedPlayers).toEqual([])
+		expect(initialState.droppedRefundCount).toBe(0)
 		expect(initialState.isProcessing).toBe(false)
 	})
 })

@@ -741,6 +741,12 @@ export class PlayerService {
 				destinationRegistrationId = sourceRegistrationId
 			}
 
+			// Detach fees from source slots (fees remain on registration, just unlinked from slot)
+			await tx
+				.update(registrationFee)
+				.set({ registrationSlotId: null })
+				.where(inArray(registrationFee.registrationSlotId, sourceSlotIds))
+
 			// Clear source slots first (avoids unique constraint violation)
 			await tx
 				.update(registrationSlot)

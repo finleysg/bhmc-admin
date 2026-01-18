@@ -1,7 +1,7 @@
 "use client"
 
 import { useReducer, useEffect, useRef } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import type { CompleteClubEvent, ReplacePlayerRequest } from "@repo/domain/types"
 import { reducer, initialState } from "./reducer"
 import { GroupSearch } from "../components/group-search"
@@ -9,6 +9,7 @@ import { PlayerSearch } from "../components/player-search"
 
 export default function ReplacePlayerPage() {
 	const { eventId } = useParams<{ eventId: string }>()
+	const router = useRouter()
 	const [state, dispatch] = useReducer(reducer, initialState)
 	const abortControllerRef = useRef<AbortController | null>(null)
 	const resultRef = useRef<HTMLDivElement>(null)
@@ -278,29 +279,45 @@ export default function ReplacePlayerPage() {
 							)}
 
 						{state.replaceSuccess && (
-							<div ref={resultRef} className="alert alert-success mb-4">
-								Player replaced successfully!
-								<button
-									className="btn btn-ghost btn-sm"
-									onClick={() => dispatch({ type: "RESET" })}
-								>
-									Replace Another
-								</button>
+							<div ref={resultRef} className="mt-6">
+								<div className="text-success mb-6">
+									Replaced {state.originalPlayer?.firstName} {state.originalPlayer?.lastName} with{" "}
+									{state.replacementPlayer?.firstName} {state.replacementPlayer?.lastName}{" "}
+									successfully!
+								</div>
+								<div>
+									<button
+										className="btn btn-success me-2"
+										onClick={() => dispatch({ type: "RESET" })}
+									>
+										Replace More
+									</button>
+									<button
+										className="btn btn-neutral"
+										onClick={() => router.push(`/events/${eventId}/players`)}
+									>
+										Player Menu
+									</button>
+								</div>
 							</div>
 						)}
 
-						{state.error ? (
-							<div ref={resultRef} className="alert alert-error mb-4">
-								<span>
-									Error:{" "}
-									{state.error instanceof Error
-										? state.error.message
-										: typeof state.error === "string"
-											? state.error
-											: "Unknown error"}
-								</span>
+						{state.error != null && (
+							<div ref={resultRef} className="mb-6">
+								<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
+								<div className="alert alert-error text-xs mb-2">
+									<span className="text-wrap">
+										Error: {typeof state.error === "string" ? state.error : "Unknown error"}
+									</span>
+								</div>
+								<button
+									className="btn btn-neutral"
+									onClick={() => dispatch({ type: "SET_ERROR", payload: null })}
+								>
+									Try Again
+								</button>
 							</div>
-						) : null}
+						)}
 					</div>
 				</div>
 			</div>
