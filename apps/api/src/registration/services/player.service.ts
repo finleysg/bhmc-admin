@@ -523,7 +523,7 @@ export class PlayerService {
 			)
 		}
 
-		// Calculate green fee difference
+		// Calculate green fee difference: TODO - generalize to all fees
 		const eventRecord = await this.events.getCompleteClubEventById(eventId, false)
 		const greenFeeEventFee = eventRecord.eventFees.find((ef) => ef.feeType?.code === "GREENS")
 		let greenFeeDifference: number | undefined = undefined
