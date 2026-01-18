@@ -1,15 +1,14 @@
 import os
-import structlog
 import sys
 
+import structlog
 from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LOG_DIR = os.path.join(BASE_DIR, 'var/log')
+LOG_DIR = os.path.join(BASE_DIR, "var/log")
 # LOG_DIR = os.path.join(BASE_DIR, '/var/log/django')
-CACHE_DIR = os.path.join(BASE_DIR, 'var/cache')
+CACHE_DIR = os.path.join(BASE_DIR, "var/cache")
 
 if not os.path.exists(LOG_DIR):
     os.mkdir(LOG_DIR)
@@ -20,9 +19,10 @@ if not os.path.exists(CACHE_DIR):
 # Load Environment variables, defaulting to prod, where
 # we don't inject DJANGO_ENV.
 DJANGO_ENV = os.getenv("DJANGO_ENV", "prod")
+TESTING = "test" in sys.argv
 ENVIRONMENTS = {
-  "local": ".env.local",
-  "docker": ".env.docker",
+    "local": ".env.local",
+    "docker": ".env.docker",
 }
 
 sys.stdout.write(f"Loading environment {DJANGO_ENV}\n")
@@ -40,15 +40,15 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 # Other common settings that vary by environment
 allowed_hosts = os.getenv("ALLOWED_HOSTS")
 if allowed_hosts is not None:
-  ALLOWED_HOSTS = list(allowed_hosts.split(","))
+    ALLOWED_HOSTS = list(allowed_hosts.split(","))
 
 trusted_origins = os.getenv("CSRF_TRUSTED_ORIGINS")
 if trusted_origins is not None:
-  CSRF_TRUSTED_ORIGINS = list(trusted_origins.split(","))
+    CSRF_TRUSTED_ORIGINS = list(trusted_origins.split(","))
 
 allowed_origins = os.getenv("CORS_ALLOWED_ORIGINS")
 if allowed_origins is not None:
-  CORS_ALLOWED_ORIGINS = list(allowed_origins.split(","))
+    CORS_ALLOWED_ORIGINS = list(allowed_origins.split(","))
 
 CORS_ALLOW_HEADERS = (
     *default_headers,
@@ -67,7 +67,7 @@ WEBSITE_URL = os.getenv("WEBSITE_URL")
 # Common settings
 SITE_ID = 1
 
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 ROOT_URLCONF = "bhmc.urls"
 
@@ -139,7 +139,9 @@ AUTHENTICATION_BACKENDS = [
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates"), ],
+        "DIRS": [
+            os.path.join(BASE_DIR, "templates"),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -154,9 +156,7 @@ TEMPLATES = [
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticatedOrReadOnly",),
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.TokenAuthentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.TokenAuthentication",),
     "EXCEPTION_HANDLER": "core.exception_handler.custom_exception_handler",
 }
 
@@ -174,7 +174,7 @@ DJOSER = {
     "EMAIL": {
         "activation": "core.email.ActivationEmail",
         "password_reset": "core.email.PasswordResetEmail",
-    }
+    },
 }
 LOGIN_REDIRECT_URL = "/"
 
@@ -193,13 +193,16 @@ LOGGING = {
         },
         "key_value": {
             "()": structlog.stdlib.ProcessorFormatter,
-            "processor": structlog.processors.KeyValueRenderer(key_order=['timestamp', 'level', 'event', 'logger']),
+            "processor": structlog.processors.KeyValueRenderer(
+                key_order=["timestamp", "level", "event", "logger"]
+            ),
         },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "plain_console",
+            "level": "CRITICAL" if TESTING else "DEBUG",
         },
         "flat_line_file": {
             "class": "logging.handlers.TimedRotatingFileHandler",
@@ -226,7 +229,7 @@ LOGGING = {
             "level": "INFO",
         },
         "stripe": {
-            "handlers": ["console", "flat_line_file"] ,
+            "handlers": ["console", "flat_line_file"],
             "level": "ERROR",
         },
         "core": {
@@ -249,7 +252,7 @@ LOGGING = {
             "handlers": ["console", "flat_line_file"],
             "level": "INFO",
         },
-    }
+    },
 }
 
 structlog.configure(
@@ -273,13 +276,13 @@ DJANGO_STRUCTLOG_CELERY_ENABLED = True
 
 # Database
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv("DATABASE_NAME"),
-        'USER': os.getenv("DATABASE_USER"),
-        'PASSWORD': os.getenv("DATABASE_PASSWORD"),
-        'HOST': os.getenv("DATABASE_HOST"),
-        'PORT': os.getenv("DATABASE_PORT"),
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("DATABASE_NAME"),
+        "USER": os.getenv("DATABASE_USER"),
+        "PASSWORD": os.getenv("DATABASE_PASSWORD"),
+        "HOST": os.getenv("DATABASE_HOST"),
+        "PORT": os.getenv("DATABASE_PORT"),
     }
 }
 
@@ -292,7 +295,7 @@ CACHES = {
     "file": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
         "LOCATION": CACHE_DIR,
-    }
+    },
 }
 
 # Celery
@@ -306,21 +309,21 @@ CELERY_TASK_TRACK_STARTED = True
 
 # Storage
 AWS_HEADERS = {
-    'Expires': 'Thu, 31 Dec 2099 20:00:00 GMT',
-    'Cache-Control': 'max-age=94608000',
+    "Expires": "Thu, 31 Dec 2099 20:00:00 GMT",
+    "Cache-Control": "max-age=94608000",
 }
 AWS_S3_FILE_OVERWRITE = True
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
-AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 
-STATICFILES_LOCATION = 'static'
-MEDIAFILES_LOCATION = 'media'
+STATICFILES_LOCATION = "static"
+MEDIAFILES_LOCATION = "media"
 
-STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, STATICFILES_LOCATION)
-MEDIA_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION)
+STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{STATICFILES_LOCATION}/"
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{MEDIAFILES_LOCATION}/"
 
 STORAGES = {
     "default": {
@@ -332,12 +335,12 @@ STORAGES = {
 }
 
 STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 )
 
 # Email settings
-ADMINS = [('Stuart Finley', 'finleysg@gmail.com')]
+ADMINS = [("Stuart Finley", "finleysg@gmail.com")]
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
 
 if DJANGO_ENV == "prod":

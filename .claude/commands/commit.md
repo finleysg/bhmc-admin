@@ -1,50 +1,23 @@
 ---
-description: Format, lint, test, build, then commit changes
+description: Stage changes if needed, push a branch, and open a PR if needed
 ---
 
 # Commit Workflow
 
 Execute these steps in order. Fix any issues before proceeding to the next step.
 
-## Step 1: Format
-
-Run `pnpm format` to format code.
-
-## Step 2: Lint
-
-Run `pnpm lint`. If there are errors:
-
-1. Attempt to fix them (prefer `pnpm lint:fix` first)
-2. For remaining issues, edit files directly
-3. Re-run lint to verify fixes
-
-## Step 3: Test
-
-Run `pnpm test`. If tests fail:
-
-1. Analyze failures
-2. Fix the issues (only fix tests you broke, not pre-existing failures)
-3. Re-run tests to verify
-
-## Step 4: Build
-
-Run `pnpm build`. If build fails:
-
-1. Fix type errors or build issues
-2. Re-run build to verify
-
-## Step 5: Branch Check
+## Step 1: Branch Check
 
 Check current branch with `git branch --show-current`. If on `main`:
 
 1. Ask user for a branch name
 2. Create and checkout the new branch: `git checkout -b <branch-name>`
 
-## Step 6: Stage Changes
+## Step 2: Stage Changes
 
 Run `git add -A` to stage all changes.
 
-## Step 7: Commit
+## Step 3: Commit
 
 1. Run `git diff --cached --stat` to summarize staged changes
 2. Create a concise commit message describing the changes
@@ -61,16 +34,10 @@ EOF
 )"
 ```
 
-## Step 8: Push (User Decision)
+## Step 4: Push
 
-Ask the user: "Push branch to remote?"
+Push branch to remote: `git push -u origin <branch-name>`
 
-- If yes: `git push -u origin <branch-name>`
-- If no: skip
+## Step 9: PR
 
-## Step 9: PR (User Decision)
-
-Ask the user: "Open a pull request?"
-
-- If yes: Create PR using `gh pr create` with a summary of changes
-- If no: done
+If there is not already an open PR create one using `gh pr create` with a summary of changes
