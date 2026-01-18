@@ -348,6 +348,18 @@ describe("MovePlayerReducer - other actions", () => {
 		expect(result.isProcessing).toBe(false)
 	})
 
+	it("SET_SUCCESS clears existing error", () => {
+		const state = createState({
+			isProcessing: true,
+			error: "Previous error message",
+		})
+
+		const result = reducer(state, { type: "SET_SUCCESS", payload: true })
+
+		expect(result.moveSuccess).toBe(true)
+		expect(result.error).toBeNull()
+	})
+
 	it("SET_ERROR updates error and clears processing", () => {
 		const state = createState({ isProcessing: true })
 

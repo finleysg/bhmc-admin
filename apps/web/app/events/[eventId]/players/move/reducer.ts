@@ -135,6 +135,7 @@ export function reducer(state: MovePlayerState, action: Action): MovePlayerState
 				...state,
 				moveSuccess: action.payload,
 				isProcessing: false,
+				error: null,
 			}
 
 		case "SET_ERROR":

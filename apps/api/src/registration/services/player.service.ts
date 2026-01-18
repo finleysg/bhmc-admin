@@ -626,10 +626,7 @@ export class PlayerService {
 	/**
 	 * Move players from source slots to destination slot group.
 	 */
-	async movePlayers(
-		eventId: number,
-		request: MovePlayersRequest,
-	): Promise<MovePlayersResponse> {
+	async movePlayers(eventId: number, request: MovePlayersRequest): Promise<MovePlayersResponse> {
 		const { sourceSlotIds, destinationStartingHoleId, destinationStartingOrder, notes } = request
 
 		if (!sourceSlotIds.length) {
@@ -685,9 +682,7 @@ export class PlayerService {
 			.limit(1)
 
 		if (!destinationHoleRow.length) {
-			throw new BadRequestException(
-				`Destination hole ${destinationStartingHoleId} not found`,
-			)
+			throw new BadRequestException(`Destination hole ${destinationStartingHoleId} not found`)
 		}
 		const destinationCourseId = destinationHoleRow[0].courseId
 
@@ -746,6 +741,16 @@ export class PlayerService {
 				destinationRegistrationId = sourceRegistrationId
 			}
 
+			// Clear source slots first (avoids unique constraint violation)
+			await tx
+				.update(registrationSlot)
+				.set({
+					playerId: null,
+					registrationId: null,
+					status: RegistrationStatusChoices.AVAILABLE,
+				})
+				.where(inArray(registrationSlot.id, sourceSlotIds))
+
 			// Update destination slots with player info
 			for (let i = 0; i < sourceSlotIds.length; i++) {
 				const playerId = playerIds[i]
@@ -759,16 +764,6 @@ export class PlayerService {
 					})
 					.where(eq(registrationSlot.id, destSlot.id))
 			}
-
-			// Clear source slots
-			await tx
-				.update(registrationSlot)
-				.set({
-					playerId: null,
-					registrationId: null,
-					status: RegistrationStatusChoices.AVAILABLE,
-				})
-				.where(inArray(registrationSlot.id, sourceSlotIds))
 
 			// Update source registration notes
 			await tx

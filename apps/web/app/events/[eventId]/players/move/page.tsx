@@ -5,8 +5,13 @@ import { useParams, useRouter } from "next/navigation"
 import { GroupSearch } from "../components/group-search"
 import { SelectPlayers } from "../components/select-players"
 import { SelectAvailable } from "../components/select-available"
-import type { CompleteClubEvent, Player, AvailableSlotGroup } from "@repo/domain/types"
+import type { CompleteClubEvent, Player, AvailableSlotGroup, Course } from "@repo/domain/types"
+import { getStart } from "@repo/domain/functions"
 import { reducer, initialState } from "./reducer"
+
+function findCourseByHoleId(courses: Course[], holeId: number): Course | undefined {
+	return courses.find((c) => c.holes?.some((h) => h.id === holeId))
+}
 
 /**
  * Move Player page for a club event, allowing selection of a registration group, choosing player(s) to move, selecting destination, and confirming the move.
@@ -253,14 +258,26 @@ export default function MovePlayerPage() {
 											{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
 										</p>
 										<p className="mb-2">
-											<strong>From:</strong>{" "}
-											{state.sourceGroup.course?.name || `Course ${state.sourceGroup.courseId}`} -{" "}
-											Hole {state.sourceGroup.slots[0]?.hole?.holeNumber || "Unknown"} (
-											{state.sourceGroup.slots[0]?.startingOrder === 0 ? "A" : "B"})
+											<strong>From:</strong> {state.sourceGroup.course?.name} -{" "}
+											{state.sourceGroup.course?.holes
+												? getStart(
+														state.clubEvent,
+														state.sourceGroup.slots[0],
+														state.sourceGroup.course.holes,
+													)
+												: "Unknown"}
 										</p>
 										<p className="mb-2">
-											<strong>To:</strong> Hole {state.destinationSlotGroup.holeNumber} (
-											{state.destinationSlotGroup.startingOrder === 0 ? "A" : "B"})
+											<strong>To:</strong>{" "}
+											{(() => {
+												const destCourse = findCourseByHoleId(
+													state.clubEvent.courses ?? [],
+													state.destinationSlotGroup.holeId,
+												)
+												return destCourse?.holes
+													? `${destCourse.name} - ${getStart(state.clubEvent, state.destinationSlotGroup.slots[0], destCourse.holes)}`
+													: "Unknown"
+											})()}
 										</p>
 									</div>
 
@@ -314,7 +331,11 @@ export default function MovePlayerPage() {
 						<div ref={resultRef}>
 							{state.moveSuccess && (
 								<div className="mt-6">
-									<div className="text-success mb-6">Players moved successfully!</div>
+									<div className="text-success mb-6">
+										Moved{" "}
+										{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}{" "}
+										successfully!
+									</div>
 									<div>
 										<button
 											className="btn btn-success me-2"

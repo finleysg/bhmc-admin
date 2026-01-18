@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-claude --model sonnet --permission-mode acceptEdits "@plans/replace-player-prd.json @progress.txt \
+claude --model opus --permission-mode acceptEdits "@plans/move-players-prd.json @progress.txt \
 1. Find the highest priority feature to work on from the plan file and work ONLY on that feature. \
 This should be the one YOU decide has the highest priority, not necessarily the first in the list. \
 2. Decide if you need one or more tests for your feature and write the tests as needed. \
