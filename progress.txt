@@ -1,0 +1,24 @@
+## PRD #1 - ReplacePlayerRequest/Response types (COMPLETE)
+- Created packages/domain/src/types/register/replace-player.ts
+- ReplacePlayerRequest: slotId, originalPlayerId, replacementPlayerId, notes?
+- ReplacePlayerResponse: slotId, greenFeeDifference?
+- Exported via register/index.ts barrel
+- All acceptance criteria met: types defined, exported, build passes, importable from @repo/domain
+- Commit: e53be22
+
+## PRD #2 - replacePlayer validation stub (COMPLETE)
+- Added replacePlayer method to PlayerService
+- Validates: slot exists, slot belongs to event, slot status=Reserved, originalPlayerId matches, replacement not already registered
+- Method returns ReplacePlayerResponse stub (actual logic in PRD #3)
+- Created player.service.test.ts with 6 unit tests covering all validation cases
+- Files: apps/api/src/registration/services/player.service.ts, apps/api/src/registration/__tests__/player.service.test.ts
+- All tests pass, typecheck/lint pass
+- Commit: 3634688
+
+## PRD #3 - replacePlayer slot update and notes (COMPLETE)
+- Updates registrationSlot.playerId to replacementPlayerId in transaction
+- Appends audit trail to registration.notes: "Replaced {original} with {replacement} on {date}"
+- Appends user notes if provided via request.notes
+- Added 3 new unit tests: slot update, audit trail, user notes
+- All 9 tests pass, typecheck/lint pass
+- Commit: 3b72244
