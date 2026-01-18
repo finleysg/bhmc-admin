@@ -4,7 +4,8 @@ import { useReducer, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { GroupSearch } from "../components/group-search"
 import { SelectPlayers } from "../components/select-players"
-import type { CompleteClubEvent, Player } from "@repo/domain/types"
+import { SelectAvailable } from "../components/select-available"
+import type { CompleteClubEvent, Player, AvailableSlotGroup } from "@repo/domain/types"
 import { reducer, initialState } from "./reducer"
 
 /**
@@ -132,10 +133,51 @@ export default function MovePlayerPage() {
 							</div>
 						)}
 
-						{/* Placeholder for future steps */}
-						{(state.step === "destination" || state.step === "confirm") && (
+						{/* Step 3: Select Destination */}
+						{state.step === "destination" && state.clubEvent && (
 							<div className="mb-6">
-								<p className="text-sm text-base-content/70">Step {state.step} - Coming soon</p>
+								<h4 className="font-semibold mb-2">Step 3 of 4: Select Destination</h4>
+								<p className="text-sm text-base-content/70 mb-4">
+									Moving:{" "}
+									{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
+								</p>
+								<SelectAvailable
+									players={state.selectedPlayers.length}
+									courses={state.clubEvent.courses ?? []}
+									clubEvent={state.clubEvent}
+									onSlotSelect={(slotIds: number[], group?: AvailableSlotGroup) => {
+										if (group) {
+											dispatch({ type: "SET_DESTINATION_SLOTS", payload: group })
+										}
+									}}
+									onError={(err) =>
+										dispatch({
+											type: "SET_ERROR",
+											payload: err instanceof Error ? err.message : "Unknown error",
+										})
+									}
+								/>
+								<div className="flex justify-around gap-2 mt-4">
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "GO_BACK" })}
+									>
+										← Back
+									</button>
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => dispatch({ type: "RESET" })}
+									>
+										Start Over
+									</button>
+								</div>
+							</div>
+						)}
+
+						{/* Placeholder for confirm step */}
+						{state.step === "confirm" && (
+							<div className="mb-6">
+								<p className="text-sm text-base-content/70">Step confirm - Coming soon</p>
 								<button
 									className="btn btn-ghost btn-sm mt-4"
 									onClick={() => dispatch({ type: "GO_BACK" })}
