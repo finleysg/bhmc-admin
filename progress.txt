@@ -62,3 +62,53 @@
 - Files: apps/api/src/mail/templates/player-replacement-notification-email.tsx, mail.service.ts, player.service.ts, player.service.test.ts
 - All 256 tests pass, typecheck/lint pass
 
+## PRD #9 - Next.js API proxy for replace-player (COMPLETE)
+- Created POST /api/registration/replace-player?eventId=X
+- Proxies to NestJS /registration/:eventId/replace-player
+- Uses fetchWithAuth pattern for Django token forwarding
+- Validates eventId query param and JSON body
+- File: apps/web/app/api/registration/replace-player/route.ts
+- Typecheck/lint pass
+- Commit: 57dc80f
+
+## PRD #10 - replace player reducer (COMPLETE)
+- Created reducer with stepped workflow: group -> player -> replacement -> confirm
+- State: clubEvent, selectedGroup, originalPlayer, originalSlot, replacementPlayer, notes, step, isLoading, isProcessing, error, replaceSuccess
+- Actions: SET_EVENT, SET_GROUP, SET_ORIGINAL_PLAYER, SET_REPLACEMENT_PLAYER, SET_NOTES, SET_PROCESSING, SET_SUCCESS, SET_ERROR, RESET
+- Step advances on group/player/replacement selection
+- File: apps/web/app/events/[eventId]/players/replace/reducer.ts
+- Typecheck/lint pass
+- Commit: 3d17c16
+
+## PRDs #11-14 - replace player page (COMPLETE)
+- 4-step workflow using reducer
+- Step 1: GroupSearch component for selecting registration group
+- Step 2: Radio list of reserved (status=R) players in selected group
+- Step 3: PlayerSearch with excludeRegistered=true for replacement
+- Step 4: Confirm with summary (orig/replacement names, slot details), notes textarea, submit
+- Calls POST /api/registration/replace-player?eventId=X
+- Success: shows message + reset button to replace another
+- Error: displays error message
+- File: apps/web/app/events/[eventId]/players/replace/page.tsx
+- Typecheck/lint pass
+- Commit: 3d54dd4
+
+## PRD #15 - navigation link (COMPLETE)
+- Replace ActionCard already present in players menu
+- Links to players/replace
+- No changes needed
+
+## PRD #16 - unit tests (COMPLETE)
+- Tests created in PRDs #2-5, verified comprehensive coverage
+- 15 test cases covering all acceptance criteria:
+  * Slot not found validation
+  * Slot status Reserved validation
+  * originalPlayerId match validation
+  * Replacement already registered validation
+  * Slot update on successful replace
+  * Audit trail notes appended
+  * Green fee difference calculation (same-rate, senior/non-senior swaps)
+  * Payment notes appended based on greenFeeDifference
+- All tests pass
+- File: apps/api/src/registration/__tests__/player.service.test.ts
+
