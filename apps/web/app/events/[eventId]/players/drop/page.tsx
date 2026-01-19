@@ -301,7 +301,13 @@ export default function DropPlayerPage() {
 						<div ref={resultRef}>
 							{state.dropSuccess && (
 								<div className="mt-6">
-									<div className="text-success mb-6">Players dropped and refunds processed!</div>
+									<div className="text-success mb-6">
+										Dropped{" "}
+										{state.droppedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}{" "}
+										successfully!
+										{state.droppedRefundCount > 0 &&
+											` ${state.droppedRefundCount} refund(s) processed.`}
+									</div>
 									<div>
 										<button
 											className="btn btn-success me-2"

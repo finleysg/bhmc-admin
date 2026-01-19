@@ -16,6 +16,8 @@ import {
 	EventTypeChoices,
 	ReplacePlayerRequest,
 	ReplacePlayerResponse,
+	MovePlayersRequest,
+	MovePlayersResponse,
 } from "@repo/domain/types"
 
 import { toCourse, toHole } from "../../courses/mappers"
@@ -619,5 +621,166 @@ export class PlayerService {
 			slotId,
 			greenFeeDifference,
 		}
+	}
+
+	/**
+	 * Move players from source slots to destination slot group.
+	 */
+	async movePlayers(eventId: number, request: MovePlayersRequest): Promise<MovePlayersResponse> {
+		const { sourceSlotIds, destinationStartingHoleId, destinationStartingOrder, notes } = request
+
+		if (!sourceSlotIds.length) {
+			throw new BadRequestException("At least one source slot ID is required")
+		}
+
+		// 1. Fetch and validate source slots
+		const sourceSlotRows = await Promise.all(
+			sourceSlotIds.map((id) => this.repository.findRegistrationSlotById(id)),
+		)
+
+		// Validate all slots belong to the event
+		for (const slot of sourceSlotRows) {
+			if (slot.eventId !== eventId) {
+				throw new BadRequestException(`Slot ${slot.id} does not belong to event ${eventId}`)
+			}
+		}
+
+		// Validate all slots have status R (reserved)
+		for (const slot of sourceSlotRows) {
+			if (slot.status !== RegistrationStatusChoices.RESERVED) {
+				throw new BadRequestException(
+					`Slot ${slot.id} must have status Reserved, but has ${slot.status}`,
+				)
+			}
+		}
+
+		// Validate all slots have players
+		for (const slot of sourceSlotRows) {
+			if (!slot.playerId) {
+				throw new BadRequestException(`Slot ${slot.id} has no player assigned`)
+			}
+		}
+
+		// Validate all slots belong to same registration
+		const registrationIds = new Set(sourceSlotRows.map((s) => s.registrationId))
+		if (registrationIds.size !== 1) {
+			throw new BadRequestException("All source slots must belong to the same registration")
+		}
+		const sourceRegistrationId = sourceSlotRows[0].registrationId!
+
+		// 2. Get source registration to check course
+		const sourceRegistration = await this.repository.findRegistrationById(sourceRegistrationId)
+		if (!sourceRegistration) {
+			throw new NotFoundException(`Registration ${sourceRegistrationId} not found`)
+		}
+
+		// 3. Find destination slots at the specified hole/order
+		const destinationHoleRow = await this.drizzle.db
+			.select()
+			.from(hole)
+			.where(eq(hole.id, destinationStartingHoleId))
+			.limit(1)
+
+		if (!destinationHoleRow.length) {
+			throw new BadRequestException(`Destination hole ${destinationStartingHoleId} not found`)
+		}
+		const destinationCourseId = destinationHoleRow[0].courseId
+
+		// Find available slots at destination
+		const availableDestinationSlots = await this.drizzle.db
+			.select()
+			.from(registrationSlot)
+			.where(
+				and(
+					eq(registrationSlot.eventId, eventId),
+					eq(registrationSlot.holeId, destinationStartingHoleId),
+					eq(registrationSlot.startingOrder, destinationStartingOrder),
+					eq(registrationSlot.status, RegistrationStatusChoices.AVAILABLE),
+				),
+			)
+
+		if (availableDestinationSlots.length < sourceSlotIds.length) {
+			throw new BadRequestException(
+				`Not enough available destination slots. Need ${sourceSlotIds.length}, found ${availableDestinationSlots.length}`,
+			)
+		}
+
+		// Take only as many destination slots as needed
+		const destinationSlots = availableDestinationSlots.slice(0, sourceSlotIds.length)
+
+		// 4. Execute the move in a transaction
+		const playerIds = sourceSlotRows.map((s) => s.playerId!)
+		const isCrossCourseMove = sourceRegistration.courseId !== destinationCourseId
+
+		// Build audit notes
+		const playerRows = await this.repository.findPlayersByIds(playerIds)
+		const playerNames = playerRows.map((p) => `${p.firstName} ${p.lastName}`.trim())
+		const moveDate = new Date().toISOString().split("T")[0]
+		const currentNotes = sourceRegistration.notes || ""
+		let auditNotes = `Moved ${playerNames.join(", ")} on ${moveDate}`
+		if (notes) {
+			auditNotes += ` - ${notes}`
+		}
+		const newNotes = `${currentNotes}\n${auditNotes}`.trim()
+
+		await this.drizzle.db.transaction(async (tx) => {
+			// Determine destination registration
+			let destinationRegistrationId: number
+
+			if (isCrossCourseMove) {
+				// Create new registration for the destination course
+				const [result] = await tx.insert(registration).values({
+					eventId,
+					courseId: destinationCourseId,
+					createdDate: toDbString(new Date()),
+					notes: `Created from move on ${moveDate}`,
+				})
+				destinationRegistrationId = Number(result.insertId)
+			} else {
+				// Same course - use source registration
+				destinationRegistrationId = sourceRegistrationId
+			}
+
+			// Detach fees from source slots (fees remain on registration, just unlinked from slot)
+			await tx
+				.update(registrationFee)
+				.set({ registrationSlotId: null })
+				.where(inArray(registrationFee.registrationSlotId, sourceSlotIds))
+
+			// Clear source slots first (avoids unique constraint violation)
+			await tx
+				.update(registrationSlot)
+				.set({
+					playerId: null,
+					registrationId: null,
+					status: RegistrationStatusChoices.AVAILABLE,
+				})
+				.where(inArray(registrationSlot.id, sourceSlotIds))
+
+			// Update destination slots with player info
+			for (let i = 0; i < sourceSlotIds.length; i++) {
+				const playerId = playerIds[i]
+				const destSlot = destinationSlots[i]
+				await tx
+					.update(registrationSlot)
+					.set({
+						playerId,
+						registrationId: destinationRegistrationId,
+						status: RegistrationStatusChoices.RESERVED,
+					})
+					.where(eq(registrationSlot.id, destSlot.id))
+			}
+
+			// Update source registration notes
+			await tx
+				.update(registration)
+				.set({ notes: newNotes })
+				.where(eq(registration.id, sourceRegistrationId))
+		})
+
+		// Broadcast change
+		this.broadcast.notifyChange(eventId)
+
+		return { movedCount: sourceSlotIds.length }
 	}
 }

@@ -309,7 +309,11 @@ export default function AddPlayerPage() {
 						<div ref={resultRef}>
 							{state.completeSuccess && (
 								<div className="mt-6">
-									<div className="text-success mb-6">Registration created!</div>
+									<div className="text-success mb-6">
+										Added{" "}
+										{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}{" "}
+										successfully!
+									</div>
 									<div>
 										<button
 											className="btn btn-success me-2"

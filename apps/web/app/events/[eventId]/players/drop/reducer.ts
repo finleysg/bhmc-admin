@@ -17,6 +17,8 @@ export type State = {
 	error?: unknown
 	isLoading: boolean
 	dropSuccess: boolean
+	droppedPlayers: Player[]
+	droppedRefundCount: number
 	isProcessing: boolean
 	resetKey: number
 	step: DropPlayerStep
@@ -104,7 +106,14 @@ export function reducer(state: State, action: Action): State {
 		case "SET_PROCESSING":
 			return { ...state, isProcessing: action.payload }
 		case "SET_DROP_SUCCESS":
-			return { ...state, dropSuccess: action.payload }
+			return {
+				...state,
+				dropSuccess: action.payload,
+				droppedPlayers: action.payload ? state.selectedPlayers : [],
+				droppedRefundCount: action.payload
+					? state.selectedFees.reduce((sum, f) => sum + f.registrationFeeIds.length, 0)
+					: 0,
+			}
 		case "RESET_STATE":
 			return { ...initialState }
 		case "RESET_SELECTIONS":
@@ -114,6 +123,8 @@ export function reducer(state: State, action: Action): State {
 				selectedPlayers: [],
 				selectedFees: [],
 				dropSuccess: false,
+				droppedPlayers: [],
+				droppedRefundCount: 0,
 				isProcessing: false,
 				error: null,
 				resetKey: state.resetKey + 1,
@@ -154,6 +165,8 @@ export const initialState: State = {
 	error: null,
 	isLoading: true,
 	dropSuccess: false,
+	droppedPlayers: [],
+	droppedRefundCount: 0,
 	isProcessing: false,
 	resetKey: 0,
 	step: "group",
