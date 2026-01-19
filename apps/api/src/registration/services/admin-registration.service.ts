@@ -173,8 +173,8 @@ export class AdminRegistrationService {
 	}
 
 	/** Mark player as member for season. */
-	async updateMembershipStatus(playerId: number, season: number): Promise<void> {
-		const player = await this.repository.findPlayerById(playerId)
+	async updateMembershipStatus(userId: number, season: number): Promise<void> {
+		const player = await this.repository.findPlayerByUserId(userId)
 		if (player) {
 			player.isMember = 1
 			player.lastSeason = season

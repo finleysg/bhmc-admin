@@ -24,7 +24,6 @@ def _has_unique_error(exc):
 
 
 def custom_exception_handler(exc, context):
-
     if isinstance(exc, OSError):
         pass
     elif isinstance(exc, NotAuthenticated):
@@ -43,19 +42,24 @@ def custom_exception_handler(exc, context):
         if isinstance(exc, IntegrityError):
             response = Response({"detail": "Database conflict"}, status=status.HTTP_409_CONFLICT)
         else:
-            response = Response({'detail': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            response = Response({"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         set_rollback()
 
     if _has_unique_error(exc):
-        response = Response({"detail": "The player selected has already signed up or is in the process of signing up"}, status=status.HTTP_409_CONFLICT)
+        response = Response(
+            {
+                "detail": "The player selected has already signed up or is in the process of signing up"
+            },
+            status=status.HTTP_409_CONFLICT,
+        )
 
-    if len(exc.args) > 0 and exc.args[0] == "Invalid token.":
+    if hasattr(exc, "detail") and str(exc.detail) == "Invalid token.":
         logger.warning("Detected an invalid token: deleting cookie")
         response.delete_cookie(
-            key = "access_token",
-            path = "/",
-            samesite = "Lax",
-            domain = ".bhmc.org" if not is_localhost else None,
+            key="access_token",
+            path="/",
+            samesite="Lax",
+            domain=".bhmc.org" if not is_localhost else None,
         )
 
     return response
