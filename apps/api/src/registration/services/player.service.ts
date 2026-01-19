@@ -18,6 +18,8 @@ import {
 	ReplacePlayerResponse,
 	MovePlayersRequest,
 	MovePlayersResponse,
+	SwapPlayersRequest,
+	SwapPlayersResponse,
 } from "@repo/domain/types"
 
 import { toCourse, toHole } from "../../courses/mappers"
@@ -782,5 +784,16 @@ export class PlayerService {
 		this.broadcast.notifyChange(eventId)
 
 		return { movedCount: sourceSlotIds.length }
+	}
+
+	/**
+	 * Swap two players between different registration slots.
+	 */
+	swapPlayers(eventId: number, request: SwapPlayersRequest): Promise<SwapPlayersResponse> {
+		this.logger.debug(
+			`swapPlayers stub called for event ${eventId} with request ${JSON.stringify(request)}`,
+		)
+		// TODO: Implement validation and swap logic (PRD items 9 & 10)
+		throw new BadRequestException("Swap players not yet implemented")
 	}
 }

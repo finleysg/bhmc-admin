@@ -20,6 +20,8 @@ import type {
 	ReplacePlayerResponse,
 	MovePlayersRequest,
 	MovePlayersResponse,
+	SwapPlayersRequest,
+	SwapPlayersResponse,
 } from "@repo/domain/types"
 
 import { Admin } from "../../auth"
@@ -144,6 +146,17 @@ export class AdminRegistrationController {
 			`Moving ${request.sourceSlotIds.length} players to hole ${request.destinationStartingHoleId} order ${request.destinationStartingOrder} for event ${eventId}`,
 		)
 		return this.adminRegisterService.movePlayers(eventId, request)
+	}
+
+	@Post(":eventId/swap-players")
+	async swapPlayers(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Body() request: SwapPlayersRequest,
+	): Promise<SwapPlayersResponse> {
+		this.logger.log(
+			`Swapping player ${request.playerAId} in slot ${request.slotAId} with player ${request.playerBId} in slot ${request.slotBId} for event ${eventId}`,
+		)
+		return this.adminRegisterService.swapPlayers(eventId, request)
 	}
 
 	@Post("refund")
