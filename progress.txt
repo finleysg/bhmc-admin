@@ -129,5 +129,12 @@ PRD item 13 (api-test) - COMPLETE
 - Tests successful swap: correct response, fees moved with players, audit notes appended to both registrations, user notes included in audit trail
 - Total 14 new tests covering all acceptance criteria
 - File: apps/api/src/registration/__tests__/player.service.test.ts
+- Commit: a4f6830
 - No blockers, all tests pass, typecheck/lint pass
 
+PRD item 14 (integration) - MANUAL VERIFICATION REQUIRED
+- All feature code complete (items 1-13)
+- Requires docker compose environment for end-to-end testing
+- Manual verification steps: create test event with registrations, perform same-course swap, perform cross-course swap, verify fees moved, verify emails sent, verify audit trail, verify UI tee sheet
+- Blocker: Docker daemon not available in current environment
+- Status: Feature implementation complete, requires manual QA in running environment
