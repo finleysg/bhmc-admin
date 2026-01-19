@@ -1162,3 +1162,39 @@ describe("PlayerService.swapPlayers", () => {
 		expect(notesUpdates.some((call: any) => call[0].notes.includes("Player request"))).toBe(true)
 	})
 })
+
+describe("PlayerService.updateNotes", () => {
+	test("throws NotFoundException if registration not found", async () => {
+		const { service, repository } = createService()
+
+		repository.findRegistrationById.mockResolvedValue(null)
+
+		await expect(service.updateNotes(999, "Some notes")).rejects.toThrow(
+			"Registration 999 not found",
+		)
+	})
+
+	test("successfully updates notes with new value", async () => {
+		const { service, repository } = createService()
+
+		const registrationRecord = createRegistrationRow({ id: 10, notes: "Old notes" })
+		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+		repository.updateRegistration.mockResolvedValue(registrationRecord)
+
+		await service.updateNotes(10, "New notes")
+
+		expect(repository.updateRegistration).toHaveBeenCalledWith(10, { notes: "New notes" })
+	})
+
+	test("handles null (clearing notes)", async () => {
+		const { service, repository } = createService()
+
+		const registrationRecord = createRegistrationRow({ id: 10, notes: "Old notes" })
+		repository.findRegistrationById.mockResolvedValue(registrationRecord)
+		repository.updateRegistration.mockResolvedValue(registrationRecord)
+
+		await service.updateNotes(10, null)
+
+		expect(repository.updateRegistration).toHaveBeenCalledWith(10, { notes: null })
+	})
+})
