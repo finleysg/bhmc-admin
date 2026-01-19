@@ -1,0 +1,256 @@
+{
+	"feature": "Swap Players",
+	"description": "Exchange two players between different registration groups within the same event. Fees move with players. Cross-course swaps supported.",
+	"items": [
+		{
+			"id": 1,
+			"category": "domain",
+			"description": "Add SwapPlayersRequest and SwapPlayersResponse types to domain package",
+			"acceptance": [
+				"SwapPlayersRequest has slotAId (number), playerAId (number), slotBId (number), playerBId (number), notes (string optional)",
+				"SwapPlayersResponse has swappedCount (literal 2), playerAName (string), playerBName (string)",
+				"Types defined in packages/domain/src/types/register/swap-players.ts",
+				"Types exported from packages/domain/src/types/register/index.ts"
+			],
+			"verify": ["pnpm build passes", "Types importable from @bhmc/domain"],
+			"passes": true
+		},
+		{
+			"id": 2,
+			"category": "web-state",
+			"description": "Create swap player reducer with state shape and all action handlers",
+			"acceptance": [
+				"State includes: clubEvent, groupA, playerA, slotA, groupB, playerB, slotB, notes, step, isLoading, isProcessing, error, swapSuccess, resetKey",
+				"Steps: playerA → playerB → confirm (3 steps)",
+				"Actions: SET_EVENT, SET_PLAYER_A, SET_PLAYER_B, SET_NOTES, SET_PROCESSING, SET_SUCCESS, SET_ERROR, RESET, GO_BACK",
+				"SET_PLAYER_A auto-advances to playerB step",
+				"SET_PLAYER_B auto-advances to confirm step",
+				"GO_BACK clears appropriate state for each step transition"
+			],
+			"verify": [
+				"File exists at apps/web/app/events/[eventId]/players/swap/reducer.ts",
+				"Exports reducer function, initialState, Action type, SwapPlayerState type"
+			],
+			"passes": true
+		},
+		{
+			"id": 3,
+			"category": "web-test",
+			"description": "Add reducer unit tests for swap player state transitions",
+			"acceptance": [
+				"Tests SET_EVENT stores club event",
+				"Tests SET_PLAYER_A advances to playerB step and stores groupA, playerA, slotA",
+				"Tests SET_PLAYER_B advances to confirm step and stores groupB, playerB, slotB",
+				"Tests GO_BACK reverses steps and clears appropriate state",
+				"Tests RESET preserves clubEvent but clears all player selections"
+			],
+			"verify": ["pnpm --filter web test -- --testPathPattern=swap passes"],
+			"passes": true
+		},
+		{
+			"id": 4,
+			"category": "web-api",
+			"description": "Add Next.js API route for swap-players proxy",
+			"acceptance": [
+				"POST /api/registration/swap-players?eventId={eventId}",
+				"Validates eventId query param required",
+				"Uses fetchWithAuth to proxy to backend /registration/{eventId}/swap-players",
+				"Returns JSON response from backend"
+			],
+			"verify": [
+				"File exists at apps/web/app/api/registration/swap-players/route.ts",
+				"pnpm build passes"
+			],
+			"passes": true
+		},
+		{
+			"id": 5,
+			"category": "web-ui",
+			"description": "Create swap player page with step 1 (first player selection)",
+			"acceptance": [
+				"Page at apps/web/app/events/[eventId]/players/swap/page.tsx replaces placeholder",
+				"Uses useReducer with swap player reducer",
+				"Fetches event on mount, dispatches SET_EVENT",
+				"Step 1 renders GroupSearch component",
+				"After group selected, shows radio buttons for players in group with status R",
+				"Shows step indicator (Step 1 of 3: Select first player)",
+				"Selecting player dispatches SET_PLAYER_A with group, player, and slot"
+			],
+			"verify": [
+				"Navigate to /events/{eventId}/players/swap",
+				"GroupSearch appears and is functional",
+				"Selecting group shows players as radio buttons",
+				"Selecting player advances to step 2"
+			],
+			"passes": true
+		},
+		{
+			"id": 6,
+			"category": "web-ui",
+			"description": "Add step 2 (second player selection) to swap player page",
+			"acceptance": [
+				"Step 2 renders fresh GroupSearch component",
+				"After group selected, shows radio buttons for players with status R",
+				"Validates selected player is from different registration than playerA",
+				"Validates selected player is not the same player as playerA",
+				"Selecting valid player dispatches SET_PLAYER_B",
+				"Shows Back button that dispatches GO_BACK",
+				"Shows Start Over button that dispatches RESET"
+			],
+			"verify": [
+				"After selecting first player, new group search appears",
+				"Can select player from different group",
+				"Attempting to select same group shows error or is prevented",
+				"Selecting valid player advances to step 3"
+			],
+			"passes": true
+		},
+		{
+			"id": 7,
+			"category": "web-ui",
+			"description": "Add step 3 (confirm and submit) to swap player page",
+			"acceptance": [
+				"Shows summary: playerA name + current slot info, playerB name + current slot info",
+				"Shows 'after swap' indicator: playerA → slotB location, playerB → slotA location",
+				"Optional notes textarea bound to state.notes",
+				"Confirm button calls POST /api/registration/swap-players with SwapPlayersRequest body",
+				"Shows spinner during processing, disables buttons",
+				"Success shows message with player names, Swap More button (RESET), Player Menu button",
+				"Error shows alert with error message, Try Again button"
+			],
+			"verify": [
+				"Confirm step shows accurate summary of both players and their swap destinations",
+				"Notes can be entered",
+				"Confirm button triggers API call",
+				"Success state renders correctly",
+				"Error state renders correctly with retry option"
+			],
+			"passes": true
+		},
+		{
+			"id": 8,
+			"category": "api-controller",
+			"description": "Add swapPlayers endpoint to NestJS admin registration controller",
+			"acceptance": [
+				"POST /:eventId/swap-players endpoint in admin-registration.controller.ts",
+				"Accepts SwapPlayersRequest body",
+				"Returns SwapPlayersResponse",
+				"Logs swap attempt with player IDs and slot IDs",
+				"Calls playerService.swapPlayers(eventId, request)"
+			],
+			"verify": ["pnpm --filter api build passes", "Endpoint registered in controller"],
+			"passes": true
+		},
+		{
+			"id": 9,
+			"category": "api-service",
+			"description": "Implement swapPlayers validation logic in player service",
+			"acceptance": [
+				"Method signature: swapPlayers(eventId: number, request: SwapPlayersRequest): Promise<SwapPlayersResponse>",
+				"Fetches both slots by ID, throws if not found",
+				"Validates both slots belong to specified eventId",
+				"Validates both slots have status RESERVED",
+				"Validates playerAId matches slotA.playerId and playerBId matches slotB.playerId",
+				"Validates playerAId !== playerBId (not same player)",
+				"Validates slotA.registrationId !== slotB.registrationId (different registrations)",
+				"Throws BadRequestException with descriptive message for each validation failure"
+			],
+			"verify": [
+				"pnpm --filter api build passes",
+				"Invalid requests return appropriate 400 errors"
+			],
+			"passes": true
+		},
+		{
+			"id": 10,
+			"category": "api-service",
+			"description": "Implement swapPlayers transaction logic for slot and fee exchange",
+			"acceptance": [
+				"All database operations wrapped in transaction",
+				"Fetches fees for both slots before modification",
+				"Detaches fees: UPDATE registration_fee SET registrationSlotId=null WHERE registrationSlotId IN (slotAId, slotBId)",
+				"Clears both slots: UPDATE registration_slot SET playerId=null WHERE id IN (slotAId, slotBId)",
+				"Assigns players to swapped slots: playerA→slotB, playerB→slotA",
+				"Reattaches fees to follow players: slotA's fees→slotB, slotB's fees→slotA",
+				"Appends audit trail to both registrations' notes with format: 'Swapped {playerAName} with {playerBName} on {date}[ - {notes}]'",
+				"Calls broadcast.notifyChange(eventId) after transaction"
+			],
+			"verify": [
+				"After swap, players appear in each other's original slots",
+				"Fees moved with players (check registration_fee.registrationSlotId)",
+				"Both registration.notes updated with audit entry"
+			],
+			"passes": true
+		},
+		{
+			"id": 11,
+			"category": "api-mail",
+			"description": "Create swap notification email template",
+			"acceptance": [
+				"Template at apps/api/src/mail/templates/player-swap-notification-email.tsx",
+				"Props: recipientName, swappedWithName, eventName, eventDate, newStartInfo (hole/time)",
+				"Email subject: 'Tee Time Swap Notification'",
+				"Body explains swap occurred and shows new tee time info",
+				"Uses EmailLayout component matching existing templates",
+				"Template exported from apps/api/src/mail/templates/index.ts"
+			],
+			"verify": ["pnpm --filter api build passes", "Template renders without errors"],
+			"passes": true
+		},
+		{
+			"id": 12,
+			"category": "api-mail",
+			"description": "Add sendSwapNotification method to mail service and wire up in swapPlayers",
+			"acceptance": [
+				"Method signature: sendSwapNotification(player, swappedWithName, event, newSlotInfo)",
+				"Sends email using player-swap-notification-email template",
+				"swapPlayers calls sendSwapNotification for BOTH players after successful transaction",
+				"Email to playerA shows: swapped with playerB, new location = slotB info",
+				"Email to playerB shows: swapped with playerA, new location = slotA info",
+				"Emails sent in parallel using Promise.all"
+			],
+			"verify": [
+				"End-to-end swap sends emails to both players",
+				"Email content shows correct swap details for each recipient"
+			],
+			"passes": true
+		},
+		{
+			"id": 13,
+			"category": "api-test",
+			"description": "Add unit tests for swapPlayers service method",
+			"acceptance": [
+				"Tests validation: rejects slots from wrong event",
+				"Tests validation: rejects non-RESERVED slots",
+				"Tests validation: rejects mismatched player IDs",
+				"Tests validation: rejects same player swap",
+				"Tests validation: rejects same registration swap",
+				"Tests successful swap: players exchanged correctly",
+				"Tests successful swap: fees moved with players",
+				"Tests successful swap: audit notes appended"
+			],
+			"verify": ["pnpm --filter api test -- --testPathPattern=swap passes"],
+			"passes": true
+		},
+		{
+			"id": 14,
+			"category": "integration",
+			"description": "End-to-end integration test of swap players feature",
+			"acceptance": [
+				"Same-course swap: two players from same course swap correctly",
+				"Cross-course swap: players from different courses swap correctly",
+				"Fees verified: each player's fees moved to their new slot",
+				"Emails verified: both players received notification",
+				"Audit trail verified: both registrations have swap notes",
+				"UI verified: tee sheet reflects swapped positions"
+			],
+			"verify": [
+				"docker compose up -d --build",
+				"Create test event with two registrations",
+				"Perform swap via admin UI",
+				"Verify all acceptance criteria manually or via test"
+			],
+			"passes": false
+		}
+	]
+}
