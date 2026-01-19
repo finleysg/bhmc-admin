@@ -7,9 +7,11 @@ import type {
 	Player,
 	CompleteRegistration,
 	CompleteRegistrationSlot,
+	SwapPlayersRequest,
 } from "@repo/domain/types"
 import { GroupSearch } from "../components/group-search"
 import { reducer, initialState } from "./reducer"
+import { getStart } from "@repo/domain/functions"
 
 export default function SwapPlayerPage() {
 	const { eventId } = useParams<{ eventId: string }>()
@@ -97,6 +99,53 @@ export default function SwapPlayerPage() {
 		setSelectedGroupA(null)
 		setSelectedGroupB(null)
 		setValidationError(null)
+	}
+
+	const handleConfirmSwap = async () => {
+		if (!state.slotA || !state.playerA || !state.slotB || !state.playerB || !state.clubEvent) {
+			return
+		}
+
+		dispatch({ type: "SET_PROCESSING", payload: true })
+		dispatch({ type: "SET_ERROR", payload: null })
+
+		try {
+			const requestBody: SwapPlayersRequest = {
+				slotAId: state.slotA.id,
+				playerAId: state.playerA.id,
+				slotBId: state.slotB.id,
+				playerBId: state.playerB.id,
+				...(state.notes && { notes: state.notes }),
+			}
+
+			const response = await fetch(`/api/registration/swap-players?eventId=${state.clubEvent.id}`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(requestBody),
+			})
+
+			if (!response.ok) {
+				let errorMessage = `HTTP ${response.status}`
+				try {
+					const errorData = (await response.json()) as { message?: string }
+					if (errorData.message) {
+						errorMessage = errorData.message
+					}
+				} catch {
+					// Ignore JSON parse errors
+				}
+				throw new Error(errorMessage)
+			}
+
+			await response.json()
+			dispatch({ type: "SET_SUCCESS", payload: true })
+		} catch (err) {
+			dispatch({ type: "SET_ERROR", payload: String(err) })
+		} finally {
+			dispatch({ type: "SET_PROCESSING", payload: false })
+		}
 	}
 
 	// Get players with status R from selected group A
@@ -239,8 +288,139 @@ export default function SwapPlayerPage() {
 							</div>
 						)}
 
-						{/* Error display */}
-						{state.error && (
+						{/* Step 3: Confirm and Submit */}
+						{state.step === "confirm" && !state.swapSuccess && (
+							<div className="mb-6">
+								<h4 className="font-semibold mb-4">Step 3 of 3: Confirm swap</h4>
+
+								{/* Summary */}
+								<div className="space-y-4 mb-6">
+									{/* Player A */}
+									{state.playerA && state.slotA && state.groupA && state.clubEvent && (
+										<div className="p-4 bg-base-200 rounded">
+											<p className="font-semibold mb-1">
+												{state.playerA.firstName} {state.playerA.lastName}
+											</p>
+											<p className="text-sm text-gray-600">
+												Current: {state.groupA.course?.name || "Course"} •{" "}
+												{getStart(state.clubEvent, state.slotA, state.groupA.course?.holes || [])}
+											</p>
+											{state.slotB && state.groupB && (
+												<p className="text-sm text-primary font-medium mt-2">
+													→ After swap: {state.groupB.course?.name || "Course"} •{" "}
+													{getStart(state.clubEvent, state.slotB, state.groupB.course?.holes || [])}
+												</p>
+											)}
+										</div>
+									)}
+
+									{/* Player B */}
+									{state.playerB && state.slotB && state.groupB && state.clubEvent && (
+										<div className="p-4 bg-base-200 rounded">
+											<p className="font-semibold mb-1">
+												{state.playerB.firstName} {state.playerB.lastName}
+											</p>
+											<p className="text-sm text-gray-600">
+												Current: {state.groupB.course?.name || "Course"} •{" "}
+												{getStart(state.clubEvent, state.slotB, state.groupB.course?.holes || [])}
+											</p>
+											{state.slotA && state.groupA && (
+												<p className="text-sm text-primary font-medium mt-2">
+													→ After swap: {state.groupA.course?.name || "Course"} •{" "}
+													{getStart(state.clubEvent, state.slotA, state.groupA.course?.holes || [])}
+												</p>
+											)}
+										</div>
+									)}
+								</div>
+
+								{/* Notes */}
+								<div className="form-control mb-6">
+									<label className="label">
+										<span className="label-text">Notes (optional)</span>
+									</label>
+									<textarea
+										className="textarea textarea-bordered h-24"
+										placeholder="Add any notes about this swap..."
+										value={state.notes}
+										onChange={(e) => dispatch({ type: "SET_NOTES", payload: e.target.value })}
+										disabled={state.isProcessing}
+									/>
+								</div>
+
+								{/* Error display */}
+								{state.error && (
+									<div className="alert alert-error mb-4">
+										<span>{state.error}</span>
+									</div>
+								)}
+
+								{/* Buttons */}
+								<div className="flex gap-2">
+									<button
+										type="button"
+										className="btn btn-outline"
+										onClick={handleBack}
+										disabled={state.isProcessing}
+									>
+										Back
+									</button>
+									<button
+										type="button"
+										className="btn btn-ghost"
+										onClick={handleReset}
+										disabled={state.isProcessing}
+									>
+										Start Over
+									</button>
+									<button
+										type="button"
+										className="btn btn-primary ml-auto"
+										onClick={() => void handleConfirmSwap()}
+										disabled={state.isProcessing}
+									>
+										{state.isProcessing ? (
+											<>
+												<span className="loading loading-spinner loading-sm"></span>
+												Processing...
+											</>
+										) : (
+											"Confirm Swap"
+										)}
+									</button>
+								</div>
+							</div>
+						)}
+
+						{/* Success State */}
+						{state.swapSuccess && (
+							<div className="mb-6">
+								<div className="alert alert-success mb-4">
+									<span>
+										Successfully swapped {state.playerA?.firstName} {state.playerA?.lastName} with{" "}
+										{state.playerB?.firstName} {state.playerB?.lastName}
+									</span>
+								</div>
+
+								<div className="flex gap-2">
+									<button type="button" className="btn btn-primary" onClick={handleReset}>
+										Swap More
+									</button>
+									<button
+										type="button"
+										className="btn btn-outline"
+										onClick={() => {
+											window.location.href = `/events/${eventId}/players`
+										}}
+									>
+										Player Menu
+									</button>
+								</div>
+							</div>
+						)}
+
+						{/* Error display (for non-confirm steps) */}
+						{state.error && state.step !== "confirm" && (
 							<div className="alert alert-error">
 								<span>{state.error}</span>
 							</div>
