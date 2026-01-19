@@ -108,7 +108,7 @@
 				"Calls playerService.updateNotes(registrationId, request.notes)"
 			],
 			"verify": ["pnpm --filter api build passes", "Endpoint registered in controller"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 7,
@@ -121,7 +121,7 @@
 				"Supports null to clear notes entirely"
 			],
 			"verify": ["pnpm --filter api build passes", "Invalid registration ID returns 404"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 8,
@@ -133,7 +133,7 @@
 				"Tests updateNotes handles null (clearing notes)"
 			],
 			"verify": ["pnpm --filter api test -- --testPathPattern=player.service passes"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 9,
