@@ -1,7 +1,13 @@
 import { and, eq, inArray, isNotNull } from "drizzle-orm"
 
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
-import { dummyCourse, dummyHole, getAmount, validateRegistration } from "@repo/domain/functions"
+import {
+	dummyCourse,
+	dummyHole,
+	getAmount,
+	getStart,
+	validateRegistration,
+} from "@repo/domain/functions"
 import {
 	AvailableSlotGroup,
 	Player,
@@ -18,8 +24,11 @@ import {
 	ReplacePlayerResponse,
 	MovePlayersRequest,
 	MovePlayersResponse,
+	SwapPlayersRequest,
+	SwapPlayersResponse,
 } from "@repo/domain/types"
 
+import { CoursesService } from "../../courses"
 import { toCourse, toHole } from "../../courses/mappers"
 import {
 	course,
@@ -58,6 +67,7 @@ export class PlayerService {
 		@Inject(EventsService) private readonly events: EventsService,
 		@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService,
 		@Inject(MailService) private readonly mail: MailService,
+		@Inject(CoursesService) private readonly courses: CoursesService,
 	) {}
 
 	/** Find a player by id */
@@ -782,5 +792,230 @@ export class PlayerService {
 		this.broadcast.notifyChange(eventId)
 
 		return { movedCount: sourceSlotIds.length }
+	}
+
+	/**
+	 * Swap two players between different registration slots.
+	 */
+	async swapPlayers(eventId: number, request: SwapPlayersRequest): Promise<SwapPlayersResponse> {
+		const { slotAId, playerAId, slotBId, playerBId } = request
+
+		this.logger.log(
+			`Swapping players: slotA=${slotAId}, playerA=${playerAId}, slotB=${slotBId}, playerB=${playerBId}`,
+		)
+
+		// Fetch both slots
+		let slotA
+		let slotB
+		try {
+			slotA = await this.repository.findRegistrationSlotById(slotAId)
+		} catch {
+			throw new BadRequestException(`Slot ${slotAId} not found`)
+		}
+		try {
+			slotB = await this.repository.findRegistrationSlotById(slotBId)
+		} catch {
+			throw new BadRequestException(`Slot ${slotBId} not found`)
+		}
+
+		// Validate both slots belong to specified eventId
+		if (slotA.eventId !== eventId) {
+			throw new BadRequestException(`Slot ${slotAId} does not belong to event ${eventId}`)
+		}
+		if (slotB.eventId !== eventId) {
+			throw new BadRequestException(`Slot ${slotBId} does not belong to event ${eventId}`)
+		}
+
+		// Validate both slots have status RESERVED
+		if (slotA.status !== RegistrationStatusChoices.RESERVED) {
+			throw new BadRequestException(
+				`Slot ${slotAId} must have status Reserved, but has ${slotA.status}`,
+			)
+		}
+		if (slotB.status !== RegistrationStatusChoices.RESERVED) {
+			throw new BadRequestException(
+				`Slot ${slotBId} must have status Reserved, but has ${slotB.status}`,
+			)
+		}
+
+		// Validate playerAId matches slotA.playerId and playerBId matches slotB.playerId
+		if (slotA.playerId !== playerAId) {
+			throw new BadRequestException(
+				`Slot ${slotAId} is assigned to player ${slotA.playerId}, not ${playerAId}`,
+			)
+		}
+		if (slotB.playerId !== playerBId) {
+			throw new BadRequestException(
+				`Slot ${slotBId} is assigned to player ${slotB.playerId}, not ${playerBId}`,
+			)
+		}
+
+		// Validate playerAId !== playerBId (not same player)
+		if (playerAId === playerBId) {
+			throw new BadRequestException("Cannot swap a player with themselves")
+		}
+
+		// Validate slotA.registrationId !== slotB.registrationId (different registrations)
+		if (slotA.registrationId === slotB.registrationId) {
+			throw new BadRequestException(
+				"Cannot swap players within the same registration. Slots must belong to different registrations",
+			)
+		}
+
+		// Fetch player records for response
+		const playerA = await this.repository.findPlayerById(playerAId)
+		const playerB = await this.repository.findPlayerById(playerBId)
+
+		const playerAName = `${playerA.firstName} ${playerA.lastName}`.trim()
+		const playerBName = `${playerB.firstName} ${playerB.lastName}`.trim()
+
+		// Fetch registrations for audit trail
+		const registrationA = await this.repository.findRegistrationById(slotA.registrationId!)
+		const registrationB = await this.repository.findRegistrationById(slotB.registrationId!)
+
+		if (!registrationA || !registrationB) {
+			throw new BadRequestException("One or both registrations not found")
+		}
+
+		// Build audit notes
+		const swapDate = new Date().toISOString().split("T")[0]
+		let auditNotes = `Swapped ${playerAName} with ${playerBName} on ${swapDate}`
+		if (request.notes) {
+			auditNotes += ` - ${request.notes}`
+		}
+
+		const newNotesA = `${registrationA.notes || ""}\n${auditNotes}`.trim()
+		const newNotesB = `${registrationB.notes || ""}\n${auditNotes}`.trim()
+
+		// Execute swap in transaction
+		await this.drizzle.db.transaction(async (tx) => {
+			// Fetch fees for both slots before modification
+			const feesA = await tx
+				.select()
+				.from(registrationFee)
+				.where(eq(registrationFee.registrationSlotId, slotAId))
+
+			const feesB = await tx
+				.select()
+				.from(registrationFee)
+				.where(eq(registrationFee.registrationSlotId, slotBId))
+
+			// Detach fees from both slots
+			await tx
+				.update(registrationFee)
+				.set({ registrationSlotId: null })
+				.where(inArray(registrationFee.registrationSlotId, [slotAId, slotBId]))
+
+			// Clear both slots
+			await tx
+				.update(registrationSlot)
+				.set({ playerId: null })
+				.where(inArray(registrationSlot.id, [slotAId, slotBId]))
+
+			// Assign players to swapped slots: playerA→slotB, playerB→slotA
+			await tx
+				.update(registrationSlot)
+				.set({ playerId: playerAId })
+				.where(eq(registrationSlot.id, slotBId))
+
+			await tx
+				.update(registrationSlot)
+				.set({ playerId: playerBId })
+				.where(eq(registrationSlot.id, slotAId))
+
+			// Reattach fees to follow players: slotA's fees→slotB, slotB's fees→slotA
+			if (feesA.length > 0) {
+				const feeAIds = feesA.map((f) => f.id)
+				await tx
+					.update(registrationFee)
+					.set({ registrationSlotId: slotBId })
+					.where(inArray(registrationFee.id, feeAIds))
+			}
+
+			if (feesB.length > 0) {
+				const feeBIds = feesB.map((f) => f.id)
+				await tx
+					.update(registrationFee)
+					.set({ registrationSlotId: slotAId })
+					.where(inArray(registrationFee.id, feeBIds))
+			}
+
+			// Append audit trail to both registrations
+			await tx
+				.update(registration)
+				.set({ notes: newNotesA })
+				.where(eq(registration.id, slotA.registrationId!))
+
+			await tx
+				.update(registration)
+				.set({ notes: newNotesB })
+				.where(eq(registration.id, slotB.registrationId!))
+		})
+
+		// Broadcast change after transaction
+		this.broadcast.notifyChange(eventId)
+
+		// Send swap notification emails to both players
+		try {
+			const eventRecord = await this.events.getCompleteClubEventById(eventId, false)
+
+			// Fetch both registrations to get course IDs
+			const regAWithCourse = await this.repository.findRegistrationWithCourse(slotA.registrationId!)
+			const regBWithCourse = await this.repository.findRegistrationWithCourse(slotB.registrationId!)
+
+			if (regAWithCourse?.course && regBWithCourse?.course) {
+				// Fetch courses with holes
+				const courseA = await this.courses.findCourseWithHolesById(regAWithCourse.course.id)
+				const courseB = await this.courses.findCourseWithHolesById(regBWithCourse.course.id)
+
+				// Fetch updated slots to get new start info
+				const slotARows = await this.repository.findSlotsWithPlayerAndHole(slotA.registrationId!)
+				const slotBRows = await this.repository.findSlotsWithPlayerAndHole(slotB.registrationId!)
+
+				const slotsA = hydrateSlotsWithPlayerAndHole(slotARows)
+				const slotsB = hydrateSlotsWithPlayerAndHole(slotBRows)
+
+				// Find the specific swapped slots in each registration
+				const slotAUpdated = slotsA.find((s) => s.id === slotAId)
+				const slotBUpdated = slotsB.find((s) => s.id === slotBId)
+
+				if (slotAUpdated && slotBUpdated) {
+					// PlayerA is now in slotB, so get slotB's start info
+					const newStartInfoForPlayerA = getStart(eventRecord, slotBUpdated, courseB.holes)
+
+					// PlayerB is now in slotA, so get slotA's start info
+					const newStartInfoForPlayerB = getStart(eventRecord, slotAUpdated, courseA.holes)
+
+					// Send emails in parallel
+					await Promise.all([
+						this.mail.sendSwapNotification(
+							toPlayer(playerA),
+							playerBName,
+							eventRecord,
+							newStartInfoForPlayerA,
+						),
+						this.mail.sendSwapNotification(
+							toPlayer(playerB),
+							playerAName,
+							eventRecord,
+							newStartInfoForPlayerB,
+						),
+					])
+
+					this.logger.log(`Swap notification emails sent to ${playerA.email} and ${playerB.email}`)
+				}
+			}
+		} catch (error) {
+			this.logger.error(
+				`Failed to send swap notification emails: ${error instanceof Error ? error.message : "Unknown error"}`,
+			)
+			// Don't fail the swap if email fails
+		}
+
+		return {
+			swappedCount: 2,
+			playerAName,
+			playerBName,
+		}
 	}
 }
