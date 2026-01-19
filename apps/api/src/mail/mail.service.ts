@@ -25,6 +25,7 @@ import {
 	AdminRegistrationNotificationEmail,
 	MatchPlayEmail,
 	PlayerReplacementNotificationEmail,
+	PlayerSwapNotificationEmail,
 	RefundNotificationEmail,
 	RegistrationConfirmationEmail,
 	RegistrationUpdateEmail,
@@ -471,6 +472,32 @@ export class MailService {
 				greenFeeDifference,
 				paymentUrl:
 					greenFeeDifference !== undefined && greenFeeDifference > 0 ? paymentUrl : undefined,
+			}),
+		})
+	}
+
+	async sendSwapNotification(
+		player: Pick<Player, "firstName" | "email">,
+		swappedWithName: string,
+		event: ClubEvent,
+		newStartInfo: string,
+	): Promise<void> {
+		const eventDate = new Date(event.startDate).toLocaleDateString("en-US", {
+			weekday: "long",
+			month: "long",
+			day: "numeric",
+			year: "numeric",
+		})
+
+		await this.sendEmail({
+			to: player.email,
+			subject: "Tee Time Swap Notification",
+			template: PlayerSwapNotificationEmail({
+				recipientName: player.firstName,
+				swappedWithName,
+				eventName: event.name,
+				eventDate,
+				newStartInfo,
 			}),
 		})
 	}

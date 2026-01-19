@@ -1,7 +1,13 @@
 import { and, eq, inArray, isNotNull } from "drizzle-orm"
 
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
-import { dummyCourse, dummyHole, getAmount, validateRegistration } from "@repo/domain/functions"
+import {
+	dummyCourse,
+	dummyHole,
+	getAmount,
+	getStart,
+	validateRegistration,
+} from "@repo/domain/functions"
 import {
 	AvailableSlotGroup,
 	Player,
@@ -22,6 +28,7 @@ import {
 	SwapPlayersResponse,
 } from "@repo/domain/types"
 
+import { CoursesService } from "../../courses"
 import { toCourse, toHole } from "../../courses/mappers"
 import {
 	course,
@@ -60,6 +67,7 @@ export class PlayerService {
 		@Inject(EventsService) private readonly events: EventsService,
 		@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService,
 		@Inject(MailService) private readonly mail: MailService,
+		@Inject(CoursesService) private readonly courses: CoursesService,
 	) {}
 
 	/** Find a player by id */
@@ -946,6 +954,63 @@ export class PlayerService {
 
 		// Broadcast change after transaction
 		this.broadcast.notifyChange(eventId)
+
+		// Send swap notification emails to both players
+		try {
+			const eventRecord = await this.events.getCompleteClubEventById(eventId, false)
+
+			// Fetch both registrations to get course IDs
+			const regAWithCourse = await this.repository.findRegistrationWithCourse(slotA.registrationId!)
+			const regBWithCourse = await this.repository.findRegistrationWithCourse(slotB.registrationId!)
+
+			if (regAWithCourse?.course && regBWithCourse?.course) {
+				// Fetch courses with holes
+				const courseA = await this.courses.findCourseWithHolesById(regAWithCourse.course.id)
+				const courseB = await this.courses.findCourseWithHolesById(regBWithCourse.course.id)
+
+				// Fetch updated slots to get new start info
+				const slotARows = await this.repository.findSlotsWithPlayerAndHole(slotA.registrationId!)
+				const slotBRows = await this.repository.findSlotsWithPlayerAndHole(slotB.registrationId!)
+
+				const slotsA = hydrateSlotsWithPlayerAndHole(slotARows)
+				const slotsB = hydrateSlotsWithPlayerAndHole(slotBRows)
+
+				// Find the specific swapped slots in each registration
+				const slotAUpdated = slotsA.find((s) => s.id === slotAId)
+				const slotBUpdated = slotsB.find((s) => s.id === slotBId)
+
+				if (slotAUpdated && slotBUpdated) {
+					// PlayerA is now in slotB, so get slotB's start info
+					const newStartInfoForPlayerA = getStart(eventRecord, slotBUpdated, courseB.holes)
+
+					// PlayerB is now in slotA, so get slotA's start info
+					const newStartInfoForPlayerB = getStart(eventRecord, slotAUpdated, courseA.holes)
+
+					// Send emails in parallel
+					await Promise.all([
+						this.mail.sendSwapNotification(
+							toPlayer(playerA),
+							playerBName,
+							eventRecord,
+							newStartInfoForPlayerA,
+						),
+						this.mail.sendSwapNotification(
+							toPlayer(playerB),
+							playerAName,
+							eventRecord,
+							newStartInfoForPlayerB,
+						),
+					])
+
+					this.logger.log(`Swap notification emails sent to ${playerA.email} and ${playerB.email}`)
+				}
+			}
+		} catch (error) {
+			this.logger.error(
+				`Failed to send swap notification emails: ${error instanceof Error ? error.message : "Unknown error"}`,
+			)
+			// Don't fail the swap if email fails
+		}
 
 		return {
 			swappedCount: 2,

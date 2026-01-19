@@ -105,6 +105,11 @@ const createMockBroadcastService = () => ({
 
 const createMockMailService = () => ({
 	sendPlayerReplacementNotification: jest.fn(),
+	sendSwapNotification: jest.fn(),
+})
+
+const createMockCoursesService = () => ({
+	findCourseWithHolesById: jest.fn(),
 })
 
 function createService() {
@@ -114,6 +119,7 @@ function createService() {
 	const eventsService = createMockEventsService()
 	const broadcastService = createMockBroadcastService()
 	const mailService = createMockMailService()
+	const coursesService = createMockCoursesService()
 
 	const service = new PlayerService(
 		drizzle as any,
@@ -122,6 +128,7 @@ function createService() {
 		eventsService as any,
 		broadcastService as any,
 		mailService as any,
+		coursesService as any,
 	)
 
 	return {
@@ -132,6 +139,7 @@ function createService() {
 		eventsService,
 		broadcastService,
 		mailService,
+		coursesService,
 	}
 }
 
