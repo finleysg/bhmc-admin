@@ -1,13 +1,40 @@
 "use client"
 
-import Link from "next/link"
+import { useReducer, useEffect } from "react"
+import { useParams } from "next/navigation"
+import type { CompleteClubEvent, CompleteRegistration } from "@repo/domain/types"
+import { GroupSearch } from "../components/group-search"
+import { reducer, initialState } from "./reducer"
 
-import { useAuth } from "@/lib/auth-context"
+export default function NotesPage() {
+	const { eventId } = useParams<{ eventId: string }>()
+	const [state, dispatch] = useReducer(reducer, initialState)
 
-export default function NotesPlayerPage() {
-	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
+	// Fetch event on mount
+	useEffect(() => {
+		const fetchEvent = async () => {
+			try {
+				const response = await fetch(`/api/events/${eventId}`)
+				if (response.ok) {
+					const eventData = (await response.json()) as CompleteClubEvent
+					dispatch({ type: "SET_EVENT", payload: eventData })
+				} else {
+					dispatch({ type: "SET_ERROR", payload: "Failed to fetch event" })
+				}
+			} catch (err) {
+				dispatch({ type: "SET_ERROR", payload: String(err) })
+			}
+		}
+		if (eventId) {
+			void fetchEvent()
+		}
+	}, [eventId])
 
-	if (isPending) {
+	const handleGroupSelected = (group: CompleteRegistration) => {
+		dispatch({ type: "SET_GROUP", payload: group })
+	}
+
+	if (state.isLoading) {
 		return (
 			<div className="flex items-center justify-center p-8">
 				<span className="loading loading-spinner loading-lg"></span>
@@ -15,22 +42,40 @@ export default function NotesPlayerPage() {
 		)
 	}
 
-	if (!signedIn) {
-		return null // Middleware will redirect
+	if (!state.clubEvent) {
+		return (
+			<div className="flex items-center justify-center p-8">
+				<div className="alert alert-error">Event not found</div>
+			</div>
+		)
 	}
 
 	return (
-		<main className="min-h-screen flex justify-center p-8">
+		<main className="min-h-screen flex justify-center md:p-8">
 			<div className="w-full max-w-3xl">
-				<div className="card bg-base-100 shadow-xl">
-					<div className="card-body text-center">
-						<h2 className="card-title text-2xl font-bold mb-4">Registration Notes</h2>
-						<p className="text-muted-foreground mb-6">Add or update registration notes.</p>
-						<div className="card-actions justify-center">
-							<Link href="../players" className="btn btn-primary">
-								Back to Players
-							</Link>
-						</div>
+				<div className="card bg-base-100 shadow-xs">
+					<div className="card-body">
+						<h3 className="card-title text-secondary font-semibold mb-4">Registration Notes</h3>
+
+						{/* Step 1: Select Group */}
+						{state.step === "group" && (
+							<div className="mb-6">
+								<h4 className="font-semibold mb-2">Step 1 of 2: Select Group</h4>
+								<GroupSearch
+									key={state.resetKey}
+									clubEvent={state.clubEvent}
+									onGroupSelected={handleGroupSelected}
+									onError={(err) => dispatch({ type: "SET_ERROR", payload: String(err) })}
+								/>
+							</div>
+						)}
+
+						{/* Error display */}
+						{state.error && (
+							<div className="alert alert-error">
+								<span>{state.error}</span>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>
