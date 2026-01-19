@@ -861,8 +861,96 @@ export class PlayerService {
 		const playerAName = `${playerA.firstName} ${playerA.lastName}`.trim()
 		const playerBName = `${playerB.firstName} ${playerB.lastName}`.trim()
 
-		// TODO: Implement transaction logic (PRD item 10)
-		this.logger.debug(`Would swap ${playerAName} with ${playerBName}`)
-		throw new BadRequestException("Swap transaction logic not yet implemented")
+		// Fetch registrations for audit trail
+		const registrationA = await this.repository.findRegistrationById(slotA.registrationId!)
+		const registrationB = await this.repository.findRegistrationById(slotB.registrationId!)
+
+		if (!registrationA || !registrationB) {
+			throw new BadRequestException("One or both registrations not found")
+		}
+
+		// Build audit notes
+		const swapDate = new Date().toISOString().split("T")[0]
+		let auditNotes = `Swapped ${playerAName} with ${playerBName} on ${swapDate}`
+		if (request.notes) {
+			auditNotes += ` - ${request.notes}`
+		}
+
+		const newNotesA = `${registrationA.notes || ""}\n${auditNotes}`.trim()
+		const newNotesB = `${registrationB.notes || ""}\n${auditNotes}`.trim()
+
+		// Execute swap in transaction
+		await this.drizzle.db.transaction(async (tx) => {
+			// Fetch fees for both slots before modification
+			const feesA = await tx
+				.select()
+				.from(registrationFee)
+				.where(eq(registrationFee.registrationSlotId, slotAId))
+
+			const feesB = await tx
+				.select()
+				.from(registrationFee)
+				.where(eq(registrationFee.registrationSlotId, slotBId))
+
+			// Detach fees from both slots
+			await tx
+				.update(registrationFee)
+				.set({ registrationSlotId: null })
+				.where(inArray(registrationFee.registrationSlotId, [slotAId, slotBId]))
+
+			// Clear both slots
+			await tx
+				.update(registrationSlot)
+				.set({ playerId: null })
+				.where(inArray(registrationSlot.id, [slotAId, slotBId]))
+
+			// Assign players to swapped slots: playerA→slotB, playerB→slotA
+			await tx
+				.update(registrationSlot)
+				.set({ playerId: playerAId })
+				.where(eq(registrationSlot.id, slotBId))
+
+			await tx
+				.update(registrationSlot)
+				.set({ playerId: playerBId })
+				.where(eq(registrationSlot.id, slotAId))
+
+			// Reattach fees to follow players: slotA's fees→slotB, slotB's fees→slotA
+			if (feesA.length > 0) {
+				const feeAIds = feesA.map((f) => f.id)
+				await tx
+					.update(registrationFee)
+					.set({ registrationSlotId: slotBId })
+					.where(inArray(registrationFee.id, feeAIds))
+			}
+
+			if (feesB.length > 0) {
+				const feeBIds = feesB.map((f) => f.id)
+				await tx
+					.update(registrationFee)
+					.set({ registrationSlotId: slotAId })
+					.where(inArray(registrationFee.id, feeBIds))
+			}
+
+			// Append audit trail to both registrations
+			await tx
+				.update(registration)
+				.set({ notes: newNotesA })
+				.where(eq(registration.id, slotA.registrationId!))
+
+			await tx
+				.update(registration)
+				.set({ notes: newNotesB })
+				.where(eq(registration.id, slotB.registrationId!))
+		})
+
+		// Broadcast change after transaction
+		this.broadcast.notifyChange(eventId)
+
+		return {
+			swappedCount: 2,
+			playerAName,
+			playerBName,
+		}
 	}
 }
