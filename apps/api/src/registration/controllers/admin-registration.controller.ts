@@ -22,6 +22,7 @@ import type {
 	MovePlayersResponse,
 	SwapPlayersRequest,
 	SwapPlayersResponse,
+	UpdateNotesRequest,
 } from "@repo/domain/types"
 
 import { Admin } from "../../auth"
@@ -157,6 +158,16 @@ export class AdminRegistrationController {
 			`Swapping player ${request.playerAId} in slot ${request.slotAId} with player ${request.playerBId} in slot ${request.slotBId} for event ${eventId}`,
 		)
 		return this.adminRegisterService.swapPlayers(eventId, request)
+	}
+
+	@Post(":registrationId/update-notes")
+	async updateNotes(
+		@Param("registrationId", ParseIntPipe) registrationId: number,
+		@Body() request: UpdateNotesRequest,
+	): Promise<{ success: boolean }> {
+		this.logger.log(`Updating notes for registration ${registrationId}`)
+		await this.adminRegisterService.updateNotes(registrationId, request.notes)
+		return { success: true }
 	}
 
 	@Post("refund")

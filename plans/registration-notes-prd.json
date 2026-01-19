@@ -1,0 +1,159 @@
+{
+	"feature": "Registration Notes",
+	"description": "Add or update notes on a registration group. Simple 2-step flow: select group, edit notes.",
+	"items": [
+		{
+			"id": 1,
+			"category": "web-state",
+			"description": "Create notes reducer with state shape and all action handlers",
+			"acceptance": [
+				"State includes: clubEvent, selectedGroup, notes, step, isLoading, isProcessing, error, success, resetKey",
+				"Steps: group → edit (2 steps)",
+				"Actions: SET_EVENT, SET_GROUP, SET_NOTES, SET_PROCESSING, SET_SUCCESS, SET_ERROR, RESET, GO_BACK",
+				"SET_GROUP extracts notes from group.notes and auto-advances to edit step",
+				"GO_BACK clears selectedGroup and notes, returns to group step"
+			],
+			"verify": [
+				"File exists at apps/web/app/events/[eventId]/players/notes/reducer.ts",
+				"Exports reducer function, initialState, Action type, NotesState type"
+			],
+			"passes": true
+		},
+		{
+			"id": 2,
+			"category": "web-test",
+			"description": "Add reducer unit tests for notes state transitions",
+			"acceptance": [
+				"Tests SET_EVENT stores club event and sets isLoading false",
+				"Tests SET_GROUP advances to edit step and stores selectedGroup and notes",
+				"Tests SET_NOTES updates notes field",
+				"Tests SET_PROCESSING toggles isProcessing",
+				"Tests SET_SUCCESS sets success true and clears error",
+				"Tests SET_ERROR sets error and clears isProcessing",
+				"Tests GO_BACK returns to group step and clears selectedGroup/notes",
+				"Tests RESET preserves clubEvent but clears all other state, increments resetKey"
+			],
+			"verify": ["pnpm --filter web test -- --testPathPattern=notes passes"],
+			"passes": true
+		},
+		{
+			"id": 3,
+			"category": "web-api",
+			"description": "Add Next.js API route for update-notes proxy",
+			"acceptance": [
+				"POST /api/registration/update-notes?registrationId={registrationId}",
+				"Validates registrationId query param required",
+				"Uses fetchWithAuth to proxy to backend POST /registration/{registrationId}/update-notes",
+				"Request body is UpdateNotesRequest (from domain)",
+				"Returns JSON response from backend"
+			],
+			"verify": [
+				"File exists at apps/web/app/api/registration/update-notes/route.ts",
+				"pnpm build passes"
+			],
+			"passes": true
+		},
+		{
+			"id": 4,
+			"category": "web-ui",
+			"description": "Create notes page with step 1 (group selection)",
+			"acceptance": [
+				"Page at apps/web/app/events/[eventId]/players/notes/page.tsx",
+				"Uses useReducer with notes reducer",
+				"Fetches event on mount, dispatches SET_EVENT",
+				"Step 1 renders GroupSearch component",
+				"Shows step indicator (Step 1 of 2: Select Group)",
+				"Selecting group dispatches SET_GROUP with full CompleteRegistration"
+			],
+			"verify": [
+				"Navigate to /events/{eventId}/players/notes",
+				"GroupSearch appears and is functional",
+				"Selecting group advances to step 2"
+			],
+			"passes": true
+		},
+		{
+			"id": 5,
+			"category": "web-ui",
+			"description": "Add step 2 (edit and submit notes) to notes page",
+			"acceptance": [
+				"Shows group summary: course name, start info, player names",
+				"Textarea pre-filled with existing registration.notes (may be empty)",
+				"Textarea bound to state.notes via SET_NOTES action",
+				"Save button calls POST /api/registration/update-notes with UpdateNotesRequest body",
+				"Shows spinner during processing, disables buttons",
+				"Back button dispatches GO_BACK",
+				"Start Over button dispatches RESET",
+				"Success shows message, Update More button (RESET), Player Menu button",
+				"Error shows alert with error message"
+			],
+			"verify": [
+				"Step 2 shows group info and notes textarea",
+				"Existing notes are pre-filled",
+				"Can edit and save notes",
+				"Success state renders correctly",
+				"Error state renders correctly"
+			],
+			"passes": true
+		},
+		{
+			"id": 6,
+			"category": "api-controller",
+			"description": "Add updateNotes endpoint to NestJS admin registration controller",
+			"acceptance": [
+				"POST /:registrationId/update-notes endpoint in admin-registration.controller.ts",
+				"Accepts UpdateNotesRequest body (from domain)",
+				"Returns { success: boolean }",
+				"Logs update attempt with registration ID",
+				"Calls playerService.updateNotes(registrationId, request.notes)"
+			],
+			"verify": ["pnpm --filter api build passes", "Endpoint registered in controller"],
+			"passes": true
+		},
+		{
+			"id": 7,
+			"category": "api-service",
+			"description": "Implement updateNotes method in player service",
+			"acceptance": [
+				"Method signature: updateNotes(registrationId: number, notes: string | null): Promise<void>",
+				"Fetches registration by ID, throws NotFoundException if not found",
+				"Updates registration.notes field with provided value",
+				"Supports null to clear notes entirely"
+			],
+			"verify": ["pnpm --filter api build passes", "Invalid registration ID returns 404"],
+			"passes": true
+		},
+		{
+			"id": 8,
+			"category": "api-test",
+			"description": "Add unit tests for updateNotes service method",
+			"acceptance": [
+				"Tests updateNotes throws NotFoundException if registration not found",
+				"Tests updateNotes successfully updates notes with new value",
+				"Tests updateNotes handles null (clearing notes)"
+			],
+			"verify": ["pnpm --filter api test -- --testPathPattern=player.service passes"],
+			"passes": true
+		},
+		{
+			"id": 9,
+			"category": "integration",
+			"description": "End-to-end test of registration notes feature",
+			"acceptance": [
+				"Can search for and select a registration group",
+				"Can view existing notes (if any)",
+				"Can edit and save new notes",
+				"Can clear notes (save empty)",
+				"Notes persist after page reload",
+				"UI shows success confirmation"
+			],
+			"verify": [
+				"docker compose up -d --build",
+				"Navigate to event > Players > Notes",
+				"Complete full update flow",
+				"Verify notes saved in database"
+			],
+			"passes": true
+		}
+	]
+}

@@ -1018,4 +1018,13 @@ export class PlayerService {
 			playerBName,
 		}
 	}
+
+	async updateNotes(registrationId: number, notes: string | null): Promise<void> {
+		const reg = await this.repository.findRegistrationById(registrationId)
+		if (!reg) {
+			throw new NotFoundException(`Registration ${registrationId} not found`)
+		}
+
+		await this.repository.updateRegistration(registrationId, { notes })
+	}
 }
