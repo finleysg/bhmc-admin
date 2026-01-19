@@ -789,11 +789,80 @@ export class PlayerService {
 	/**
 	 * Swap two players between different registration slots.
 	 */
-	swapPlayers(eventId: number, request: SwapPlayersRequest): Promise<SwapPlayersResponse> {
-		this.logger.debug(
-			`swapPlayers stub called for event ${eventId} with request ${JSON.stringify(request)}`,
+	async swapPlayers(eventId: number, request: SwapPlayersRequest): Promise<SwapPlayersResponse> {
+		const { slotAId, playerAId, slotBId, playerBId } = request
+
+		this.logger.log(
+			`Swapping players: slotA=${slotAId}, playerA=${playerAId}, slotB=${slotBId}, playerB=${playerBId}`,
 		)
-		// TODO: Implement validation and swap logic (PRD items 9 & 10)
-		throw new BadRequestException("Swap players not yet implemented")
+
+		// Fetch both slots
+		let slotA
+		let slotB
+		try {
+			slotA = await this.repository.findRegistrationSlotById(slotAId)
+		} catch {
+			throw new BadRequestException(`Slot ${slotAId} not found`)
+		}
+		try {
+			slotB = await this.repository.findRegistrationSlotById(slotBId)
+		} catch {
+			throw new BadRequestException(`Slot ${slotBId} not found`)
+		}
+
+		// Validate both slots belong to specified eventId
+		if (slotA.eventId !== eventId) {
+			throw new BadRequestException(`Slot ${slotAId} does not belong to event ${eventId}`)
+		}
+		if (slotB.eventId !== eventId) {
+			throw new BadRequestException(`Slot ${slotBId} does not belong to event ${eventId}`)
+		}
+
+		// Validate both slots have status RESERVED
+		if (slotA.status !== RegistrationStatusChoices.RESERVED) {
+			throw new BadRequestException(
+				`Slot ${slotAId} must have status Reserved, but has ${slotA.status}`,
+			)
+		}
+		if (slotB.status !== RegistrationStatusChoices.RESERVED) {
+			throw new BadRequestException(
+				`Slot ${slotBId} must have status Reserved, but has ${slotB.status}`,
+			)
+		}
+
+		// Validate playerAId matches slotA.playerId and playerBId matches slotB.playerId
+		if (slotA.playerId !== playerAId) {
+			throw new BadRequestException(
+				`Slot ${slotAId} is assigned to player ${slotA.playerId}, not ${playerAId}`,
+			)
+		}
+		if (slotB.playerId !== playerBId) {
+			throw new BadRequestException(
+				`Slot ${slotBId} is assigned to player ${slotB.playerId}, not ${playerBId}`,
+			)
+		}
+
+		// Validate playerAId !== playerBId (not same player)
+		if (playerAId === playerBId) {
+			throw new BadRequestException("Cannot swap a player with themselves")
+		}
+
+		// Validate slotA.registrationId !== slotB.registrationId (different registrations)
+		if (slotA.registrationId === slotB.registrationId) {
+			throw new BadRequestException(
+				"Cannot swap players within the same registration. Slots must belong to different registrations",
+			)
+		}
+
+		// Fetch player records for response
+		const playerA = await this.repository.findPlayerById(playerAId)
+		const playerB = await this.repository.findPlayerById(playerBId)
+
+		const playerAName = `${playerA.firstName} ${playerA.lastName}`.trim()
+		const playerBName = `${playerB.firstName} ${playerB.lastName}`.trim()
+
+		// TODO: Implement transaction logic (PRD item 10)
+		this.logger.debug(`Would swap ${playerAName} with ${playerBName}`)
+		throw new BadRequestException("Swap transaction logic not yet implemented")
 	}
 }
