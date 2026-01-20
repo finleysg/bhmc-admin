@@ -48,6 +48,9 @@ export async function httpClient(endpoint: string, options?: Partial<RequestInit
 			}
 			return null
 		} else {
+			if (response.status === 401) {
+				window.dispatchEvent(new CustomEvent("auth-invalid"))
+			}
 			const error = await response.json()
 			return Promise.reject(parseError(error))
 		}

@@ -57,6 +57,15 @@ export function AuthProvider({
 		loadUser()
 	}, [loadUser])
 
+	useEffect(() => {
+		const handleAuthInvalid = () => {
+			queryClient.clear()
+			setUser(new User(null))
+		}
+		window.addEventListener("auth-invalid", handleAuthInvalid)
+		return () => window.removeEventListener("auth-invalid", handleAuthInvalid)
+	}, [queryClient])
+
 	const login = useMutation({
 		mutationFn: (args: LoginData) => authenticationProvider.login(args),
 		onSuccess: () => {

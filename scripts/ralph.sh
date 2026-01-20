@@ -18,7 +18,7 @@ trap "rm -f $tmpfile" EXIT
 for ((i=1; i<=$1; i++)); do
   echo "Iteration $i"
   echo "============================================================="
-  docker sandbox run claude -p --model sonnet "@plans/swap-players-prd.json @progress.txt \
+  docker sandbox run claude -p --model sonnet "@plans/registration-notes-prd.json @progress.txt \
 CRITICAL: Complete exactly ONE PRD item, make ONE commit, then STOP. \
 1. Pick the highest priority incomplete PRD item (one item = one feature). \
 2. Write tests if needed. \
