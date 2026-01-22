@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import type { ClubEvent, Document } from "@repo/domain/types"
 
 import { useAuth } from "@/lib/auth-context"
+import { DocumentForm, type DocumentFormData } from "./components/document-form"
 import { DocumentList } from "./components/document-list"
 import { initialState, reducer } from "./reducer"
 
@@ -51,6 +52,56 @@ export default function DocumentsPage() {
 		dispatch({ type: "SET_MODE", payload: "add" })
 	}
 
+	const handleCancel = () => {
+		dispatch({ type: "RESET" })
+	}
+
+	const handleAddSubmit = async (data: DocumentFormData) => {
+		if (!state.clubEvent) return
+
+		dispatch({ type: "SET_SUBMITTING", payload: true })
+		dispatch({ type: "SET_ERROR", payload: null })
+
+		const year = new Date(state.clubEvent.startDate).getFullYear()
+
+		const formData = new FormData()
+		formData.append("title", data.title)
+		formData.append("document_type", data.documentType)
+		formData.append("year", String(year))
+		formData.append("event", eventId)
+		if (data.file) {
+			formData.append("file", data.file)
+		}
+
+		try {
+			const res = await fetch("/api/documents", {
+				method: "POST",
+				body: formData,
+			})
+
+			if (!res.ok) {
+				const errorData = (await res.json().catch(() => ({}))) as { error?: string }
+				throw new Error(errorData.error ?? "Failed to create document")
+			}
+
+			await res.json()
+			// Refetch documents list
+			const docsRes = await fetch(`/api/documents?event_id=${eventId}`)
+			if (docsRes.ok) {
+				const docs = (await docsRes.json()) as Document[]
+				dispatch({ type: "SET_DOCUMENTS", payload: docs })
+			}
+			dispatch({ type: "RESET" })
+		} catch (err) {
+			dispatch({
+				type: "SET_ERROR",
+				payload: err instanceof Error ? err.message : "Failed to create document",
+			})
+		} finally {
+			dispatch({ type: "SET_SUBMITTING", payload: false })
+		}
+	}
+
 	if (isPending || state.isLoading) {
 		return (
 			<div className="flex items-center justify-center p-8">
@@ -67,12 +118,34 @@ export default function DocumentsPage() {
 		<main className="min-h-screen flex justify-center p-8">
 			<div className="w-full max-w-3xl">
 				<h2 className="text-3xl font-bold mb-4 text-center">Event Documents</h2>
-				<div className="flex justify-end mb-4">
-					<button type="button" className="btn btn-primary" onClick={handleAddClick}>
-						Add Document
-					</button>
-				</div>
-				<DocumentList documents={state.documents} onEdit={handleEdit} onDelete={handleDelete} />
+
+				{state.error && (
+					<div className="alert alert-error mb-4">
+						<span>{state.error}</span>
+					</div>
+				)}
+
+				{state.mode === "add" && (
+					<div className="card bg-base-200 p-6 mb-4">
+						<h3 className="text-xl font-semibold mb-4">Add Document</h3>
+						<DocumentForm
+							onSubmit={handleAddSubmit}
+							onCancel={handleCancel}
+							isSubmitting={state.isSubmitting}
+						/>
+					</div>
+				)}
+
+				{state.mode === "list" && (
+					<>
+						<div className="flex justify-end mb-4">
+							<button type="button" className="btn btn-primary" onClick={handleAddClick}>
+								Add Document
+							</button>
+						</div>
+						<DocumentList documents={state.documents} onEdit={handleEdit} onDelete={handleDelete} />
+					</>
+				)}
 			</div>
 		</main>
 	)

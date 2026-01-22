@@ -11,7 +11,7 @@ export interface DocumentFormData {
 }
 
 interface DocumentFormProps {
-	onSubmit: (data: DocumentFormData) => void
+	onSubmit: (data: DocumentFormData) => void | Promise<void>
 	onCancel: () => void
 	initialData?: Document
 	isSubmitting: boolean
@@ -19,7 +19,9 @@ interface DocumentFormProps {
 
 export function DocumentForm({ onSubmit, onCancel, initialData, isSubmitting }: DocumentFormProps) {
 	const [title, setTitle] = useState(initialData?.title ?? "")
-	const [documentType, setDocumentType] = useState<DocumentTypeCode>(initialData?.documentType ?? "O")
+	const [documentType, setDocumentType] = useState<DocumentTypeCode>(
+		initialData?.documentType ?? "O",
+	)
 	const [file, setFile] = useState<File | undefined>(undefined)
 	const [errors, setErrors] = useState<{ title?: string; file?: string }>({})
 
@@ -45,7 +47,7 @@ export function DocumentForm({ onSubmit, onCancel, initialData, isSubmitting }: 
 
 		if (!validate()) return
 
-		onSubmit({
+		void onSubmit({
 			title: title.trim(),
 			documentType,
 			file,
@@ -92,7 +94,9 @@ export function DocumentForm({ onSubmit, onCancel, initialData, isSubmitting }: 
 
 			<div className="form-control">
 				<label className="label">
-					<span className="label-text">File {!isEditMode && <span className="text-error">*</span>}</span>
+					<span className="label-text">
+						File {!isEditMode && <span className="text-error">*</span>}
+					</span>
 				</label>
 				<FilePicker onFileSelect={setFile} currentFileName={currentFileName} />
 				{errors.file && <span className="text-error text-sm mt-1">{errors.file}</span>}
