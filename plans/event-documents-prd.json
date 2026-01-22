@@ -108,7 +108,7 @@
 				"File selection triggers onFileSelect callback",
 				"Edit mode shows current filename"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 8,
@@ -128,7 +128,7 @@
 				"Validation prevents submit without required fields",
 				"Edit mode pre-fills values"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 9,
@@ -148,7 +148,7 @@
 				"File links open in new tab",
 				"Edit/delete buttons trigger callbacks"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 10,

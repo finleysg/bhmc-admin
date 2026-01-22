@@ -4,3 +4,6 @@ PRD#3 complete: GET /api/documents route. File: apps/web/app/api/documents/route
 PRD#4 complete: POST /api/documents route. File: apps/web/app/api/documents/route.ts. Commit: 1c59215. Uses fetchFormDataWithAuth, extracts FormData from request. Typecheck/lint pass.
 PRD#5 complete: PUT /api/documents/[id] route. File: apps/web/app/api/documents/[id]/route.ts. Commit: da61648. Uses fetchFormDataWithAuth, extracts id from params. Note: also includes DELETE handler (PRD#6) in same file.
 PRD#6 complete: DELETE /api/documents/[id] route. Already implemented in da61648 with PRD#5. Uses fetchWithAuth, extracts id from params. Marking as complete.
+PRD#7 complete: FilePicker component. File: apps/web/app/events/[eventId]/documents/components/file-picker.tsx. Commit: a012791. Added react-dropzone dep. daisyUI drag-drop styling, edit mode shows current filename.
+PRD#8 complete: DocumentForm component. File: apps/web/app/events/[eventId]/documents/components/document-form.tsx. Commit: fa5cf47. Props: onSubmit, onCancel, initialData, isSubmitting. Title+type fields, FilePicker integration, validation, daisyUI styling.
+PRD#9 complete: DocumentList component. File: apps/web/app/events/[eventId]/documents/components/document-list.tsx. Simple table with Title/Type/File/Actions. File links open in new tab. Edit/delete buttons call callbacks. Empty state shows "No documents".
