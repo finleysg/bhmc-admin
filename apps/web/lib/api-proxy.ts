@@ -14,6 +14,13 @@ interface FetchSSEWithAuthOptions {
 	backendPath: string // e.g., "/golfgenius/events/123/import-points"
 }
 
+interface FetchFormDataWithAuthOptions {
+	request: NextRequest
+	backendPath: string
+	method: "POST" | "PUT"
+	formData: FormData
+}
+
 /**
  * Extracts the Django auth token from cookies.
  * Django sets an httponly cookie named "access_token".
@@ -141,5 +148,54 @@ export async function fetchSSEWithAuth({
 	} catch (error) {
 		console.error("Error proxying SSE:", error)
 		return new Response("Internal server error", { status: 500 })
+	}
+}
+
+/**
+ * Centralized utility for making authenticated multipart FormData requests to the backend API.
+ * Does NOT set Content-Type header - browser/fetch sets boundary automatically.
+ */
+export async function fetchFormDataWithAuth({
+	request,
+	backendPath,
+	method,
+	formData,
+}: FetchFormDataWithAuthOptions): Promise<NextResponse> {
+	try {
+		const token = getAuthToken(request)
+
+		if (!token) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+		}
+
+		const apiUrl = process.env.API_URL
+		if (!apiUrl) {
+			return NextResponse.json({ error: "API URL not configured" }, { status: 500 })
+		}
+
+		const backendUrl = `${apiUrl}${backendPath}`
+
+		const response = await fetch(backendUrl, {
+			method,
+			headers: {
+				Authorization: `Token ${token}`,
+				// Do NOT set Content-Type - fetch sets multipart boundary automatically
+			},
+			body: formData,
+		})
+
+		if (!response.ok) {
+			const errorText = await response.text()
+			return NextResponse.json(
+				{ error: `Backend API error: ${errorText}` },
+				{ status: response.status },
+			)
+		}
+
+		const data: unknown = await response.json()
+		return NextResponse.json(data)
+	} catch (error) {
+		console.error("Error proxying FormData to backend API:", error)
+		return NextResponse.json({ error: "Internal server error" }, { status: 500 })
 	}
 }
