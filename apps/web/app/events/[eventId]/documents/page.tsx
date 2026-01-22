@@ -102,6 +102,48 @@ export default function DocumentsPage() {
 		}
 	}
 
+	const handleEditSubmit = async (data: DocumentFormData) => {
+		if (!state.selectedDocument) return
+
+		dispatch({ type: "SET_SUBMITTING", payload: true })
+		dispatch({ type: "SET_ERROR", payload: null })
+
+		const formData = new FormData()
+		formData.append("title", data.title)
+		formData.append("document_type", data.documentType)
+		if (data.file) {
+			formData.append("file", data.file)
+		}
+
+		try {
+			const res = await fetch(`/api/documents/${state.selectedDocument.id}`, {
+				method: "PUT",
+				body: formData,
+			})
+
+			if (!res.ok) {
+				const errorData = (await res.json().catch(() => ({}))) as { error?: string }
+				throw new Error(errorData.error ?? "Failed to update document")
+			}
+
+			await res.json()
+			// Refetch documents list
+			const docsRes = await fetch(`/api/documents?event_id=${eventId}`)
+			if (docsRes.ok) {
+				const docs = (await docsRes.json()) as Document[]
+				dispatch({ type: "SET_DOCUMENTS", payload: docs })
+			}
+			dispatch({ type: "RESET" })
+		} catch (err) {
+			dispatch({
+				type: "SET_ERROR",
+				payload: err instanceof Error ? err.message : "Failed to update document",
+			})
+		} finally {
+			dispatch({ type: "SET_SUBMITTING", payload: false })
+		}
+	}
+
 	if (isPending || state.isLoading) {
 		return (
 			<div className="flex items-center justify-center p-8">
@@ -131,6 +173,18 @@ export default function DocumentsPage() {
 						<DocumentForm
 							onSubmit={handleAddSubmit}
 							onCancel={handleCancel}
+							isSubmitting={state.isSubmitting}
+						/>
+					</div>
+				)}
+
+				{state.mode === "edit" && state.selectedDocument && (
+					<div className="card bg-base-200 p-6 mb-4">
+						<h3 className="text-xl font-semibold mb-4">Edit Document</h3>
+						<DocumentForm
+							onSubmit={handleEditSubmit}
+							onCancel={handleCancel}
+							initialData={state.selectedDocument}
 							isSubmitting={state.isSubmitting}
 						/>
 					</div>
