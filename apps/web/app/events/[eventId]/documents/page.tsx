@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import type { ClubEvent, Document } from "@repo/domain/types"
 
 import { useAuth } from "@/lib/auth-context"
+import { DeleteConfirmModal } from "./components/delete-confirm-modal"
 import { DocumentForm, type DocumentFormData } from "./components/document-form"
 import { DocumentList } from "./components/document-list"
 import { initialState, reducer } from "./reducer"
@@ -144,6 +145,39 @@ export default function DocumentsPage() {
 		}
 	}
 
+	const handleDeleteConfirm = async () => {
+		if (!state.selectedDocument) return
+
+		dispatch({ type: "SET_SUBMITTING", payload: true })
+		dispatch({ type: "SET_ERROR", payload: null })
+
+		try {
+			const res = await fetch(`/api/documents/${state.selectedDocument.id}`, {
+				method: "DELETE",
+			})
+
+			if (!res.ok) {
+				const errorData = (await res.json().catch(() => ({}))) as { error?: string }
+				throw new Error(errorData.error ?? "Failed to delete document")
+			}
+
+			// Refetch documents list
+			const docsRes = await fetch(`/api/documents?event_id=${eventId}`)
+			if (docsRes.ok) {
+				const docs = (await docsRes.json()) as Document[]
+				dispatch({ type: "SET_DOCUMENTS", payload: docs })
+			}
+			dispatch({ type: "RESET" })
+		} catch (err) {
+			dispatch({
+				type: "SET_ERROR",
+				payload: err instanceof Error ? err.message : "Failed to delete document",
+			})
+		} finally {
+			dispatch({ type: "SET_SUBMITTING", payload: false })
+		}
+	}
+
 	if (isPending || state.isLoading) {
 		return (
 			<div className="flex items-center justify-center p-8">
@@ -189,6 +223,14 @@ export default function DocumentsPage() {
 						/>
 					</div>
 				)}
+
+				<DeleteConfirmModal
+					isOpen={state.mode === "delete"}
+					document={state.selectedDocument}
+					onConfirm={handleDeleteConfirm}
+					onCancel={handleCancel}
+					isDeleting={state.isSubmitting}
+				/>
 
 				{state.mode === "list" && (
 					<>

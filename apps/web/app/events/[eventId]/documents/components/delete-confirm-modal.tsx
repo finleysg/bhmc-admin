@@ -6,7 +6,7 @@ import type { Document } from "@repo/domain/types"
 interface DeleteConfirmModalProps {
 	isOpen: boolean
 	document: Document | null
-	onConfirm: () => void
+	onConfirm: () => void | Promise<void>
 	onCancel: () => void
 	isDeleting: boolean
 }
@@ -35,6 +35,10 @@ export function DeleteConfirmModal({
 		onCancel()
 	}
 
+	const handleConfirm = () => {
+		void onConfirm()
+	}
+
 	return (
 		<dialog ref={dialogRef} className="modal" onClose={handleCancel}>
 			<div className="modal-box">
@@ -47,7 +51,7 @@ export function DeleteConfirmModal({
 					<button className="btn btn-ghost" onClick={handleCancel} disabled={isDeleting}>
 						Cancel
 					</button>
-					<button className="btn btn-error" onClick={onConfirm} disabled={isDeleting}>
+					<button className="btn btn-error" onClick={handleConfirm} disabled={isDeleting}>
 						{isDeleting ? (
 							<>
 								<span className="loading loading-spinner loading-sm"></span>
