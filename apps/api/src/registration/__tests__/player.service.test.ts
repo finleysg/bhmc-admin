@@ -1198,3 +1198,78 @@ describe("PlayerService.updateNotes", () => {
 		expect(repository.updateRegistration).toHaveBeenCalledWith(10, { notes: null })
 	})
 })
+
+describe("PlayerService.searchPlayers", () => {
+	test("returns all players when isMember is undefined", async () => {
+		const { service, repository } = createService()
+
+		const member = createPlayerRow({ id: 1, isMember: 1 })
+		const nonMember = createPlayerRow({ id: 2, isMember: 0 })
+		repository.findPlayersByText.mockResolvedValue([member, nonMember])
+
+		const result = await service.searchPlayers({ searchText: "test" })
+
+		expect(result).toHaveLength(2)
+	})
+
+	test("returns only members when isMember is true", async () => {
+		const { service, repository } = createService()
+
+		const member = createPlayerRow({ id: 1, isMember: 1 })
+		const nonMember = createPlayerRow({ id: 2, isMember: 0 })
+		repository.findPlayersByText.mockResolvedValue([member, nonMember])
+
+		const result = await service.searchPlayers({ searchText: "test", isMember: true })
+
+		expect(result).toHaveLength(1)
+		expect(result[0].id).toBe(1)
+	})
+
+	test("returns only non-members when isMember is false", async () => {
+		const { service, repository } = createService()
+
+		const member = createPlayerRow({ id: 1, isMember: 1 })
+		const nonMember = createPlayerRow({ id: 2, isMember: 0 })
+		repository.findPlayersByText.mockResolvedValue([member, nonMember])
+
+		const result = await service.searchPlayers({ searchText: "test", isMember: false })
+
+		expect(result).toHaveLength(1)
+		expect(result[0].id).toBe(2)
+	})
+
+	test("excludeRegistered filters out registered players", async () => {
+		const { service, repository } = createService()
+
+		const player1 = createPlayerRow({ id: 1 })
+		const player2 = createPlayerRow({ id: 2 })
+		repository.findPlayersByText.mockResolvedValue([player1, player2])
+		repository.findRegisteredPlayers.mockResolvedValue([{ id: 1 }])
+
+		const result = await service.searchPlayers({
+			searchText: "test",
+			eventId: 100,
+			excludeRegistered: true,
+		})
+
+		expect(result).toHaveLength(1)
+		expect(result[0].id).toBe(2)
+	})
+
+	test("excludeRegistered=false returns all players", async () => {
+		const { service, repository } = createService()
+
+		const player1 = createPlayerRow({ id: 1 })
+		const player2 = createPlayerRow({ id: 2 })
+		repository.findPlayersByText.mockResolvedValue([player1, player2])
+
+		const result = await service.searchPlayers({
+			searchText: "test",
+			eventId: 100,
+			excludeRegistered: false,
+		})
+
+		expect(result).toHaveLength(2)
+		expect(repository.findRegisteredPlayers).not.toHaveBeenCalled()
+	})
+})

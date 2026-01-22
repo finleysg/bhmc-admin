@@ -169,24 +169,28 @@ export class PlayerService {
 	/** Search players by name/GHIN with membership filter. */
 	async searchPlayers(query: PlayerQuery): Promise<Player[]> {
 		let players: Player[] = []
-		const { searchText, isMember = true, eventId, excludeRegistered = true } = query
+		const { searchText, isMember, eventId, excludeRegistered } = query
 
 		if (searchText) {
 			const results = await this.repository.findPlayersByText(searchText)
 			results.forEach((r) => players.push(toPlayer(r)))
+			this.logger.log("Players found: {players}", players.length)
 		} else {
 			const results = await this.repository.getPlayers()
 			results.forEach((r) => players.push(toPlayer(r)))
 		}
 
-		if (isMember) {
-			players = players.filter((p) => p.isMember)
+		if (isMember !== undefined) {
+			players = players.filter((p) => p.isMember === isMember)
+			this.logger.log("Players found after isMember filter: {players}", players.length)
 		}
 
 		if (excludeRegistered && eventId) {
 			const registered = await this.repository.findRegisteredPlayers(eventId)
 			const registeredIds = new Set(registered.map((r) => r.id))
-			return players.filter((p) => !registeredIds.has(p.id))
+			const filtered = players.filter((p) => !registeredIds.has(p.id))
+			this.logger.log("Players found after excludeRegistered filter: {players}", filtered.length)
+			return filtered
 		}
 
 		return players

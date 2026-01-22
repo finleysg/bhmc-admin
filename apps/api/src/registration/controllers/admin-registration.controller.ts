@@ -46,10 +46,14 @@ export class AdminRegistrationController {
 	async playerQuery(@Query() query: PlayerQuery) {
 		const obj: PlayerQuery = {
 			searchText: query.searchText,
-			isMember: query.isMember ?? true,
+			isMember: query.isMember === undefined ? undefined : String(query.isMember) === "true",
 			eventId: query.eventId ? Number(query.eventId) : undefined,
-			excludeRegistered: query.excludeRegistered ?? true,
+			excludeRegistered:
+				query.excludeRegistered === undefined
+					? undefined
+					: String(query.excludeRegistered) === "true",
 		}
+		this.logger.log("Player search query: {query}", obj)
 		return this.adminRegisterService.searchPlayers(obj)
 	}
 
