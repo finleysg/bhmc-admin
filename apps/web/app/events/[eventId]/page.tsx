@@ -49,6 +49,14 @@ export default function EventHubPage() {
 						disabled={false}
 						icon={"📊"}
 					/>
+
+					<ActionCard
+						title="Event Documents"
+						description="Manage documents for this event."
+						href={`/events/${eventId}/documents`}
+						disabled={false}
+						icon={"📄"}
+					/>
 				</div>
 			</div>
 		</main>
