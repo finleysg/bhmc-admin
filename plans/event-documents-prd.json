@@ -1,0 +1,304 @@
+{
+	"feature": "Event Documents",
+	"description": "Manage documents for events (tee sheets, results, flights). Add, edit (replace file + update metadata), delete from event page.",
+	"items": [
+		{
+			"id": 1,
+			"category": "domain",
+			"description": "Add Document type and DOCUMENT_TYPES constant to domain package",
+			"acceptance": [
+				"Document interface with: id, year, title, documentType, file (URL string), event (number|null), eventType (string|null), createdBy, lastUpdate",
+				"DOCUMENT_TYPES constant maps codes to labels: R→Event Results, T→Event Tee Times, L→Event Flights, P→Season Long Points, D→Dam Cup, M→Match Play, F→Financial Statements, S→Sign Up, O→Other, Z→Data",
+				"DocumentTypeCode type exported as keyof typeof DOCUMENT_TYPES",
+				"Exported from packages/domain/src/types/index.ts"
+			],
+			"verify": ["File exists at packages/domain/src/types/documents.ts", "pnpm build passes"],
+			"passes": true
+		},
+		{
+			"id": 2,
+			"category": "web-api",
+			"description": "Add fetchFormDataWithAuth helper for multipart uploads",
+			"acceptance": [
+				"New function in apps/web/lib/api-proxy.ts",
+				"Accepts request, backendPath, method, formData parameters",
+				"Extracts auth token from cookies same as fetchWithAuth",
+				"Forwards FormData to backend WITHOUT Content-Type header (browser sets boundary)",
+				"Returns NextResponse with JSON or error"
+			],
+			"verify": [
+				"Function exported from apps/web/lib/api-proxy.ts",
+				"pnpm --filter web build passes"
+			],
+			"passes": true
+		},
+		{
+			"id": 3,
+			"category": "web-api",
+			"description": "Add GET /api/documents route to list documents",
+			"acceptance": [
+				"GET handler at apps/web/app/api/documents/route.ts",
+				"Forwards query params to Django (event_id filter)",
+				"Uses fetchWithAuth to proxy to backend GET /documents/",
+				"Returns JSON array of documents"
+			],
+			"verify": [
+				"File exists at apps/web/app/api/documents/route.ts",
+				"pnpm --filter web build passes"
+			],
+			"passes": true
+		},
+		{
+			"id": 4,
+			"category": "web-api",
+			"description": "Add POST /api/documents route to create document",
+			"acceptance": [
+				"POST handler in apps/web/app/api/documents/route.ts",
+				"Uses fetchFormDataWithAuth to proxy multipart FormData",
+				"Proxies to backend POST /documents/",
+				"Returns created document JSON"
+			],
+			"verify": ["POST handler exists in route.ts", "pnpm --filter web build passes"],
+			"passes": true
+		},
+		{
+			"id": 5,
+			"category": "web-api",
+			"description": "Add PUT /api/documents/[id] route to update document",
+			"acceptance": [
+				"PUT handler at apps/web/app/api/documents/[id]/route.ts",
+				"Extracts id from route params",
+				"Uses fetchFormDataWithAuth to proxy multipart FormData",
+				"Proxies to backend PUT /documents/{id}/",
+				"Returns updated document JSON"
+			],
+			"verify": [
+				"File exists at apps/web/app/api/documents/[id]/route.ts",
+				"pnpm --filter web build passes"
+			],
+			"passes": true
+		},
+		{
+			"id": 6,
+			"category": "web-api",
+			"description": "Add DELETE /api/documents/[id] route to delete document",
+			"acceptance": [
+				"DELETE handler in apps/web/app/api/documents/[id]/route.ts",
+				"Extracts id from route params",
+				"Uses fetchWithAuth to proxy to backend DELETE /documents/{id}/",
+				"Returns success response"
+			],
+			"verify": ["DELETE handler exists in route.ts", "pnpm --filter web build passes"],
+			"passes": true
+		},
+		{
+			"id": 7,
+			"category": "web-component",
+			"description": "Create file picker component for document uploads",
+			"acceptance": [
+				"File at apps/web/app/events/[eventId]/documents/components/file-picker.tsx",
+				"Uses react-dropzone for drag-drop (add dependency to package.json)",
+				"Props: onFileSelect callback, currentFileName (optional for edit mode)",
+				"Shows drop zone with daisyUI styling",
+				"Edit mode: shows current filename with 'Replace file' option",
+				"Accepts any file type"
+			],
+			"verify": [
+				"Component renders drop zone",
+				"File selection triggers onFileSelect callback",
+				"Edit mode shows current filename"
+			],
+			"passes": true
+		},
+		{
+			"id": 8,
+			"category": "web-component",
+			"description": "Create document form component",
+			"acceptance": [
+				"File at apps/web/app/events/[eventId]/documents/components/document-form.tsx",
+				"Props: onSubmit, onCancel, initialData (optional for edit), isSubmitting",
+				"Title field: text input, required",
+				"Document type field: select dropdown with DOCUMENT_TYPES options, required",
+				"File picker: required on add, optional on edit",
+				"Submit button shows spinner when isSubmitting",
+				"Cancel button calls onCancel"
+			],
+			"verify": [
+				"Form renders all fields",
+				"Validation prevents submit without required fields",
+				"Edit mode pre-fills values"
+			],
+			"passes": true
+		},
+		{
+			"id": 9,
+			"category": "web-component",
+			"description": "Create document list component",
+			"acceptance": [
+				"File at apps/web/app/events/[eventId]/documents/components/document-list.tsx",
+				"Props: documents array, onEdit callback, onDelete callback",
+				"Renders table/list with columns: Title, Type (label from DOCUMENT_TYPES), File link, Actions",
+				"File link opens document URL in new tab",
+				"Edit button calls onEdit with document",
+				"Delete button calls onDelete with document",
+				"Empty state shows 'No documents' message"
+			],
+			"verify": [
+				"List renders documents correctly",
+				"File links open in new tab",
+				"Edit/delete buttons trigger callbacks"
+			],
+			"passes": true
+		},
+		{
+			"id": 10,
+			"category": "web-component",
+			"description": "Create delete confirmation modal component",
+			"acceptance": [
+				"File at apps/web/app/events/[eventId]/documents/components/delete-confirm-modal.tsx",
+				"Props: isOpen, document, onConfirm, onCancel, isDeleting",
+				"Shows document title in confirmation message",
+				"Confirm button calls onConfirm, shows spinner when isDeleting",
+				"Cancel button calls onCancel",
+				"Uses daisyUI modal styling"
+			],
+			"verify": [
+				"Modal renders when isOpen is true",
+				"Confirm triggers onConfirm",
+				"Cancel closes modal"
+			],
+			"passes": true
+		},
+		{
+			"id": 11,
+			"category": "web-state",
+			"description": "Create documents page reducer",
+			"acceptance": [
+				"File at apps/web/app/events/[eventId]/documents/reducer.ts",
+				"State: mode (list|add|edit|delete), documents array, selectedDocument, clubEvent, isLoading, isSubmitting, error",
+				"Actions: SET_EVENT, SET_DOCUMENTS, SET_MODE, SELECT_DOCUMENT, SET_SUBMITTING, SET_ERROR, RESET",
+				"SET_MODE to add/edit/delete sets appropriate mode",
+				"SELECT_DOCUMENT stores document for edit/delete operations",
+				"RESET returns to list mode and clears selection"
+			],
+			"verify": [
+				"File exists at apps/web/app/events/[eventId]/documents/reducer.ts",
+				"Exports reducer, initialState, Action type, DocumentsState type"
+			],
+			"passes": true
+		},
+		{
+			"id": 12,
+			"category": "web-ui",
+			"description": "Create documents page with list view",
+			"acceptance": [
+				"Page at apps/web/app/events/[eventId]/documents/page.tsx",
+				"Uses useReducer with documents reducer",
+				"Fetches event on mount (extracts year from startDate)",
+				"Fetches documents filtered by event_id on mount",
+				"Renders 'Add Document' button above list",
+				"Renders DocumentList component with documents",
+				"Shows loading spinner during fetch"
+			],
+			"verify": [
+				"Navigate to /events/{eventId}/documents",
+				"Documents for event are listed",
+				"Add Document button is visible"
+			],
+			"passes": true
+		},
+		{
+			"id": 13,
+			"category": "web-ui",
+			"description": "Add create document flow to documents page",
+			"acceptance": [
+				"Clicking 'Add Document' sets mode to 'add'",
+				"Add mode renders DocumentForm component",
+				"Form submit: creates FormData with title, document_type, year, event, file",
+				"POSTs to /api/documents",
+				"Success: dispatches SET_DOCUMENTS with updated list, returns to list mode",
+				"Error: shows error message, stays in add mode",
+				"Cancel returns to list mode"
+			],
+			"verify": [
+				"Can add new document with file",
+				"Document appears in list after creation",
+				"Cancel returns to list without creating"
+			],
+			"passes": true
+		},
+		{
+			"id": 14,
+			"category": "web-ui",
+			"description": "Add edit document flow to documents page",
+			"acceptance": [
+				"Clicking edit on document sets mode to 'edit' and selects document",
+				"Edit mode renders DocumentForm with initialData from selected document",
+				"Form submit: creates FormData with title, document_type, and optional file",
+				"PUTs to /api/documents/{id}",
+				"Success: updates document in list, returns to list mode",
+				"Cancel returns to list mode without saving"
+			],
+			"verify": [
+				"Can edit document title and type",
+				"Can replace document file",
+				"Changes persist after save"
+			],
+			"passes": true
+		},
+		{
+			"id": 15,
+			"category": "web-ui",
+			"description": "Add delete document flow to documents page",
+			"acceptance": [
+				"Clicking delete on document sets mode to 'delete' and selects document",
+				"Delete mode renders DeleteConfirmModal",
+				"Confirm: DELETEs /api/documents/{id}",
+				"Success: removes document from list, returns to list mode",
+				"Cancel returns to list mode without deleting"
+			],
+			"verify": [
+				"Delete button shows confirmation modal",
+				"Confirming removes document",
+				"Cancel closes modal without deleting"
+			],
+			"passes": true
+		},
+		{
+			"id": 16,
+			"category": "web-ui",
+			"description": "Add Event Documents ActionCard to event hub",
+			"acceptance": [
+				"New ActionCard in apps/web/app/events/[eventId]/page.tsx",
+				"Title: 'Event Documents'",
+				"Description: 'Manage documents for this event.'",
+				"Icon: document emoji or similar",
+				"Links to /events/{eventId}/documents",
+				"Not disabled"
+			],
+			"verify": ["Event hub shows 4 ActionCards", "Documents card links to documents page"],
+			"passes": true
+		},
+		{
+			"id": 17,
+			"category": "integration",
+			"description": "End-to-end test of event documents feature",
+			"acceptance": [
+				"Can navigate to documents page from event hub",
+				"Can add new document with file upload",
+				"Document appears in list with correct metadata",
+				"Can edit document title and type",
+				"Can replace document file",
+				"Can delete document",
+				"File links work (open/download)"
+			],
+			"verify": [
+				"docker compose up -d --build",
+				"Navigate to event > Event Documents",
+				"Complete add, edit, delete flows",
+				"Verify document accessible via file URL"
+			],
+			"passes": false
+		}
+	]
+}

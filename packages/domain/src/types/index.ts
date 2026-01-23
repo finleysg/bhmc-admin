@@ -1,5 +1,6 @@
 export * from "./auth"
 export * from "./courses"
+export * from "./documents"
 export * from "./events"
 export * from "./golf-genius"
 export * from "./register"
