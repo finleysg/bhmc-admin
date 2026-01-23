@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 
 import { IntegrationActionName, IntegrationLog, CompleteClubEvent } from "@repo/domain/types"
 
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import IntegrationActionCard from "./integration-action-card"
 
 interface PhaseInfo {
@@ -209,7 +210,7 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 	if (isLoadingLogs) {
 		return (
 			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
+				<LoadingSpinner size="lg" />
 				<span className="ml-3">Loading integration status...</span>
 			</div>
 		)

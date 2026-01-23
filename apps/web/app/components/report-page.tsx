@@ -3,6 +3,7 @@ import { ReactNode } from "react"
 import Link from "next/link"
 
 import { useAuthenticatedFetch, useExcelExport } from "@/lib/use-report"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface ReportPageProps<T> {
 	title: string
@@ -27,7 +28,7 @@ export function ReportPage<T>({
 	if (loading) {
 		return (
 			<div className="flex items-center justify-center p-2">
-				<span className="loading loading-spinner loading-lg" />
+				<LoadingSpinner size="lg" />
 			</div>
 		)
 	}

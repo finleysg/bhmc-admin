@@ -4,6 +4,7 @@ import { useParams } from "next/navigation"
 
 import ActionCard from "@/components/action-card"
 import { useAuth } from "@/lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 export default function EventHubPage() {
 	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
@@ -11,11 +12,7 @@ export default function EventHubPage() {
 	const eventId = params.eventId as string
 
 	if (isPending) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!signedIn) {

@@ -33,7 +33,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms spinners display correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 3,

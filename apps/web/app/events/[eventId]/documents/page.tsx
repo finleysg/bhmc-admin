@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import type { ClubEvent, Document } from "@repo/domain/types"
 
 import { useAuth } from "@/lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { DeleteConfirmModal } from "./components/delete-confirm-modal"
 import { DocumentForm, type DocumentFormData } from "./components/document-form"
 import { DocumentList } from "./components/document-list"
@@ -189,11 +190,7 @@ export default function DocumentsPage() {
 	}
 
 	if (isPending || state.isLoading) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!signedIn) {

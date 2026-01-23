@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { GroupSearch } from "../components/group-search"
 import SelectPlayers from "../components/select-players"
 import type { CompleteClubEvent } from "@repo/domain/types"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { reducer, initialState, translateRefundRequests } from "./reducer"
 import { PaidFeePicker } from "../components/paid-fee-picker"
 
@@ -150,11 +151,7 @@ export default function DropPlayerPage() {
 	)
 
 	if (state.isLoading) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!state.clubEvent) {

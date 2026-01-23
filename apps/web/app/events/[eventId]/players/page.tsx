@@ -6,6 +6,7 @@ import { useParams } from "next/navigation"
 
 import ActionCard from "@/components/action-card"
 import { useAuth } from "@/lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { ClubEvent } from "@repo/domain/types"
 
 export default function EventManagementPage() {
@@ -27,11 +28,7 @@ export default function EventManagementPage() {
 	}, [signedIn, eventId])
 
 	if (isPending) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!signedIn) {

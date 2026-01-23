@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation"
 
 import { useAuth } from "../../../../lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import ReportCard from "../../../components/report-card"
 
 export default function EventReportsPage() {
@@ -19,11 +20,7 @@ export default function EventReportsPage() {
 	}
 
 	if (isPending) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!signedIn) {

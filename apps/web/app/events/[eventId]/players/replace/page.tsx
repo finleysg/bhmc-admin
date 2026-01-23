@@ -3,6 +3,7 @@
 import { useReducer, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import type { CompleteClubEvent, ReplacePlayerRequest } from "@repo/domain/types"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { reducer, initialState } from "./reducer"
 import { GroupSearch } from "../components/group-search"
 import { PlayerSearch } from "../components/player-search"
@@ -95,11 +96,7 @@ export default function ReplacePlayerPage() {
 	}
 
 	if (state.isLoading) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!state.clubEvent) {

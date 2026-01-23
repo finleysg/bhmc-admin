@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
 import { useAuth } from "@/lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { CompleteClubEvent } from "@repo/domain/types"
 
 import IntegrationOrchestrator from "./components/integration-orchestrator"
@@ -45,7 +46,7 @@ export default function GolfGeniusIntegrationPage() {
 	if (isPending || loading) {
 		return (
 			<main className="min-h-screen flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
+				<LoadingSpinner size="lg" />
 			</main>
 		)
 	}

@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Pagination } from "@/components/pagination"
 import { useIsMobile } from "@/lib/use-is-mobile"
 import { useAuthenticatedFetch, useExcelExport } from "@/lib/use-report"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
 import { EventReportRow } from "@repo/domain/types"
 import {
@@ -252,7 +253,7 @@ export default function MembershipReportPage() {
 	if (!eventId || loading) {
 		return (
 			<div className="flex items-center justify-center p-2">
-				<span className="loading loading-spinner loading-lg" />
+				<LoadingSpinner size="lg" />
 			</div>
 		)
 	}

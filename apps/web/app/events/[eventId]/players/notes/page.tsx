@@ -4,6 +4,7 @@ import { useReducer, useEffect } from "react"
 import { useParams } from "next/navigation"
 import type { CompleteClubEvent, CompleteRegistration } from "@repo/domain/types"
 import { getStart } from "@repo/domain/functions"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { GroupSearch } from "../components/group-search"
 import { reducer, initialState } from "./reducer"
 
@@ -75,11 +76,7 @@ export default function NotesPage() {
 	}
 
 	if (state.isLoading) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!state.clubEvent) {

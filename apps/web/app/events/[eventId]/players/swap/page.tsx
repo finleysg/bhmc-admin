@@ -2,6 +2,7 @@
 
 import { useReducer, useEffect, useState } from "react"
 import { useParams } from "next/navigation"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import type {
 	CompleteClubEvent,
 	Player,
@@ -163,11 +164,7 @@ export default function SwapPlayerPage() {
 		: []
 
 	if (state.isLoading) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!state.clubEvent) {

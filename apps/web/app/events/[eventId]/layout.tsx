@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
 
 import { useAuth } from "@/lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { parseLocalDate } from "@repo/domain/functions"
 import { ClubEvent } from "@repo/domain/types"
 
@@ -49,7 +50,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 	if (loading) {
 		return (
 			<div className="flex items-center justify-center md:p-8">
-				<span className="loading loading-spinner loading-lg"></span>
+				<LoadingSpinner size="lg" />
 			</div>
 		)
 	}

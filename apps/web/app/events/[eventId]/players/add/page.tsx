@@ -9,6 +9,7 @@ import { EventFeePicker } from "@/app/events/[eventId]/players/components/event-
 import { PlayerSearch } from "@/app/events/[eventId]/players/components/player-search"
 import { SelectAvailable } from "@/app/events/[eventId]/players/components/select-available"
 import { useAuth } from "@/lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { parseLocalDate } from "@repo/domain/functions"
 import {
 	RegistrationTypeChoices,
@@ -120,11 +121,7 @@ export default function AddPlayerPage() {
 	}
 
 	if (isPending) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	const membersOnly = state.event?.registrationType === RegistrationTypeChoices.MEMBER

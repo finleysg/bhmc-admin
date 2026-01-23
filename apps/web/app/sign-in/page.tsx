@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
 
 import { useAuth } from "../../lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 function SignInForm() {
 	const [email, setEmail] = useState("")
@@ -118,7 +119,7 @@ function SignInForm() {
 export default function SignInPage() {
 	return (
 		<div className="min-h-screen bg-base-200 px-4">
-			<Suspense fallback={<div className="loading loading-spinner loading-lg" />}>
+			<Suspense fallback={<LoadingSpinner size="lg" />}>
 				<SignInForm />
 			</Suspense>
 		</div>

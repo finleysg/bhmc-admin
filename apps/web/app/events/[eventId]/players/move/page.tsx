@@ -7,6 +7,7 @@ import { SelectPlayers } from "../components/select-players"
 import { SelectAvailable } from "../components/select-available"
 import type { CompleteClubEvent, Player, AvailableSlotGroup, Course } from "@repo/domain/types"
 import { getStart } from "@repo/domain/functions"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { reducer, initialState } from "./reducer"
 
 function findCourseByHoleId(courses: Course[], holeId: number): Course | undefined {
@@ -116,11 +117,7 @@ export default function MovePlayerPage() {
 	}, [eventId])
 
 	if (state.isLoading) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!state.clubEvent) {
