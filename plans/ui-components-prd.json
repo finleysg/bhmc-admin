@@ -16,7 +16,7 @@
 				"File exists at apps/web/app/components/ui/loading-spinner.tsx",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 2,
