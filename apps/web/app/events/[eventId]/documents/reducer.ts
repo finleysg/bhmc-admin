@@ -19,6 +19,7 @@ export type Action =
 	| { type: "SELECT_DOCUMENT"; payload: Document }
 	| { type: "SET_SUBMITTING"; payload: boolean }
 	| { type: "SET_ERROR"; payload: string | null }
+	| { type: "SET_LOADING"; payload: boolean }
 	| { type: "RESET" }
 
 export function reducer(state: DocumentsState, action: Action): DocumentsState {
@@ -35,6 +36,8 @@ export function reducer(state: DocumentsState, action: Action): DocumentsState {
 			return { ...state, isSubmitting: action.payload }
 		case "SET_ERROR":
 			return { ...state, error: action.payload }
+		case "SET_LOADING":
+			return { ...state, isLoading: action.payload }
 		case "RESET":
 			return { ...state, mode: "list", selectedDocument: null, error: null }
 		default:

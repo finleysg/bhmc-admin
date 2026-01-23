@@ -25,9 +25,9 @@ export function DeleteConfirmModal({
 		if (!dialog) return
 
 		if (isOpen) {
-			dialog.showModal()
+			if (!dialog.open) dialog.showModal()
 		} else {
-			dialog.close()
+			if (dialog.open) dialog.close()
 		}
 	}, [isOpen])
 

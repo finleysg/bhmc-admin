@@ -39,7 +39,7 @@ export function DocumentList({ documents, onEdit, onDelete }: DocumentListProps)
 								return (
 									<tr key={doc.id}>
 										<td>{doc.title}</td>
-										<td>{DOCUMENT_TYPES[doc.documentType]}</td>
+										<td>{DOCUMENT_TYPES[doc.documentType] ?? doc.documentType}</td>
 										<td>
 											<a
 												href={doc.file}
@@ -83,7 +83,7 @@ export function DocumentList({ documents, onEdit, onDelete }: DocumentListProps)
 							<div key={doc.id} className="border-b border-base-300 pb-4 last:border-0">
 								<div className="font-semibold">{doc.title}</div>
 								<div className="text-sm text-base-content/70">
-									{DOCUMENT_TYPES[doc.documentType]}
+									{DOCUMENT_TYPES[doc.documentType] ?? doc.documentType}
 								</div>
 								<a
 									href={doc.file}

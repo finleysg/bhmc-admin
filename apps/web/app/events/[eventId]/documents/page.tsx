@@ -17,10 +17,20 @@ export default function DocumentsPage() {
 	const [state, dispatch] = useReducer(reducer, initialState)
 
 	const fetchEvent = useCallback(async () => {
-		const res = await fetch(`/api/events/${eventId}`)
-		if (res.ok) {
+		try {
+			const res = await fetch(`/api/events/${eventId}`)
+			if (!res.ok) {
+				throw new Error("Failed to load event")
+			}
 			const data = (await res.json()) as ClubEvent
 			dispatch({ type: "SET_EVENT", payload: data })
+		} catch (err) {
+			dispatch({
+				type: "SET_ERROR",
+				payload: err instanceof Error ? err.message : "Failed to load event",
+			})
+		} finally {
+			dispatch({ type: "SET_LOADING", payload: false })
 		}
 	}, [eventId])
 

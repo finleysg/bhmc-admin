@@ -11,14 +11,17 @@ export async function GET(request: NextRequest) {
 
 	if (!response.ok) return response
 
-	const data = await response.json()
-	const transformed = data.map((doc: Record<string, unknown>) => ({
-		...doc,
-		documentType: doc.document_type,
-		eventType: doc.event_type,
-		createdBy: doc.created_by,
-		lastUpdate: doc.last_update,
-	}))
+	const data = (await response.json()) as Record<string, unknown>[]
+	const transformed = data.map((doc) => {
+		const { document_type, event_type, created_by, last_update, ...rest } = doc
+		return {
+			...rest,
+			documentType: document_type,
+			eventType: event_type,
+			createdBy: created_by,
+			lastUpdate: last_update,
+		}
+	})
 	return NextResponse.json(transformed)
 }
 
