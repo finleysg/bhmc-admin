@@ -49,7 +49,7 @@
 				"File exists at apps/web/app/components/ui/page-layout.tsx",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 4,

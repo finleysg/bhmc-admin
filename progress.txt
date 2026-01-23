@@ -14,3 +14,11 @@ UI Components PRD Item 2: Replace loading spinner patterns with LoadingSpinner c
 - Verified: grep -r 'loading-spinner loading-lg' returns 0 results (except component file)
 - Decision: Replaced all instances not just lg size with spinner, to ensure consistency
 - No blockers
+
+UI Components PRD Item 3: Create PageLayout component - COMPLETED
+- File: apps/web/app/components/ui/page-layout.tsx
+- Props: maxWidth ('3xl' | '5xl' | '6xl', default '3xl'), children, className
+- Exported as named export
+- All acceptance criteria met
+- Decision: Use 'use client' directive matching LoadingSpinner pattern
+- No blockers
