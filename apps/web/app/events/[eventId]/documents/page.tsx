@@ -191,9 +191,16 @@ export default function DocumentsPage() {
 	}
 
 	return (
-		<main className="min-h-screen flex justify-center p-8">
+		<main className="min-h-screen flex justify-center md:p-8">
 			<div className="w-full max-w-3xl">
-				<h2 className="text-3xl font-bold mb-4 text-center">Event Documents</h2>
+				<div className="flex items-center justify-between mb-4">
+					<h2 className="text-3xl font-bold">Event Documents</h2>
+					{state.mode === "list" && (
+						<button type="button" className="btn btn-primary" onClick={handleAddClick}>
+							Add Document
+						</button>
+					)}
+				</div>
 
 				{state.error && (
 					<div className="alert alert-error mb-4">
@@ -202,25 +209,29 @@ export default function DocumentsPage() {
 				)}
 
 				{state.mode === "add" && (
-					<div className="card bg-base-200 p-6 mb-4">
-						<h3 className="text-xl font-semibold mb-4">Add Document</h3>
-						<DocumentForm
-							onSubmit={handleAddSubmit}
-							onCancel={handleCancel}
-							isSubmitting={state.isSubmitting}
-						/>
+					<div className="card bg-base-100 shadow-xs mb-4">
+						<div className="card-body">
+							<h3 className="card-title text-secondary font-semibold mb-4">Add Document</h3>
+							<DocumentForm
+								onSubmit={handleAddSubmit}
+								onCancel={handleCancel}
+								isSubmitting={state.isSubmitting}
+							/>
+						</div>
 					</div>
 				)}
 
 				{state.mode === "edit" && state.selectedDocument && (
-					<div className="card bg-base-200 p-6 mb-4">
-						<h3 className="text-xl font-semibold mb-4">Edit Document</h3>
-						<DocumentForm
-							onSubmit={handleEditSubmit}
-							onCancel={handleCancel}
-							initialData={state.selectedDocument}
-							isSubmitting={state.isSubmitting}
-						/>
+					<div className="card bg-base-100 shadow-xs mb-4">
+						<div className="card-body">
+							<h3 className="card-title text-secondary font-semibold mb-4">Edit Document</h3>
+							<DocumentForm
+								onSubmit={handleEditSubmit}
+								onCancel={handleCancel}
+								initialData={state.selectedDocument}
+								isSubmitting={state.isSubmitting}
+							/>
+						</div>
 					</div>
 				)}
 
@@ -233,14 +244,7 @@ export default function DocumentsPage() {
 				/>
 
 				{state.mode === "list" && (
-					<>
-						<div className="flex justify-end mb-4">
-							<button type="button" className="btn btn-primary" onClick={handleAddClick}>
-								Add Document
-							</button>
-						</div>
-						<DocumentList documents={state.documents} onEdit={handleEdit} onDelete={handleDelete} />
-					</>
+					<DocumentList documents={state.documents} onEdit={handleEdit} onDelete={handleDelete} />
 				)}
 			</div>
 		</main>

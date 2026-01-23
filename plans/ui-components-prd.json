@@ -1,0 +1,514 @@
+{
+	"feature": "UI Component Extraction",
+	"description": "Extract repeated styling patterns into reusable components in apps/web/app/components/ui/ to reduce duplication and improve consistency.",
+	"items": [
+		{
+			"id": 1,
+			"category": "web-component",
+			"description": "Create LoadingSpinner component",
+			"acceptance": [
+				"File at apps/web/app/components/ui/loading-spinner.tsx",
+				"Props: size ('sm' | 'lg', default 'lg'), className (optional)",
+				"Renders: <div className='flex items-center justify-center p-8'><span className='loading loading-spinner loading-{size}'></span></div>",
+				"Exported as named export"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/loading-spinner.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 2,
+			"category": "web-refactor",
+			"description": "Replace loading spinner patterns with LoadingSpinner component",
+			"acceptance": [
+				"All instances of 'loading loading-spinner loading-lg' wrapped in 'flex items-center justify-center p-8' replaced",
+				"Files to update: events/page.tsx, events/[eventId]/page.tsx, events/[eventId]/players/page.tsx, events/[eventId]/documents/page.tsx, club/page.tsx, and others",
+				"Import LoadingSpinner from '@/app/components/ui/loading-spinner'",
+				"No change to visual behavior"
+			],
+			"verify": [
+				"grep -r 'loading-spinner loading-lg' apps/web/app returns only the component file",
+				"pnpm --filter web build passes",
+				"Visual inspection confirms spinners display correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 3,
+			"category": "web-component",
+			"description": "Create PageLayout component",
+			"acceptance": [
+				"File at apps/web/app/components/ui/page-layout.tsx",
+				"Props: maxWidth ('3xl' | '5xl' | '6xl', default '3xl'), children, className (optional)",
+				"Renders: <main className='min-h-screen flex justify-center md:p-8'><div className='w-full max-w-{maxWidth}'>{children}</div></main>",
+				"Exported as named export"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/page-layout.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 4,
+			"category": "web-refactor",
+			"description": "Replace page layout patterns with PageLayout component",
+			"acceptance": [
+				"All instances of 'min-h-screen flex justify-center md:p-8' with 'w-full max-w-3xl/5xl/6xl' replaced",
+				"Files to update: events/page.tsx, events/[eventId]/page.tsx, events/[eventId]/players/page.tsx, events/[eventId]/documents/page.tsx, club/page.tsx, page.tsx, and others",
+				"Pass appropriate maxWidth prop based on original value",
+				"No change to visual layout"
+			],
+			"verify": [
+				"grep -r 'min-h-screen flex justify-center' apps/web/app returns only the component file",
+				"pnpm --filter web build passes",
+				"Visual inspection confirms layouts display correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 5,
+			"category": "web-component",
+			"description": "Create Alert component",
+			"acceptance": [
+				"File at apps/web/app/components/ui/alert.tsx",
+				"Props: type ('error' | 'success' | 'info' | 'warning'), children, className (optional)",
+				"Renders: <div className='alert alert-{type} {className}'><span>{children}</span></div>",
+				"Exported as named export"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/alert.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 6,
+			"category": "web-refactor",
+			"description": "Replace error alert patterns with Alert component",
+			"acceptance": [
+				"All instances of 'alert alert-error' replaced with <Alert type='error'>",
+				"Files to update: documents/page.tsx, players/add/page.tsx, players/move/page.tsx, players/drop/page.tsx, players/swap/page.tsx, sign-in/page.tsx, and others",
+				"Preserve existing margin classes via className prop if present",
+				"No change to visual behavior"
+			],
+			"verify": [
+				"grep -r 'alert alert-error' apps/web/app returns only the component file",
+				"pnpm --filter web build passes",
+				"Visual inspection confirms alerts display correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 7,
+			"category": "web-component",
+			"description": "Create Card component with CardBody and CardTitle",
+			"acceptance": [
+				"File at apps/web/app/components/ui/card.tsx",
+				"Card props: shadow ('xs' | 'sm' | 'md' | 'xl', default 'md'), children, className (optional)",
+				"Card renders: <div className='card bg-base-100 shadow-{shadow} {className}'>{children}</div>",
+				"CardBody props: children, className (optional)",
+				"CardBody renders: <div className='card-body {className}'>{children}</div>",
+				"CardTitle props: children, className (optional)",
+				"CardTitle renders: <h3 className='card-title text-secondary font-semibold mb-4 {className}'>{children}</h3>",
+				"All three exported as named exports"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/card.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 8,
+			"category": "web-refactor",
+			"description": "Replace card patterns with Card components (documents pages)",
+			"acceptance": [
+				"Update apps/web/app/events/[eventId]/documents/page.tsx to use Card, CardBody, CardTitle",
+				"Update apps/web/app/events/[eventId]/documents/components/document-form.tsx to use Card, CardBody, CardTitle",
+				"Update apps/web/app/events/[eventId]/documents/components/document-list.tsx to use Card, CardBody",
+				"Pass appropriate shadow prop based on original value",
+				"No change to visual layout"
+			],
+			"verify": [
+				"pnpm --filter web build passes",
+				"Visual inspection confirms cards display correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 9,
+			"category": "web-refactor",
+			"description": "Replace card patterns with Card components (player pages)",
+			"acceptance": [
+				"Update apps/web/app/events/[eventId]/players/add/page.tsx to use Card, CardBody, CardTitle",
+				"Update apps/web/app/events/[eventId]/players/move/page.tsx to use Card, CardBody, CardTitle",
+				"Update apps/web/app/events/[eventId]/players/drop/page.tsx to use Card, CardBody, CardTitle",
+				"Update apps/web/app/events/[eventId]/players/swap/page.tsx to use Card, CardBody, CardTitle",
+				"Update apps/web/app/events/[eventId]/players/notes/page.tsx to use Card, CardBody, CardTitle",
+				"No change to visual layout"
+			],
+			"verify": [
+				"pnpm --filter web build passes",
+				"Visual inspection confirms cards display correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 10,
+			"category": "web-component",
+			"description": "Create EmptyState component",
+			"acceptance": [
+				"File at apps/web/app/components/ui/empty-state.tsx",
+				"Props: message (string), className (optional)",
+				"Renders: <div className='text-center py-12 {className}'><p className='text-muted-foreground'>{message}</p></div>",
+				"Exported as named export"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/empty-state.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 11,
+			"category": "web-refactor",
+			"description": "Replace empty state patterns with EmptyState component",
+			"acceptance": [
+				"Update apps/web/app/club/membership/page.tsx to use EmptyState",
+				"Update apps/web/app/components/report-page.tsx to use EmptyState",
+				"Update any other files with 'text-center py-12' empty state pattern",
+				"No change to visual behavior"
+			],
+			"verify": [
+				"pnpm --filter web build passes",
+				"Visual inspection confirms empty states display correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 12,
+			"category": "web-component",
+			"description": "Create PageHeader component with consistent styling",
+			"acceptance": [
+				"File at apps/web/app/components/ui/page-header.tsx",
+				"Props: children, centered (boolean, default true), className (optional)",
+				"Renders: <h2 className='text-3xl font-bold mb-6 {centered ? 'text-center' : ''} {className}'>{children}</h2>",
+				"Standardizes all page headers to text-3xl font-bold mb-6",
+				"Exported as named export"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/page-header.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 13,
+			"category": "web-refactor",
+			"description": "Replace page header patterns with PageHeader component",
+			"acceptance": [
+				"Update apps/web/app/events/[eventId]/documents/page.tsx to use PageHeader",
+				"Update apps/web/app/events/[eventId]/players/page.tsx to use PageHeader",
+				"Update apps/web/app/club/membership/page.tsx to use PageHeader",
+				"Update other pages with 'text-3xl font-bold' pattern",
+				"Standardize inconsistent headers (text-4xl on homepage becomes text-3xl)",
+				"No change to visual behavior except standardized sizing"
+			],
+			"verify": [
+				"pnpm --filter web build passes",
+				"Visual inspection confirms headers display correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 14,
+			"category": "web-component",
+			"description": "Create StepIndicator component for multi-step forms",
+			"acceptance": [
+				"File at apps/web/app/components/ui/step-indicator.tsx",
+				"Props: currentStep (number), totalSteps (number), label (string)",
+				"Renders: <h4 className='text-lg font-semibold mb-4'>Step {currentStep} of {totalSteps}: {label}</h4>",
+				"Standardizes all step headers across add/move/drop/swap player flows",
+				"Exported as named export"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/step-indicator.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 15,
+			"category": "web-refactor",
+			"description": "Replace step indicator patterns with StepIndicator component",
+			"acceptance": [
+				"Update apps/web/app/events/[eventId]/players/add/page.tsx to use StepIndicator",
+				"Update apps/web/app/events/[eventId]/players/move/page.tsx to use StepIndicator",
+				"Update apps/web/app/events/[eventId]/players/drop/page.tsx to use StepIndicator",
+				"Update apps/web/app/events/[eventId]/players/swap/page.tsx to use StepIndicator",
+				"Replace all 'Step X of Y:' h4 headers with component",
+				"No change to visual behavior"
+			],
+			"verify": [
+				"grep -r 'Step.*of.*:' apps/web/app returns only the component file",
+				"pnpm --filter web build passes",
+				"Visual inspection confirms step indicators display correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 16,
+			"category": "web-component",
+			"description": "Create SectionHeader component for subsection titles",
+			"acceptance": [
+				"File at apps/web/app/components/ui/section-header.tsx",
+				"Props: children, size ('lg' | 'md' | 'sm', default 'lg'), className (optional)",
+				"Size 'lg' renders: text-lg font-semibold mb-4",
+				"Size 'md' renders: text-md font-medium mb-2",
+				"Size 'sm' renders: text-sm font-medium mb-2",
+				"Exported as named export"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/section-header.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 17,
+			"category": "web-refactor",
+			"description": "Replace section header patterns in report pages",
+			"acceptance": [
+				"Update apps/web/app/events/[eventId]/reports/results/page.tsx to use SectionHeader",
+				"Replace 'text-lg font-semibold mb-4' and 'text-md font-medium mb-2' patterns",
+				"No change to visual behavior"
+			],
+			"verify": [
+				"pnpm --filter web build passes",
+				"Visual inspection confirms section headers display correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 18,
+			"category": "web-component",
+			"description": "Create HelperText component for secondary/muted text",
+			"acceptance": [
+				"File at apps/web/app/components/ui/helper-text.tsx",
+				"Props: children, className (optional)",
+				"Renders: <p className='text-sm text-base-content/70 mb-4 {className}'>{children}</p>",
+				"Standardizes opacity to /70 (currently mixed /60, /70, text-muted-foreground)",
+				"Exported as named export"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/helper-text.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 19,
+			"category": "web-refactor",
+			"description": "Replace helper text patterns with HelperText component",
+			"acceptance": [
+				"Update files using 'text-sm text-base-content/70' pattern",
+				"Update files using 'text-sm text-base-content/60' to use HelperText (standardize to /70)",
+				"Update files using 'text-muted-foreground' for similar purpose",
+				"No change to visual behavior"
+			],
+			"verify": [
+				"pnpm --filter web build passes",
+				"Visual inspection confirms helper text displays correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 20,
+			"category": "web-component",
+			"description": "Create Badge component with consistent close button",
+			"acceptance": [
+				"File at apps/web/app/components/ui/badge.tsx",
+				"Props: children, variant ('info' | 'success' | 'warning' | 'error', default 'info'), onClose (optional callback)",
+				"Renders: <span className='badge badge-{variant} gap-2'>{children}{onClose && <button onClick={onClose} className='btn btn-ghost btn-xs btn-circle'><XMarkIcon className='h-3 w-3' /></button>}</span>",
+				"Uses Heroicons XMarkIcon consistently (not text symbol)",
+				"Exported as named export"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/badge.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 21,
+			"category": "web-refactor",
+			"description": "Replace badge patterns with Badge component",
+			"acceptance": [
+				"Update apps/web/app/events/[eventId]/players/components/player-search.tsx to use Badge",
+				"Update apps/web/app/events/[eventId]/players/components/select-available.tsx to use Badge",
+				"Standardize close button implementation (use XMarkIcon)",
+				"No change to visual behavior"
+			],
+			"verify": [
+				"pnpm --filter web build passes",
+				"Visual inspection confirms badges display correctly with close functionality"
+			],
+			"passes": false
+		},
+		{
+			"id": 22,
+			"category": "web-refactor",
+			"description": "Consolidate action-card and report-card into single LinkCard component",
+			"acceptance": [
+				"Rename apps/web/app/components/action-card.tsx to link-card.tsx",
+				"Add buttonLabel prop (default 'Open')",
+				"Remove apps/web/app/components/report-card.tsx",
+				"Update all imports of ActionCard to LinkCard",
+				"Update all imports of ReportCard to LinkCard with buttonLabel='View Report'",
+				"No change to visual behavior"
+			],
+			"verify": [
+				"apps/web/app/components/report-card.tsx no longer exists",
+				"grep -r 'ReportCard' apps/web/app returns 0 results",
+				"pnpm --filter web build passes",
+				"Visual inspection confirms cards display correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 23,
+			"category": "web-component",
+			"description": "Create FormField wrapper component",
+			"acceptance": [
+				"File at apps/web/app/components/ui/form-field.tsx",
+				"Props: label (optional string), error (optional string), children, className (optional)",
+				"Renders: <div className='form-control {className}'>{label && <label className='label'><span className='label-text'>{label}</span></label>}{children}{error && <label className='label'><span className='label-text-alt text-error'>{error}</span></label>}</div>",
+				"Exported as named export"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/form-field.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 24,
+			"category": "web-refactor",
+			"description": "Replace form-control patterns with FormField in document form",
+			"acceptance": [
+				"Update apps/web/app/events/[eventId]/documents/components/document-form.tsx to use FormField",
+				"Wrap each input/select/textarea in FormField with appropriate label",
+				"No change to visual behavior"
+			],
+			"verify": [
+				"pnpm --filter web build passes",
+				"Visual inspection confirms form displays correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 25,
+			"category": "web-component",
+			"description": "Create Modal component with consistent ref-based trigger",
+			"acceptance": [
+				"File at apps/web/app/components/ui/modal.tsx",
+				"Props: isOpen (boolean), onClose (function), title (optional string), children",
+				"Uses daisyUI dialog element with modal-box styling",
+				"Uses useEffect to call showModal()/close() based on isOpen prop",
+				"Renders title with 'font-bold text-lg' if provided",
+				"Standardizes modal trigger pattern (removes getElementById approach)",
+				"Exported as named export"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/modal.tsx",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 26,
+			"category": "web-refactor",
+			"description": "Refactor delete-confirm-modal to use Modal component",
+			"acceptance": [
+				"Update apps/web/app/events/[eventId]/documents/components/delete-confirm-modal.tsx to use Modal",
+				"Remove duplicated modal-box styling",
+				"No change to visual behavior or functionality"
+			],
+			"verify": ["pnpm --filter web build passes", "Delete confirmation flow works correctly"],
+			"passes": false
+		},
+		{
+			"id": 27,
+			"category": "web-refactor",
+			"description": "Refactor integration-action-card modal to use Modal component",
+			"acceptance": [
+				"Update apps/web/app/events/[eventId]/golf-genius/components/integration-action-card.tsx to use Modal",
+				"Remove getElementById modal trigger pattern",
+				"Use isOpen prop pattern instead",
+				"No change to visual behavior or functionality"
+			],
+			"verify": [
+				"grep -r 'getElementById' apps/web/app/events/[eventId]/golf-genius returns 0 results",
+				"pnpm --filter web build passes",
+				"Integration action modal opens and closes correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 28,
+			"category": "web-refactor",
+			"description": "Add PageHeader to event hub page",
+			"acceptance": [
+				"Add PageHeader to apps/web/app/events/[eventId]/page.tsx",
+				"Display event name as page header",
+				"Consistent with other hub pages (club hub has header)",
+				"No change to existing ActionCard layout"
+			],
+			"verify": ["pnpm --filter web build passes", "Event hub displays header with event name"],
+			"passes": false
+		},
+		{
+			"id": 29,
+			"category": "web-component",
+			"description": "Create index.ts barrel export for ui components",
+			"acceptance": [
+				"File at apps/web/app/components/ui/index.ts",
+				"Re-exports all components: LoadingSpinner, PageLayout, Alert, Card, CardBody, CardTitle, EmptyState, PageHeader, StepIndicator, SectionHeader, HelperText, Badge, FormField, Modal",
+				"Allows single import: import { LoadingSpinner, Alert } from '@/app/components/ui'"
+			],
+			"verify": [
+				"File exists at apps/web/app/components/ui/index.ts",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 30,
+			"category": "integration",
+			"description": "End-to-end verification of UI component refactoring",
+			"acceptance": [
+				"docker compose up -d --build succeeds",
+				"Navigate through all major pages: home, events, event hub, documents, players, club",
+				"All loading states display correctly",
+				"All cards display correctly with proper shadows",
+				"All alerts display correctly",
+				"All forms display correctly",
+				"All modals open and close correctly",
+				"All step indicators display correctly in multi-step flows",
+				"All badges display correctly with close functionality",
+				"All page headers are consistent (text-3xl font-bold)",
+				"No visual regressions from original styling"
+			],
+			"verify": [
+				"docker compose up -d --build",
+				"Manual navigation through all pages",
+				"Complete add/move/drop/swap player flows to test step indicators",
+				"Test document add/edit/delete flows for modals"
+			],
+			"passes": false
+		}
+	]
+}

@@ -13,3 +13,4 @@ PRD#12 complete: Documents page w/ list view. File: apps/web/app/events/[eventId
 PRD#13 complete: Add create document flow. Files: page.tsx, document-form.tsx. Commit: acb5482. Add mode shows DocumentForm, POSTs FormData to /api/documents, refetches list on success, shows error on failure. Updated onSubmit prop to support async.
 PRD#14 complete: Edit document flow. File: page.tsx. Commit: 3fa397d. Edit mode renders DocumentForm w/ initialData, PUTs FormData to /api/documents/{id}, refetches list on success. Typecheck/lint/test pass.
 PRD#15 complete: Delete document flow. Files: page.tsx, delete-confirm-modal.tsx. Delete mode renders DeleteConfirmModal, DELETEs /api/documents/{id}, refetches list on success. Updated modal to support async onConfirm. Typecheck/lint/test pass.
+PRD#16 complete: Event Documents ActionCard added to event hub. File: apps/web/app/events/[eventId]/page.tsx. Commit: fa72aec. Links to /events/{eventId}/documents. Typecheck/lint/test pass.

@@ -15,6 +15,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 		backendPath: `/documents/${id}/`,
 		method: "PUT",
 		formData,
+		apiBaseUrl: process.env.DJANGO_API_URL,
 	})
 }
 
@@ -28,5 +29,10 @@ export async function DELETE(
 		return NextResponse.json({ error: "Document ID is required" }, { status: 400 })
 	}
 
-	return fetchWithAuth({ request, backendPath: `/documents/${id}/`, method: "DELETE" })
+	return fetchWithAuth({
+		request,
+		backendPath: `/documents/${id}/`,
+		method: "DELETE",
+		apiBaseUrl: process.env.DJANGO_API_URL,
+	})
 }

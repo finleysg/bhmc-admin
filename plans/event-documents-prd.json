@@ -277,7 +277,7 @@
 				"Not disabled"
 			],
 			"verify": ["Event hub shows 4 ActionCards", "Documents card links to documents page"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 17,

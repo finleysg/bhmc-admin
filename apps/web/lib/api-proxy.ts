@@ -7,6 +7,7 @@ interface FetchWithAuthOptions {
 	body?: unknown
 	responseType?: "json" | "binary" // Default: "json"
 	filename?: string // For Content-Disposition in binary mode
+	apiBaseUrl?: string // Override API_URL (e.g., for Django endpoints)
 }
 
 interface FetchSSEWithAuthOptions {
@@ -19,6 +20,7 @@ interface FetchFormDataWithAuthOptions {
 	backendPath: string
 	method: "POST" | "PUT"
 	formData: FormData
+	apiBaseUrl?: string // Override API_URL (e.g., for Django endpoints)
 }
 
 /**
@@ -41,6 +43,7 @@ export async function fetchWithAuth({
 	body,
 	responseType = "json",
 	filename,
+	apiBaseUrl,
 }: FetchWithAuthOptions): Promise<NextResponse> {
 	try {
 		const token = getAuthToken(request)
@@ -50,7 +53,7 @@ export async function fetchWithAuth({
 		}
 
 		// Forward the request to the backend API with the Django token
-		const apiUrl = process.env.API_URL
+		const apiUrl = apiBaseUrl ?? process.env.API_URL
 		if (!apiUrl) {
 			return NextResponse.json({ error: "API URL not configured" }, { status: 500 })
 		}
@@ -160,6 +163,7 @@ export async function fetchFormDataWithAuth({
 	backendPath,
 	method,
 	formData,
+	apiBaseUrl,
 }: FetchFormDataWithAuthOptions): Promise<NextResponse> {
 	try {
 		const token = getAuthToken(request)
@@ -168,7 +172,7 @@ export async function fetchFormDataWithAuth({
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 		}
 
-		const apiUrl = process.env.API_URL
+		const apiUrl = apiBaseUrl ?? process.env.API_URL
 		if (!apiUrl) {
 			return NextResponse.json({ error: "API URL not configured" }, { status: 500 })
 		}
