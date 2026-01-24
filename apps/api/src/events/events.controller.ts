@@ -4,6 +4,7 @@ import {
 	Get,
 	Inject,
 	Logger,
+	NotFoundException,
 	Param,
 	ParseIntPipe,
 	Query,
@@ -12,6 +13,7 @@ import {
 import { ClubEvent } from "@repo/domain/types"
 
 import { Admin } from "../auth"
+import { RegistrationRepository } from "../registration/repositories/registration.repository"
 
 import { EventsRepository } from "./events.repository"
 import { toEvent } from "./mappers"
@@ -25,6 +27,7 @@ export class EventsController {
 	constructor(
 		@Inject(EventsRepository) private readonly events: EventsRepository,
 		@Inject(EventsService) private readonly service: EventsService,
+		@Inject(RegistrationRepository) private readonly registrations: RegistrationRepository,
 	) {}
 
 	@Get()
@@ -48,6 +51,18 @@ export class EventsController {
 	): Promise<{ eventId: number }> {
 		const eventId = await this.service.getSeasonRegistrationEventId(season)
 		return { eventId }
+	}
+
+	@Get(":eventId/available-slot-count")
+	async getAvailableSlotCount(
+		@Param("eventId", ParseIntPipe) eventId: number,
+	): Promise<{ count: number }> {
+		const event = await this.events.findEventById(eventId)
+		if (!event) {
+			throw new NotFoundException(`Event with id ${eventId} not found`)
+		}
+		const count = await this.registrations.countAvailableSlots(eventId)
+		return { count }
 	}
 
 	@UseInterceptors(ClassSerializerInterceptor)

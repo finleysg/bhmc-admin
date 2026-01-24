@@ -57,6 +57,7 @@ import {
 		PlayerService,
 		RefundService,
 		RegistrationBroadcastService,
+		RegistrationRepository,
 		RegistrationService,
 	],
 })
