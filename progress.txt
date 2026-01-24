@@ -280,3 +280,13 @@ UI Components PRD Item 27: Refactor integration-action-card modal to use Modal c
 - Decision: Extended Modal component with className prop for size customization
 - No blockers
 
+UI Components PRD Item 28: Add PageHeader to event hub page - COMPLETED
+- File updated: apps/web/app/events/[eventId]/page.tsx
+- Added event data fetching with useState/useEffect (matches pattern used in other pages)
+- Imported PageHeader component and ClubEvent type
+- Added PageHeader displaying event.name before LinkCard grid
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Decision: Fetched event data in page component to maintain component encapsulation; follows established fetch pattern
+- No blockers
+

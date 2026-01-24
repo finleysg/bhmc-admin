@@ -468,7 +468,7 @@
 				"No change to existing ActionCard layout"
 			],
 			"verify": ["pnpm --filter web build passes", "Event hub displays header with event name"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 29,
