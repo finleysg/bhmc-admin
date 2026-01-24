@@ -8,6 +8,7 @@ import ActionCard from "@/components/action-card"
 import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { PageLayout } from "@/components/ui/page-layout"
+import { PageHeader } from "@/components/ui/page-header"
 import { ClubEvent } from "@repo/domain/types"
 
 export default function EventManagementPage() {
@@ -38,7 +39,7 @@ export default function EventManagementPage() {
 
 	return (
 		<PageLayout maxWidth="3xl">
-			<h2 className="text-3xl font-bold mb-4 text-center">Manage Players</h2>
+			<PageHeader>Manage Players</PageHeader>
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 				<ActionCard title="Add" description="Add a player to this event" href="players/add" />
 				{event?.canChoose && (

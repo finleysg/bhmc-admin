@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useAuthenticatedFetch, useExcelExport } from "@/lib/use-report"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { EmptyState } from "@/components/ui/empty-state"
+import { PageHeader } from "@/components/ui/page-header"
 
 interface ReportPageProps<T> {
 	title: string
@@ -38,7 +39,7 @@ export function ReportPage<T>({
 		return (
 			<main className="min-h-screen flex items-center justify-center p-2">
 				<div className="w-full max-w-3xl text-center">
-					<h2 className="text-3xl font-bold mb-4">{title}</h2>
+					<PageHeader>{title}</PageHeader>
 					<p className="text-error mb-8">Error loading report: {error}</p>
 					<Link href={`/events/${eventId}/reports`} className="btn btn-primary">
 						Back to Reports

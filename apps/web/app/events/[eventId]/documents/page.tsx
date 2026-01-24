@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
+import { PageHeader } from "@/components/ui/page-header"
 import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { DeleteConfirmModal } from "./components/delete-confirm-modal"
 import { DocumentForm, type DocumentFormData } from "./components/document-form"
@@ -202,8 +203,8 @@ export default function DocumentsPage() {
 
 	return (
 		<PageLayout maxWidth="3xl">
-			<div className="flex items-center justify-between mb-4">
-				<h2 className="text-3xl font-bold">Event Documents</h2>
+			<div className="flex items-center justify-between mb-6">
+				<PageHeader>Event Documents</PageHeader>
 				{state.mode === "list" && (
 					<button type="button" className="btn btn-primary" onClick={handleAddClick}>
 						Add Document

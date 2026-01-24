@@ -3,13 +3,16 @@
 import { useAuth } from "../lib/auth-context"
 import ActionCard from "./components/action-card"
 import { PageLayout } from "./components/ui/page-layout"
+import { PageHeader } from "./components/ui/page-header"
 
 export default function Home() {
 	const { isAuthenticated: signedIn } = useAuth()
 
 	return (
 		<PageLayout maxWidth="5xl">
-			<h1 className="text-4xl font-bold text-primary mb-2">BHMC Admin</h1>
+			<PageHeader centered={false} className="text-primary mb-2">
+				BHMC Admin
+			</PageHeader>
 			<p className="text-sm text-muted-foreground mb-6">
 				Administrative actions for tournament management
 			</p>
