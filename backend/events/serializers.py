@@ -14,8 +14,13 @@ class TournamentResultSerializer(serializers.ModelSerializer):
             "team_id",
             "position",
             "score",
-            "points",
-            "is_net",
+            "amount",
+            "payout_type",
+            "payout_to",
+            "payout_status",
+            "flight",
+            "summary",
+            "details",
         )
 
 

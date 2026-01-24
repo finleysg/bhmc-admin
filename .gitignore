@@ -47,7 +47,7 @@ Thumbs.db
 .cache/
 .cache-loader/
 turbo/
-/.progress.txt
+/progress.txt
 
 # Docker
 docker/*.log

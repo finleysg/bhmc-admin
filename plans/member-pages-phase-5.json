@@ -1,0 +1,94 @@
+[
+  {
+    "id": "5.1",
+    "category": "frontend",
+    "description": "Add tee name to score row display: format 'YYYY-MM-DD (Tee) Gross/Net'",
+    "files": [
+      "apps/public/src/components/scores/player-scores.tsx",
+      "apps/public/src/components/scores/score-utils.tsx"
+    ],
+    "verify": [
+      "Score rows show tee name in parentheses",
+      "Format: '2025-04-09 (Gold) Gross'"
+    ],
+    "passes": false
+  },
+  {
+    "id": "5.2",
+    "category": "frontend",
+    "description": "Create CourseFilterChips component - clickable chips toggle selection, no selection = show all",
+    "files": ["apps/public/src/components/scores/course-filter-chips.tsx (create)"],
+    "verify": [
+      "Chips shown for each course",
+      "Click toggles selection",
+      "Selected chips visually distinct"
+    ],
+    "passes": false
+  },
+  {
+    "id": "5.3",
+    "category": "frontend",
+    "description": "Integrate CourseFilterChips into scores page, filter displayed rounds by selected courses",
+    "files": [
+      "apps/public/src/screens/account/player-scores.tsx",
+      "apps/public/src/components/scores/player-scores.tsx"
+    ],
+    "verify": [
+      "Filter chips appear on scores page",
+      "Selecting course filters to only that course",
+      "Multiple selection works",
+      "No selection shows all"
+    ],
+    "passes": false
+  },
+  {
+    "id": "5.4",
+    "category": "frontend",
+    "description": "Add xlsx library to public app dependencies",
+    "files": ["apps/public/package.json"],
+    "verify": [
+      "pnpm install completes",
+      "import * as XLSX from 'xlsx' works"
+    ],
+    "passes": false
+  },
+  {
+    "id": "5.5",
+    "category": "frontend",
+    "description": "Create ExportScoresButton using xlsx - generates my-scores-{season}.xlsx with columns: Date, Tee, Type, Course, Holes 1-9, Total",
+    "files": ["apps/public/src/components/scores/export-scores-button.tsx (create)"],
+    "verify": [
+      "Button renders with export icon",
+      "Click generates Excel download",
+      "File has correct columns",
+      "Data sorted by course then date"
+    ],
+    "passes": false
+  },
+  {
+    "id": "5.6",
+    "category": "frontend",
+    "description": "Add ExportScoresButton to scores page, disabled when no data, respects course filter",
+    "files": ["apps/public/src/screens/account/player-scores.tsx"],
+    "verify": [
+      "Export button visible",
+      "Disabled when no scores",
+      "Export includes only filtered data"
+    ],
+    "passes": false
+  },
+  {
+    "id": "5.7",
+    "category": "routing",
+    "description": "Move enhanced scores to /member/scores/:scoreType/:season route",
+    "files": [
+      "apps/public/src/screens/member/member-scores.tsx (create)",
+      "apps/public/src/screens/member/member-routes.tsx"
+    ],
+    "verify": [
+      "/member/scores/gross/2024 shows scores",
+      "Tee display, filters, export all work"
+    ],
+    "passes": false
+  }
+]

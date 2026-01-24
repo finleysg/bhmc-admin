@@ -1,0 +1,78 @@
+[
+  {
+    "id": "4.1",
+    "category": "frontend",
+    "description": "Create Zod schemas + TypeScript types for TournamentResult and TournamentPoints API responses",
+    "files": ["apps/public/src/models/tournament-results.ts (create)"],
+    "verify": [
+      "Types compile without errors",
+      "Schemas validate sample API data"
+    ],
+    "passes": false
+  },
+  {
+    "id": "4.2",
+    "category": "frontend",
+    "description": "Create useTournamentResults and useTournamentPoints hooks with player/season params",
+    "files": ["apps/public/src/hooks/use-tournament-results.ts (create)"],
+    "verify": [
+      "Hooks fetch from correct endpoints",
+      "Data transforms to typed classes",
+      "Enabled only when playerId provided"
+    ],
+    "passes": false
+  },
+  {
+    "id": "4.3",
+    "category": "frontend",
+    "description": "Create ResultEventCard showing event header, Scores, Points, Credits (if amount>0), Skins (if format=Skins) sections with payout badges",
+    "files": ["apps/public/src/components/results/result-event-card.tsx (create)"],
+    "verify": [
+      "Event header shows name + date",
+      "Scores section shows gross/net with position",
+      "Points section shows gross/net points",
+      "Credits section conditional on amount > 0",
+      "Skins section conditional on skins results",
+      "Payout badges: Paid/Confirmed/Pending"
+    ],
+    "passes": false
+  },
+  {
+    "id": "4.4",
+    "category": "frontend",
+    "description": "Create PendingEventCard for registered future events showing 'Waiting for results' status",
+    "files": ["apps/public/src/components/results/pending-event-card.tsx (create)"],
+    "verify": [
+      "Shows event name + date",
+      "Shows 'Registered' indicator",
+      "Shows 'Waiting for results'",
+      "Visually distinct from completed events"
+    ],
+    "passes": false
+  },
+  {
+    "id": "4.5",
+    "category": "frontend",
+    "description": "Create MemberResultsScreen with season selector, event cards (completed + pending), sorted by date desc, empty state",
+    "files": ["apps/public/src/screens/member/member-results.tsx (create)"],
+    "verify": [
+      "Season selector defaults to current season",
+      "Changing season filters results",
+      "Events sorted newest first",
+      "All future registrations interspersed by date",
+      "Empty state shown when no results"
+    ],
+    "passes": false
+  },
+  {
+    "id": "4.6",
+    "category": "routing",
+    "description": "Wire up MemberResultsScreen at /member/results",
+    "files": ["apps/public/src/screens/member/member-routes.tsx"],
+    "verify": [
+      "/member/results shows results page",
+      "Hub card links to results"
+    ],
+    "passes": false
+  }
+]

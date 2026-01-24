@@ -18,14 +18,15 @@ trap "rm -f $tmpfile" EXIT
 for ((i=1; i<=$1; i++)); do
   echo "Iteration $i"
   echo "============================================================="
-  docker sandbox run claude -p --model opus "@plans/event-status-prd.json @progress.txt \
+  docker sandbox run claude -p --model sonnet "@plans/member-pages-phase-1.json @progress.txt \
 CRITICAL: Complete exactly ONE PRD item, make ONE commit, then STOP. \
 1. Pick the highest priority incomplete PRD item (one item = one feature). \
-2. Write tests if needed. \
-3. Run feedback loops: pnpm typecheck, pnpm lint, pnpm test. \
-4. Make ONE git commit for this single PRD item. \
-5. Update the PRD item status to true. Append to progress.txt: task completed, PRD ref, decisions, files changed, blockers. Keep concise. \
-6. STOP HERE. Do not continue to other PRD items. \
+2. If you are creating screens or components, analyse existing patterns. \
+3. Write tests if needed. \
+4. Run feedback loops: pnpm typecheck, pnpm lint, pnpm test. \
+5. Make ONE git commit for this single PRD item. \
+6. Update the work item status to true. Append to progress.txt: task completed, PRD ref, decisions, files changed, blockers. Keep concise. \
+6. STOP HERE. Do not continue to other work items. \
 Only if ALL PRD items are already complete, output <promise>COMPLETE</promise>. \
 " 2>&1 | tee "$tmpfile"
 

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "1.1",
+    "category": "backend",
+    "description": "Fix TournamentResultSerializer - remove nonexistent points/is_net fields, add amount/payout_type/payout_to/payout_status/flight/summary/details",
+    "files": ["backend/events/serializers.py"],
+    "verify": [
+      "GET /api/tournament-results/ returns records without points/is_net fields",
+      "Response includes amount, payout_type, payout_to, payout_status, flight, summary, details",
+      "No serialization errors"
+    ],
+    "passes": false
+  },
+  {
+    "id": "1.2",
+    "category": "backend",
+    "description": "Add player/season filtering to TournamentResultViewSet via get_queryset()",
+    "files": ["backend/events/views.py"],
+    "verify": [
+      "GET /api/tournament-results/?player=123 returns only that player's results",
+      "GET /api/tournament-results/?season=2024 returns only 2024 results",
+      "Combined filters work: ?player=123&season=2024",
+      "No params returns all (backward compatible)"
+    ],
+    "passes": false
+  },
+  {
+    "id": "1.3",
+    "category": "backend",
+    "description": "Create TournamentPointsSerializer with id, tournament, player, position, score, points, details, create_date",
+    "files": ["backend/events/serializers.py"],
+    "verify": [
+      "Serializer imports cleanly",
+      "Fields match TournamentPoints model"
+    ],
+    "passes": false
+  },
+  {
+    "id": "1.4",
+    "category": "backend",
+    "description": "Create TournamentPointsViewSet with player/season filtering, register as tournament-points in urls",
+    "files": ["backend/events/views.py", "backend/bhmc/urls.py"],
+    "verify": [
+      "GET /api/tournament-points/ returns all points",
+      "GET /api/tournament-points/?player=123&season=2024 returns filtered",
+      "Endpoint registered in router"
+    ],
+    "passes": false
+  }
+]
