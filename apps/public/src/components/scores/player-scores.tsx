@@ -1,10 +1,10 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useClubEvents } from "../../hooks/use-club-events"
 import { useMyPlayerRecord } from "../../hooks/use-my-player-record"
 import { usePlayerScores } from "../../hooks/use-player-scores"
 import { RoundsProps, SeasonProps } from "../../models/common-props"
 import { Hole } from "../../models/course"
-import { CourseInRound, LoadRounds, ScoreByHole } from "../../models/scores"
+import { CourseInRound, LoadRounds, Round, ScoreByHole } from "../../models/scores"
 import { OverlaySpinner } from "../spinners/overlay-spinner"
 import { CourseFilterChips } from "./course-filter-chips"
 import {
@@ -115,9 +115,10 @@ function RoundsByCourse({ course, holes, courseName, rounds }: RoundsByCoursePro
 
 interface PlayerScoresProps extends SeasonProps {
 	isNet: boolean
+	onFilteredRoundsChange?: (rounds: Round[]) => void
 }
 
-export function PlayerScores({ isNet, season }: PlayerScoresProps) {
+export function PlayerScores({ isNet, season, onFilteredRoundsChange }: PlayerScoresProps) {
 	const { data: player } = useMyPlayerRecord()
 	const { data: events } = useClubEvents(season)
 	const { data: playerRounds } = usePlayerScores(season, player?.id)
@@ -161,6 +162,19 @@ export function PlayerScores({ isNet, season }: PlayerScoresProps) {
 	// Filter courses to display
 	const displayedCourses =
 		selectedCourseIds.length === 0 ? courses : courses.filter((c) => selectedCourseIds.includes(c.id))
+
+	// Calculate filtered rounds for export
+	const filteredRounds = rounds.filter((r) => {
+		if (selectedCourseIds.length === 0) return true
+		return selectedCourseIds.includes(r.course.id)
+	})
+
+	// Notify parent when filtered rounds change
+	useEffect(() => {
+		if (onFilteredRoundsChange) {
+			onFilteredRoundsChange(filteredRounds)
+		}
+	}, [filteredRounds, onFilteredRoundsChange])
 
 	return (
 		<div className="mt-2">

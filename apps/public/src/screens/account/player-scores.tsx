@@ -1,10 +1,13 @@
+import { useState } from "react"
 import { useParams } from "react-router-dom"
 
 import { PlayerScores } from "../../components/scores/player-scores"
+import { ExportScoresButton } from "../../components/scores/export-scores-button"
 import { Tab } from "../../components/tab/tab"
 import { Tabs } from "../../components/tab/tabs"
 import { SeasonMenu } from "../../layout/season-menu"
 import { currentSeason } from "../../utils/app-config"
+import { Round } from "../../models/scores"
 
 export function PlayerScoresScreen() {
 	const { scoreType, season } = useParams()
@@ -15,6 +18,8 @@ export function PlayerScoresScreen() {
 	if (!scoreType || !validScoreTypes.includes(scoreType)) {
 		renderedScoreType = "gross"
 	}
+
+	const [filteredRounds, setFilteredRounds] = useState<Round[]>([])
 
 	return (
 		<div className="content__inner">
@@ -29,7 +34,14 @@ export function PlayerScoresScreen() {
 					<Tab to={`/my-scores/gross/${season ?? currentSeason}`}>Gross Scores</Tab>
 					<Tab to={`/my-scores/net/${season ?? currentSeason}`}>Net Scores</Tab>
 				</Tabs>
-				<PlayerScores isNet={scoreType === "net"} season={year} />
+				<div className="d-flex justify-content-end mb-2">
+					<ExportScoresButton rounds={filteredRounds} season={year} disabled={filteredRounds.length === 0} />
+				</div>
+				<PlayerScores
+					isNet={scoreType === "net"}
+					season={year}
+					onFilteredRoundsChange={setFilteredRounds}
+				/>
 			</div>
 		</div>
 	)
