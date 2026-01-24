@@ -16,7 +16,7 @@
 				"File exists at packages/domain/src/types/events/event-status.ts",
 				"pnpm build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 2,
@@ -36,7 +36,7 @@
 				"Function exported from packages/domain/src/functions/index.ts",
 				"pnpm build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 3,
@@ -55,7 +55,7 @@
 				"Test file exists at packages/domain/src/functions/__tests__/event-status-validation.test.ts",
 				"pnpm --filter domain test passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 4,
@@ -71,7 +71,7 @@
 				"Method added to apps/api/src/registration/repositories/registration.repository.ts",
 				"pnpm --filter api build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 5,
@@ -88,7 +88,7 @@
 				"curl localhost:3001/events/{id}/available-slot-count returns { count: N }",
 				"pnpm --filter api build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 6,
@@ -104,7 +104,7 @@
 				"File exists at apps/web/app/api/events/[id]/available-slot-count/route.ts",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 7,
@@ -121,7 +121,7 @@
 				"File exists at apps/web/app/api/django/documents/route.ts",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 8,
@@ -137,7 +137,7 @@
 				"File exists at apps/web/app/api/django/events/[id]/create-slots/route.ts",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 9,
@@ -153,7 +153,7 @@
 				"File exists at apps/web/app/api/django/events/[id]/append-teetime/route.ts",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 10,
@@ -172,7 +172,7 @@
 				"File exists at apps/web/app/api/events/[id]/status/route.ts",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 11,
@@ -193,7 +193,7 @@
 				"Event info card renders with all fields",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 12,
@@ -213,7 +213,7 @@
 				"Event with no ggId shows warning alert",
 				"Buttons visible for actionable items"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 13,
