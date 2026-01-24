@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 
 import { useParams } from "next/navigation"
 
@@ -9,6 +9,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { HelperText } from "@/components/ui/helper-text"
+import { Modal } from "@/components/ui/modal"
 import { parseLocalDate } from "@repo/domain/functions"
 import { StartTypeChoices } from "@repo/domain/types"
 
@@ -61,28 +62,55 @@ export default function EventStatusPage() {
 	const [statusInfo, setStatusInfo] = useState<EventStatusInfo | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
+	const [showRecreateModal, setShowRecreateModal] = useState(false)
+	const [isCreatingSlots, setIsCreatingSlots] = useState(false)
+
+	const fetchStatus = useCallback(async () => {
+		try {
+			const response = await fetch(`/api/events/${eventId}/status`)
+			if (!response.ok) {
+				throw new Error(`Failed to fetch status: ${response.status}`)
+			}
+			const data = (await response.json()) as EventStatusInfo
+			setStatusInfo(data)
+		} catch (err) {
+			console.error("Error fetching event status:", err)
+			setError("Failed to load event status")
+		} finally {
+			setLoading(false)
+		}
+	}, [eventId])
 
 	useEffect(() => {
 		if (!signedIn || !eventId) return
-
-		const fetchStatus = async () => {
-			try {
-				const response = await fetch(`/api/events/${eventId}/status`)
-				if (!response.ok) {
-					throw new Error(`Failed to fetch status: ${response.status}`)
-				}
-				const data = (await response.json()) as EventStatusInfo
-				setStatusInfo(data)
-			} catch (err) {
-				console.error("Error fetching event status:", err)
-				setError("Failed to load event status")
-			} finally {
-				setLoading(false)
-			}
-		}
-
 		void fetchStatus()
-	}, [eventId, signedIn])
+	}, [eventId, signedIn, fetchStatus])
+
+	const handleCreateSlots = async () => {
+		setIsCreatingSlots(true)
+		try {
+			const response = await fetch(`/api/registration/${eventId}/create-slots`, {
+				method: "POST",
+			})
+			if (!response.ok) {
+				throw new Error(`Failed to create slots: ${response.status}`)
+			}
+			setShowRecreateModal(false)
+			await fetchStatus()
+		} catch (err) {
+			console.error("Error creating slots:", err)
+		} finally {
+			setIsCreatingSlots(false)
+		}
+	}
+
+	const onClickCreateSlots = () => {
+		if (statusInfo && statusInfo.totalSpots > 0) {
+			setShowRecreateModal(true)
+		} else {
+			void handleCreateSlots()
+		}
+	}
 
 	if (isPending || loading) {
 		return (
@@ -162,15 +190,69 @@ export default function EventStatusPage() {
 
 				<Card>
 					<CardBody>
-						<div className="flex flex-wrap gap-2">
+						<div className="flex flex-wrap gap-2 mb-4">
 							{event.canChoose && (
 								<Badge variant={totalSpots > 0 ? "success" : "warning"}>Slots Created</Badge>
 							)}
 							<Badge variant={event.ggId ? "success" : "warning"}>Golf Genius Integration</Badge>
 							<Badge variant={documentsCount > 0 ? "success" : "warning"}>Documents Uploaded</Badge>
 						</div>
+						{event.canChoose && (
+							<div className="flex flex-wrap gap-2">
+								<button
+									className="btn btn-primary btn-sm"
+									onClick={onClickCreateSlots}
+									disabled={isCreatingSlots}
+								>
+									{isCreatingSlots ? (
+										<>
+											<span className="loading loading-spinner loading-sm"></span>
+											Creating...
+										</>
+									) : totalSpots > 0 ? (
+										"Recreate Slots"
+									) : (
+										"Create Slots"
+									)}
+								</button>
+							</div>
+						)}
 					</CardBody>
 				</Card>
+
+				<Modal
+					isOpen={showRecreateModal}
+					onClose={() => setShowRecreateModal(false)}
+					title="Recreate Slots"
+				>
+					<p className="py-4">
+						Are you sure you want to recreate slots? All existing slots will be deleted and new ones
+						will be created. This action cannot be undone.
+					</p>
+					<div className="modal-action">
+						<button
+							className="btn btn-ghost"
+							onClick={() => setShowRecreateModal(false)}
+							disabled={isCreatingSlots}
+						>
+							Cancel
+						</button>
+						<button
+							className="btn btn-error"
+							onClick={() => void handleCreateSlots()}
+							disabled={isCreatingSlots}
+						>
+							{isCreatingSlots ? (
+								<>
+									<span className="loading loading-spinner loading-sm"></span>
+									Recreating...
+								</>
+							) : (
+								"Recreate Slots"
+							)}
+						</button>
+					</div>
+				</Modal>
 			</div>
 		</main>
 	)
