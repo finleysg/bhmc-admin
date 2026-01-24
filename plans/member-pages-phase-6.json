@@ -53,7 +53,7 @@
       "Tests pass",
       "Coverage for filter, export, tee display"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "6.6",
@@ -66,6 +66,6 @@
       "/my-activity -> /member/friends",
       "/my-scores/* -> /member/scores/*"
     ],
-    "passes": false
+    "passes": true
   }
 ]

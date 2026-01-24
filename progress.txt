@@ -62,3 +62,15 @@ PRD 6.4: Add MemberResults tests - COMPLETE
 - Mock handlers for tournament-results, tournament-points, events, registration-slots
 - File: apps/public/src/screens/member/__tests__/member-results.test.tsx (new)
 - Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
+
+PRD 6.5: Add PlayerScores tests - COMPLETE
+- Tests: course filter chips, filter by course, tee display in round row, gross/net tabs, export button, empty state
+- Mock handlers for scores and events APIs
+- File: apps/public/src/components/scores/__tests__/player-scores.test.tsx (new)
+- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
+
+PRD 6.6: Add member-routes redirect tests - COMPLETE
+- Tests: /my-account→/member/account, /my-activity→/member/friends, /my-scores/*→/member/scores/*
+- Uses LegacyScoresRedirect component, Navigate from react-router-dom
+- File: apps/public/src/screens/member/__tests__/member-routes.test.tsx (new)
+- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
