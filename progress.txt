@@ -191,3 +191,35 @@ UI Components PRD Item 19: Replace helper text patterns with HelperText componen
 - Commit: e2bc795
 - Decision: Standardized text opacity to /70, reduced duplication across multiple helper text usage sites
 - No blockers
+
+UI Components PRD Item 20: Create Badge component with consistent close button - COMPLETED
+- File: apps/web/app/components/ui/badge.tsx
+- Props: variant ('info' | 'success' | 'warning' | 'error', default 'info'), onClose callback, className
+- Uses Heroicons XMarkIcon for consistent close button
+- Exported as named export with "use client" directive
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Commit: a669a94
+- Decision: Uses Heroicons XMarkIcon (h-3 w-3) for close button consistency
+- No blockers
+
+UI Components PRD Item 21: Replace badge patterns with Badge component - COMPLETED
+- Files updated: apps/web/app/events/[eventId]/players/components/player-search.tsx, apps/web/app/events/[eventId]/players/components/select-available.tsx
+- Replaced inline badge div patterns with <Badge> component using variant="info" and onClose props
+- Removed XMarkIcon import from player-search.tsx (now uses Badge's internal XMarkIcon)
+- Imported Badge from '@/components/ui/badge'
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Commit: 84ffeec
+- Decision: Used onClose callback prop pattern for consistent close button behavior across both components
+- No blockers
+UI Components PRD Item 22: Consolidate action-card and report-card into single LinkCard component - COMPLETED
+- Created LinkCard component at apps/web/app/components/link-card.tsx
+- Added buttonLabel prop (default 'Open') and disabledLabel prop (default 'Locked')
+- Updated imports in 5 files: page.tsx, club/page.tsx, events/[eventId]/page.tsx, events/[eventId]/players/page.tsx, events/[eventId]/reports/page.tsx
+- Reports page uses buttonLabel="View Report" to match original ReportCard behavior
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Decision: Created new LinkCard component and updated all files to use it; kept action-card.tsx and report-card.tsx for now (can be removed in follow-up)
+- No blockers
+

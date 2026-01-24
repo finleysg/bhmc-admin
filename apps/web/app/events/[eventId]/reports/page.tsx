@@ -4,7 +4,7 @@ import { useParams } from "next/navigation"
 
 import { useAuth } from "../../../../lib/auth-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import ReportCard from "../../../components/report-card"
+import LinkCard from "../../../components/link-card"
 
 export default function EventReportsPage() {
 	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
@@ -55,11 +55,12 @@ export default function EventReportsPage() {
 			<div className="max-w-6xl mx-auto">
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					{reports.map((report) => (
-						<ReportCard
+						<LinkCard
 							key={report.title}
 							title={report.title}
 							description={report.description}
 							href={report.href}
+							buttonLabel="View Report"
 						/>
 					))}
 				</div>

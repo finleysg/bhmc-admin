@@ -340,7 +340,7 @@
 				"File exists at apps/web/app/components/ui/badge.tsx",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 21,
@@ -356,7 +356,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms badges display correctly with close functionality"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 22,
@@ -376,7 +376,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms cards display correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 23,

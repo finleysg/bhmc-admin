@@ -1,6 +1,6 @@
 "use client"
 
-import ActionCard from "@/components/action-card"
+import LinkCard from "@/components/link-card"
 import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { PageLayout } from "@/components/ui/page-layout"
@@ -19,7 +19,7 @@ export default function ClubPage() {
 	return (
 		<PageLayout maxWidth="5xl">
 			<div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-				<ActionCard
+				<LinkCard
 					title="Membership Report"
 					description="View and export membership data"
 					href="/club/membership"
@@ -27,7 +27,7 @@ export default function ClubPage() {
 					icon="📋"
 				/>
 
-				<ActionCard
+				<LinkCard
 					title="Manage Club Documents"
 					description="Upload and organize club documents"
 					href="/club/documents"
@@ -35,7 +35,7 @@ export default function ClubPage() {
 					icon="📁"
 				/>
 
-				<ActionCard
+				<LinkCard
 					title="Upload Photos"
 					description="Add photos to the club gallery"
 					href="/club/photos"
@@ -43,7 +43,7 @@ export default function ClubPage() {
 					icon="📷"
 				/>
 
-				<ActionCard
+				<LinkCard
 					title="Settings"
 					description="Configure club settings"
 					href="/club/settings"

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 
 import { useParams } from "next/navigation"
 
-import ActionCard from "@/components/action-card"
+import LinkCard from "@/components/link-card"
 import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { PageLayout } from "@/components/ui/page-layout"
@@ -41,30 +41,30 @@ export default function EventManagementPage() {
 		<PageLayout maxWidth="3xl">
 			<PageHeader>Manage Players</PageHeader>
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-				<ActionCard title="Add" description="Add a player to this event" href="players/add" />
+				<LinkCard title="Add" description="Add a player to this event" href="players/add" />
 				{event?.canChoose && (
-					<ActionCard
+					<LinkCard
 						title="Move"
 						description="Move a player or group to another spot in the teesheet"
 						href="players/move"
 					/>
 				)}
-				<ActionCard
+				<LinkCard
 					title="Drop"
 					description="Remove a player or group from the event"
 					href="players/drop"
 				/>
-				<ActionCard
+				<LinkCard
 					title="Replace"
 					description="Replace a player with another player"
 					href="players/replace"
 				/>
-				<ActionCard
+				<LinkCard
 					title="Swap"
 					description="Swap a player or group with another player or group"
 					href="players/swap"
 				/>
-				<ActionCard
+				<LinkCard
 					title="Notes"
 					description="Add or update registration notes"
 					href="players/notes"
