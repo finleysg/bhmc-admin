@@ -1,9 +1,8 @@
+import { Navigate } from "react-router-dom"
 import { AboutUsScreen } from "../screens/about-us"
 import { AdminPaymentCompleteScreen } from "../screens/registration/admin-payment-complete"
 import { AdminPaymentFlow } from "../screens/registration/admin-payment-flow"
 import { AdminPaymentScreen } from "../screens/registration/admin-payment"
-import { AccountScreen } from "../screens/account/account"
-import { AccountSettingsScreen } from "../screens/account/account-settings"
 import { CalendarScreen } from "../screens/calendar"
 import { ChampionsScreen } from "../screens/champions"
 import { ContactScreen } from "../screens/contact"
@@ -49,6 +48,7 @@ import {
 	ResultsPlaceholder,
 } from "../screens/member/member-routes"
 import { Member } from "../screens/member/member"
+import { LegacyScoresRedirect } from "../components/legacy-redirect"
 
 export const mainRoutes = () =>
 	config.maintenanceMode
@@ -103,8 +103,9 @@ export const mainRoutes = () =>
 				{ path: "/about-us", element: <AboutUsScreen /> },
 				{ path: "/gallery", element: <PhotoGalleryScreen /> },
 				{ path: "/gallery/:id", element: <GalleryImageScreen /> },
-				{ path: "/my-account", element: <AccountScreen /> },
-				{ path: "/my-activity", element: <AccountSettingsScreen /> },
+				{ path: "/my-account", element: <Navigate to="/member/account" replace /> },
+				{ path: "/my-activity", element: <Navigate to="/member/friends" replace /> },
+				{ path: "/my-scores/*", element: <LegacyScoresRedirect /> },
 				{
 					path: "/member",
 					element: <Member />,
@@ -112,7 +113,7 @@ export const mainRoutes = () =>
 						{ index: true, element: <MemberPlaceholder /> },
 						{ path: "account", element: <AccountPlaceholder /> },
 						{ path: "friends", element: <FriendsPlaceholder /> },
-						{ path: "scores", element: <ScoresPlaceholder /> },
+						{ path: "scores/*", element: <ScoresPlaceholder /> },
 						{ path: "results", element: <ResultsPlaceholder /> },
 					],
 				},
