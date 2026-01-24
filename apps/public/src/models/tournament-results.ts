@@ -15,6 +15,8 @@ export const TournamentResultApiSchema = z.object({
 	flight: z.string().nullable(),
 	summary: z.string().nullable(),
 	details: z.string().nullable(),
+	event_name: z.string(),
+	event_date: z.string(),
 })
 
 export type TournamentResultData = z.infer<typeof TournamentResultApiSchema>
@@ -33,6 +35,8 @@ export class TournamentResult {
 	flight: string | null
 	summary: string | null
 	details: string | null
+	eventName: string
+	eventDate: Date
 
 	constructor(data: TournamentResultData) {
 		this.id = data.id
@@ -48,6 +52,8 @@ export class TournamentResult {
 		this.flight = data.flight
 		this.summary = data.summary
 		this.details = data.details
+		this.eventName = data.event_name
+		this.eventDate = new Date(data.event_date)
 	}
 }
 
@@ -61,6 +67,8 @@ export const TournamentPointsApiSchema = z.object({
 	points: z.number(),
 	details: z.string().nullable(),
 	create_date: z.string(),
+	event_name: z.string(),
+	event_date: z.string(),
 })
 
 export type TournamentPointsData = z.infer<typeof TournamentPointsApiSchema>
@@ -74,6 +82,8 @@ export class TournamentPoints {
 	points: number
 	details: string | null
 	createDate: Date
+	eventName: string
+	eventDate: Date
 
 	constructor(data: TournamentPointsData) {
 		this.id = data.id
@@ -84,5 +94,7 @@ export class TournamentPoints {
 		this.points = data.points
 		this.details = data.details
 		this.createDate = new Date(data.create_date)
+		this.eventName = data.event_name
+		this.eventDate = new Date(data.event_date)
 	}
 }

@@ -1,8 +1,9 @@
 import { MemberHub } from "./member-hub"
 import { MemberAccountScreen } from "./member-account"
 import { MemberFriendsScreen } from "./member-friends"
+import { MemberResultsScreen } from "./member-results"
 
-export { MemberHub, MemberAccountScreen, MemberFriendsScreen }
+export { MemberHub, MemberAccountScreen, MemberFriendsScreen, MemberResultsScreen }
 
 export function ScoresPlaceholder() {
 	return (
