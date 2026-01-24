@@ -6,6 +6,7 @@ import { GroupSearch } from "../components/group-search"
 import SelectPlayers from "../components/select-players"
 import type { CompleteClubEvent } from "@repo/domain/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { reducer, initialState, translateRefundRequests } from "./reducer"
 import { PaidFeePicker } from "../components/paid-fee-picker"
@@ -158,7 +159,9 @@ export default function DropPlayerPage() {
 	if (!state.clubEvent) {
 		return (
 			<div className="flex items-center justify-center p-8">
-				<div className="alert alert-error">Event not found</div>
+				<Alert type="error" className="">
+					Event not found
+				</Alert>
 			</div>
 		)
 	}
@@ -325,11 +328,9 @@ export default function DropPlayerPage() {
 						{state.error != null && (
 							<div className="mb-6">
 								<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
-								<div className="alert alert-error text-xs mb-2">
-									<span className="text-wrap">
-										Error: {typeof state.error === "string" ? state.error : "Unknown error"}
-									</span>
-								</div>
+								<Alert type="error" className="text-xs mb-2">
+									Error: {typeof state.error === "string" ? state.error : "Unknown error"}
+								</Alert>
 								<button
 									className="btn btn-neutral"
 									onClick={() => dispatch({ type: "RESET_ERROR" })}

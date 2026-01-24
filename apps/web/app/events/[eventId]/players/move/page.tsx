@@ -8,6 +8,7 @@ import { SelectAvailable } from "../components/select-available"
 import type { CompleteClubEvent, Player, AvailableSlotGroup, Course } from "@repo/domain/types"
 import { getStart } from "@repo/domain/functions"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { reducer, initialState } from "./reducer"
 
@@ -124,7 +125,9 @@ export default function MovePlayerPage() {
 	if (!state.clubEvent) {
 		return (
 			<div className="flex items-center justify-center p-8">
-				<div className="alert alert-error">Event not found</div>
+				<Alert type="error" className="">
+					Event not found
+				</Alert>
 			</div>
 		)
 	}
@@ -353,11 +356,9 @@ export default function MovePlayerPage() {
 						{state.error != null && (
 							<div className="mb-6">
 								<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
-								<div className="alert alert-error text-xs mb-2">
-									<span className="text-wrap">
-										Error: {typeof state.error === "string" ? state.error : "Unknown error"}
-									</span>
-								</div>
+								<Alert type="error" className="text-xs mb-2">
+									Error: {typeof state.error === "string" ? state.error : "Unknown error"}
+								</Alert>
 								<button
 									className="btn btn-neutral"
 									onClick={() => dispatch({ type: "SET_ERROR", payload: null })}

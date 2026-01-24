@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import type { CompleteClubEvent, CompleteRegistration } from "@repo/domain/types"
 import { getStart } from "@repo/domain/functions"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { GroupSearch } from "../components/group-search"
 import { reducer, initialState } from "./reducer"
@@ -83,7 +84,9 @@ export default function NotesPage() {
 	if (!state.clubEvent) {
 		return (
 			<div className="flex items-center justify-center p-8">
-				<div className="alert alert-error">Event not found</div>
+				<Alert type="error" className="">
+					Event not found
+				</Alert>
 			</div>
 		)
 	}
@@ -198,9 +201,9 @@ export default function NotesPage() {
 
 					{/* Error display */}
 					{state.error && (
-						<div className="alert alert-error">
-							<span>{state.error}</span>
-						</div>
+						<Alert type="error" className="">
+							{state.error}
+						</Alert>
 					)}
 				</div>
 			</div>

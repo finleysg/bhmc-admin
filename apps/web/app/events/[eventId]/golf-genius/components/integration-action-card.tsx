@@ -10,6 +10,7 @@ import {
 	TournamentProgressEvent,
 } from "@repo/domain/types"
 
+import { Alert } from "@/components/ui/alert"
 import IntegrationProgress from "./integration-progress"
 
 interface ParsedResult {
@@ -176,9 +177,9 @@ export default function IntegrationActionCard({
 								<IntegrationProgress progress={progress} />
 							</div>
 						) : error ? (
-							<div className="alert alert-error mt-4">
-								<span className="text-xs">{error}</span>
-							</div>
+							<Alert type="error" className="mt-4">
+								{error}
+							</Alert>
 						) : (
 							<div>
 								<p className="text-sm text-base-content/70">

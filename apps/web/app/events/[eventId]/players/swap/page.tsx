@@ -3,6 +3,7 @@
 import { useReducer, useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import type {
 	CompleteClubEvent,
@@ -171,7 +172,9 @@ export default function SwapPlayerPage() {
 	if (!state.clubEvent) {
 		return (
 			<div className="flex items-center justify-center p-8">
-				<div className="alert alert-error">Event not found</div>
+				<Alert type="error" className="">
+					Event not found
+				</Alert>
 			</div>
 		)
 	}
@@ -347,9 +350,9 @@ export default function SwapPlayerPage() {
 
 							{/* Error display */}
 							{state.error && (
-								<div className="alert alert-error mb-4">
-									<span>{state.error}</span>
-								</div>
+								<Alert type="error" className=" mb-4">
+									{state.error}
+								</Alert>
 							)}
 
 							{/* Buttons */}
@@ -418,9 +421,9 @@ export default function SwapPlayerPage() {
 
 					{/* Error display (for non-confirm steps) */}
 					{state.error && state.step !== "confirm" && (
-						<div className="alert alert-error">
-							<span>{state.error}</span>
-						</div>
+						<Alert type="error" className="">
+							{state.error}
+						</Alert>
 					)}
 				</div>
 			</div>

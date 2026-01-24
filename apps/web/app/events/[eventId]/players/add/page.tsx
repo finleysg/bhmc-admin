@@ -10,6 +10,7 @@ import { PlayerSearch } from "@/app/events/[eventId]/players/components/player-s
 import { SelectAvailable } from "@/app/events/[eventId]/players/components/select-available"
 import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { parseLocalDate } from "@repo/domain/functions"
 import {
@@ -331,9 +332,9 @@ export default function AddPlayerPage() {
 						{state.error && (
 							<div className="mb-6">
 								<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>{" "}
-								<div className="alert alert-error text-xs mb-2">
-									<span className="text-wrap">Error: {JSON.stringify(state.error)}</span>
-								</div>
+								<Alert type="error" className="text-xs mb-2">
+									Error: {JSON.stringify(state.error)}
+								</Alert>
 								<button
 									className="btn btn-neutral"
 									onClick={() => {

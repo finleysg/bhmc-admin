@@ -4,6 +4,7 @@ import { useReducer, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import type { CompleteClubEvent, ReplacePlayerRequest } from "@repo/domain/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { reducer, initialState } from "./reducer"
 import { GroupSearch } from "../components/group-search"
@@ -103,7 +104,9 @@ export default function ReplacePlayerPage() {
 	if (!state.clubEvent) {
 		return (
 			<div className="flex items-center justify-center p-8">
-				<div className="alert alert-error">Event not found</div>
+				<Alert type="error" className="">
+					Event not found
+				</Alert>
 			</div>
 		)
 	}
@@ -302,11 +305,9 @@ export default function ReplacePlayerPage() {
 					{state.error != null && (
 						<div ref={resultRef} className="mb-6">
 							<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
-							<div className="alert alert-error text-xs mb-2">
-								<span className="text-wrap">
-									Error: {typeof state.error === "string" ? state.error : "Unknown error"}
-								</span>
-							</div>
+							<Alert type="error" className="text-xs mb-2">
+								Error: {typeof state.error === "string" ? state.error : "Unknown error"}
+							</Alert>
 							<button
 								className="btn btn-neutral"
 								onClick={() => dispatch({ type: "SET_ERROR", payload: null })}

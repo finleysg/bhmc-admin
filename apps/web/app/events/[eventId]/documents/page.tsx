@@ -6,6 +6,7 @@ import type { ClubEvent, Document } from "@repo/domain/types"
 
 import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { DeleteConfirmModal } from "./components/delete-confirm-modal"
 import { DocumentForm, type DocumentFormData } from "./components/document-form"
@@ -210,9 +211,9 @@ export default function DocumentsPage() {
 			</div>
 
 			{state.error && (
-				<div className="alert alert-error mb-4">
-					<span>{state.error}</span>
-				</div>
+				<Alert type="error" className=" mb-4">
+					{state.error}
+				</Alert>
 			)}
 
 			{state.mode === "add" && (
