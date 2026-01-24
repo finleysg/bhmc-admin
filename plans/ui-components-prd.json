@@ -82,7 +82,7 @@
 				"File exists at apps/web/app/components/ui/alert.tsx",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 6,

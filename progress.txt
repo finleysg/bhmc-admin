@@ -22,3 +22,23 @@ UI Components PRD Item 3: Create PageLayout component - COMPLETED
 - All acceptance criteria met
 - Decision: Use 'use client' directive matching LoadingSpinner pattern
 - No blockers
+
+UI Components PRD Item 4: Replace page layout patterns with PageLayout component - COMPLETED
+- Replaced all instances of 'min-h-screen flex justify-center md:p-8' with 'w-full max-w-{3xl|5xl|6xl}' pattern
+- Files updated: page.tsx, events/page.tsx, events/[eventId]/page.tsx, club/page.tsx, events/[eventId]/documents/page.tsx, events/[eventId]/players/page.tsx, events/[eventId]/players/add/page.tsx, events/[eventId]/players/move/page.tsx, events/[eventId]/players/drop/page.tsx, events/[eventId]/players/swap/page.tsx, events/[eventId]/players/notes/page.tsx, events/[eventId]/players/replace/page.tsx
+- Imported PageLayout from '@/components/ui/page-layout'
+- All files typecheck/lint/test pass
+- Verified: grep confirms no remaining pattern instances (except component file)
+- Commit: e03c459
+- Decision: Used appropriate maxWidth prop (5xl for hub pages, 3xl for detail pages) matching original layouts
+- No blockers
+
+UI Components PRD Item 5: Create Alert component - COMPLETED
+- File: apps/web/app/components/ui/alert.tsx
+- Props: type ('error' | 'success' | 'info' | 'warning'), children, className (optional)
+- Renders: <div className='alert alert-{type} {className}'><span>{children}</span></div>
+- Exported as named export
+- All acceptance criteria met
+- Decision: Used "use client" directive matching existing UI component patterns
+- pnpm typecheck, lint, and test all pass
+- No blockers
