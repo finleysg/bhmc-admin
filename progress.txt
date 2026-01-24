@@ -64,3 +64,25 @@ UI Components PRD Item 7: Create Card component with CardBody and CardTitle - CO
 - Commit: 0d86072
 - Decision: Structured as separate Card, CardBody, CardTitle exports following component pattern
 - No blockers
+
+UI Components PRD Item 8: Replace card patterns with Card components (documents pages) - COMPLETED
+- Files updated: documents/page.tsx, document-list.tsx
+- Replaced card divs with Card, CardBody, CardTitle components
+- Used shadow="xs" prop matching original value
+- Import: Card, CardBody, CardTitle from '@/components/ui/card'
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Commit: c6f4ae5
+- Decision: Updated page and list only (document-form uses form-control, not card pattern)
+- No blockers
+
+UI Components PRD Item 9: Replace card patterns with Card components (player pages) - COMPLETED
+- Files updated: add/page.tsx, move/page.tsx, drop/page.tsx, swap/page.tsx, notes/page.tsx
+- Replaced card divs with Card, CardBody, CardTitle components in all 5 player management pages
+- Used shadow="xs" prop matching original value
+- Import: Card, CardBody, CardTitle from '@/components/ui/card'
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Decision: Replaced outer wrapper divs with Card, nested CardBody wraps all step content, CardTitle replaces h3 header
+- Fixed JSX closing tag mismatch in swap/page.tsx
+- No blockers

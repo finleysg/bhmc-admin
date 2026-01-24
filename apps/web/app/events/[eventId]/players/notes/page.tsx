@@ -7,6 +7,7 @@ import { getStart } from "@repo/domain/functions"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
+import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { GroupSearch } from "../components/group-search"
 import { reducer, initialState } from "./reducer"
 
@@ -93,9 +94,9 @@ export default function NotesPage() {
 
 	return (
 		<PageLayout maxWidth="3xl">
-			<div className="card bg-base-100 shadow-xs">
-				<div className="card-body">
-					<h3 className="card-title text-secondary font-semibold mb-4">Registration Notes</h3>
+			<Card shadow="xs">
+				<CardBody>
+					<CardTitle>Registration Notes</CardTitle>
 
 					{/* Step 1: Select Group */}
 					{state.step === "group" && (
@@ -205,8 +206,8 @@ export default function NotesPage() {
 							{state.error}
 						</Alert>
 					)}
-				</div>
-			</div>
+				</CardBody>
+			</Card>
 		</PageLayout>
 	)
 }

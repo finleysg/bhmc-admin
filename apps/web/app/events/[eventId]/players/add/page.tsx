@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
+import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { parseLocalDate } from "@repo/domain/functions"
 import {
 	RegistrationTypeChoices,
@@ -143,9 +144,9 @@ export default function AddPlayerPage() {
 
 	return (
 		<PageLayout maxWidth="3xl">
-			<div className="card bg-base-100 shadow-xs">
-				<div className="card-body">
-					<h3 className="card-title text-secondary font-semibold mb-4">Add Player</h3>
+			<Card shadow="xs">
+				<CardBody>
+					<CardTitle>Add Player</CardTitle>
 
 					{state.step === "player" && (
 						<div className="mb-6">
@@ -346,8 +347,8 @@ export default function AddPlayerPage() {
 							</div>
 						)}
 					</div>
-				</div>
-			</div>
+				</CardBody>
+			</Card>
 		</PageLayout>
 	)
 }

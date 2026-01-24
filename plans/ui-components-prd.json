@@ -136,7 +136,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms cards display correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 9,
@@ -154,7 +154,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms cards display correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 10,

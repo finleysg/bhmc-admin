@@ -8,6 +8,7 @@ import type { CompleteClubEvent } from "@repo/domain/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
+import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { reducer, initialState, translateRefundRequests } from "./reducer"
 import { PaidFeePicker } from "../components/paid-fee-picker"
 
@@ -168,9 +169,9 @@ export default function DropPlayerPage() {
 
 	return (
 		<PageLayout maxWidth="3xl">
-			<div className="card bg-base-100 shadow-xs">
-				<div className="card-body">
-					<h3 className="card-title text-secondary font-semibold mb-4">Drop Player</h3>
+			<Card shadow="xs">
+				<CardBody>
+					<CardTitle>Drop Player</CardTitle>
 
 					{/* Step 1: Select Group */}
 					{state.step === "group" && (
@@ -340,8 +341,8 @@ export default function DropPlayerPage() {
 							</div>
 						)}
 					</div>
-				</div>
-			</div>
+				</CardBody>
+			</Card>
 		</PageLayout>
 	)
 }

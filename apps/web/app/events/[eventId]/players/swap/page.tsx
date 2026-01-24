@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
+import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import type {
 	CompleteClubEvent,
 	Player,
@@ -181,9 +182,9 @@ export default function SwapPlayerPage() {
 
 	return (
 		<PageLayout maxWidth="3xl">
-			<div className="card bg-base-100 shadow-xs">
-				<div className="card-body">
-					<h3 className="card-title text-secondary font-semibold mb-4">Swap Players</h3>
+			<Card shadow="xs">
+				<CardBody>
+					<CardTitle>Swap Players</CardTitle>
 
 					{/* Step 1: Select First Player */}
 					{state.step === "playerA" && (
@@ -425,8 +426,8 @@ export default function SwapPlayerPage() {
 							{state.error}
 						</Alert>
 					)}
-				</div>
-			</div>
+				</CardBody>
+			</Card>
 		</PageLayout>
 	)
 }
