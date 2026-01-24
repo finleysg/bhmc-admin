@@ -1,0 +1,4 @@
+PRD 5.4: Add xlsx library to public app dependencies - COMPLETE
+- Added xlsx@https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz to dependencies
+- File: apps/public/package.json
+- Blocker: pnpm install fails with EPERM permission errors (pnpm store issue), dependency added to package.json

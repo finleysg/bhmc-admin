@@ -50,7 +50,7 @@
       "pnpm install completes",
       "import * as XLSX from 'xlsx' works"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "5.5",
