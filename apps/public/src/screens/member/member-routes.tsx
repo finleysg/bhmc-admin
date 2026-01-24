@@ -1,15 +1,6 @@
-export function MemberPlaceholder() {
-	return (
-		<div className="content__inner">
-			<div className="card">
-				<div className="card-body">
-					<h2>Member Home</h2>
-					<p>This is a placeholder for the member home page.</p>
-				</div>
-			</div>
-		</div>
-	)
-}
+import { MemberHub } from "./member-hub"
+
+export { MemberHub }
 
 export function AccountPlaceholder() {
 	return (

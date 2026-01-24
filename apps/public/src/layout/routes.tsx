@@ -41,7 +41,7 @@ import { SendMessageScreen } from "../screens/send-message"
 import * as config from "../utils/app-config"
 import { MembershipScreen } from "../screens/membership"
 import {
-	MemberPlaceholder,
+	MemberHub,
 	AccountPlaceholder,
 	FriendsPlaceholder,
 	ScoresPlaceholder,
@@ -110,7 +110,7 @@ export const mainRoutes = () =>
 					path: "/member",
 					element: <Member />,
 					children: [
-						{ index: true, element: <MemberPlaceholder /> },
+						{ index: true, element: <MemberHub /> },
 						{ path: "account", element: <AccountPlaceholder /> },
 						{ path: "friends", element: <FriendsPlaceholder /> },
 						{ path: "scores/*", element: <ScoresPlaceholder /> },
