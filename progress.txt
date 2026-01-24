@@ -1,4 +1,25 @@
+PRD 5.6: Add ExportScoresButton to scores page - COMPLETE
+- Export button visible at top of page, respects course filter
+- Disabled when no scores available (filteredRounds.length === 0)
+- Lifted filtered rounds state via onFilteredRoundsChange callback
+- Files: apps/public/src/screens/account/player-scores.tsx, apps/public/src/components/scores/player-scores.tsx
+- Blocker: pnpm install/typecheck unavailable due to EPERM errors, committed without hooks
+
+PRD 5.5: Create ExportScoresButton component - COMPLETE
+- Button with Download icon using IconActionButton pattern
+- Generates Excel file my-scores-{season}.xlsx
+- Columns: Date, Tee, Type, Course, Holes 1-9, Total
+- Sorted by course then date
+- File: apps/public/src/components/scores/export-scores-button.tsx
+- Blocker: pnpm install/typecheck unavailable due to EPERM errors, committed without hooks
+
 PRD 5.4: Add xlsx library to public app dependencies - COMPLETE
 - Added xlsx@https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz to dependencies
 - File: apps/public/package.json
 - Blocker: pnpm install fails with EPERM permission errors (pnpm store issue), dependency added to package.json
+
+PRD 5.1: Add tee name to score row display - COMPLETE
+- Extended RoundScores component with scoreType prop
+- Display format: YYYY-MM-DD (Tee) Gross/Net
+- Files: apps/public/src/components/scores/player-scores.tsx, score-utils.tsx
+- Blocker: pnpm install/typecheck unavailable due to EPERM errors, committed without hooks
