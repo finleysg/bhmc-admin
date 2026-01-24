@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import React from "react"
+import { HelperText } from "@/components/ui/helper-text"
 
 type Props = {
 	title: string
@@ -19,7 +20,7 @@ export default function ActionCard({ title, description, href, disabled, icon }:
 					<div className="text-2xl">{icon}</div>
 					<div className="flex-1">
 						<h3 className="card-title">{title}</h3>
-						{description && <p className="text-sm text-muted-foreground">{description}</p>}
+						{description && <HelperText>{description}</HelperText>}
 					</div>
 				</div>
 

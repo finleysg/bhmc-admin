@@ -12,6 +12,7 @@ import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { StepIndicator } from "@/components/ui/step-indicator"
+import { HelperText } from "@/components/ui/helper-text"
 import { reducer, initialState } from "./reducer"
 
 function findCourseByHoleId(courses: Course[], holeId: number): Course | undefined {
@@ -208,10 +209,10 @@ export default function MovePlayerPage() {
 					{state.step === "destination" && state.clubEvent && (
 						<div className="mb-6">
 							<StepIndicator currentStep={3} totalSteps={4} label="Select Destination" />
-							<p className="text-sm text-base-content/70 mb-4">
+							<HelperText>
 								Moving:{" "}
 								{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
-							</p>
+							</HelperText>
 							<SelectAvailable
 								players={state.selectedPlayers.length}
 								courses={state.clubEvent.courses ?? []}

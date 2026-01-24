@@ -2,6 +2,7 @@
 
 import { DOCUMENT_TYPES, type Document } from "@repo/domain/types"
 import { Card, CardBody } from "@/components/ui/card"
+import { HelperText } from "@/components/ui/helper-text"
 
 interface DocumentListProps {
 	documents: Document[]
@@ -83,9 +84,7 @@ export function DocumentList({ documents, onEdit, onDelete }: DocumentListProps)
 						return (
 							<div key={doc.id} className="border-b border-base-300 pb-4 last:border-0">
 								<div className="font-semibold">{doc.title}</div>
-								<div className="text-sm text-base-content/70">
-									{DOCUMENT_TYPES[doc.documentType] ?? doc.documentType}
-								</div>
+								<HelperText>{DOCUMENT_TYPES[doc.documentType] ?? doc.documentType}</HelperText>
 								<a
 									href={doc.file}
 									target="_blank"

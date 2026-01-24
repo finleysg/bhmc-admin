@@ -2,6 +2,7 @@
 
 import type { EventFeeWithType as EventFee, Player } from "@repo/domain/types"
 import { formatCurrency, getAmount, getTotalAmountForPlayer } from "@repo/domain/functions"
+import { HelperText } from "@/components/ui/helper-text"
 
 interface PlayerEventFeePickerProps {
 	player: Player
@@ -83,9 +84,7 @@ export function PlayerEventFeePicker({
 								/>
 								<span className="text-sm">{fee.feeType?.name || "Fee"}</span>
 							</div>
-							<span className="text-sm text-base-content/70">
-								{formatCurrency(getAmount(fee, player, eventDate))}
-							</span>
+							<HelperText>{formatCurrency(getAmount(fee, player, eventDate))}</HelperText>
 						</label>
 					))}
 				</div>

@@ -158,3 +158,25 @@ UI Components PRD Item 16: Create SectionHeader component for subsection titles 
 - Typecheck and lint pass
 - Decision: Used "use client" directive following UI component pattern
 - No blockers
+
+UI Components PRD Item 17: Replace section header patterns in report pages - COMPLETED
+- File updated: apps/web/app/events/[eventId]/reports/results/page.tsx
+- Replaced 3 h3/h4 headers with SectionHeader component: proxies section, stroke/skins sections, sub-sections
+- Used size="md" for sub-section headers matching text-md font-medium mb-2 pattern
+- Imported SectionHeader from '@/components/ui/section-header'
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Commit: 1d59642
+- Decision: Replaced all h3/h4 headers with matching text styling patterns
+- No blockers
+
+UI Components PRD Item 18: Create HelperText component for secondary/muted text - COMPLETED
+- File: apps/web/app/components/ui/helper-text.tsx
+- Props: children (React.ReactNode), className (optional string)
+- Renders: <p className='text-sm text-base-content/70 mb-4 {className}'>{children}</p>
+- Exported as named export with "use client" directive
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Commit: ed37293
+- Decision: Standardizes opacity to /70 for consistent secondary text styling
+- No blockers

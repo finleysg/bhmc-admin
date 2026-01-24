@@ -2,6 +2,7 @@
 
 import { getEventTypeName, getRegistrationTypeName } from "@repo/domain/functions"
 import { ClubEvent } from "@repo/domain/types"
+import { HelperText } from "@/components/ui/helper-text"
 
 interface ResultsCardProps {
 	isLoading: boolean
@@ -58,14 +59,14 @@ export default function ResultsCard({
 									onClick={() => onEventSelect(event)}
 								>
 									<h3 className="font-semibold">{event.name}</h3>
-									<p className="text-sm text-base-content/70">
+									<HelperText>
 										{getEventTypeName(event.eventType)} •{" "}
 										{getRegistrationTypeName(event.registrationType)}
-									</p>
-									<p className="text-sm text-base-content/60">
+									</HelperText>
+									<HelperText>
 										{event.startDate}
 										{event.startTime && ` - ${event.startTime}`}
-									</p>
+									</HelperText>
 								</div>
 							))}
 						</div>

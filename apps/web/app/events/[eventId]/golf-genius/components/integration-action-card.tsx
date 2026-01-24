@@ -11,6 +11,7 @@ import {
 } from "@repo/domain/types"
 
 import { Alert } from "@/components/ui/alert"
+import { HelperText } from "@/components/ui/helper-text"
 import IntegrationProgress from "./integration-progress"
 
 interface ParsedResult {
@@ -182,17 +183,17 @@ export default function IntegrationActionCard({
 							</Alert>
 						) : (
 							<div>
-								<p className="text-sm text-base-content/70">
+								<HelperText>
 									Last run: {lastRun ? formatTimestamp(lastRun.actionDate) : "Never"}
-								</p>
-								<p className="text-sm text-base-content/70">
+								</HelperText>
+								<HelperText>
 									Last result: {lastRun ? errorCount + " errors" : "N/A"}
 									{lastRun && (
 										<span className={errorCount === 0 ? "text-success ml-2" : "text-error ml-2"}>
 											{errorCount === 0 ? "✓" : "✗"}
 										</span>
 									)}
-								</p>
+								</HelperText>
 								<button
 									className="link link-secondary text-sm"
 									disabled={!lastRun?.details}

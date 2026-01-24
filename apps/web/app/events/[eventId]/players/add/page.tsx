@@ -14,6 +14,7 @@ import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { StepIndicator } from "@/components/ui/step-indicator"
+import { HelperText } from "@/components/ui/helper-text"
 import { parseLocalDate } from "@repo/domain/functions"
 import {
 	RegistrationTypeChoices,
@@ -184,10 +185,10 @@ export default function AddPlayerPage() {
 								totalSteps={totalSteps}
 								label="Find an Open Spot"
 							/>
-							<p className="text-sm text-base-content/70 mb-4">
+							<HelperText>
 								Players:{" "}
 								{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
-							</p>
+							</HelperText>
 							<SelectAvailable
 								players={state.selectedPlayers.length}
 								courses={state.event.courses ?? []}
@@ -224,10 +225,10 @@ export default function AddPlayerPage() {
 					{state.step === "fee" && (
 						<div className="mb-6">
 							<StepIndicator currentStep={stepNumber} totalSteps={totalSteps} label="Select Fees" />
-							<p className="text-sm text-base-content/70 mb-4">
+							<HelperText>
 								Players:{" "}
 								{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
-							</p>
+							</HelperText>
 							{state.event?.eventFees && (
 								<EventFeePicker
 									fees={state.event.eventFees}
@@ -267,10 +268,10 @@ export default function AddPlayerPage() {
 								totalSteps={totalSteps}
 								label="Payment Options"
 							/>
-							<p className="text-sm text-base-content/70 mb-4">
+							<HelperText>
 								Players:{" "}
 								{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
-							</p>
+							</HelperText>
 							<AdminRegistrationOptions
 								options={state.registrationOptions}
 								onChange={(opts) => dispatch({ type: "SET_REGISTRATION_OPTIONS", payload: opts })}
