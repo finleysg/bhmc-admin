@@ -61,7 +61,7 @@
 				"PUT handler proxies to Django endpoint",
 				"Uses DJANGO_API_URL env var"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 6,

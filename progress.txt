@@ -23,3 +23,9 @@ PRD #4: Add create-slots Next.js API route
 - Proxies to Django /events/{eventId}/create_slots/
 - Uses fetchWithAuth with DJANGO_API_URL env var
 Files: apps/web/app/api/registration/[eventId]/create-slots/route.ts
+
+PRD #5: Add append-teetime Next.js API route
+- Created PUT /api/registration/[eventId]/append-teetime proxy route
+- Proxies to Django /events/{eventId}/append_teetime/
+- Uses fetchWithAuth with DJANGO_API_URL env var
+Files: apps/web/app/api/registration/[eventId]/append-teetime/route.ts
