@@ -407,7 +407,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms form displays correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 25,

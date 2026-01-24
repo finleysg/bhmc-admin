@@ -234,3 +234,14 @@ UI Components PRD Item 23: Create FormField wrapper component - COMPLETED
 - Decision: Simple wrapper component for form-control patterns; used optional props for label/error/className
 - No blockers
 
+UI Components PRD Item 24: Replace form-control patterns with FormField in document form - COMPLETED
+- File updated: apps/web/app/events/[eventId]/documents/components/document-form.tsx
+- Replaced 3 form-control divs with FormField component: title, documentType, file
+- Wrapped input/select/FilePicker in FormField with appropriate label and error props
+- Imported FormField from '@/app/components/ui/form-field'
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Commit: d612198
+- Decision: Used error prop to display validation errors via FormField's error label slot
+- No blockers
+
