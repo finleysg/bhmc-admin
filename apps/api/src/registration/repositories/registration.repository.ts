@@ -1,4 +1,4 @@
-import { and, eq, inArray, or, like, lt, sql } from "drizzle-orm"
+import { and, eq, inArray, or, like, lt, sql, count } from "drizzle-orm"
 import type { MySql2Database } from "drizzle-orm/mysql2"
 
 import { Inject, Injectable, Logger } from "@nestjs/common"
@@ -276,6 +276,15 @@ export class RegistrationRepository {
 
 	async deleteRegistrationSlots(slotIds: number[]): Promise<void> {
 		await this.drizzle.db.delete(registrationSlot).where(inArray(registrationSlot.id, slotIds))
+	}
+
+	async countAvailableSlots(eventId: number): Promise<number> {
+		const [result] = await this.drizzle.db
+			.select({ count: count() })
+			.from(registrationSlot)
+			.where(and(eq(registrationSlot.eventId, eventId), eq(registrationSlot.status, "A")))
+
+		return result?.count ?? 0
 	}
 
 	// ==================== REGISTRATION ====================
