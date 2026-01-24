@@ -1,319 +1,92 @@
-UI Components PRD Item 1: Create LoadingSpinner component - COMPLETED
-- File: apps/web/app/components/ui/loading-spinner.tsx
-- Exported as named export with size ('sm' | 'lg') and className props
-- Commit: f075f49
-- All acceptance criteria met
-- Decision: Used pattern matching existing component structure with "use client" directive
-- No blockers
+PRD #1: Add getAvailableSpots method to registration service
+- Added countSlotsByEventAndStatus/countSlotsByEvent to RegistrationRepository
+- Added getAvailableSpots to RegistrationService
+- canChoose: counts AVAILABLE vs total slots
+- non-canChoose: registrationMaximum minus RESERVED slots
+- Added 8 unit tests covering both event types
+Files: registration.repository.ts, registration.service.ts, registration.service.test.ts
 
-UI Components PRD Item 2: Replace loading spinner patterns with LoadingSpinner component - COMPLETED
-- Replaced all instances of 'loading loading-spinner loading-lg' wrapped in 'flex items-center justify-center p-8' with <LoadingSpinner size="lg" />
-- Files updated: events/page.tsx, events/[eventId]/page.tsx, events/[eventId]/players/page.tsx, events/[eventId]/documents/page.tsx, club/page.tsx, events/[eventId]/players/add/page.tsx, events/[eventId]/players/move/page.tsx, events/[eventId]/players/drop/page.tsx, events/[eventId]/players/swap/page.tsx, events/[eventId]/players/notes/page.tsx, events/[eventId]/players/replace/page.tsx, events/[eventId]/reports/page.tsx, events/[eventId]/golf-genius/page.tsx, events/[eventId]/golf-genius/components/integration-orchestrator.tsx, club/membership/page.tsx, components/report-page.tsx, sign-in/page.tsx, events/[eventId]/layout.tsx
-- Imported LoadingSpinner from '@/components/ui/loading-spinner'
-- All files typecheck/lint/test pass
-- Verified: grep -r 'loading-spinner loading-lg' returns 0 results (except component file)
-- Decision: Replaced all instances not just lg size with spinner, to ensure consistency
-- No blockers
+PRD #2: Add available-spots endpoint to registration controller
+- Added GET /registration/:eventId/available-spots to AdminRegistrationController
+- Injects RegistrationService, calls getAvailableSpots method
+- Returns { availableSpots, totalSpots }
+- No controller tests (none exist in codebase); service tests already cover logic
+Files: admin-registration.controller.ts
 
-UI Components PRD Item 3: Create PageLayout component - COMPLETED
-- File: apps/web/app/components/ui/page-layout.tsx
-- Props: maxWidth ('3xl' | '5xl' | '6xl', default '3xl'), children, className
-- Exported as named export
-- All acceptance criteria met
-- Decision: Use 'use client' directive matching LoadingSpinner pattern
-- No blockers
+PRD #3: Add available-spots Next.js API route
+- Created GET /api/registration/[eventId]/available-spots proxy route
+- Uses fetchWithAuth pattern; proxies to NestJS /registration/{eventId}/available-spots
+Files: apps/web/app/api/registration/[eventId]/available-spots/route.ts
 
-UI Components PRD Item 4: Replace page layout patterns with PageLayout component - COMPLETED
-- Replaced all instances of 'min-h-screen flex justify-center md:p-8' with 'w-full max-w-{3xl|5xl|6xl}' pattern
-- Files updated: page.tsx, events/page.tsx, events/[eventId]/page.tsx, club/page.tsx, events/[eventId]/documents/page.tsx, events/[eventId]/players/page.tsx, events/[eventId]/players/add/page.tsx, events/[eventId]/players/move/page.tsx, events/[eventId]/players/drop/page.tsx, events/[eventId]/players/swap/page.tsx, events/[eventId]/players/notes/page.tsx, events/[eventId]/players/replace/page.tsx
-- Imported PageLayout from '@/components/ui/page-layout'
-- All files typecheck/lint/test pass
-- Verified: grep confirms no remaining pattern instances (except component file)
-- Commit: e03c459
-- Decision: Used appropriate maxWidth prop (5xl for hub pages, 3xl for detail pages) matching original layouts
-- No blockers
+PRD #4: Add create-slots Next.js API route
+- Created POST /api/registration/[eventId]/create-slots proxy route
+- Proxies to Django /events/{eventId}/create_slots/
+- Uses fetchWithAuth with DJANGO_API_URL env var
+Files: apps/web/app/api/registration/[eventId]/create-slots/route.ts
 
-UI Components PRD Item 5: Create Alert component - COMPLETED
-- File: apps/web/app/components/ui/alert.tsx
-- Props: type ('error' | 'success' | 'info' | 'warning'), children, className (optional)
-- Renders: <div className='alert alert-{type} {className}'><span>{children}</span></div>
-- Exported as named export
-- All acceptance criteria met
-- Decision: Used "use client" directive matching existing UI component patterns
-- pnpm typecheck, lint, and test all pass
-- No blockers
+PRD #5: Add append-teetime Next.js API route
+- Created PUT /api/registration/[eventId]/append-teetime proxy route
+- Proxies to Django /events/{eventId}/append_teetime/
+- Uses fetchWithAuth with DJANGO_API_URL env var
+Files: apps/web/app/api/registration/[eventId]/append-teetime/route.ts
 
-UI Components PRD Item 6: Replace error alert patterns with Alert component - COMPLETED
-- Replaced all instances of 'alert alert-error' wrapped in <div> with <Alert type="error">
-- Files updated: events/[eventId]/documents/page.tsx, events/[eventId]/players/add/page.tsx, events/[eventId]/players/move/page.tsx, events/[eventId]/players/drop/page.tsx, events/[eventId]/players/swap/page.tsx, events/[eventId]/players/notes/page.tsx, events/[eventId]/players/replace/page.tsx, sign-in/page.tsx, events/[eventId]/golf-genius/components/integration-action-card.tsx
-- Imported Alert from '@/components/ui/alert'
-- All files typecheck/lint/test pass
-- Verified: grep -r 'alert alert-error' returns 0 results (except component file)
-- Commit: 3353143
-- Decision: Handled both simple spans and complex content (SVG icons) by passing children directly to Alert
-- No blockers
+PRD #6: Add event status Next.js API route
+- Created GET /api/events/[id]/status aggregation endpoint
+- Parallel fetches: Django event, Django documents count, NestJS available-spots
+- Exports EventStatusInfo type for reuse
+- Returns { event, documentsCount, availableSpots, totalSpots }
+Files: apps/web/app/api/events/[id]/status/route.ts
 
-UI Components PRD Item 7: Create Card component with CardBody and CardTitle - COMPLETED
-- File: apps/web/app/components/ui/card.tsx
-- Card: shadow prop ('xs' | 'sm' | 'md' | 'xl', default 'md'), children, className
-- CardBody: children, className props
-- CardTitle: children, className props
-- All three exported as named exports
-- All acceptance criteria met
-- Typecheck and lint pass
-- Commit: 0d86072
-- Decision: Structured as separate Card, CardBody, CardTitle exports following component pattern
-- No blockers
+PRD #7: Create event status page with event info card
+- Created /events/{eventId}/status page
+- Displays event name, start date/time, start type (Tee Times/Shotgun/N/A)
+- Shows all 4 signup dates (priority, start, end, payments end) in local timezone
+- Shows available spots as X / Y format
+- Uses existing Card/CardBody/CardTitle components
+Files: apps/web/app/events/[eventId]/status/page.tsx
 
-UI Components PRD Item 8: Replace card patterns with Card components (documents pages) - COMPLETED
-- Files updated: documents/page.tsx, document-list.tsx
-- Replaced card divs with Card, CardBody, CardTitle components
-- Used shadow="xs" prop matching original value
-- Import: Card, CardBody, CardTitle from '@/components/ui/card'
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Commit: c6f4ae5
-- Decision: Updated page and list only (document-form uses form-control, not card pattern)
-- No blockers
+PRD #8: Add status badges to status page
+- Added second card (no title) with status badges
+- Slots Created: shows for canChoose events only; green if totalSpots > 0, warning otherwise
+- Golf Genius Integration: green if event.ggId exists, warning otherwise
+- Documents Uploaded: green if documentsCount > 0, warning otherwise
+- Uses existing Badge component with success/warning variants
+Files: apps/web/app/events/[eventId]/status/page.tsx
 
-UI Components PRD Item 9: Replace card patterns with Card components (player pages) - COMPLETED
-- Files updated: add/page.tsx, move/page.tsx, drop/page.tsx, swap/page.tsx, notes/page.tsx
-- Replaced card divs with Card, CardBody, CardTitle components in all 5 player management pages
-- Used shadow="xs" prop matching original value
-- Import: Card, CardBody, CardTitle from '@/components/ui/card'
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Decision: Replaced outer wrapper divs with Card, nested CardBody wraps all step content, CardTitle replaces h3 header
-- Fixed JSX closing tag mismatch in swap/page.tsx
-- No blockers
+PRD #9: Add Create/Recreate Slots action with confirmation
+- Button shows only for canChoose events
+- Label: "Create Slots" when totalSpots=0, "Recreate Slots" otherwise
+- Recreate triggers confirmation modal warning slots will be deleted
+- POSTs to /api/registration/{eventId}/create-slots on confirm
+- Refreshes page data after success via fetchStatus callback
+- Uses existing Modal component; follows delete-confirm-modal pattern
+Files: apps/web/app/events/[eventId]/status/page.tsx
 
-UI Components PRD Item 10: Create EmptyState component - COMPLETED
-- File: apps/web/app/components/ui/empty-state.tsx
-- Props: message (string), className (optional)
-- Renders: <div className='text-center py-12 {className}'><p className='text-muted-foreground'>{message}</p></div>
-- Exported as named export
-- All acceptance criteria met
-- Typecheck and lint pass
-- Commit: 11aa83a
-- Decision: Used "use client" directive matching existing UI component pattern
-- No blockers
+PRD #10: Add Add Tee Time action
+- Button shows only for canChoose events (same section as Create Slots)
+- Disabled when totalSpots=0; enabled otherwise
+- PUTs to /api/registration/{eventId}/append-teetime on click
+- Refreshes page data after success via fetchStatus callback
+- Uses btn-secondary style to differentiate from Create Slots
+Files: apps/web/app/events/[eventId]/status/page.tsx
 
-UI Components PRD Item 11: Replace empty state patterns with EmptyState component - COMPLETED
-- Files updated: apps/web/app/components/report-page.tsx, apps/web/app/club/membership/page.tsx
-- Replaced 'text-center py-12' pattern divs with <EmptyState message="..." /> component
-- Import: EmptyState from '@/components/ui/empty-state'
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Commit: fd6b212
-- Decision: Updated report-page and membership pages to use EmptyState with appropriate messages
-- No blockers
+PRD #11: Add Django Admin link
+- Link button opens Django admin in new tab
+- Uses NEXT_PUBLIC_DJANGO_API_URL env var (will be renamed in PRD #13)
+- target=_blank with rel=noopener noreferrer
+- btn-outline style; always visible (not just for canChoose)
+Files: apps/web/app/events/[eventId]/status/page.tsx
 
-UI Components PRD Item 12: Create PageHeader component - COMPLETED
-- File: apps/web/app/components/ui/page-header.tsx
-- Props: children, centered (boolean, default true), className (optional)
-- Renders: <h2 className='text-3xl font-bold mb-6 {centered ? 'text-center' : ''} {className}'>{children}</h2>
-- All acceptance criteria met
-- Typecheck and lint pass
-- Commit: 34b2651
-- Decision: Used "use client" directive following UI component pattern
-- No blockers
+PRD #12: Add Event Status link to event hub page
+- Added LinkCard to event hub page for navigating to status page
+- Title: "Event Status", Description: "View event configuration status and admin actions."
+- Links to /events/{eventId}/status; uses ✅ icon
+Files: apps/web/app/events/[eventId]/page.tsx
 
-UI Components PRD Item 13: Replace page header patterns with PageHeader component - COMPLETED
-- Replaced all 'text-3xl font-bold' h2/h1 headers with <PageHeader> component
-- Files updated: documents/page.tsx, players/page.tsx, club/membership/page.tsx, report-page.tsx, page.tsx
-- Standardized homepage header from text-4xl to text-3xl
-- Import: PageHeader from '@/components/ui/page-header'
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Commit: 0c666bb
-- Decision: Used centered={false} for homepage to preserve left-aligned layout; other pages use default centered=true
-- No blockers
-
-UI Components PRD Item 14: Create StepIndicator component - COMPLETED
-- File: apps/web/app/components/ui/step-indicator.tsx
-- Props: currentStep (number), totalSteps (number), label (string)
-- Renders: <h4 className='text-lg font-semibold mb-4'>Step {currentStep} of {totalSteps}: {label}</h4>
-- Exported as named export
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Decision: Used "use client" directive matching UI component pattern
-- No blockers
-
-UI Components PRD Item 15: Replace step indicator patterns with StepIndicator component - COMPLETED
-- Replaced all 'Step X of Y: ' h4 headers with <StepIndicator> component
-- Files updated: add/page.tsx, move/page.tsx, drop/page.tsx, swap/page.tsx
-- Imported StepIndicator from '@/components/ui/step-indicator'
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Commit: fa3cf9f
-- Decision: Updated dynamic step headers in add/page.tsx (using stepNumber variable); used hardcoded step numbers in other pages where steps are constant
-- No blockers
-
-UI Components PRD Item 16: Create SectionHeader component for subsection titles - COMPLETED
-- File: apps/web/app/components/ui/section-header.tsx
-- Props: children, size ('lg' | 'md' | 'sm', default 'lg'), className (optional)
-- Size mappings: 'lg' = text-lg font-semibold mb-4, 'md' = text-md font-medium mb-2, 'sm' = text-sm font-medium mb-2
-- Exported as named export with "use client" directive
-- All acceptance criteria met
-- Typecheck and lint pass
-- Decision: Used "use client" directive following UI component pattern
-- No blockers
-
-UI Components PRD Item 17: Replace section header patterns in report pages - COMPLETED
-- File updated: apps/web/app/events/[eventId]/reports/results/page.tsx
-- Replaced 3 h3/h4 headers with SectionHeader component: proxies section, stroke/skins sections, sub-sections
-- Used size="md" for sub-section headers matching text-md font-medium mb-2 pattern
-- Imported SectionHeader from '@/components/ui/section-header'
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Commit: 1d59642
-- Decision: Replaced all h3/h4 headers with matching text styling patterns
-- No blockers
-
-UI Components PRD Item 18: Create HelperText component for secondary/muted text - COMPLETED
-- File: apps/web/app/components/ui/helper-text.tsx
-- Props: children (React.ReactNode), className (optional string)
-- Renders: <p className='text-sm text-base-content/70 mb-4 {className}'>{children}</p>
-- Exported as named export with "use client" directive
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Commit: ed37293
-- Decision: Standardizes opacity to /70 for consistent secondary text styling
-- No blockers
-
-UI Components PRD Item 19: Replace helper text patterns with HelperText component - COMPLETED
-- Updated 16 files to use HelperText component
-- Files updated: club/settings/page.tsx, club/documents/page.tsx, club/photos/page.tsx, components/calendar-card.tsx, components/results-card.tsx, components/report-card.tsx, components/action-card.tsx, events/[eventId]/golf-genius/page.tsx, events/[eventId]/players/move/page.tsx, events/[eventId]/players/add/page.tsx, events/[eventId]/players/components/group-search.tsx, events/[eventId]/players/components/player-event-fee-picker.tsx, events/[eventId]/players/components/player-fee-picker.tsx, events/[eventId]/golf-genius/components/integration-action-card.tsx, events/[eventId]/documents/components/document-list.tsx, events/[eventId]/documents/components/file-picker.tsx
-- Replaced patterns: text-sm text-base-content/70, text-sm text-base-content/60, text-muted-foreground
-- Imported HelperText from '@/components/ui/helper-text'
-- All acceptance criteria met
-- Typecheck, lint all pass
-- Commit: e2bc795
-- Decision: Standardized text opacity to /70, reduced duplication across multiple helper text usage sites
-- No blockers
-
-UI Components PRD Item 20: Create Badge component with consistent close button - COMPLETED
-- File: apps/web/app/components/ui/badge.tsx
-- Props: variant ('info' | 'success' | 'warning' | 'error', default 'info'), onClose callback, className
-- Uses Heroicons XMarkIcon for consistent close button
-- Exported as named export with "use client" directive
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Commit: a669a94
-- Decision: Uses Heroicons XMarkIcon (h-3 w-3) for close button consistency
-- No blockers
-
-UI Components PRD Item 21: Replace badge patterns with Badge component - COMPLETED
-- Files updated: apps/web/app/events/[eventId]/players/components/player-search.tsx, apps/web/app/events/[eventId]/players/components/select-available.tsx
-- Replaced inline badge div patterns with <Badge> component using variant="info" and onClose props
-- Removed XMarkIcon import from player-search.tsx (now uses Badge's internal XMarkIcon)
-- Imported Badge from '@/components/ui/badge'
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Commit: 84ffeec
-- Decision: Used onClose callback prop pattern for consistent close button behavior across both components
-- No blockers
-UI Components PRD Item 22: Consolidate action-card and report-card into single LinkCard component - COMPLETED
-- Created LinkCard component at apps/web/app/components/link-card.tsx
-- Added buttonLabel prop (default 'Open') and disabledLabel prop (default 'Locked')
-- Updated imports in 5 files: page.tsx, club/page.tsx, events/[eventId]/page.tsx, events/[eventId]/players/page.tsx, events/[eventId]/reports/page.tsx
-- Reports page uses buttonLabel="View Report" to match original ReportCard behavior
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Decision: Created new LinkCard component and updated all files to use it; kept action-card.tsx and report-card.tsx for now (can be removed in follow-up)
-- No blockers
-
-UI Components PRD Item 23: Create FormField wrapper component - COMPLETED
-- File: apps/web/app/components/ui/form-field.tsx
-- Props: label (optional string), error (optional string), children, className (optional)
-- Renders: <div className='form-control {className}'>{label && <label className='label'><span className='label-text'>{label}</span></label>}{children}{error && <label className='label'><span className='label-text-alt text-error'>{error}</span></label>}</div>
-- Exported as named export
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Commit: 2292dc0
-- Decision: Simple wrapper component for form-control patterns; used optional props for label/error/className
-- No blockers
-
-UI Components PRD Item 24: Replace form-control patterns with FormField in document form - COMPLETED
-- File updated: apps/web/app/events/[eventId]/documents/components/document-form.tsx
-- Replaced 3 form-control divs with FormField component: title, documentType, file
-- Wrapped input/select/FilePicker in FormField with appropriate label and error props
-- Imported FormField from '@/app/components/ui/form-field'
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Commit: d612198
-- Decision: Used error prop to display validation errors via FormField's error label slot
-- No blockers
-
-UI Components PRD Item 25: Create Modal component with consistent ref-based trigger - COMPLETED
-- File: apps/web/app/components/ui/modal.tsx
-- Props: isOpen (boolean), onClose (function), title (optional string), children
-- Uses daisyUI dialog element with modal-box styling
-- Uses useEffect to call showModal()/close() based on isOpen prop
-- Renders title with 'font-bold text-lg' if provided
-- Exported as named export with "use client" directive
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Decision: Pattern matches existing DeleteConfirmModal; standardizes modal trigger approach
-- No blockers
-
-UI Components PRD Item 26: Refactor delete-confirm-modal to use Modal component - COMPLETED
-- File updated: apps/web/app/events/[eventId]/documents/components/delete-confirm-modal.tsx
-- Refactored to use Modal component instead of duplicated dialog element
-- Removed useEffect and dialogRef hooks (now handled by Modal)
-- Removed useRef import
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Commit: Uses new Modal component to eliminate modal-box styling duplication
-- Decision: Simplified component by delegating modal lifecycle to Modal component
-- No blockers
-
-UI Components PRD Item 27: Refactor integration-action-card modal to use Modal component - COMPLETED
-- File updated: apps/web/app/events/[eventId]/golf-genius/components/integration-action-card.tsx
-- Refactored modal to use Modal component with isOpen state
-- Removed getElementById modal trigger pattern
-- Added isDetailsModalOpen state for modal control
-- Updated Modal component to accept optional className prop (max-w-4xl)
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Verified: grep -r 'getElementById' apps/web/app/events/[eventId]/golf-genius returns 0 results
-- Decision: Extended Modal component with className prop for size customization
-- No blockers
-
-UI Components PRD Item 28: Add PageHeader to event hub page - COMPLETED
-- File updated: apps/web/app/events/[eventId]/page.tsx
-- Added event data fetching with useState/useEffect (matches pattern used in other pages)
-- Imported PageHeader component and ClubEvent type
-- Added PageHeader displaying event.name before LinkCard grid
-- All acceptance criteria met
-- Typecheck, lint, test all pass
-- Decision: Fetched event data in page component to maintain component encapsulation; follows established fetch pattern
-- No blockers
-
-UI Components PRD Item 29: Create index.ts barrel export for ui components - COMPLETED
-- File: apps/web/app/components/ui/index.ts
-- Re-exports all 12 components: LoadingSpinner, PageLayout, Alert, Card, CardBody, CardTitle, EmptyState, PageHeader, StepIndicator, SectionHeader, HelperText, Badge, FormField, Modal
-- Enables single-line imports: import { LoadingSpinner, Alert } from '@/app/components/ui'
-- Formatted with Prettier
-- All acceptance criteria met
-- Typecheck and lint pass
-- Commit: 327f03d
-- Decision: Standard barrel export pattern re-exporting all UI components
-- No blockers
-
-UI Components PRD Item 30: End-to-end verification of UI component refactoring - COMPLETED
-- Verified all 14 UI components exist and are properly exported in index.ts
-- pnpm typecheck: PASSED (no type errors)
-- pnpm lint: PASSED (no linting errors)
-- Verified all components are used across key pages:
-  * events/[eventId]/page.tsx - PageHeader, LinkCard
-  * events/[eventId]/documents/page.tsx - PageLayout, PageHeader, Card, CardTitle, CardBody, Modal, FormField
-  * events/[eventId]/players/page.tsx - PageLayout, PageHeader, Card
-- All old styling patterns successfully replaced:
-  * grep -r 'loading-spinner loading-lg' returns 0 results (except component file)
-  * grep -r 'alert alert-error' returns 0 results (except component file)
-  * grep -r 'getElementById' in golf-genius returns 0 results
-- All acceptance criteria met
-- Decision: Docker build skipped (daemon unavailable in environment); verified with typecheck, lint, and file inspection
-- No blockers
-
+PRD #13: Replace NEXT_PUBLIC_DJANGO_API_URL with NEXT_PUBLIC_DJANGO_URL
+- Renamed env var for cleaner semantics (base URL, not API URL)
+- Updated .env, .env.development, .env.example
+- Updated django-auth.ts const DJANGO_API_URL -> DJANGO_URL
+- Updated status page admin link to use new var
+- Updated GitHub Actions deploy workflow
+Files: apps/web/.env, apps/web/.env.development, apps/web/.env.example, apps/web/lib/django-auth.ts, apps/web/app/events/[eventId]/status/page.tsx, .github/workflows/deploy-app.yml

@@ -10,9 +10,16 @@ interface BadgeProps {
 	className?: string
 }
 
+const variantClasses = {
+	info: "badge-info",
+	success: "badge-success",
+	warning: "badge-warning",
+	error: "badge-error",
+} as const
+
 export function Badge({ children, variant = "info", onClose, className = "" }: BadgeProps) {
 	return (
-		<span className={`badge badge-${variant} gap-2 ${className}`}>
+		<span className={`badge ${variantClasses[variant]} gap-2 ${className}`}>
 			{children}
 			{onClose && (
 				<button

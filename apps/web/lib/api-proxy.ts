@@ -98,6 +98,11 @@ export async function fetchWithAuth({
 			})
 		}
 
+		// Handle 204 No Content (common for DELETE)
+		if (response.status === 204) {
+			return new NextResponse(null, { status: 204 })
+		}
+
 		const data: unknown = await response.json()
 		return NextResponse.json(data)
 	} catch (error) {

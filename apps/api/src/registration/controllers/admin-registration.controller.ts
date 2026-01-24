@@ -29,6 +29,7 @@ import { Admin } from "../../auth"
 import { AdminRegistrationService } from "../services/admin-registration.service"
 import { PlayerService } from "../services/player.service"
 import { RefundService } from "../services/refund.service"
+import { RegistrationService } from "../services/registration.service"
 
 @Controller("registration")
 @Admin()
@@ -40,6 +41,7 @@ export class AdminRegistrationController {
 		private readonly adminRegistrationService: AdminRegistrationService,
 		@Inject(PlayerService) private readonly adminRegisterService: PlayerService,
 		@Inject(RefundService) private readonly refundService: RefundService,
+		@Inject(RegistrationService) private readonly registrationService: RegistrationService,
 	) {}
 
 	@Get("players")
@@ -112,6 +114,13 @@ export class AdminRegistrationController {
 		@Query("players", ParseIntPipe) players: number,
 	): Promise<AvailableSlotGroup[]> {
 		return await this.adminRegisterService.getAvailableSlots(eventId, courseId, players)
+	}
+
+	@Get(":eventId/available-spots")
+	async getAvailableSpots(
+		@Param("eventId", ParseIntPipe) eventId: number,
+	): Promise<{ availableSpots: number; totalSpots: number }> {
+		return await this.registrationService.getAvailableSpots(eventId)
 	}
 
 	@Post(":eventId/reserve-admin-slots")

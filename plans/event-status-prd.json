@@ -1,281 +1,180 @@
 {
-	"feature": "Event Status Validation",
-	"description": "New page showing event configuration status with validation errors, warnings, and corrective actions. Accessible from event hub as 4th ActionCard.",
+	"feature": "Event Validation Page",
+	"description": "Add /events/{id}/status page to display event configuration status and provide admin actions",
 	"items": [
 		{
 			"id": 1,
-			"category": "domain-types",
-			"description": "Add EventStatusInfo and EventValidationResult types to domain package",
-			"acceptance": [
-				"EventValidationResult has: type ('error' | 'warning' | 'info'), code (string), message (string), action (optional object)",
-				"Action object has: label (string), type ('api-call' | 'redirect'), endpoint (optional), url (optional), method (optional 'POST' | 'PUT')",
-				"EventStatusInfo has: event (ClubEvent), availableSlotCount (number), hasTeeTimeDocument (boolean), isReadonly (boolean), validations (EventValidationResult[])",
-				"Types exported from packages/domain/src/types/events/index.ts"
+			"category": "api",
+			"description": "Add getAvailableSpots method to registration service",
+			"details": "Add method to apps/api/src/registration/services/registration.service.ts that calculates available spots. For canChoose events: count slots with status=AVAILABLE vs total slots. For non-canChoose: registrationMaximum minus confirmed registrations.",
+			"stepsToVerify": [
+				"Method exists in registration.service.ts",
+				"Returns { availableSpots: number, totalSpots: number }",
+				"Handles canChoose events by counting slot statuses",
+				"Handles non-canChoose events using registrationMaximum"
 			],
-			"verify": [
-				"File exists at packages/domain/src/types/events/event-status.ts",
-				"pnpm build passes"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 2,
-			"category": "domain-function",
-			"description": "Create validateEventStatus pure function in domain package",
-			"acceptance": [
-				"Function signature: validateEventStatus(event: ClubEvent, availableSlotCount: number, hasTeeTimeDocument: boolean): EventValidationResult[]",
-				"Returns error when slots=0 AND canChoose=true with Create Slots action",
-				"Returns error when slots=0 AND canChoose=false AND signup not ended with Django admin action",
-				"Returns info when slots>0 AND canChoose=true AND signup not ended with Add Tee Time action",
-				"Returns warning when ggId missing with Golf Genius redirect action",
-				"Returns warning when signup ended AND event not started AND no tee time document (no action)",
-				"Helper function parseEventStartDateTime combines startDate and startTime"
+			"category": "api",
+			"description": "Add available-spots endpoint to registration controller",
+			"details": "Add GET /registration/:eventId/available-spots endpoint to apps/api/src/registration/registration.controller.ts that calls the service method.",
+			"stepsToVerify": [
+				"Endpoint exists at GET /registration/:eventId/available-spots",
+				"Returns JSON with availableSpots and totalSpots",
+				"Returns 404 for non-existent event"
 			],
-			"verify": [
-				"File exists at packages/domain/src/functions/event-status-validation.ts",
-				"Function exported from packages/domain/src/functions/index.ts",
-				"pnpm build passes"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 3,
-			"category": "domain-test",
-			"description": "Add unit tests for validateEventStatus function",
-			"acceptance": [
-				"Tests slots=0 + canChoose=true returns error with create-slots action",
-				"Tests slots=0 + canChoose=false + signup not ended returns error with django-admin action",
-				"Tests slots>0 + canChoose=true + signup not ended returns info with add-teetime action",
-				"Tests missing ggId returns warning with golf-genius redirect",
-				"Tests signup ended + not started + no document returns warning",
-				"Tests all valid returns empty array",
-				"Tests past event returns empty (readonly doesnt trigger validations)"
+			"category": "web-api",
+			"description": "Add available-spots Next.js API route",
+			"details": "Create apps/web/app/api/registration/[eventId]/available-spots/route.ts that proxies to NestJS API.",
+			"stepsToVerify": [
+				"File exists at correct path",
+				"GET handler proxies to NestJS /registration/{eventId}/available-spots",
+				"Uses fetchWithAuth pattern"
 			],
-			"verify": [
-				"Test file exists at packages/domain/src/functions/__tests__/event-status-validation.test.ts",
-				"pnpm --filter domain test passes"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 4,
-			"category": "api-repository",
-			"description": "Add countAvailableSlots method to RegistrationRepository",
-			"acceptance": [
-				"Method signature: countAvailableSlots(eventId: number): Promise<number>",
-				"Counts registration slots where eventId matches AND status='A'",
-				"Returns 0 if no available slots exist",
-				"Uses drizzle count aggregation (not fetching all rows)"
+			"category": "web-api",
+			"description": "Add create-slots Next.js API route",
+			"details": "Create apps/web/app/api/registration/[eventId]/create-slots/route.ts that proxies POST to Django /events/{id}/create_slots/.",
+			"stepsToVerify": [
+				"File exists at correct path",
+				"POST handler proxies to Django endpoint",
+				"Uses DJANGO_API_URL env var"
 			],
-			"verify": [
-				"Method added to apps/api/src/registration/repositories/registration.repository.ts",
-				"pnpm --filter api build passes"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 5,
-			"category": "api-controller",
-			"description": "Add getAvailableSlotCount endpoint to events controller",
-			"acceptance": [
-				"GET /events/:eventId/available-slot-count endpoint",
-				"Returns JSON: { count: number }",
-				"Uses RegistrationRepository.countAvailableSlots",
-				"Returns 404 if event not found"
+			"category": "web-api",
+			"description": "Add append-teetime Next.js API route",
+			"details": "Create apps/web/app/api/registration/[eventId]/append-teetime/route.ts that proxies PUT to Django /events/{id}/append_teetime/.",
+			"stepsToVerify": [
+				"File exists at correct path",
+				"PUT handler proxies to Django endpoint",
+				"Uses DJANGO_API_URL env var"
 			],
-			"verify": [
-				"Endpoint added to apps/api/src/events/events.controller.ts",
-				"curl localhost:3001/events/{id}/available-slot-count returns { count: N }",
-				"pnpm --filter api build passes"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 6,
 			"category": "web-api",
-			"description": "Add Next.js API route to proxy available-slot-count",
-			"acceptance": [
-				"GET /api/events/{id}/available-slot-count route",
-				"Uses fetchWithAuth to proxy to NestJS endpoint",
-				"Validates eventId param required",
-				"Returns JSON { count: number }"
+			"description": "Add event status Next.js API route",
+			"details": "Create apps/web/app/api/events/[id]/status/route.ts that aggregates: event data, documents count from Django, available spots from NestJS. Returns combined EventStatusInfo.",
+			"stepsToVerify": [
+				"File exists at correct path",
+				"Fetches event from Django",
+				"Fetches documents count from Django /documents/?event_id={id}",
+				"Fetches available spots from NestJS",
+				"Returns combined response with event, documentsCount, availableSpots, totalSpots"
 			],
-			"verify": [
-				"File exists at apps/web/app/api/events/[id]/available-slot-count/route.ts",
-				"pnpm --filter web build passes"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 7,
-			"category": "web-api",
-			"description": "Add Next.js API route to proxy Django documents endpoint",
-			"acceptance": [
-				"GET /api/django/documents route",
-				"Accepts query params: event_id (required), type (optional)",
-				"Proxies to Django GET /api/documents/?event_id={id}&type={type}",
-				"Uses django auth token from cookie",
-				"Returns Django response JSON"
+			"category": "web-ui",
+			"description": "Create event status page with event info card",
+			"details": "Create apps/web/app/events/[eventId]/status/page.tsx with Card 1 displaying: event name, start date/time, start type (Tee Times/Shotgun/N/A), signup dates in local time, available spots.",
+			"stepsToVerify": [
+				"Page exists and renders at /events/{id}/status",
+				"Shows event name",
+				"Shows start date and time",
+				"Shows start type as human-readable text",
+				"Shows all 4 signup dates formatted in local timezone (not UTC)",
+				"Shows available spots as X / Y format"
 			],
-			"verify": [
-				"File exists at apps/web/app/api/django/documents/route.ts",
-				"pnpm --filter web build passes"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 8,
-			"category": "web-api",
-			"description": "Add Next.js API route to proxy Django create-slots action",
-			"acceptance": [
-				"POST /api/django/events/{id}/create-slots route",
-				"Proxies to Django POST /api/events/{id}/create_slots/",
-				"Uses django auth token from cookie",
-				"Returns Django response JSON (array of created slots)"
+			"category": "web-ui",
+			"description": "Add status badges to status page",
+			"details": "Add second card (no title) with status badges: Slots Created (canChoose only), Golf Genius Integration, Documents Uploaded. Use green badge for ok, warning badge for not ready.",
+			"stepsToVerify": [
+				"Second card has no title",
+				"Slots Created badge shows for canChoose events only",
+				"Slots Created shows green if totalSlots > 0, warning otherwise",
+				"Golf Genius shows green if event.ggId exists, warning otherwise",
+				"Documents shows green if documentsCount > 0, warning otherwise"
 			],
-			"verify": [
-				"File exists at apps/web/app/api/django/events/[id]/create-slots/route.ts",
-				"pnpm --filter web build passes"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 9,
-			"category": "web-api",
-			"description": "Add Next.js API route to proxy Django append-teetime action",
-			"acceptance": [
-				"PUT /api/django/events/{id}/append-teetime route",
-				"Proxies to Django PUT /api/events/{id}/append_teetime/",
-				"Uses django auth token from cookie",
-				"Returns Django response JSON (updated event)"
+			"category": "web-ui",
+			"description": "Add Create/Recreate Slots action with confirmation",
+			"details": "Add button to second card for canChoose events. Label is 'Create Slots' if no slots, 'Recreate Slots' if slots exist. Recreate shows confirmation modal warning slots will be deleted.",
+			"stepsToVerify": [
+				"Button only shows for canChoose events",
+				"Button label is 'Create Slots' when totalSlots === 0",
+				"Button label is 'Recreate Slots' when totalSlots > 0",
+				"Clicking Recreate shows confirmation modal",
+				"Modal warns that existing slots will be deleted",
+				"Confirming calls POST /api/registration/{eventId}/create-slots",
+				"Page refreshes data after success"
 			],
-			"verify": [
-				"File exists at apps/web/app/api/django/events/[id]/append-teetime/route.ts",
-				"pnpm --filter web build passes"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 10,
-			"category": "web-api",
-			"description": "Add aggregated status API route that combines all data sources",
-			"acceptance": [
-				"GET /api/events/{id}/status route",
-				"Fetches event from NestJS /events/{id}",
-				"Fetches slot count from /api/events/{id}/available-slot-count",
-				"Fetches tee time docs from /api/django/documents?event_id={id}&type=T",
-				"Computes isReadonly by comparing startDate+startTime to now",
-				"Runs validateEventStatus function",
-				"Returns EventStatusInfo JSON"
+			"category": "web-ui",
+			"description": "Add Add Tee Time action",
+			"details": "Add button to second card for canChoose events. Disabled when no slots exist. Calls PUT /api/registration/{eventId}/append-teetime.",
+			"stepsToVerify": [
+				"Button only shows for canChoose events",
+				"Button is disabled when totalSlots === 0",
+				"Button is enabled when totalSlots > 0",
+				"Clicking calls PUT endpoint",
+				"Page refreshes data after success"
 			],
-			"verify": [
-				"File exists at apps/web/app/api/events/[id]/status/route.ts",
-				"pnpm --filter web build passes"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 11,
 			"category": "web-ui",
-			"description": "Create event status page with info card section",
-			"acceptance": [
-				"Page at apps/web/app/events/[eventId]/status/page.tsx",
-				"Client component with useAuth and loading states",
-				"Fetches /api/events/{eventId}/status on mount",
-				"Displays event name with green checkmark if validations empty",
-				"Shows readonly banner if isReadonly: 'This event has started. Configuration is read-only.'",
-				"Info card displays: name, start date/time (formatted), event type (mapped label), start type (mapped label)",
-				"Info card displays: priority signup start, signup start, signup end, payments end (all formatted or 'N/A')",
-				"Info card displays: available spots count"
+			"description": "Add Django Admin link",
+			"details": "Add link button that opens Django admin for the event in new tab. URL: ${NEXT_PUBLIC_DJANGO_URL}/admin/events/event/${id}/change/",
+			"stepsToVerify": [
+				"Link button exists",
+				"Opens in new tab (target=_blank)",
+				"URL is correctly constructed from env var",
+				"Has rel=noopener noreferrer"
 			],
-			"verify": [
-				"Navigate to /events/{eventId}/status",
-				"Event info card renders with all fields",
-				"pnpm --filter web build passes"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 12,
 			"category": "web-ui",
-			"description": "Add validation results section to status page",
-			"acceptance": [
-				"Renders list of validations below info card",
-				"Error items use alert alert-error styling",
-				"Warning items use alert alert-warning styling",
-				"Info items use alert alert-info styling",
-				"Each item shows message text",
-				"Items with action show button with action.label",
-				"Buttons disabled when isReadonly=true"
+			"description": "Add Event Status link to event hub page",
+			"details": "Add LinkCard to apps/web/app/events/[eventId]/page.tsx for navigating to the status page.",
+			"stepsToVerify": [
+				"LinkCard exists on event hub page",
+				"Has appropriate title and description",
+				"Links to /events/{eventId}/status",
+				"Has an appropriate icon"
 			],
-			"verify": [
-				"Event with no slots shows error alert",
-				"Event with no ggId shows warning alert",
-				"Buttons visible for actionable items"
-			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 13,
-			"category": "web-ui",
-			"description": "Implement action handlers for validation buttons",
-			"acceptance": [
-				"api-call actions: POST/PUT to endpoint, show loading spinner, refresh page on success, show error on failure",
-				"redirect actions: navigate using router.push for internal URLs",
-				"redirect to Django admin: window.open with target='_blank' for /admin/* URLs",
-				"Create Slots button calls POST /api/django/events/{id}/create-slots",
-				"Add Tee Time button calls PUT /api/django/events/{id}/append-teetime",
-				"Configure Golf Genius redirects to /events/{id}/golf-genius",
-				"Edit in Django opens https://{DJANGO_URL}/admin/events/event/{id}/change/ in new tab"
+			"category": "config",
+			"description": "Replace NEXT_PUBLIC_DJANGO_API_URL with NEXT_PUBLIC_DJANGO_URL",
+			"details": "Update env files to use NEXT_PUBLIC_DJANGO_URL as base URL. Update any existing code that uses NEXT_PUBLIC_DJANGO_API_URL to use new var with /api suffix.",
+			"stepsToVerify": [
+				"apps/web/.env.local has NEXT_PUBLIC_DJANGO_URL",
+				"apps/web/.env.docker has NEXT_PUBLIC_DJANGO_URL",
+				"docker-compose.yml has NEXT_PUBLIC_DJANGO_URL",
+				"No references to NEXT_PUBLIC_DJANGO_API_URL remain",
+				"Existing client-side Django API calls still work"
 			],
-			"verify": [
-				"Click Create Slots -> slots created, page refreshes, error clears",
-				"Click Add Tee Time -> tee time added, page refreshes",
-				"Click Configure Golf Genius -> navigates to GG page",
-				"Click Edit in Django -> opens Django admin in new tab"
-			],
-			"passes": false
-		},
-		{
-			"id": 14,
-			"category": "web-ui",
-			"description": "Add Event Status ActionCard to event hub page",
-			"acceptance": [
-				"4th ActionCard added to /events/{eventId} hub page grid",
-				"Title: 'Event Status'",
-				"Description: 'View event configuration and validation status.'",
-				"Icon: checkmark or similar",
-				"Links to /events/{eventId}/status"
-			],
-			"verify": [
-				"Navigate to /events/{eventId}",
-				"Event Status card visible in grid",
-				"Clicking card navigates to status page"
-			],
-			"passes": false
-		},
-		{
-			"id": 15,
-			"category": "integration",
-			"description": "End-to-end test of event status validation feature",
-			"acceptance": [
-				"Create event with canChoose=true, no slots -> error shows with Create Slots button",
-				"Click Create Slots -> slots created, error clears",
-				"Create event with canChoose=false, registrationMaximum=0 -> error shows with Django link",
-				"Click Django link -> opens admin in new tab",
-				"Event with available slots and signup open -> Add Tee Time info action shows",
-				"Remove ggId from event -> warning shows with Golf Genius link",
-				"Event with signup ended, no tee time doc -> warning shows",
-				"Event with no issues -> green checkmark appears",
-				"Navigate to past event -> readonly banner shows, all buttons disabled"
-			],
-			"verify": [
-				"docker compose up -d --build",
-				"Navigate through all test scenarios",
-				"All validations render correctly",
-				"All actions work correctly"
-			],
-			"passes": false
+			"passes": true
 		}
 	]
 }
