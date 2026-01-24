@@ -117,3 +117,24 @@ UI Components PRD Item 12: Create PageHeader component - COMPLETED
 - Commit: 34b2651
 - Decision: Used "use client" directive following UI component pattern
 - No blockers
+
+UI Components PRD Item 13: Replace page header patterns with PageHeader component - COMPLETED
+- Replaced all 'text-3xl font-bold' h2/h1 headers with <PageHeader> component
+- Files updated: documents/page.tsx, players/page.tsx, club/membership/page.tsx, report-page.tsx, page.tsx
+- Standardized homepage header from text-4xl to text-3xl
+- Import: PageHeader from '@/components/ui/page-header'
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Commit: 0c666bb
+- Decision: Used centered={false} for homepage to preserve left-aligned layout; other pages use default centered=true
+- No blockers
+
+UI Components PRD Item 14: Create StepIndicator component - COMPLETED
+- File: apps/web/app/components/ui/step-indicator.tsx
+- Props: currentStep (number), totalSteps (number), label (string)
+- Renders: <h4 className='text-lg font-semibold mb-4'>Step {currentStep} of {totalSteps}: {label}</h4>
+- Exported as named export
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Decision: Used "use client" directive matching UI component pattern
+- No blockers
