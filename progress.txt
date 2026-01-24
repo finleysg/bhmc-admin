@@ -76,3 +76,17 @@ PRD #11: Add Django Admin link
 - target=_blank with rel=noopener noreferrer
 - btn-outline style; always visible (not just for canChoose)
 Files: apps/web/app/events/[eventId]/status/page.tsx
+
+PRD #12: Add Event Status link to event hub page
+- Added LinkCard to event hub page for navigating to status page
+- Title: "Event Status", Description: "View event configuration status and admin actions."
+- Links to /events/{eventId}/status; uses ✅ icon
+Files: apps/web/app/events/[eventId]/page.tsx
+
+PRD #13: Replace NEXT_PUBLIC_DJANGO_API_URL with NEXT_PUBLIC_DJANGO_URL
+- Renamed env var for cleaner semantics (base URL, not API URL)
+- Updated .env, .env.development, .env.example
+- Updated django-auth.ts const DJANGO_API_URL -> DJANGO_URL
+- Updated status page admin link to use new var
+- Updated GitHub Actions deploy workflow
+Files: apps/web/.env, apps/web/.env.development, apps/web/.env.example, apps/web/lib/django-auth.ts, apps/web/app/events/[eventId]/status/page.tsx, .github/workflows/deploy-app.yml

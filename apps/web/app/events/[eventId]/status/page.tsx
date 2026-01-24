@@ -251,7 +251,7 @@ export default function EventStatusPage() {
 								</>
 							)}
 							<a
-								href={`${process.env.NEXT_PUBLIC_DJANGO_API_URL}/admin/events/event/${event.id}/change/`}
+								href={`${process.env.NEXT_PUBLIC_DJANGO_URL}/admin/events/event/${event.id}/change/`}
 								target="_blank"
 								rel="noopener noreferrer"
 								className="btn btn-outline btn-sm"

@@ -191,7 +191,7 @@ jobs:
 
       - name: Create production env file
         run: |
-          echo "NEXT_PUBLIC_DJANGO_API_URL=${{ vars.NEXT_PUBLIC_DJANGO_API_URL }}" > apps/web/.env.production
+          echo "NEXT_PUBLIC_DJANGO_URL=${{ vars.NEXT_PUBLIC_DJANGO_URL }}" > apps/web/.env.production
 
       - name: Create deployment tarball
         run: |

@@ -15,7 +15,7 @@ interface LoginError {
 	password?: string[]
 }
 
-const DJANGO_API_URL = process.env.NEXT_PUBLIC_DJANGO_API_URL || "http://localhost:8000"
+const DJANGO_URL = process.env.NEXT_PUBLIC_DJANGO_URL || "http://localhost:8000"
 
 /**
  * Login with email and password.
@@ -26,7 +26,7 @@ export async function login(
 	password: string,
 ): Promise<{ success: true; user: DjangoUser } | { success: false; error: string }> {
 	try {
-		const response = await fetch(`${DJANGO_API_URL}/auth/token/login/`, {
+		const response = await fetch(`${DJANGO_URL}/auth/token/login/`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -65,7 +65,7 @@ export async function login(
  */
 export async function logout(): Promise<{ success: boolean }> {
 	try {
-		const response = await fetch(`${DJANGO_API_URL}/auth/token/logout/`, {
+		const response = await fetch(`${DJANGO_URL}/auth/token/logout/`, {
 			method: "POST",
 			credentials: "include",
 		})
@@ -84,7 +84,7 @@ export async function logout(): Promise<{ success: boolean }> {
  */
 export async function getCurrentUser(): Promise<DjangoUser | null> {
 	try {
-		const response = await fetch(`${DJANGO_API_URL}/auth/users/me/`, {
+		const response = await fetch(`${DJANGO_URL}/auth/users/me/`, {
 			method: "GET",
 			credentials: "include",
 		})

@@ -160,7 +160,7 @@
 				"Links to /events/{eventId}/status",
 				"Has an appropriate icon"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 13,
@@ -174,7 +174,7 @@
 				"No references to NEXT_PUBLIC_DJANGO_API_URL remain",
 				"Existing client-side Django API calls still work"
 			],
-			"passes": false
+			"passes": true
 		}
 	]
 }
