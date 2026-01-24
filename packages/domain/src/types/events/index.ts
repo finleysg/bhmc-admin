@@ -1,5 +1,6 @@
 export * from "./choices"
 export * from "./event-fee"
+export * from "./event-status"
 export * from "./event"
 export * from "./round"
 export * from "./tournament-points"
