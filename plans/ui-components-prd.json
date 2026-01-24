@@ -438,7 +438,7 @@
 				"No change to visual behavior or functionality"
 			],
 			"verify": ["pnpm --filter web build passes", "Delete confirmation flow works correctly"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 27,

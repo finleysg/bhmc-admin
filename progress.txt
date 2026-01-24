@@ -257,3 +257,14 @@ UI Components PRD Item 25: Create Modal component with consistent ref-based trig
 - Decision: Pattern matches existing DeleteConfirmModal; standardizes modal trigger approach
 - No blockers
 
+UI Components PRD Item 26: Refactor delete-confirm-modal to use Modal component - COMPLETED
+- File updated: apps/web/app/events/[eventId]/documents/components/delete-confirm-modal.tsx
+- Refactored to use Modal component instead of duplicated dialog element
+- Removed useEffect and dialogRef hooks (now handled by Modal)
+- Removed useRef import
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Commit: Uses new Modal component to eliminate modal-box styling duplication
+- Decision: Simplified component by delegating modal lifecycle to Modal component
+- No blockers
+

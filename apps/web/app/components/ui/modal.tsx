@@ -7,9 +7,10 @@ interface ModalProps {
 	onClose: () => void
 	title?: string
 	children: React.ReactNode
+	className?: string
 }
 
-export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
 	const dialogRef = useRef<HTMLDialogElement>(null)
 
 	useEffect(() => {
@@ -29,7 +30,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
 
 	return (
 		<dialog ref={dialogRef} className="modal" onClose={handleClose}>
-			<div className="modal-box">
+			<div className={`modal-box ${className || ""}`}>
 				{title && <h3 className="font-bold text-lg">{title}</h3>}
 				{children}
 			</div>
