@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { DOCUMENT_TYPES, type Document, type DocumentTypeCode } from "@repo/domain/types"
+import { FormField } from "@/app/components/ui/form-field"
 import { FilePicker } from "./file-picker"
 
 export interface DocumentFormData {
@@ -58,10 +59,7 @@ export function DocumentForm({ onSubmit, onCancel, initialData, isSubmitting }: 
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-4">
-			<div className="form-control">
-				<label className="label" htmlFor="title">
-					<span className="label-text">Title</span>
-				</label>
+			<FormField label="Title" error={errors.title}>
 				<input
 					type="text"
 					id="title"
@@ -70,13 +68,9 @@ export function DocumentForm({ onSubmit, onCancel, initialData, isSubmitting }: 
 					onChange={(e) => setTitle(e.target.value)}
 					disabled={isSubmitting}
 				/>
-				{errors.title && <span className="text-error text-sm mt-1">{errors.title}</span>}
-			</div>
+			</FormField>
 
-			<div className="form-control">
-				<label className="label" htmlFor="documentType">
-					<span className="label-text">Document Type</span>
-				</label>
+			<FormField label="Document Type">
 				<select
 					id="documentType"
 					className="select select-bordered w-full"
@@ -90,17 +84,11 @@ export function DocumentForm({ onSubmit, onCancel, initialData, isSubmitting }: 
 						</option>
 					))}
 				</select>
-			</div>
+			</FormField>
 
-			<div className="form-control">
-				<label className="label">
-					<span className="label-text">
-						File {!isEditMode && <span className="text-error">*</span>}
-					</span>
-				</label>
+			<FormField label={`File${!isEditMode ? " *" : ""}`} error={errors.file}>
 				<FilePicker onFileSelect={setFile} currentFileName={currentFileName} />
-				{errors.file && <span className="text-error text-sm mt-1">{errors.file}</span>}
-			</div>
+			</FormField>
 
 			<div className="flex gap-2 justify-end pt-4">
 				<button type="button" className="btn btn-ghost" onClick={onCancel} disabled={isSubmitting}>

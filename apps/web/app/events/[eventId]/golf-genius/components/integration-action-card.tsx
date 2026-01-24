@@ -10,6 +10,9 @@ import {
 	TournamentProgressEvent,
 } from "@repo/domain/types"
 
+import { Alert } from "@/components/ui/alert"
+import { HelperText } from "@/components/ui/helper-text"
+import { Modal } from "@/components/ui/modal"
 import IntegrationProgress from "./integration-progress"
 
 interface ParsedResult {
@@ -40,6 +43,7 @@ export default function IntegrationActionCard({
 		null,
 	)
 	const [error, setError] = useState<string | null>(null)
+	const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
 
 	useEffect(() => {
 		const mostRecentLog = logs.sort(
@@ -176,32 +180,26 @@ export default function IntegrationActionCard({
 								<IntegrationProgress progress={progress} />
 							</div>
 						) : error ? (
-							<div className="alert alert-error mt-4">
-								<span className="text-xs">{error}</span>
-							</div>
+							<Alert type="error" className="mt-4">
+								{error}
+							</Alert>
 						) : (
 							<div>
-								<p className="text-sm text-base-content/70">
+								<HelperText>
 									Last run: {lastRun ? formatTimestamp(lastRun.actionDate) : "Never"}
-								</p>
-								<p className="text-sm text-base-content/70">
+								</HelperText>
+								<HelperText>
 									Last result: {lastRun ? errorCount + " errors" : "N/A"}
 									{lastRun && (
 										<span className={errorCount === 0 ? "text-success ml-2" : "text-error ml-2"}>
 											{errorCount === 0 ? "✓" : "✗"}
 										</span>
 									)}
-								</p>
+								</HelperText>
 								<button
 									className="link link-secondary text-sm"
 									disabled={!lastRun?.details}
-									onClick={() =>
-										(
-											document.getElementById(
-												`details-modal-${eventId}-${actionName}`,
-											) as HTMLDialogElement
-										)?.showModal()
-									}
+									onClick={() => setIsDetailsModalOpen(true)}
 								>
 									View details
 								</button>
@@ -230,24 +228,28 @@ export default function IntegrationActionCard({
 			</div>
 
 			{/* Details Modal */}
-			<dialog id={`details-modal-${eventId}-${actionName}`} className="modal">
-				<div className="modal-box max-w-4xl">
-					<h3 className="font-bold text-lg mb-4">Integration Details</h3>
-					<pre className="bg-base-200 p-4 rounded overflow-x-auto text-xs">
-						{lastRun?.details
-							? JSON.stringify(JSON.parse(lastRun.details), null, 2)
-							: "No details available"}
-					</pre>
-					<div className="modal-action">
-						<form method="dialog">
-							<button className="btn">Close</button>
-						</form>
-					</div>
+			<Modal
+				isOpen={isDetailsModalOpen}
+				onClose={() => setIsDetailsModalOpen(false)}
+				title="Integration Details"
+				className="max-w-4xl"
+			>
+				<pre className="bg-base-200 p-4 rounded overflow-x-auto text-xs">
+					{(() => {
+						if (!lastRun?.details) return "No details available"
+						try {
+							return JSON.stringify(JSON.parse(lastRun.details), null, 2)
+						} catch {
+							return lastRun.details
+						}
+					})()}
+				</pre>
+				<div className="modal-action">
+					<button className="btn" onClick={() => setIsDetailsModalOpen(false)}>
+						Close
+					</button>
 				</div>
-				<form method="dialog" className="modal-backdrop">
-					<button>close</button>
-				</form>
-			</dialog>
+			</Modal>
 		</>
 	)
 }

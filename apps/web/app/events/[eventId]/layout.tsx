@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react"
 
-import { useParams, usePathname, useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 import { useAuth } from "@/lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { parseLocalDate } from "@repo/domain/functions"
 import { ClubEvent } from "@repo/domain/types"
 
@@ -12,9 +13,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const router = useRouter()
 	const params = useParams()
-	const pathname = usePathname()
 	const eventId = params.eventId as string
-	const isReportsPage = pathname?.includes("/reports")
 
 	const [event, setEvent] = useState<ClubEvent | null>(null)
 	const [loading, setLoading] = useState(true)
@@ -49,7 +48,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 	if (loading) {
 		return (
 			<div className="flex items-center justify-center md:p-8">
-				<span className="loading loading-spinner loading-lg"></span>
+				<LoadingSpinner size="lg" />
 			</div>
 		)
 	}
@@ -79,17 +78,11 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 
 	return (
 		<div>
-			{isReportsPage ? (
-				<div className="p-0">
-					<h2 className="text-xl font-bold text-primary text-center">{headerText}</h2>
+			<div className="flex justify-center md:px-8 pt-4 md:pt-8">
+				<div className="w-full max-w-3xl px-4 md:px-0">
+					<h2 className="text-xl font-bold text-primary text-center mb-4">{headerText}</h2>
 				</div>
-			) : (
-				<div className="flex justify-center md:px-8 pt-4 md:pt-8">
-					<div className="w-full max-w-3xl px-4 md:px-0">
-						<h2 className="text-xl font-bold text-primary text-center">{headerText}</h2>
-					</div>
-				</div>
-			)}
+			</div>
 			{children}
 		</div>
 	)

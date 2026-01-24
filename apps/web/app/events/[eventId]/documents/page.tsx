@@ -5,6 +5,10 @@ import { useParams } from "next/navigation"
 import type { ClubEvent, Document } from "@repo/domain/types"
 
 import { useAuth } from "@/lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Alert } from "@/components/ui/alert"
+import { PageLayout } from "@/components/ui/page-layout"
+import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { DeleteConfirmModal } from "./components/delete-confirm-modal"
 import { DocumentForm, type DocumentFormData } from "./components/document-form"
 import { DocumentList } from "./components/document-list"
@@ -189,11 +193,7 @@ export default function DocumentsPage() {
 	}
 
 	if (isPending || state.isLoading) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!signedIn) {
@@ -201,62 +201,59 @@ export default function DocumentsPage() {
 	}
 
 	return (
-		<main className="min-h-screen flex justify-center md:p-8">
-			<div className="w-full max-w-3xl">
-				<div className="flex items-center justify-between mb-4">
-					<h2 className="text-3xl font-bold">Event Documents</h2>
-					{state.mode === "list" && (
-						<button type="button" className="btn btn-primary" onClick={handleAddClick}>
-							Add Document
-						</button>
-					)}
-				</div>
-
-				{state.error && (
-					<div className="alert alert-error mb-4">
-						<span>{state.error}</span>
-					</div>
-				)}
-
-				{state.mode === "add" && (
-					<div className="card bg-base-100 shadow-xs mb-4">
-						<div className="card-body">
-							<h3 className="card-title text-secondary font-semibold mb-4">Add Document</h3>
-							<DocumentForm
-								onSubmit={handleAddSubmit}
-								onCancel={handleCancel}
-								isSubmitting={state.isSubmitting}
-							/>
-						</div>
-					</div>
-				)}
-
-				{state.mode === "edit" && state.selectedDocument && (
-					<div className="card bg-base-100 shadow-xs mb-4">
-						<div className="card-body">
-							<h3 className="card-title text-secondary font-semibold mb-4">Edit Document</h3>
-							<DocumentForm
-								onSubmit={handleEditSubmit}
-								onCancel={handleCancel}
-								initialData={state.selectedDocument}
-								isSubmitting={state.isSubmitting}
-							/>
-						</div>
-					</div>
-				)}
-
-				<DeleteConfirmModal
-					isOpen={state.mode === "delete"}
-					document={state.selectedDocument}
-					onConfirm={handleDeleteConfirm}
-					onCancel={handleCancel}
-					isDeleting={state.isSubmitting}
-				/>
-
+		<PageLayout maxWidth="3xl">
+			<div className="flex items-center justify-between mb-6">
 				{state.mode === "list" && (
-					<DocumentList documents={state.documents} onEdit={handleEdit} onDelete={handleDelete} />
+					<button type="button" className="btn btn-primary" onClick={handleAddClick}>
+						Add Document
+					</button>
 				)}
 			</div>
-		</main>
+
+			{state.error && (
+				<Alert type="error" className=" mb-4">
+					{state.error}
+				</Alert>
+			)}
+
+			{state.mode === "add" && (
+				<Card shadow="xs" className="mb-4">
+					<CardBody>
+						<CardTitle>Add Document</CardTitle>
+						<DocumentForm
+							onSubmit={handleAddSubmit}
+							onCancel={handleCancel}
+							isSubmitting={state.isSubmitting}
+						/>
+					</CardBody>
+				</Card>
+			)}
+
+			{state.mode === "edit" && state.selectedDocument && (
+				<Card shadow="xs" className="mb-4">
+					<CardBody>
+						<CardTitle>Edit Document</CardTitle>
+						<DocumentForm
+							onSubmit={handleEditSubmit}
+							onCancel={handleCancel}
+							initialData={state.selectedDocument}
+							isSubmitting={state.isSubmitting}
+						/>
+					</CardBody>
+				</Card>
+			)}
+
+			<DeleteConfirmModal
+				isOpen={state.mode === "delete"}
+				document={state.selectedDocument}
+				onConfirm={handleDeleteConfirm}
+				onCancel={handleCancel}
+				isDeleting={state.isSubmitting}
+			/>
+
+			{state.mode === "list" && (
+				<DocumentList documents={state.documents} onEdit={handleEdit} onDelete={handleDelete} />
+			)}
+		</PageLayout>
 	)
 }

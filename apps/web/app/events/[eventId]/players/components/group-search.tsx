@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import type { CompleteRegistration, CompleteClubEvent } from "@repo/domain/types"
 
 import { getStart } from "@repo/domain/functions"
+import { HelperText } from "@/components/ui/helper-text"
 
 interface GroupSearchProps {
 	clubEvent: CompleteClubEvent
@@ -137,9 +138,7 @@ export function GroupSearch({
 								>
 									<div>
 										<div className="font-medium">{renderStartInfo(group)}</div>
-										<div className="text-sm text-base-content/70">
-											{renderPlayerNames(group.slots)}
-										</div>
+										<HelperText>{renderPlayerNames(group.slots)}</HelperText>
 									</div>
 								</ComboboxOption>
 							))}
@@ -151,9 +150,7 @@ export function GroupSearch({
 			{selectedGroup && (
 				<div className="mt-2 card card-bordered bg-base-100">
 					<div className="font-bold">{renderStartInfo(selectedGroup)}</div>
-					<div className="text-sm text-base-content/70">
-						{renderPlayerNames(selectedGroup.slots)}
-					</div>
+					<HelperText>{renderPlayerNames(selectedGroup.slots)}</HelperText>
 				</div>
 			)}
 		</div>

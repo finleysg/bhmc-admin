@@ -3,7 +3,8 @@
 import { useParams } from "next/navigation"
 
 import { useAuth } from "../../../../lib/auth-context"
-import ReportCard from "../../../components/report-card"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import LinkCard from "../../../components/link-card"
 
 export default function EventReportsPage() {
 	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
@@ -19,11 +20,7 @@ export default function EventReportsPage() {
 	}
 
 	if (isPending) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!signedIn) {
@@ -54,15 +51,16 @@ export default function EventReportsPage() {
 	]
 
 	return (
-		<main className="min-h-screen p-8">
+		<main className="min-h-screen md:p-8">
 			<div className="max-w-6xl mx-auto">
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					{reports.map((report) => (
-						<ReportCard
+						<LinkCard
 							key={report.title}
 							title={report.title}
 							description={report.description}
 							href={report.href}
+							buttonLabel="View Report"
 						/>
 					))}
 				</div>

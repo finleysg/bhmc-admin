@@ -4,6 +4,10 @@ import { useReducer, useEffect } from "react"
 import { useParams } from "next/navigation"
 import type { CompleteClubEvent, CompleteRegistration } from "@repo/domain/types"
 import { getStart } from "@repo/domain/functions"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Alert } from "@/components/ui/alert"
+import { PageLayout } from "@/components/ui/page-layout"
+import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { GroupSearch } from "../components/group-search"
 import { reducer, initialState } from "./reducer"
 
@@ -75,139 +79,135 @@ export default function NotesPage() {
 	}
 
 	if (state.isLoading) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!state.clubEvent) {
 		return (
 			<div className="flex items-center justify-center p-8">
-				<div className="alert alert-error">Event not found</div>
+				<Alert type="error" className="">
+					Event not found
+				</Alert>
 			</div>
 		)
 	}
 
 	return (
-		<main className="min-h-screen flex justify-center md:p-8">
-			<div className="w-full max-w-3xl">
-				<div className="card bg-base-100 shadow-xs">
-					<div className="card-body">
-						<h3 className="card-title text-secondary font-semibold mb-4">Registration Notes</h3>
+		<PageLayout maxWidth="3xl">
+			<Card shadow="xs">
+				<CardBody>
+					<CardTitle>Registration Notes</CardTitle>
 
-						{/* Step 1: Select Group */}
-						{state.step === "group" && (
-							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 1 of 2: Select Group</h4>
-								<GroupSearch
-									key={state.resetKey}
-									clubEvent={state.clubEvent}
-									onGroupSelected={handleGroupSelected}
-									onError={(err) => dispatch({ type: "SET_ERROR", payload: String(err) })}
-								/>
-							</div>
-						)}
+					{/* Step 1: Select Group */}
+					{state.step === "group" && (
+						<div className="mb-6">
+							<h4 className="font-semibold mb-2">Step 1 of 2: Select Group</h4>
+							<GroupSearch
+								key={state.resetKey}
+								clubEvent={state.clubEvent}
+								onGroupSelected={handleGroupSelected}
+								onError={(err) => dispatch({ type: "SET_ERROR", payload: String(err) })}
+							/>
+						</div>
+					)}
 
-						{/* Step 2: Edit Notes */}
-						{state.step === "edit" && !state.success && state.selectedGroup && state.clubEvent && (
-							<div>
-								<h4 className="font-semibold mb-4">Step 2 of 2: Edit Notes</h4>
+					{/* Step 2: Edit Notes */}
+					{state.step === "edit" && !state.success && state.selectedGroup && state.clubEvent && (
+						<div>
+							<h4 className="font-semibold mb-4">Step 2 of 2: Edit Notes</h4>
 
-								{/* Group Summary */}
-								<div className="bg-base-200 p-4 rounded-lg mb-4">
-									<div className="text-sm">
-										<div className="font-semibold mb-1">
-											{state.selectedGroup.course?.name || "Unknown Course"}
-										</div>
-										<div className="text-xs opacity-70 mb-2">
-											{state.clubEvent.canChoose && state.selectedGroup.slots[0]
-												? getStart(
-														state.clubEvent,
-														state.selectedGroup.slots[0],
-														state.selectedGroup.course?.holes || [],
-													)
-												: "Start info not available"}
-										</div>
-										<div className="text-sm">
-											{state.selectedGroup.slots
-												?.map((slot) =>
-													slot.player ? `${slot.player.firstName} ${slot.player.lastName}` : "Open",
+							{/* Group Summary */}
+							<div className="bg-base-200 p-4 rounded-lg mb-4">
+								<div className="text-sm">
+									<div className="font-semibold mb-1">
+										{state.selectedGroup.course?.name || "Unknown Course"}
+									</div>
+									<div className="text-xs opacity-70 mb-2">
+										{state.clubEvent.canChoose && state.selectedGroup.slots[0]
+											? getStart(
+													state.clubEvent,
+													state.selectedGroup.slots[0],
+													state.selectedGroup.course?.holes || [],
 												)
-												.join(", ")}
-										</div>
+											: "Start info not available"}
+									</div>
+									<div className="text-sm">
+										{state.selectedGroup.slots
+											?.map((slot) =>
+												slot.player ? `${slot.player.firstName} ${slot.player.lastName}` : "Open",
+											)
+											.join(", ")}
 									</div>
 								</div>
-
-								{/* Notes Textarea */}
-								<div className="form-control mb-4">
-									<label className="label">
-										<span className="label-text">Notes</span>
-									</label>
-									<textarea
-										className="textarea textarea-bordered h-32"
-										placeholder="Enter notes for this registration group..."
-										value={state.notes}
-										onChange={handleNotesChange}
-										disabled={state.isProcessing}
-									/>
-								</div>
-
-								{/* Action Buttons */}
-								<div className="flex gap-2 flex-wrap">
-									<button
-										className="btn btn-primary"
-										onClick={() => void handleSave()}
-										disabled={state.isProcessing}
-									>
-										{state.isProcessing && <span className="loading loading-spinner"></span>}
-										Save
-									</button>
-									<button
-										className="btn btn-ghost"
-										onClick={handleBack}
-										disabled={state.isProcessing}
-									>
-										Back
-									</button>
-									<button
-										className="btn btn-ghost"
-										onClick={handleReset}
-										disabled={state.isProcessing}
-									>
-										Start Over
-									</button>
-								</div>
 							</div>
-						)}
 
-						{/* Success State */}
-						{state.success && (
-							<div>
-								<div className="alert alert-success mb-4">
-									<span>Notes saved successfully!</span>
-								</div>
-								<div className="flex gap-2 flex-wrap">
-									<button className="btn btn-primary" onClick={handleReset}>
-										Update More
-									</button>
-									<a href={`/events/${eventId}/players`} className="btn btn-ghost">
-										Player Menu
-									</a>
-								</div>
+							{/* Notes Textarea */}
+							<div className="form-control mb-4">
+								<label className="label">
+									<span className="label-text">Notes</span>
+								</label>
+								<textarea
+									className="textarea textarea-bordered h-32"
+									placeholder="Enter notes for this registration group..."
+									value={state.notes}
+									onChange={handleNotesChange}
+									disabled={state.isProcessing}
+								/>
 							</div>
-						)}
 
-						{/* Error display */}
-						{state.error && (
-							<div className="alert alert-error">
-								<span>{state.error}</span>
+							{/* Action Buttons */}
+							<div className="flex gap-2 flex-wrap">
+								<button
+									className="btn btn-primary"
+									onClick={() => void handleSave()}
+									disabled={state.isProcessing}
+								>
+									{state.isProcessing && <span className="loading loading-spinner"></span>}
+									Save
+								</button>
+								<button
+									className="btn btn-ghost"
+									onClick={handleBack}
+									disabled={state.isProcessing}
+								>
+									Back
+								</button>
+								<button
+									className="btn btn-ghost"
+									onClick={handleReset}
+									disabled={state.isProcessing}
+								>
+									Start Over
+								</button>
 							</div>
-						)}
-					</div>
-				</div>
-			</div>
-		</main>
+						</div>
+					)}
+
+					{/* Success State */}
+					{state.success && (
+						<div>
+							<div className="alert alert-success mb-4">
+								<span>Notes saved successfully!</span>
+							</div>
+							<div className="flex gap-2 flex-wrap">
+								<button className="btn btn-primary" onClick={handleReset}>
+									Update More
+								</button>
+								<a href={`/events/${eventId}/players`} className="btn btn-ghost">
+									Player Menu
+								</a>
+							</div>
+						</div>
+					)}
+
+					{/* Error display */}
+					{state.error && (
+						<Alert type="error" className="">
+							{state.error}
+						</Alert>
+					)}
+				</CardBody>
+			</Card>
+		</PageLayout>
 	)
 }

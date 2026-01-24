@@ -3,6 +3,9 @@ import { ReactNode } from "react"
 import Link from "next/link"
 
 import { useAuthenticatedFetch, useExcelExport } from "@/lib/use-report"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { EmptyState } from "@/components/ui/empty-state"
+import { PageHeader } from "@/components/ui/page-header"
 
 interface ReportPageProps<T> {
 	title: string
@@ -27,7 +30,7 @@ export function ReportPage<T>({
 	if (loading) {
 		return (
 			<div className="flex items-center justify-center p-2">
-				<span className="loading loading-spinner loading-lg" />
+				<LoadingSpinner size="lg" />
 			</div>
 		)
 	}
@@ -36,7 +39,7 @@ export function ReportPage<T>({
 		return (
 			<main className="min-h-screen flex items-center justify-center p-2">
 				<div className="w-full max-w-3xl text-center">
-					<h2 className="text-3xl font-bold mb-4">{title}</h2>
+					<PageHeader>{title}</PageHeader>
 					<p className="text-error mb-8">Error loading report: {error}</p>
 					<Link href={`/events/${eventId}/reports`} className="btn btn-primary">
 						Back to Reports
@@ -75,13 +78,7 @@ export function ReportPage<T>({
 					)}
 				</div>
 
-				{hasData ? (
-					children(data)
-				) : (
-					<div className="text-center py-12">
-						<p className="text-muted-foreground">No data available for this event.</p>
-					</div>
-				)}
+				{hasData ? children(data) : <EmptyState message="No data available for this event." />}
 			</div>
 		</main>
 	)

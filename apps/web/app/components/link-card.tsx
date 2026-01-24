@@ -1,8 +1,7 @@
 "use client"
 
-import React from "react"
-
 import Link from "next/link"
+import React from "react"
 import { HelperText } from "@/components/ui/helper-text"
 
 type Props = {
@@ -11,9 +10,19 @@ type Props = {
 	href: string
 	disabled?: boolean
 	icon?: React.ReactNode
+	buttonLabel?: string
+	disabledLabel?: string
 }
 
-export default function ReportCard({ title, description, href, disabled, icon }: Props) {
+export default function LinkCard({
+	title,
+	description,
+	href,
+	disabled,
+	icon,
+	buttonLabel = "Open",
+	disabledLabel = "Locked",
+}: Props) {
 	return (
 		<div className={`card bg-base-100 shadow-md ${disabled ? "opacity-60" : "hover:shadow-lg"}`}>
 			<div className="card-body">
@@ -28,11 +37,11 @@ export default function ReportCard({ title, description, href, disabled, icon }:
 				<div className="card-actions justify-end mt-4">
 					{disabled ? (
 						<button className="btn btn-primary btn-disabled" aria-disabled="true">
-							Coming Soon
+							{disabledLabel}
 						</button>
 					) : (
 						<Link href={href} className="btn btn-primary">
-							View Report
+							{buttonLabel}
 						</Link>
 					)}
 				</div>

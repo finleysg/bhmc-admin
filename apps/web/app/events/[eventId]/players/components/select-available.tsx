@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { AvailableSlotGroup, ClubEvent, Course } from "@repo/domain/types"
 import { getStart } from "@repo/domain/functions"
+import { Badge } from "@/components/ui/badge"
 
 interface SelectAvailableProps {
 	initialGroup?: AvailableSlotGroup
@@ -126,17 +127,9 @@ export function SelectAvailable({
 						<div className="loading loading-spinner"></div>
 					) : selectedSlotIds.length > 0 ? (
 						<div className="flex items-center gap-2">
-							<div className="badge badge-info">
+							<Badge variant="info" onClose={handleClearSelection}>
 								{selectedStartName}
-								<button
-									type="button"
-									className="btn btn-ghost btn-xs ml-2"
-									onClick={handleClearSelection}
-									aria-label="Clear selection"
-								>
-									✕
-								</button>
-							</div>
+							</Badge>
 						</div>
 					) : (
 						<select

@@ -1,6 +1,8 @@
 "use client"
 
 import { DOCUMENT_TYPES, type Document } from "@repo/domain/types"
+import { Card, CardBody } from "@/components/ui/card"
+import { HelperText } from "@/components/ui/helper-text"
 
 interface DocumentListProps {
 	documents: Document[]
@@ -11,17 +13,17 @@ interface DocumentListProps {
 export function DocumentList({ documents, onEdit, onDelete }: DocumentListProps) {
 	if (documents.length === 0) {
 		return (
-			<div className="card bg-base-100 shadow-xs">
-				<div className="card-body">
+			<Card shadow="xs">
+				<CardBody>
 					<div className="text-center py-4 text-base-content/60">No documents</div>
-				</div>
-			</div>
+				</CardBody>
+			</Card>
 		)
 	}
 
 	return (
-		<div className="card bg-base-100 shadow-xs">
-			<div className="card-body">
+		<Card shadow="xs">
+			<CardBody>
 				{/* Desktop: table */}
 				<div className="hidden md:block overflow-x-auto">
 					<table className="table table-zebra">
@@ -82,9 +84,7 @@ export function DocumentList({ documents, onEdit, onDelete }: DocumentListProps)
 						return (
 							<div key={doc.id} className="border-b border-base-300 pb-4 last:border-0">
 								<div className="font-semibold">{doc.title}</div>
-								<div className="text-sm text-base-content/70">
-									{DOCUMENT_TYPES[doc.documentType] ?? doc.documentType}
-								</div>
+								<HelperText>{DOCUMENT_TYPES[doc.documentType] ?? doc.documentType}</HelperText>
 								<a
 									href={doc.file}
 									target="_blank"
@@ -113,7 +113,7 @@ export function DocumentList({ documents, onEdit, onDelete }: DocumentListProps)
 						)
 					})}
 				</div>
-			</div>
-		</div>
+			</CardBody>
+		</Card>
 	)
 }

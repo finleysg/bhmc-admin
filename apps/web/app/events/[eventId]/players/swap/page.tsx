@@ -2,6 +2,11 @@
 
 import { useReducer, useEffect, useState } from "react"
 import { useParams } from "next/navigation"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Alert } from "@/components/ui/alert"
+import { PageLayout } from "@/components/ui/page-layout"
+import { Card, CardBody, CardTitle } from "@/components/ui/card"
+import { StepIndicator } from "@/components/ui/step-indicator"
 import type {
 	CompleteClubEvent,
 	Player,
@@ -163,271 +168,267 @@ export default function SwapPlayerPage() {
 		: []
 
 	if (state.isLoading) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
-		)
+		return <LoadingSpinner size="lg" />
 	}
 
 	if (!state.clubEvent) {
 		return (
 			<div className="flex items-center justify-center p-8">
-				<div className="alert alert-error">Event not found</div>
+				<Alert type="error" className="">
+					Event not found
+				</Alert>
 			</div>
 		)
 	}
 
 	return (
-		<main className="min-h-screen flex justify-center md:p-8">
-			<div className="w-full max-w-3xl">
-				<div className="card bg-base-100 shadow-xs">
-					<div className="card-body">
-						<h3 className="card-title text-secondary font-semibold mb-4">Swap Players</h3>
+		<PageLayout maxWidth="3xl">
+			<Card shadow="xs">
+				<CardBody>
+					<CardTitle>Swap Players</CardTitle>
 
-						{/* Step 1: Select First Player */}
-						{state.step === "playerA" && (
-							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 1 of 3: Select first player</h4>
-								<GroupSearch
-									key={state.resetKey}
-									clubEvent={state.clubEvent}
-									onGroupSelected={handleGroupASelected}
-									onError={(err) => dispatch({ type: "SET_ERROR", payload: String(err) })}
-								/>
+					{/* Step 1: Select First Player */}
+					{state.step === "playerA" && (
+						<div className="mb-6">
+							<StepIndicator currentStep={1} totalSteps={3} label="Select first player" />
+							<GroupSearch
+								key={state.resetKey}
+								clubEvent={state.clubEvent}
+								onGroupSelected={handleGroupASelected}
+								onError={(err) => dispatch({ type: "SET_ERROR", payload: String(err) })}
+							/>
 
-								{/* Show players as radio buttons after group selected */}
-								{selectedGroupA && registeredPlayersA.length > 0 && (
-									<div className="mt-4">
-										<p className="text-sm mb-2">Select a player from this group:</p>
-										<div className="space-y-2">
-											{registeredPlayersA.map(({ player, slot }) => (
-												<label
-													key={slot.id}
-													className="flex items-center gap-2 p-2 rounded hover:bg-base-200 cursor-pointer"
-												>
-													<input
-														type="radio"
-														name="playerA"
-														className="radio radio-primary"
-														onChange={() => handlePlayerASelected(player, slot)}
-													/>
-													<span>
-														{player.firstName} {player.lastName}
-													</span>
-												</label>
-											))}
-										</div>
+							{/* Show players as radio buttons after group selected */}
+							{selectedGroupA && registeredPlayersA.length > 0 && (
+								<div className="mt-4">
+									<p className="text-sm mb-2">Select a player from this group:</p>
+									<div className="space-y-2">
+										{registeredPlayersA.map(({ player, slot }) => (
+											<label
+												key={slot.id}
+												className="flex items-center gap-2 p-2 rounded hover:bg-base-200 cursor-pointer"
+											>
+												<input
+													type="radio"
+													name="playerA"
+													className="radio radio-primary"
+													onChange={() => handlePlayerASelected(player, slot)}
+												/>
+												<span>
+													{player.firstName} {player.lastName}
+												</span>
+											</label>
+										))}
 									</div>
-								)}
-							</div>
-						)}
-
-						{/* Step 2: Select Second Player */}
-						{state.step === "playerB" && (
-							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 2 of 3: Select second player</h4>
-
-								{state.playerA && (
-									<div className="mb-4 p-3 bg-base-200 rounded">
-										<p className="text-sm">
-											<span className="font-semibold">First player:</span> {state.playerA.firstName}{" "}
-											{state.playerA.lastName}
-										</p>
-									</div>
-								)}
-
-								<GroupSearch
-									key={state.resetKey + "-B"}
-									clubEvent={state.clubEvent}
-									onGroupSelected={handleGroupBSelected}
-									onError={(err) => dispatch({ type: "SET_ERROR", payload: String(err) })}
-								/>
-
-								{/* Show players as radio buttons after group selected */}
-								{selectedGroupB && registeredPlayersB.length > 0 && (
-									<div className="mt-4">
-										<p className="text-sm mb-2">Select a player from this group:</p>
-										<div className="space-y-2">
-											{registeredPlayersB.map(({ player, slot }) => (
-												<label
-													key={slot.id}
-													className="flex items-center gap-2 p-2 rounded hover:bg-base-200 cursor-pointer"
-												>
-													<input
-														type="radio"
-														name="playerB"
-														className="radio radio-primary"
-														onChange={() => handlePlayerBSelected(player, slot)}
-													/>
-													<span>
-														{player.firstName} {player.lastName}
-													</span>
-												</label>
-											))}
-										</div>
-									</div>
-								)}
-
-								{/* Validation error */}
-								{validationError && (
-									<div className="alert alert-warning mt-4">
-										<span>{validationError}</span>
-									</div>
-								)}
-
-								{/* Navigation buttons */}
-								<div className="flex gap-2 mt-6">
-									<button type="button" className="btn btn-outline" onClick={handleBack}>
-										Back
-									</button>
-									<button type="button" className="btn btn-ghost" onClick={handleReset}>
-										Start Over
-									</button>
 								</div>
+							)}
+						</div>
+					)}
+
+					{/* Step 2: Select Second Player */}
+					{state.step === "playerB" && (
+						<div className="mb-6">
+							<StepIndicator currentStep={2} totalSteps={3} label="Select second player" />
+
+							{state.playerA && (
+								<div className="mb-4 p-3 bg-base-200 rounded">
+									<p className="text-sm">
+										<span className="font-semibold">First player:</span> {state.playerA.firstName}{" "}
+										{state.playerA.lastName}
+									</p>
+								</div>
+							)}
+
+							<GroupSearch
+								key={state.resetKey + "-B"}
+								clubEvent={state.clubEvent}
+								onGroupSelected={handleGroupBSelected}
+								onError={(err) => dispatch({ type: "SET_ERROR", payload: String(err) })}
+							/>
+
+							{/* Show players as radio buttons after group selected */}
+							{selectedGroupB && registeredPlayersB.length > 0 && (
+								<div className="mt-4">
+									<p className="text-sm mb-2">Select a player from this group:</p>
+									<div className="space-y-2">
+										{registeredPlayersB.map(({ player, slot }) => (
+											<label
+												key={slot.id}
+												className="flex items-center gap-2 p-2 rounded hover:bg-base-200 cursor-pointer"
+											>
+												<input
+													type="radio"
+													name="playerB"
+													className="radio radio-primary"
+													onChange={() => handlePlayerBSelected(player, slot)}
+												/>
+												<span>
+													{player.firstName} {player.lastName}
+												</span>
+											</label>
+										))}
+									</div>
+								</div>
+							)}
+
+							{/* Validation error */}
+							{validationError && (
+								<div className="alert alert-warning mt-4">
+									<span>{validationError}</span>
+								</div>
+							)}
+
+							{/* Navigation buttons */}
+							<div className="flex gap-2 mt-6">
+								<button type="button" className="btn btn-outline" onClick={handleBack}>
+									Back
+								</button>
+								<button type="button" className="btn btn-ghost" onClick={handleReset}>
+									Start Over
+								</button>
 							</div>
-						)}
+						</div>
+					)}
 
-						{/* Step 3: Confirm and Submit */}
-						{state.step === "confirm" && !state.swapSuccess && (
-							<div className="mb-6">
-								<h4 className="font-semibold mb-4">Step 3 of 3: Confirm swap</h4>
+					{/* Step 3: Confirm and Submit */}
+					{state.step === "confirm" && !state.swapSuccess && (
+						<div className="mb-6">
+							<StepIndicator currentStep={3} totalSteps={3} label="Confirm swap" />
 
-								{/* Summary */}
-								<div className="space-y-4 mb-6">
-									{/* Player A */}
-									{state.playerA && state.slotA && state.groupA && state.clubEvent && (
-										<div className="p-4 bg-base-200 rounded">
-											<p className="font-semibold mb-1">
-												{state.playerA.firstName} {state.playerA.lastName}
-											</p>
-											<p className="text-sm text-gray-600">
-												Current: {state.groupA.course?.name || "Course"} •{" "}
-												{getStart(state.clubEvent, state.slotA, state.groupA.course?.holes || [])}
-											</p>
-											{state.slotB && state.groupB && (
-												<p className="text-sm text-primary font-medium mt-2">
-													→ After swap: {state.groupB.course?.name || "Course"} •{" "}
-													{getStart(state.clubEvent, state.slotB, state.groupB.course?.holes || [])}
-												</p>
-											)}
-										</div>
-									)}
-
-									{/* Player B */}
-									{state.playerB && state.slotB && state.groupB && state.clubEvent && (
-										<div className="p-4 bg-base-200 rounded">
-											<p className="font-semibold mb-1">
-												{state.playerB.firstName} {state.playerB.lastName}
-											</p>
-											<p className="text-sm text-gray-600">
-												Current: {state.groupB.course?.name || "Course"} •{" "}
+							{/* Summary */}
+							<div className="space-y-4 mb-6">
+								{/* Player A */}
+								{state.playerA && state.slotA && state.groupA && state.clubEvent && (
+									<div className="p-4 bg-base-200 rounded">
+										<p className="font-semibold mb-1">
+											{state.playerA.firstName} {state.playerA.lastName}
+										</p>
+										<p className="text-sm text-gray-600">
+											Current: {state.groupA.course?.name || "Course"} •{" "}
+											{getStart(state.clubEvent, state.slotA, state.groupA.course?.holes || [])}
+										</p>
+										{state.slotB && state.groupB && (
+											<p className="text-sm text-primary font-medium mt-2">
+												→ After swap: {state.groupB.course?.name || "Course"} •{" "}
 												{getStart(state.clubEvent, state.slotB, state.groupB.course?.holes || [])}
 											</p>
-											{state.slotA && state.groupA && (
-												<p className="text-sm text-primary font-medium mt-2">
-													→ After swap: {state.groupA.course?.name || "Course"} •{" "}
-													{getStart(state.clubEvent, state.slotA, state.groupA.course?.holes || [])}
-												</p>
-											)}
-										</div>
-									)}
-								</div>
-
-								{/* Notes */}
-								<div className="form-control mb-6">
-									<label className="label">
-										<span className="label-text">Notes (optional)</span>
-									</label>
-									<textarea
-										className="textarea textarea-bordered h-24"
-										placeholder="Add any notes about this swap..."
-										value={state.notes}
-										onChange={(e) => dispatch({ type: "SET_NOTES", payload: e.target.value })}
-										disabled={state.isProcessing}
-									/>
-								</div>
-
-								{/* Error display */}
-								{state.error && (
-									<div className="alert alert-error mb-4">
-										<span>{state.error}</span>
+										)}
 									</div>
 								)}
 
-								{/* Buttons */}
-								<div className="flex gap-2">
-									<button
-										type="button"
-										className="btn btn-outline"
-										onClick={handleBack}
-										disabled={state.isProcessing}
-									>
-										Back
-									</button>
-									<button
-										type="button"
-										className="btn btn-ghost"
-										onClick={handleReset}
-										disabled={state.isProcessing}
-									>
-										Start Over
-									</button>
-									<button
-										type="button"
-										className="btn btn-primary ml-auto"
-										onClick={() => void handleConfirmSwap()}
-										disabled={state.isProcessing}
-									>
-										{state.isProcessing ? (
-											<>
-												<span className="loading loading-spinner loading-sm"></span>
-												Processing...
-											</>
-										) : (
-											"Confirm Swap"
+								{/* Player B */}
+								{state.playerB && state.slotB && state.groupB && state.clubEvent && (
+									<div className="p-4 bg-base-200 rounded">
+										<p className="font-semibold mb-1">
+											{state.playerB.firstName} {state.playerB.lastName}
+										</p>
+										<p className="text-sm text-gray-600">
+											Current: {state.groupB.course?.name || "Course"} •{" "}
+											{getStart(state.clubEvent, state.slotB, state.groupB.course?.holes || [])}
+										</p>
+										{state.slotA && state.groupA && (
+											<p className="text-sm text-primary font-medium mt-2">
+												→ After swap: {state.groupA.course?.name || "Course"} •{" "}
+												{getStart(state.clubEvent, state.slotA, state.groupA.course?.holes || [])}
+											</p>
 										)}
-									</button>
-								</div>
+									</div>
+								)}
 							</div>
-						)}
 
-						{/* Success State */}
-						{state.swapSuccess && (
-							<div className="mb-6">
-								<div className="alert alert-success mb-4">
-									<span>
-										Successfully swapped {state.playerA?.firstName} {state.playerA?.lastName} with{" "}
-										{state.playerB?.firstName} {state.playerB?.lastName}
-									</span>
-								</div>
-
-								<div className="flex gap-2">
-									<button type="button" className="btn btn-primary" onClick={handleReset}>
-										Swap More
-									</button>
-									<button
-										type="button"
-										className="btn btn-outline"
-										onClick={() => {
-											window.location.href = `/events/${eventId}/players`
-										}}
-									>
-										Player Menu
-									</button>
-								</div>
+							{/* Notes */}
+							<div className="form-control mb-6">
+								<label className="label">
+									<span className="label-text">Notes (optional)</span>
+								</label>
+								<textarea
+									className="textarea textarea-bordered h-24"
+									placeholder="Add any notes about this swap..."
+									value={state.notes}
+									onChange={(e) => dispatch({ type: "SET_NOTES", payload: e.target.value })}
+									disabled={state.isProcessing}
+								/>
 							</div>
-						)}
 
-						{/* Error display (for non-confirm steps) */}
-						{state.error && state.step !== "confirm" && (
-							<div className="alert alert-error">
-								<span>{state.error}</span>
+							{/* Error display */}
+							{state.error && (
+								<Alert type="error" className=" mb-4">
+									{state.error}
+								</Alert>
+							)}
+
+							{/* Buttons */}
+							<div className="flex gap-2">
+								<button
+									type="button"
+									className="btn btn-outline"
+									onClick={handleBack}
+									disabled={state.isProcessing}
+								>
+									Back
+								</button>
+								<button
+									type="button"
+									className="btn btn-ghost"
+									onClick={handleReset}
+									disabled={state.isProcessing}
+								>
+									Start Over
+								</button>
+								<button
+									type="button"
+									className="btn btn-primary ml-auto"
+									onClick={() => void handleConfirmSwap()}
+									disabled={state.isProcessing}
+								>
+									{state.isProcessing ? (
+										<>
+											<span className="loading loading-spinner loading-sm"></span>
+											Processing...
+										</>
+									) : (
+										"Confirm Swap"
+									)}
+								</button>
 							</div>
-						)}
-					</div>
-				</div>
-			</div>
-		</main>
+						</div>
+					)}
+
+					{/* Success State */}
+					{state.swapSuccess && (
+						<div className="mb-6">
+							<div className="alert alert-success mb-4">
+								<span>
+									Successfully swapped {state.playerA?.firstName} {state.playerA?.lastName} with{" "}
+									{state.playerB?.firstName} {state.playerB?.lastName}
+								</span>
+							</div>
+
+							<div className="flex gap-2">
+								<button type="button" className="btn btn-primary" onClick={handleReset}>
+									Swap More
+								</button>
+								<button
+									type="button"
+									className="btn btn-outline"
+									onClick={() => {
+										window.location.href = `/events/${eventId}/players`
+									}}
+								>
+									Player Menu
+								</button>
+							</div>
+						</div>
+					)}
+
+					{/* Error display (for non-confirm steps) */}
+					{state.error && state.step !== "confirm" && (
+						<Alert type="error" className="">
+							{state.error}
+						</Alert>
+					)}
+				</CardBody>
+			</Card>
+		</PageLayout>
 	)
 }

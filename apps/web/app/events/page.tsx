@@ -10,6 +10,7 @@ import { ClubEvent } from "@repo/domain/types"
 import { useAuth } from "../../lib/auth-context"
 import CalendarCard from "../components/calendar-card"
 import ResultsCard from "../components/results-card"
+import { LoadingSpinner } from "../components/ui/loading-spinner"
 
 export default function EventsPage() {
 	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
@@ -77,9 +78,9 @@ export default function EventsPage() {
 
 	if (isPending) {
 		return (
-			<div className="flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
-			</div>
+			<main className="min-h-screen flex items-center justify-center p-8">
+				<LoadingSpinner size="lg" />
+			</main>
 		)
 	}
 

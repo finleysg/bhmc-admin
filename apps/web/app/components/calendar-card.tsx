@@ -3,6 +3,7 @@
 import "react-day-picker/dist/style.css"
 
 import { DayPicker } from "react-day-picker"
+import { HelperText } from "@/components/ui/helper-text"
 
 interface CalendarCardProps {
 	selectedDate: Date
@@ -20,10 +21,7 @@ export default function CalendarCard({
 	return (
 		<div className="card bg-base-100 shadow-xl">
 			<div className="card-body">
-				<h2 className="card-title mb-4">Select Date</h2>
-				<p className="text-sm text-base-content/60 mb-4">
-					Choose the tournament date to get started
-				</p>
+				<HelperText>Choose the tournament date to get started</HelperText>
 
 				<DayPicker
 					mode="single"

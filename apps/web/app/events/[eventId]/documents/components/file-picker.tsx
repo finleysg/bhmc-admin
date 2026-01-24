@@ -2,6 +2,7 @@
 
 import { useCallback } from "react"
 import { useDropzone } from "react-dropzone"
+import { HelperText } from "@/components/ui/helper-text"
 
 interface FilePickerProps {
 	onFileSelect: (file: File) => void
@@ -37,13 +38,13 @@ export function FilePicker({ onFileSelect, currentFileName }: FilePickerProps) {
 				{selectedFile ? (
 					<div>
 						<p className="font-medium">{selectedFile.name}</p>
-						<p className="text-sm text-base-content/60">Click or drag to replace</p>
+						<HelperText>Click or drag to replace</HelperText>
 					</div>
 				) : currentFileName ? (
 					<div>
-						<p className="text-sm text-base-content/60">Current file:</p>
+						<HelperText>Current file:</HelperText>
 						<p className="font-medium">{currentFileName}</p>
-						<p className="text-sm text-base-content/60 mt-2">Drop a file or click to replace</p>
+						<HelperText className="mt-2">Drop a file or click to replace</HelperText>
 					</div>
 				) : (
 					<div>
@@ -52,7 +53,7 @@ export function FilePicker({ onFileSelect, currentFileName }: FilePickerProps) {
 						) : (
 							<>
 								<p>Drag and drop a file here, or click to select</p>
-								<p className="text-sm text-base-content/60 mt-1">Any file type accepted</p>
+								<HelperText className="mt-1">Any file type accepted</HelperText>
 							</>
 						)}
 					</div>

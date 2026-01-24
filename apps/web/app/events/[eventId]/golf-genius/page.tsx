@@ -5,6 +5,8 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
 import { useAuth } from "@/lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { HelperText } from "@/components/ui/helper-text"
 import { CompleteClubEvent } from "@repo/domain/types"
 
 import IntegrationOrchestrator from "./components/integration-orchestrator"
@@ -45,7 +47,7 @@ export default function GolfGeniusIntegrationPage() {
 	if (isPending || loading) {
 		return (
 			<main className="min-h-screen flex items-center justify-center p-8">
-				<span className="loading loading-spinner loading-lg"></span>
+				<LoadingSpinner size="lg" />
 			</main>
 		)
 	}
@@ -59,7 +61,7 @@ export default function GolfGeniusIntegrationPage() {
 			<main className="min-h-screen flex items-center justify-center p-8">
 				<div className="text-center">
 					<h1 className="text-2xl font-bold mb-4">Error</h1>
-					<p className="text-muted-foreground mb-4">{error || "Event not found"}</p>
+					<HelperText className="mb-4">{error || "Event not found"}</HelperText>
 					<button onClick={() => router.push("/events")} className="btn btn-primary">
 						Back to Events
 					</button>

@@ -2,6 +2,7 @@
 
 import { formatCurrency } from "@repo/domain/functions"
 import { Fee, PlayerFees } from "@/types/event-fee"
+import { HelperText } from "@/components/ui/helper-text"
 
 interface PlayerFeePickerProps {
 	playerFees: PlayerFees
@@ -86,7 +87,7 @@ export function PlayerFeePicker({
 								/>
 								<span className="text-sm">{fee.name || "Fee"}</span>
 							</div>
-							<span className="text-sm text-base-content/70">{formatCurrency(fee.amount)}</span>
+							<HelperText>{formatCurrency(fee.amount)}</HelperText>
 						</label>
 					))}
 				</div>

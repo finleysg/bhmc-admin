@@ -7,6 +7,9 @@ import Link from "next/link"
 import { Pagination } from "@/components/pagination"
 import { useIsMobile } from "@/lib/use-is-mobile"
 import { useAuthenticatedFetch, useExcelExport } from "@/lib/use-report"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { EmptyState } from "@/components/ui/empty-state"
+import { PageHeader } from "@/components/ui/page-header"
 import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
 import { EventReportRow } from "@repo/domain/types"
 import {
@@ -239,7 +242,7 @@ export default function MembershipReportPage() {
 		return (
 			<main className="min-h-screen flex items-center justify-center p-2">
 				<div className="w-full max-w-3xl text-center">
-					<h2 className="text-3xl font-bold mb-4">Membership Report</h2>
+					<PageHeader>Membership Report</PageHeader>
 					<p className="text-error mb-8">{eventError}</p>
 					<Link href="/club" className="btn btn-primary">
 						Back to Club Administration
@@ -252,7 +255,7 @@ export default function MembershipReportPage() {
 	if (!eventId || loading) {
 		return (
 			<div className="flex items-center justify-center p-2">
-				<span className="loading loading-spinner loading-lg" />
+				<LoadingSpinner size="lg" />
 			</div>
 		)
 	}
@@ -261,7 +264,7 @@ export default function MembershipReportPage() {
 		return (
 			<main className="min-h-screen flex items-center justify-center p-2">
 				<div className="w-full max-w-3xl text-center">
-					<h2 className="text-3xl font-bold mb-4">Membership Report</h2>
+					<PageHeader>Membership Report</PageHeader>
 					<p className="text-error mb-8">Error loading report: {error}</p>
 					<Link href="/club" className="btn btn-primary">
 						Back to Club Administration
@@ -295,9 +298,7 @@ export default function MembershipReportPage() {
 				{hasData ? (
 					<MembershipTable data={data} />
 				) : (
-					<div className="text-center py-12">
-						<p className="text-muted-foreground">No membership data available.</p>
-					</div>
+					<EmptyState message="No membership data available." />
 				)}
 			</div>
 		</main>
