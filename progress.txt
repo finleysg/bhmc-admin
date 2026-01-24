@@ -56,3 +56,9 @@ PRD 6.3: Add MemberHub tests - COMPLETE
 - Follows existing test patterns (renderRoute, setupAuthenticatedUser)
 - File: apps/public/src/screens/member/__tests__/member-hub.test.tsx (new)
 - Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
+
+PRD 6.4: Add MemberResults tests - COMPLETE
+- Tests: completed events, scores/points display, payout badges, pending events, empty state, season filter
+- Mock handlers for tournament-results, tournament-points, events, registration-slots
+- File: apps/public/src/screens/member/__tests__/member-results.test.tsx (new)
+- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
