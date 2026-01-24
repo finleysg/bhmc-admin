@@ -41,6 +41,13 @@ import { SeasonLongPointsScreen } from "../screens/season-long-points"
 import { SendMessageScreen } from "../screens/send-message"
 import * as config from "../utils/app-config"
 import { MembershipScreen } from "../screens/membership"
+import {
+	MemberPlaceholder,
+	AccountPlaceholder,
+	FriendsPlaceholder,
+	ScoresPlaceholder,
+	ResultsPlaceholder,
+} from "../screens/member/member-routes"
 
 export const mainRoutes = () =>
 	config.maintenanceMode
@@ -97,6 +104,16 @@ export const mainRoutes = () =>
 				{ path: "/gallery/:id", element: <GalleryImageScreen /> },
 				{ path: "/my-account", element: <AccountScreen /> },
 				{ path: "/my-activity", element: <AccountSettingsScreen /> },
+				{
+					path: "/member",
+					children: [
+						{ index: true, element: <MemberPlaceholder /> },
+						{ path: "account", element: <AccountPlaceholder /> },
+						{ path: "friends", element: <FriendsPlaceholder /> },
+						{ path: "scores", element: <ScoresPlaceholder /> },
+						{ path: "results", element: <ResultsPlaceholder /> },
+					],
+				},
 				{
 					path: "/registration/:registrationId/payment/:paymentId",
 					element: <AdminPaymentFlow />,
