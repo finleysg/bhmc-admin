@@ -6,6 +6,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { Card, CardBody, CardTitle } from "@/components/ui/card"
+import { StepIndicator } from "@/components/ui/step-indicator"
 import type {
 	CompleteClubEvent,
 	Player,
@@ -189,7 +190,7 @@ export default function SwapPlayerPage() {
 					{/* Step 1: Select First Player */}
 					{state.step === "playerA" && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">Step 1 of 3: Select first player</h4>
+							<StepIndicator currentStep={1} totalSteps={3} label="Select first player" />
 							<GroupSearch
 								key={state.resetKey}
 								clubEvent={state.clubEvent}
@@ -227,7 +228,7 @@ export default function SwapPlayerPage() {
 					{/* Step 2: Select Second Player */}
 					{state.step === "playerB" && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">Step 2 of 3: Select second player</h4>
+							<StepIndicator currentStep={2} totalSteps={3} label="Select second player" />
 
 							{state.playerA && (
 								<div className="mb-4 p-3 bg-base-200 rounded">
@@ -292,7 +293,7 @@ export default function SwapPlayerPage() {
 					{/* Step 3: Confirm and Submit */}
 					{state.step === "confirm" && !state.swapSuccess && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-4">Step 3 of 3: Confirm swap</h4>
+							<StepIndicator currentStep={3} totalSteps={3} label="Confirm swap" />
 
 							{/* Summary */}
 							<div className="space-y-4 mb-6">

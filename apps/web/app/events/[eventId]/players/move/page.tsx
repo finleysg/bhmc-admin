@@ -11,6 +11,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { Card, CardBody, CardTitle } from "@/components/ui/card"
+import { StepIndicator } from "@/components/ui/step-indicator"
 import { reducer, initialState } from "./reducer"
 
 function findCourseByHoleId(courses: Course[], holeId: number): Course | undefined {
@@ -142,7 +143,7 @@ export default function MovePlayerPage() {
 					{/* Step 1: Select Group */}
 					{state.step === "group" && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">Step 1 of 4: Select Group</h4>
+							<StepIndicator currentStep={1} totalSteps={4} label="Select Group" />
 							<GroupSearch
 								key={state.resetKey}
 								clubEvent={state.clubEvent}
@@ -160,7 +161,7 @@ export default function MovePlayerPage() {
 					{/* Step 2: Select Players */}
 					{state.step === "player" && state.sourceGroup && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">Step 2 of 4: Select Player(s) to Move</h4>
+							<StepIndicator currentStep={2} totalSteps={4} label="Select Player(s) to Move" />
 							<SelectPlayers
 								group={state.sourceGroup}
 								selectedPlayers={state.selectedPlayers}
@@ -206,7 +207,7 @@ export default function MovePlayerPage() {
 					{/* Step 3: Select Destination */}
 					{state.step === "destination" && state.clubEvent && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">Step 3 of 4: Select Destination</h4>
+							<StepIndicator currentStep={3} totalSteps={4} label="Select Destination" />
 							<p className="text-sm text-base-content/70 mb-4">
 								Moving:{" "}
 								{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
@@ -250,7 +251,7 @@ export default function MovePlayerPage() {
 						state.sourceGroup &&
 						state.destinationSlotGroup && (
 							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 4 of 4: Confirm Move</h4>
+								<StepIndicator currentStep={4} totalSteps={4} label="Confirm Move" />
 
 								{/* Summary */}
 								<div className="mb-4">

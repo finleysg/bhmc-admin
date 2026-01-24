@@ -13,6 +13,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { Card, CardBody, CardTitle } from "@/components/ui/card"
+import { StepIndicator } from "@/components/ui/step-indicator"
 import { parseLocalDate } from "@repo/domain/functions"
 import {
 	RegistrationTypeChoices,
@@ -150,9 +151,11 @@ export default function AddPlayerPage() {
 
 					{state.step === "player" && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">
-								Step {stepNumber} of {totalSteps}: Select Players
-							</h4>
+							<StepIndicator
+								currentStep={stepNumber}
+								totalSteps={totalSteps}
+								label="Select Players"
+							/>
 							<PlayerSearch
 								eventId={Number(eventId)}
 								initialSelectedPlayers={state.selectedPlayers}
@@ -176,9 +179,11 @@ export default function AddPlayerPage() {
 
 					{state.step === "slot" && state.event && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">
-								Step {stepNumber} of {totalSteps}: Find an Open Spot
-							</h4>
+							<StepIndicator
+								currentStep={stepNumber}
+								totalSteps={totalSteps}
+								label="Find an Open Spot"
+							/>
 							<p className="text-sm text-base-content/70 mb-4">
 								Players:{" "}
 								{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
@@ -218,9 +223,7 @@ export default function AddPlayerPage() {
 
 					{state.step === "fee" && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">
-								Step {stepNumber} of {totalSteps}: Select Fees
-							</h4>
+							<StepIndicator currentStep={stepNumber} totalSteps={totalSteps} label="Select Fees" />
 							<p className="text-sm text-base-content/70 mb-4">
 								Players:{" "}
 								{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}
@@ -259,9 +262,11 @@ export default function AddPlayerPage() {
 
 					{state.step === "confirm" && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">
-								Step {stepNumber} of {totalSteps}: Payment Options
-							</h4>
+							<StepIndicator
+								currentStep={stepNumber}
+								totalSteps={totalSteps}
+								label="Payment Options"
+							/>
 							<p className="text-sm text-base-content/70 mb-4">
 								Players:{" "}
 								{state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}

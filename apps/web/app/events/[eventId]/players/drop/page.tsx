@@ -9,6 +9,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
 import { Card, CardBody, CardTitle } from "@/components/ui/card"
+import { StepIndicator } from "@/components/ui/step-indicator"
 import { reducer, initialState, translateRefundRequests } from "./reducer"
 import { PaidFeePicker } from "../components/paid-fee-picker"
 
@@ -176,7 +177,7 @@ export default function DropPlayerPage() {
 					{/* Step 1: Select Group */}
 					{state.step === "group" && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">Step 1 of 4: Select Group</h4>
+							<StepIndicator currentStep={1} totalSteps={4} label="Select Group" />
 							<GroupSearch
 								key={state.resetKey}
 								clubEvent={state.clubEvent}
@@ -189,7 +190,7 @@ export default function DropPlayerPage() {
 					{/* Step 2: Select Players */}
 					{state.step === "player" && state.selectedGroup && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">Step 2 of 4: Select Player(s) to Drop</h4>
+							<StepIndicator currentStep={2} totalSteps={4} label="Select Player(s) to Drop" />
 							<SelectPlayers
 								group={state.selectedGroup}
 								selectedPlayers={state.selectedPlayers}
@@ -223,7 +224,7 @@ export default function DropPlayerPage() {
 					{/* Step 3: Select Fees */}
 					{state.step === "fee" && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">Step 3 of 4: Select Fees to Refund</h4>
+							<StepIndicator currentStep={3} totalSteps={4} label="Select Fees to Refund" />
 							<PaidFeePicker
 								clubEvent={state.clubEvent}
 								slots={slots}
@@ -255,7 +256,7 @@ export default function DropPlayerPage() {
 					{/* Step 4: Confirm */}
 					{state.step === "confirm" && !state.dropSuccess && (
 						<div className="mb-6">
-							<h4 className="font-semibold mb-2">Step 4 of 4: Confirm Drop</h4>
+							<StepIndicator currentStep={4} totalSteps={4} label="Confirm Drop" />
 							<p className="mb-2">
 								Drop {state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}{" "}
 								from this event?
