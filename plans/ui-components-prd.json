@@ -186,7 +186,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms empty states display correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 12,
@@ -203,7 +203,7 @@
 				"File exists at apps/web/app/components/ui/page-header.tsx",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 13,

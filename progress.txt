@@ -86,3 +86,34 @@ UI Components PRD Item 9: Replace card patterns with Card components (player pag
 - Decision: Replaced outer wrapper divs with Card, nested CardBody wraps all step content, CardTitle replaces h3 header
 - Fixed JSX closing tag mismatch in swap/page.tsx
 - No blockers
+
+UI Components PRD Item 10: Create EmptyState component - COMPLETED
+- File: apps/web/app/components/ui/empty-state.tsx
+- Props: message (string), className (optional)
+- Renders: <div className='text-center py-12 {className}'><p className='text-muted-foreground'>{message}</p></div>
+- Exported as named export
+- All acceptance criteria met
+- Typecheck and lint pass
+- Commit: 11aa83a
+- Decision: Used "use client" directive matching existing UI component pattern
+- No blockers
+
+UI Components PRD Item 11: Replace empty state patterns with EmptyState component - COMPLETED
+- Files updated: apps/web/app/components/report-page.tsx, apps/web/app/club/membership/page.tsx
+- Replaced 'text-center py-12' pattern divs with <EmptyState message="..." /> component
+- Import: EmptyState from '@/components/ui/empty-state'
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Commit: fd6b212
+- Decision: Updated report-page and membership pages to use EmptyState with appropriate messages
+- No blockers
+
+UI Components PRD Item 12: Create PageHeader component - COMPLETED
+- File: apps/web/app/components/ui/page-header.tsx
+- Props: children, centered (boolean, default true), className (optional)
+- Renders: <h2 className='text-3xl font-bold mb-6 {centered ? 'text-center' : ''} {className}'>{children}</h2>
+- All acceptance criteria met
+- Typecheck and lint pass
+- Commit: 34b2651
+- Decision: Used "use client" directive following UI component pattern
+- No blockers
