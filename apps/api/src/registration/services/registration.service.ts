@@ -202,6 +202,33 @@ export class RegistrationService {
 	}
 
 	/**
+	 * Get available spots for an event.
+	 * For canChoose events: counts AVAILABLE slots vs total slots.
+	 * For non-canChoose events: registrationMaximum minus RESERVED slots.
+	 */
+	async getAvailableSpots(
+		eventId: number,
+	): Promise<{ availableSpots: number; totalSpots: number }> {
+		const event = await this.events.getEventById(eventId)
+
+		if (event.canChoose) {
+			const availableSpots = await this.repository.countSlotsByEventAndStatus(eventId, [
+				RegistrationStatusChoices.AVAILABLE,
+			])
+			const totalSpots = await this.repository.countSlotsByEvent(eventId)
+			return { availableSpots, totalSpots }
+		}
+
+		// Non-canChoose: total is registrationMaximum, available is total minus reserved
+		const totalSpots = event.registrationMaximum ?? 0
+		const reservedCount = await this.repository.countSlotsByEventAndStatus(eventId, [
+			RegistrationStatusChoices.RESERVED,
+		])
+		const availableSpots = Math.max(0, totalSpots - reservedCount)
+		return { availableSpots, totalSpots }
+	}
+
+	/**
 	 * Cancel a registration and release slots.
 	 */
 	async cancelRegistration(

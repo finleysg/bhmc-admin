@@ -571,4 +571,23 @@ export class RegistrationRepository {
 	async deleteRegistrationFeesByPayment(paymentId: number): Promise<void> {
 		await this.drizzle.db.delete(registrationFee).where(eq(registrationFee.paymentId, paymentId))
 	}
+
+	async countSlotsByEventAndStatus(
+		eventId: number,
+		statuses: RegistrationStatusValue[],
+	): Promise<number> {
+		const [result] = await this.drizzle.db
+			.select({ count: sql<number>`COUNT(*)` })
+			.from(registrationSlot)
+			.where(and(eq(registrationSlot.eventId, eventId), inArray(registrationSlot.status, statuses)))
+		return Number(result?.count ?? 0)
+	}
+
+	async countSlotsByEvent(eventId: number): Promise<number> {
+		const [result] = await this.drizzle.db
+			.select({ count: sql<number>`COUNT(*)` })
+			.from(registrationSlot)
+			.where(eq(registrationSlot.eventId, eventId))
+		return Number(result?.count ?? 0)
+	}
 }

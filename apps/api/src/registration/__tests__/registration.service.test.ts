@@ -159,11 +159,14 @@ const createMockRegistrationRepository = () => ({
 	deleteRegistrationSlotsByRegistration: jest.fn(),
 	updateRegistration: jest.fn(),
 	createRegistration: jest.fn(),
+	countSlotsByEventAndStatus: jest.fn(),
+	countSlotsByEvent: jest.fn(),
 })
 
 const createMockEventsService = () => ({
 	getCompleteClubEventById: jest.fn(),
 	isCanChooseHolesEvent: jest.fn(),
+	getEventById: jest.fn(),
 })
 
 const createMockPaymentsService = () => ({
@@ -578,6 +581,107 @@ describe("RegistrationService", () => {
 			const result = await service.findRegistrationById(1)
 
 			expect(result).toBeDefined()
+		})
+	})
+
+	describe("getAvailableSpots", () => {
+		describe("canChoose events", () => {
+			it("returns available slots count and total slots for canChoose event", async () => {
+				const { service, eventsService, repository } = createService()
+
+				eventsService.getEventById.mockResolvedValue(createClubEvent({ canChoose: true }))
+				repository.countSlotsByEventAndStatus.mockResolvedValue(10) // 10 available
+				repository.countSlotsByEvent.mockResolvedValue(40) // 40 total
+
+				const result = await service.getAvailableSpots(100)
+
+				expect(result).toEqual({ availableSpots: 10, totalSpots: 40 })
+				expect(repository.countSlotsByEventAndStatus).toHaveBeenCalledWith(100, [
+					RegistrationStatusChoices.AVAILABLE,
+				])
+				expect(repository.countSlotsByEvent).toHaveBeenCalledWith(100)
+			})
+
+			it("returns 0 available when all slots taken", async () => {
+				const { service, eventsService, repository } = createService()
+
+				eventsService.getEventById.mockResolvedValue(createClubEvent({ canChoose: true }))
+				repository.countSlotsByEventAndStatus.mockResolvedValue(0)
+				repository.countSlotsByEvent.mockResolvedValue(40)
+
+				const result = await service.getAvailableSpots(100)
+
+				expect(result).toEqual({ availableSpots: 0, totalSpots: 40 })
+			})
+
+			it("returns 0 total when no slots created yet", async () => {
+				const { service, eventsService, repository } = createService()
+
+				eventsService.getEventById.mockResolvedValue(createClubEvent({ canChoose: true }))
+				repository.countSlotsByEventAndStatus.mockResolvedValue(0)
+				repository.countSlotsByEvent.mockResolvedValue(0)
+
+				const result = await service.getAvailableSpots(100)
+
+				expect(result).toEqual({ availableSpots: 0, totalSpots: 0 })
+			})
+		})
+
+		describe("non-canChoose events", () => {
+			it("returns available based on registrationMaximum minus reserved", async () => {
+				const { service, eventsService, repository } = createService()
+
+				eventsService.getEventById.mockResolvedValue(
+					createClubEvent({ canChoose: false, registrationMaximum: 100 }),
+				)
+				repository.countSlotsByEventAndStatus.mockResolvedValue(25) // 25 reserved
+
+				const result = await service.getAvailableSpots(100)
+
+				expect(result).toEqual({ availableSpots: 75, totalSpots: 100 })
+				expect(repository.countSlotsByEventAndStatus).toHaveBeenCalledWith(100, [
+					RegistrationStatusChoices.RESERVED,
+				])
+			})
+
+			it("returns 0 available when at capacity", async () => {
+				const { service, eventsService, repository } = createService()
+
+				eventsService.getEventById.mockResolvedValue(
+					createClubEvent({ canChoose: false, registrationMaximum: 50 }),
+				)
+				repository.countSlotsByEventAndStatus.mockResolvedValue(50)
+
+				const result = await service.getAvailableSpots(100)
+
+				expect(result).toEqual({ availableSpots: 0, totalSpots: 50 })
+			})
+
+			it("returns 0 available even if overbooked", async () => {
+				const { service, eventsService, repository } = createService()
+
+				eventsService.getEventById.mockResolvedValue(
+					createClubEvent({ canChoose: false, registrationMaximum: 50 }),
+				)
+				repository.countSlotsByEventAndStatus.mockResolvedValue(55) // overbooked
+
+				const result = await service.getAvailableSpots(100)
+
+				expect(result).toEqual({ availableSpots: 0, totalSpots: 50 })
+			})
+
+			it("returns 0 totalSpots when registrationMaximum is null", async () => {
+				const { service, eventsService, repository } = createService()
+
+				eventsService.getEventById.mockResolvedValue(
+					createClubEvent({ canChoose: false, registrationMaximum: null }),
+				)
+				repository.countSlotsByEventAndStatus.mockResolvedValue(10)
+
+				const result = await service.getAvailableSpots(100)
+
+				expect(result).toEqual({ availableSpots: 0, totalSpots: 0 })
+			})
 		})
 	})
 })
