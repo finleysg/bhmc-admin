@@ -628,18 +628,20 @@ describe("RegistrationService", () => {
 		})
 
 		describe("non-canChoose events", () => {
-			it("returns available based on registrationMaximum minus reserved", async () => {
+			it("returns available based on registrationMaximum minus used slots", async () => {
 				const { service, eventsService, repository } = createService()
 
 				eventsService.getEventById.mockResolvedValue(
 					createClubEvent({ canChoose: false, registrationMaximum: 100 }),
 				)
-				repository.countSlotsByEventAndStatus.mockResolvedValue(25) // 25 reserved
+				repository.countSlotsByEventAndStatus.mockResolvedValue(25) // 25 used
 
 				const result = await service.getAvailableSpots(100)
 
 				expect(result).toEqual({ availableSpots: 75, totalSpots: 100 })
 				expect(repository.countSlotsByEventAndStatus).toHaveBeenCalledWith(100, [
+					RegistrationStatusChoices.PENDING,
+					RegistrationStatusChoices.AWAITING_PAYMENT,
 					RegistrationStatusChoices.RESERVED,
 				])
 			})

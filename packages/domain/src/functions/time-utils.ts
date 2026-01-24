@@ -58,10 +58,6 @@ export function formatTime(totalMinutes: number): string {
 }
 
 /**
- * Parse tee time splits string like "9" or "8,9" into number array [9] or [8,9].
- * Throws on invalid input.
- */
-/**
  * Parse a datetime string as UTC.
  * MySQL stores datetimes as UTC without timezone markers.
  * Handles: "YYYY-MM-DD HH:MM:SS", "YYYY-MM-DD HH:MM:SS.ffffff"
@@ -70,9 +66,14 @@ export function parseUtcDateTime(dateTimeString: string): Date {
 	if (!dateTimeString || typeof dateTimeString !== "string") {
 		throw new Error("Invalid datetime string: expected non-empty string")
 	}
-	// Normalize: replace space with T, remove fractional seconds, append Z
-	const normalized = dateTimeString.replace(" ", "T").split(".")[0] + "Z"
-	return new Date(normalized)
+	// Normalize: replace space with T, remove fractional seconds, append Z if needed
+	const base = dateTimeString.trim().replace(" ", "T").split(".")[0]
+	const normalized = base.endsWith("Z") ? base : `${base}Z`
+	const parsed = new Date(normalized)
+	if (Number.isNaN(parsed.getTime())) {
+		throw new Error(`Invalid datetime string: ${dateTimeString}`)
+	}
+	return parsed
 }
 
 /**

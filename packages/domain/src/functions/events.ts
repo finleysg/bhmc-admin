@@ -6,6 +6,7 @@ import {
 	StartTypeChoices,
 } from "../types"
 import { format, isValid, isWithinInterval } from "date-fns"
+import { parseUtcDateTime } from "./time-utils"
 
 const isoDayFormat = (dt: string) => {
 	if (dt) {
@@ -170,5 +171,5 @@ export function getRegistrationTypeName(registrationType: string) {
 export function registrationHasStarted(event: ClubEvent, now: Date = new Date()): boolean {
 	const startDate = event.prioritySignupStart ?? event.signupStart
 	if (!startDate) return false
-	return now >= new Date(startDate)
+	return now >= parseUtcDateTime(startDate)
 }

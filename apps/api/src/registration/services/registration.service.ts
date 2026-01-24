@@ -219,12 +219,14 @@ export class RegistrationService {
 			return { availableSpots, totalSpots }
 		}
 
-		// Non-canChoose: total is registrationMaximum, available is total minus reserved
+		// Non-canChoose: total is registrationMaximum, available is total minus used slots
 		const totalSpots = event.registrationMaximum ?? 0
-		const reservedCount = await this.repository.countSlotsByEventAndStatus(eventId, [
+		const usedCount = await this.repository.countSlotsByEventAndStatus(eventId, [
+			RegistrationStatusChoices.PENDING,
+			RegistrationStatusChoices.AWAITING_PAYMENT,
 			RegistrationStatusChoices.RESERVED,
 		])
-		const availableSpots = Math.max(0, totalSpots - reservedCount)
+		const availableSpots = Math.max(0, totalSpots - usedCount)
 		return { availableSpots, totalSpots }
 	}
 
