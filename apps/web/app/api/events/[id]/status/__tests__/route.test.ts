@@ -159,6 +159,7 @@ describe("GET /api/events/[id]/status", () => {
 	})
 
 	it("returns 500 on fetch exception", async () => {
+		const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {})
 		mockFetch.mockRejectedValueOnce(new Error("Network error"))
 
 		const req = createMockRequest("token123")
@@ -166,5 +167,6 @@ describe("GET /api/events/[id]/status", () => {
 		expect(response.status).toBe(500)
 		const json = await response.json()
 		expect(json.error).toBe("Internal server error")
+		consoleSpy.mockRestore()
 	})
 })
