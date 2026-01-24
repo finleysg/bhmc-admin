@@ -29,7 +29,7 @@ describe("getFullName", () => {
 })
 
 describe("getAge", () => {
-	const today = new Date("2023-06-15")
+	const today = new Date(Date.UTC(2023, 5, 15))
 
 	it("calculates age correctly", () => {
 		const player = { birthDate: "1990-06-15" } as Player
@@ -41,7 +41,7 @@ describe("getAge", () => {
 
 	it("calculates event age with reference date", () => {
 		const player = { birthDate: "1990-01-01" } as Player
-		const referenceDate = new Date("2022-12-31")
+		const referenceDate = new Date(Date.UTC(2022, 11, 31))
 		const result = getAge(player, today, referenceDate)
 		expect(result.age).toBe(33)
 		expect(result.eventAge).toBe(32)
@@ -68,7 +68,7 @@ describe("getAge", () => {
 
 	it("calculates calendar age at end of year", () => {
 		const player = { birthDate: "1990-07-01" } as Player
-		const referenceDate = new Date("2023-01-15")
+		const referenceDate = new Date(Date.UTC(2023, 0, 15))
 		const result = getAge(player, today, referenceDate)
 		expect(result.calendarAge).toBe(33) // End of 2023 is 33rd year
 	})
