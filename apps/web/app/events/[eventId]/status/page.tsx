@@ -1,44 +1,97 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useCallback, useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
 
 import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert } from "@/components/ui/alert"
 import { Card, CardBody, CardTitle } from "@/components/ui/card"
-import { EventStatusInfo, EventTypeChoices, StartTypeChoices } from "@repo/domain/types"
+import {
+	EventStatusInfo,
+	EventTypeChoices,
+	StartTypeChoices,
+	ValidationAction,
+} from "@repo/domain/types"
 import { parseLocalDate } from "@repo/domain/functions"
 
 export default function EventStatusPage() {
 	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const params = useParams()
+	const router = useRouter()
 	const eventId = params.eventId as string
 
 	const [statusInfo, setStatusInfo] = useState<EventStatusInfo | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
+	const [actionLoading, setActionLoading] = useState<string | null>(null)
+	const [actionError, setActionError] = useState<string | null>(null)
+
+	const fetchStatus = useCallback(async () => {
+		try {
+			setLoading(true)
+			setError(null)
+			const res = await fetch(`/api/events/${eventId}/status`)
+			if (!res.ok) {
+				throw new Error("Failed to load event status")
+			}
+			const data = (await res.json()) as EventStatusInfo
+			setStatusInfo(data)
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Failed to load event status")
+		} finally {
+			setLoading(false)
+		}
+	}, [eventId])
 
 	useEffect(() => {
 		if (!signedIn || !eventId) return
-
-		const fetchStatus = async () => {
-			try {
-				const res = await fetch(`/api/events/${eventId}/status`)
-				if (!res.ok) {
-					throw new Error("Failed to load event status")
-				}
-				const data = (await res.json()) as EventStatusInfo
-				setStatusInfo(data)
-			} catch (err) {
-				setError(err instanceof Error ? err.message : "Failed to load event status")
-			} finally {
-				setLoading(false)
-			}
-		}
-
 		void fetchStatus()
-	}, [signedIn, eventId])
+	}, [signedIn, eventId, fetchStatus])
+
+	const handleAction = async (action: ValidationAction, code: string) => {
+		setActionError(null)
+		setActionLoading(code)
+
+		try {
+			if (action.type === "api-call") {
+				if (!action.endpoint || !action.method) {
+					throw new Error("Invalid action configuration")
+				}
+
+				const res = await fetch(action.endpoint, {
+					method: action.method,
+				})
+
+				if (!res.ok) {
+					const errorData = (await res.json().catch(() => ({}))) as {
+						message?: string
+					}
+					throw new Error(errorData.message ?? `Failed to execute action`)
+				}
+
+				// Refresh the page data on success
+				await fetchStatus()
+			} else if (action.type === "redirect") {
+				if (!action.url) {
+					throw new Error("Invalid redirect configuration")
+				}
+
+				// Django admin URLs should open in new tab
+				if (action.url.startsWith("/admin/")) {
+					const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_API_URL || "http://localhost:8000"
+					window.open(`${djangoUrl}${action.url}`, "_blank")
+				} else {
+					// Internal URLs use router
+					router.push(action.url)
+				}
+			}
+		} catch (err) {
+			setActionError(err instanceof Error ? err.message : "Action failed")
+		} finally {
+			setActionLoading(null)
+		}
+	}
 
 	if (isPending || loading) {
 		return <LoadingSpinner size="lg" />
@@ -156,6 +209,12 @@ export default function EventStatusPage() {
 					</CardBody>
 				</Card>
 
+				{actionError && (
+					<Alert type="error" className="mb-4">
+						{actionError}
+					</Alert>
+				)}
+
 				{hasValidations && (
 					<div className="space-y-4">
 						<h2 className="text-xl font-semibold">Validation Results</h2>
@@ -167,12 +226,24 @@ export default function EventStatusPage() {
 										? "warning"
 										: "info"
 
+							const isActionLoading = actionLoading === validation.code
+
 							return (
 								<Alert key={index} type={alertType} className="flex items-center justify-between">
 									<span>{validation.message}</span>
 									{validation.action && (
-										<button className="btn btn-sm" disabled={statusInfo.isReadonly}>
-											{validation.action.label}
+										<button
+											className="btn btn-sm"
+											disabled={statusInfo.isReadonly || isActionLoading}
+											onClick={() => {
+												void handleAction(validation.action!, validation.code)
+											}}
+										>
+											{isActionLoading ? (
+												<span className="loading loading-spinner loading-sm"></span>
+											) : (
+												validation.action.label
+											)}
 										</button>
 									)}
 								</Alert>
