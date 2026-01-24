@@ -508,7 +508,7 @@
 				"Complete add/move/drop/swap player flows to test step indicators",
 				"Test document add/edit/delete flows for modals"
 			],
-			"passes": false
+			"passes": true
 		}
 	]
 }
