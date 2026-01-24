@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useClubEvents } from "../../hooks/use-club-events"
 import { useMyPlayerRecord } from "../../hooks/use-my-player-record"
 import { usePlayerScores } from "../../hooks/use-player-scores"
@@ -5,6 +6,7 @@ import { RoundsProps, SeasonProps } from "../../models/common-props"
 import { Hole } from "../../models/course"
 import { CourseInRound, LoadRounds, ScoreByHole } from "../../models/scores"
 import { OverlaySpinner } from "../spinners/overlay-spinner"
+import { CourseFilterChips } from "./course-filter-chips"
 import {
 	AverageScore,
 	HoleNumbers,
@@ -142,24 +144,50 @@ export function PlayerScores({ isNet, season }: PlayerScoresProps) {
 
 	const courses = getUniqueCourses().filter((c) => c.numberOfHoles === 9)
 
+	// State for course filter
+	const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>([])
+
+	const handleToggleCourse = (courseId: number) => {
+		setSelectedCourseIds((prev) => {
+			if (prev.includes(courseId)) {
+				return prev.filter((id) => id !== courseId)
+			} else {
+				return [...prev, courseId]
+			}
+		})
+	}
+
+	// Filter courses to display
+	const displayedCourses =
+		selectedCourseIds.length === 0 ? courses : courses.filter((c) => selectedCourseIds.includes(c.id))
+
 	return (
-		<div className="row mt-2">
+		<div className="mt-2">
 			<OverlaySpinner loading={busy} />
-			{!busy &&
-				courses.map((course) => {
-					const courseRounds = rounds.filter((r) => r.course.id === course.id)
-					const holes = getHolesForCourse(course.id)
-					return (
-						<div key={course.id} className="col-lg-4 col-md-12">
-							<RoundsByCourse
-								course={course}
-								holes={holes}
-								courseName={course.name}
-								rounds={courseRounds}
-							/>
-						</div>
-					)
-				})}
+			{!busy && courses.length > 0 && (
+				<CourseFilterChips
+					courses={courses}
+					selectedCourseIds={selectedCourseIds}
+					onToggleCourse={handleToggleCourse}
+				/>
+			)}
+			<div className="row">
+				{!busy &&
+					displayedCourses.map((course) => {
+						const courseRounds = rounds.filter((r) => r.course.id === course.id)
+						const holes = getHolesForCourse(course.id)
+						return (
+							<div key={course.id} className="col-lg-4 col-md-12">
+								<RoundsByCourse
+									course={course}
+									holes={holes}
+									courseName={course.name}
+									rounds={courseRounds}
+								/>
+							</div>
+						)
+					})}
+			</div>
 		</div>
 	)
 }
