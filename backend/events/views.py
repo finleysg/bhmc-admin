@@ -1,4 +1,4 @@
-from datetime import timedelta, date
+from datetime import date, timedelta
 
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -11,13 +11,14 @@ from rest_framework.response import Response
 
 from courses.models import Course
 from payments.utils import create_admin_payment
-from register.models import RegistrationSlot, Player, Registration
+from register.models import Player, Registration, RegistrationSlot
 from register.serializers import (
-    RegistrationSlotSerializer,
     RegistrationSerializer,
-    get_starting_wave,
+    RegistrationSlotSerializer,
     get_current_wave,
+    get_starting_wave,
 )
+
 from .models import Event, FeeType, TournamentResult
 from .serializers import (
     EventSerializer,
@@ -138,9 +139,7 @@ class EventViewSet(viewsets.ModelViewSet):
         RegistrationSlot.objects.remove_slots_for_event(event)
         slots = RegistrationSlot.objects.create_slots_for_event(event)
 
-        serializer = RegistrationSlotSerializer(
-            slots, many=True, context={"request": request}
-        )
+        serializer = RegistrationSlotSerializer(slots, many=True, context={"request": request})
         return Response(serializer.data)
 
     @transaction.atomic()
@@ -220,9 +219,7 @@ class EventViewSet(viewsets.ModelViewSet):
         event = Event.objects.get(pk=pk)
 
         if not event.can_choose:
-            raise ValidationError(
-                "This event does not allow tee time/starting hole selection"
-            )
+            raise ValidationError("This event does not allow tee time/starting hole selection")
 
         course_id = request.query_params.get("course_id")
         player_count = request.query_params.get("player_count")
@@ -248,9 +245,7 @@ class EventViewSet(viewsets.ModelViewSet):
         except Course.DoesNotExist:
             raise ValidationError("Invalid course_id")
 
-        grouped = RegistrationSlot.objects.get_available_groups(
-            event, course, player_count
-        )
+        grouped = RegistrationSlot.objects.get_available_groups(event, course, player_count)
 
         # Filter by wave availability during priority signup
         current_wave = get_current_wave(event)
@@ -287,3 +282,25 @@ class FeeTypeViewSet(viewsets.ModelViewSet):
 class TournamentResultViewSet(viewsets.ModelViewSet):
     queryset = TournamentResult.objects.all()
     serializer_class = TournamentResultSerializer
+
+    def get_queryset(self):
+        """
+        Return TournamentResult objects filtered by optional query parameters.
+
+        Filters:
+        - Uses `player` to match TournamentResult.player id.
+        - Uses `season` to match TournamentResult.tournament.event.season.
+
+        Returns:
+            QuerySet: TournamentResult queryset filtered according to provided query parameters.
+        """
+        queryset = TournamentResult.objects.all()
+        player = self.request.query_params.get("player", None)
+        season = self.request.query_params.get("season", None)
+
+        if player is not None:
+            queryset = queryset.filter(player=player)
+        if season is not None:
+            queryset = queryset.filter(tournament__event__season=season)
+
+        return queryset
