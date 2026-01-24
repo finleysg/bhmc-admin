@@ -47,7 +47,7 @@ export function ProfileHeader() {
 
 	return (
 		<div className="profile-header text-center">
-			<div className="profile-header-photo">
+			<div className="profile-header-photo position-relative">
 				{player.profilePicture?.imageUrl() ? (
 					<picture>
 						<source srcSet={player.profilePicture.mobileImageUrl()} media="(max-width: 600px)" />

@@ -28,6 +28,17 @@ from .serializers import (
 )
 
 
+def _get_int_param(request, name):
+    """Parse an integer query parameter, raising ValidationError if invalid."""
+    value = request.query_params.get(name)
+    if value in (None, ""):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        raise ValidationError({name: "Must be an integer."})
+
+
 class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
 
@@ -296,8 +307,8 @@ class TournamentResultViewSet(viewsets.ModelViewSet):
             QuerySet: TournamentResult queryset filtered according to provided query parameters.
         """
         queryset = TournamentResult.objects.all()
-        player = self.request.query_params.get("player", None)
-        season = self.request.query_params.get("season", None)
+        player = _get_int_param(self.request, "player")
+        season = _get_int_param(self.request, "season")
 
         if player is not None:
             queryset = queryset.filter(player=player)
@@ -323,8 +334,8 @@ class TournamentPointsViewSet(viewsets.ModelViewSet):
             QuerySet: TournamentPoints queryset filtered according to provided query parameters.
         """
         queryset = TournamentPoints.objects.all()
-        player = self.request.query_params.get("player", None)
-        season = self.request.query_params.get("season", None)
+        player = _get_int_param(self.request, "player")
+        season = _get_int_param(self.request, "season")
 
         if player is not None:
             queryset = queryset.filter(player=player)

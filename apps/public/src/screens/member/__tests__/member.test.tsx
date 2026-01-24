@@ -19,6 +19,5 @@ test("authenticated user sees child content", async () => {
 	setupAuthenticatedUser()
 	renderRoute("/member/account")
 
-	expect(await screen.findByText(/account/i)).toBeVisible()
-	expect(screen.getByText(/placeholder for the account page/i)).toBeInTheDocument()
+	expect(await screen.findByText(/account settings/i)).toBeVisible()
 })

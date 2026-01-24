@@ -1,75 +1,68 @@
 [
-  {
-    "id": "3.1",
-    "category": "frontend",
-    "description": "Create MemberCard component with title, description, icon, link action (follows AdminCard pattern)",
-    "files": ["apps/public/src/screens/member/member-card.tsx (create)"],
-    "verify": [
-      "Card renders title, icon, description",
-      "Click navigates to specified route"
-    ],
-    "passes": false
-  },
-  {
-    "id": "3.2",
-    "category": "frontend",
-    "description": "Create ProfileHeader component with centered photo, name below, edit icon triggering PhotoPicker modal",
-    "files": ["apps/public/src/screens/member/profile-header.tsx (create)"],
-    "verify": [
-      "Shows player profile picture (or default)",
-      "Shows player name below photo",
-      "Edit icon visible",
-      "Click edit opens photo picker",
-      "Upload works with toast confirmation"
-    ],
-    "passes": false
-  },
-  {
-    "id": "3.3",
-    "category": "frontend",
-    "description": "Create MemberHub page with ProfileHeader + 4 navigation cards (Account, Friends, Scores, Results)",
-    "files": ["apps/public/src/screens/member/member-hub.tsx (create)"],
-    "verify": [
-      "Profile header displays at top",
-      "Four cards in responsive grid",
-      "Card links navigate correctly"
-    ],
-    "passes": false
-  },
-  {
-    "id": "3.4",
-    "category": "frontend",
-    "description": "Create MemberAccountScreen with PlayerInfo + PlayerPassword (no profile photo)",
-    "files": ["apps/public/src/screens/member/member-account.tsx (create)"],
-    "verify": [
-      "Shows player info form",
-      "Shows password change form",
-      "No profile photo on page"
-    ],
-    "passes": false
-  },
-  {
-    "id": "3.5",
-    "category": "frontend",
-    "description": "Create MemberFriendsScreen - full page with friends list, add/remove functionality",
-    "files": ["apps/public/src/screens/member/member-friends.tsx (create)"],
-    "verify": [
-      "Shows list of current friends",
-      "Can remove friend via star toggle",
-      "Full page layout"
-    ],
-    "passes": false
-  },
-  {
-    "id": "3.6",
-    "category": "routing",
-    "description": "Wire up MemberHub, MemberAccountScreen, MemberFriendsScreen in member-routes",
-    "files": ["apps/public/src/screens/member/member-routes.tsx"],
-    "verify": [
-      "/member shows hub with cards",
-      "/member/account shows account screen",
-      "/member/friends shows friends screen"
-    ],
-    "passes": false
-  }
+	{
+		"id": "3.1",
+		"category": "frontend",
+		"description": "Create MemberCard component with title, description, icon, link action (follows AdminCard pattern)",
+		"files": ["apps/public/src/screens/member/member-card.tsx (create)"],
+		"verify": ["Card renders title, icon, description", "Click navigates to specified route"],
+		"passes": true
+	},
+	{
+		"id": "3.2",
+		"category": "frontend",
+		"description": "Create ProfileHeader component with centered photo, name below, edit icon triggering PhotoPicker modal",
+		"files": ["apps/public/src/screens/member/profile-header.tsx (create)"],
+		"verify": [
+			"Shows player profile picture (or default)",
+			"Shows player name below photo",
+			"Edit icon visible",
+			"Click edit opens photo picker",
+			"Upload works with toast confirmation"
+		],
+		"passes": true
+	},
+	{
+		"id": "3.3",
+		"category": "frontend",
+		"description": "Create MemberHub page with ProfileHeader + 4 navigation cards (Account, Friends, Scores, Results)",
+		"files": ["apps/public/src/screens/member/member-hub.tsx (create)"],
+		"verify": [
+			"Profile header displays at top",
+			"Four cards in responsive grid",
+			"Card links navigate correctly"
+		],
+		"passes": true
+	},
+	{
+		"id": "3.4",
+		"category": "frontend",
+		"description": "Create MemberAccountScreen with PlayerInfo + PlayerPassword (no profile photo)",
+		"files": ["apps/public/src/screens/member/member-account.tsx (create)"],
+		"verify": ["Shows player info form", "Shows password change form", "No profile photo on page"],
+		"passes": true
+	},
+	{
+		"id": "3.5",
+		"category": "frontend",
+		"description": "Create MemberFriendsScreen - full page with friends list, add/remove functionality",
+		"files": ["apps/public/src/screens/member/member-friends.tsx (create)"],
+		"verify": [
+			"Shows list of current friends",
+			"Can remove friend via star toggle",
+			"Full page layout"
+		],
+		"passes": true
+	},
+	{
+		"id": "3.6",
+		"category": "routing",
+		"description": "Wire up MemberHub, MemberAccountScreen, MemberFriendsScreen in member-routes",
+		"files": ["apps/public/src/screens/member/member-routes.tsx"],
+		"verify": [
+			"/member shows hub with cards",
+			"/member/account shows account screen",
+			"/member/friends shows friends screen"
+		],
+		"passes": true
+	}
 ]
