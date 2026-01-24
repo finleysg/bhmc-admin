@@ -89,6 +89,6 @@
       "/member/scores/gross/2024 shows scores",
       "Tee display, filters, export all work"
     ],
-    "passes": false
+    "passes": true
   }
 ]

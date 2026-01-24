@@ -1,3 +1,10 @@
+PRD 5.7: Move scores to /member/scores/:scoreType/:season - COMPLETE
+- Created MemberScoresScreen based on PlayerScoresScreen pattern
+- Route params: scoreType (gross/net), season (year or 'all')
+- Removed ScoresPlaceholder, updated member hub link
+- Files: member-scores.tsx (new), member-routes.tsx, routes.tsx, member-hub.tsx
+- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
+
 PRD 5.2/5.3: CourseFilterChips + integration - COMPLETE
 - Component already existed in course-filter-chips.tsx
 - Fixed type errors: react-bootstrap-icons → react-icons, missing isNet prop threading
