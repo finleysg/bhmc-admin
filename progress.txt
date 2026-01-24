@@ -245,3 +245,15 @@ UI Components PRD Item 24: Replace form-control patterns with FormField in docum
 - Decision: Used error prop to display validation errors via FormField's error label slot
 - No blockers
 
+UI Components PRD Item 25: Create Modal component with consistent ref-based trigger - COMPLETED
+- File: apps/web/app/components/ui/modal.tsx
+- Props: isOpen (boolean), onClose (function), title (optional string), children
+- Uses daisyUI dialog element with modal-box styling
+- Uses useEffect to call showModal()/close() based on isOpen prop
+- Renders title with 'font-bold text-lg' if provided
+- Exported as named export with "use client" directive
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Decision: Pattern matches existing DeleteConfirmModal; standardizes modal trigger approach
+- No blockers
+
