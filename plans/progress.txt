@@ -1,0 +1,25 @@
+## PRD Item 13 - Action Handlers for Validation Buttons (COMPLETE)
+
+**Task**: Implement action handlers for validation buttons in event status page
+**PRD Ref**: plans/event-status-prd.json item 13
+**Commit**: bf26b39
+
+**Implementation**:
+- Added handleAction async function to handle both api-call and redirect action types
+- API call actions: POST/PUT fetch with loading state, error handling, page refresh on success
+- Redirect actions: router.push for internal URLs, window.open for Django admin (/admin/*)
+- Added actionLoading state to show spinner on active button
+- Added actionError state to display error messages
+- Used NEXT_PUBLIC_DJANGO_API_URL env var for Django admin URLs
+- Wrapped fetchStatus in useCallback to avoid infinite re-render loop
+
+**Files Changed**:
+- apps/web/app/events/[eventId]/status/page.tsx
+
+**Decisions**:
+- Used validation.code as loading state key (unique per validation)
+- Django admin opens in new tab, internal redirects use router
+- Error display global (not per-button) for simplicity
+- Used void operator for onClick async handler to satisfy lint
+
+**Blockers**: None

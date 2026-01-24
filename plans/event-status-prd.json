@@ -234,7 +234,7 @@
 				"Click Configure Golf Genius -> navigates to GG page",
 				"Click Edit in Django -> opens Django admin in new tab"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 14,
