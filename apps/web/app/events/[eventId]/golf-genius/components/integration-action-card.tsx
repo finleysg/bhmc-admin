@@ -235,9 +235,14 @@ export default function IntegrationActionCard({
 				className="max-w-4xl"
 			>
 				<pre className="bg-base-200 p-4 rounded overflow-x-auto text-xs">
-					{lastRun?.details
-						? JSON.stringify(JSON.parse(lastRun.details), null, 2)
-						: "No details available"}
+					{(() => {
+						if (!lastRun?.details) return "No details available"
+						try {
+							return JSON.stringify(JSON.parse(lastRun.details), null, 2)
+						} catch {
+							return lastRun.details
+						}
+					})()}
 				</pre>
 				<div className="modal-action">
 					<button className="btn" onClick={() => setIsDetailsModalOpen(false)}>

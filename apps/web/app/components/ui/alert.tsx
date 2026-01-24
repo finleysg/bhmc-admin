@@ -1,10 +1,12 @@
 "use client"
 
+import type { ReactNode } from "react"
+
 type AlertType = "error" | "success" | "info" | "warning"
 
 interface AlertProps {
 	type: AlertType
-	children: React.ReactNode
+	children: ReactNode
 	className?: string
 }
 

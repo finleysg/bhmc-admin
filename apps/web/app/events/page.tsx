@@ -77,7 +77,11 @@ export default function EventsPage() {
 	}
 
 	if (isPending) {
-		return <LoadingSpinner size="lg" />
+		return (
+			<main className="min-h-screen flex items-center justify-center p-8">
+				<LoadingSpinner size="lg" />
+			</main>
+		)
 	}
 
 	if (!signedIn && !isPending) {

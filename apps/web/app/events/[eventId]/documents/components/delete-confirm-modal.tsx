@@ -1,7 +1,7 @@
 "use client"
 
 import type { Document } from "@repo/domain/types"
-import { Modal } from "@/app/components/ui/modal"
+import { Modal } from "@/components/ui/modal"
 
 interface DeleteConfirmModalProps {
 	isOpen: boolean

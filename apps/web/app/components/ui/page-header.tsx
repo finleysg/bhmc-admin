@@ -1,7 +1,9 @@
 "use client"
 
+import type { ReactNode } from "react"
+
 interface PageHeaderProps {
-	children: React.ReactNode
+	children: ReactNode
 	centered?: boolean
 	className?: string
 }

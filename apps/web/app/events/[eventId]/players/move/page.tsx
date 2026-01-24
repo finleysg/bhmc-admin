@@ -262,7 +262,7 @@ export default function MovePlayerPage() {
 									</p>
 									<p className="mb-2">
 										<strong>From:</strong> {state.sourceGroup.course?.name} -{" "}
-										{state.sourceGroup.course?.holes
+										{state.sourceGroup.course?.holes && state.sourceGroup.slots[0]
 											? getStart(
 													state.clubEvent,
 													state.sourceGroup.slots[0],
@@ -277,7 +277,7 @@ export default function MovePlayerPage() {
 												state.clubEvent.courses ?? [],
 												state.destinationSlotGroup.holeId,
 											)
-											return destCourse?.holes
+											return destCourse?.holes && state.destinationSlotGroup.slots[0]
 												? `${destCourse.name} - ${getStart(state.clubEvent, state.destinationSlotGroup.slots[0], destCourse.holes)}`
 												: "Unknown"
 										})()}

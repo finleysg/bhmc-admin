@@ -1,12 +1,13 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { useEffect, useRef } from "react"
 
 interface ModalProps {
 	isOpen: boolean
 	onClose: () => void
 	title?: string
-	children: React.ReactNode
+	children: ReactNode
 	className?: string
 }
 
@@ -35,7 +36,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
 				{children}
 			</div>
 			<form method="dialog" className="modal-backdrop">
-				<button onClick={handleClose}>close</button>
+				<button type="submit">close</button>
 			</form>
 		</dialog>
 	)

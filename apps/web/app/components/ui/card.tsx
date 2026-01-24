@@ -1,17 +1,23 @@
 "use client"
 
+import type { ReactNode } from "react"
+
+const SHADOW_MAP = { xs: "shadow-xs", sm: "shadow-sm", md: "shadow-md", xl: "shadow-xl" } as const
+
 interface CardProps {
 	shadow?: "xs" | "sm" | "md" | "xl"
-	children: React.ReactNode
+	children: ReactNode
 	className?: string
 }
 
 export function Card({ shadow = "md", children, className }: CardProps) {
-	return <div className={`card bg-base-100 shadow-${shadow} ${className || ""}`}>{children}</div>
+	return (
+		<div className={`card bg-base-100 ${SHADOW_MAP[shadow]} ${className || ""}`}>{children}</div>
+	)
 }
 
 interface CardBodyProps {
-	children: React.ReactNode
+	children: ReactNode
 	className?: string
 }
 
@@ -20,7 +26,7 @@ export function CardBody({ children, className }: CardBodyProps) {
 }
 
 interface CardTitleProps {
-	children: React.ReactNode
+	children: ReactNode
 	className?: string
 }
 
