@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation"
 
 import { ReportPage } from "@/components/report-page"
+import { SectionHeader } from "@/components/ui/section-header"
 import { formatCurrency } from "@/lib/use-report"
 import { EventResultsReport, EventResultsSection } from "@repo/domain/types"
 
@@ -10,7 +11,7 @@ const renderSection = (section: EventResultsSection) => {
 	if (section.type === "proxies") {
 		return (
 			<div key={section.type} className="mb-8">
-				<h3 className="text-lg font-semibold mb-4">{section.header}</h3>
+				<SectionHeader>{section.header}</SectionHeader>
 				<div className="overflow-x-auto bg-base-100">
 					<table className="table table-zebra table-xs">
 						<thead>
@@ -51,14 +52,14 @@ const renderSection = (section: EventResultsSection) => {
 
 	return (
 		<div key={section.type} className="mb-8">
-			<h3 className="text-lg font-semibold mb-4">{section.header}</h3>
+			<SectionHeader>{section.header}</SectionHeader>
 			{section.subSections.map((subSection, index) => (
 				<div
 					key={subSection.header}
 					className={`mb-6 ${index < section.subSections.length - 1 ? "border-b-2 border-gray-300 pb-4" : ""}`}
 					style={index < section.subSections.length - 1 ? { borderBottomWidth: "2.5pt" } : {}}
 				>
-					<h4 className="text-md font-medium mb-2">{subSection.header}</h4>
+					<SectionHeader size="md">{subSection.header}</SectionHeader>
 					<div className="overflow-x-auto bg-base-100">
 						<table className="table table-zebra table-xs">
 							<thead>

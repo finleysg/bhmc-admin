@@ -290,7 +290,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms section headers display correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 18,
