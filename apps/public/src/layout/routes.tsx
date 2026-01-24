@@ -42,8 +42,8 @@ import * as config from "../utils/app-config"
 import { MembershipScreen } from "../screens/membership"
 import {
 	MemberHub,
-	AccountPlaceholder,
-	FriendsPlaceholder,
+	MemberAccountScreen,
+	MemberFriendsScreen,
 	ScoresPlaceholder,
 	ResultsPlaceholder,
 } from "../screens/member/member-routes"
@@ -111,8 +111,8 @@ export const mainRoutes = () =>
 					element: <Member />,
 					children: [
 						{ index: true, element: <MemberHub /> },
-						{ path: "account", element: <AccountPlaceholder /> },
-						{ path: "friends", element: <FriendsPlaceholder /> },
+						{ path: "account", element: <MemberAccountScreen /> },
+						{ path: "friends", element: <MemberFriendsScreen /> },
 						{ path: "scores/*", element: <ScoresPlaceholder /> },
 						{ path: "results", element: <ResultsPlaceholder /> },
 					],

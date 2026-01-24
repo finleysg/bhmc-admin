@@ -1,32 +1,8 @@
 import { MemberHub } from "./member-hub"
+import { MemberAccountScreen } from "./member-account"
+import { MemberFriendsScreen } from "./member-friends"
 
-export { MemberHub }
-
-export function AccountPlaceholder() {
-	return (
-		<div className="content__inner">
-			<div className="card">
-				<div className="card-body">
-					<h2>Account</h2>
-					<p>This is a placeholder for the account page.</p>
-				</div>
-			</div>
-		</div>
-	)
-}
-
-export function FriendsPlaceholder() {
-	return (
-		<div className="content__inner">
-			<div className="card">
-				<div className="card-body">
-					<h2>Friends</h2>
-					<p>This is a placeholder for the friends page.</p>
-				</div>
-			</div>
-		</div>
-	)
-}
+export { MemberHub, MemberAccountScreen, MemberFriendsScreen }
 
 export function ScoresPlaceholder() {
 	return (
