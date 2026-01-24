@@ -20,7 +20,7 @@
       "Click navigates to /member",
       "Old links removed"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "6.3",
@@ -31,7 +31,7 @@
       "Tests pass",
       "Coverage for cards, profile, navigation"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "6.4",

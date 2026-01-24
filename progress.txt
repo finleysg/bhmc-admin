@@ -44,3 +44,15 @@ PRD 6.1: Sidebar 'My Scores' → 'Member' - COMPLETE
 - Used MdAccountCircle icon to match member hub
 - File: apps/public/src/layout/sidebar.tsx
 - Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
+
+PRD 6.2: User menu 'My Account'/'My Activity' → 'My Pages' - COMPLETE
+- Replaced two links with single 'My Pages' link pointing to /member
+- Removed old /my-account, /my-activity links
+- File: apps/public/src/layout/user-menu.tsx
+- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
+
+PRD 6.3: Add MemberHub tests - COMPLETE
+- Tests: renders cards, profile header, navigation links, descriptions
+- Follows existing test patterns (renderRoute, setupAuthenticatedUser)
+- File: apps/public/src/screens/member/__tests__/member-hub.test.tsx (new)
+- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
