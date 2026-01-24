@@ -290,3 +290,14 @@ UI Components PRD Item 28: Add PageHeader to event hub page - COMPLETED
 - Decision: Fetched event data in page component to maintain component encapsulation; follows established fetch pattern
 - No blockers
 
+UI Components PRD Item 29: Create index.ts barrel export for ui components - COMPLETED
+- File: apps/web/app/components/ui/index.ts
+- Re-exports all 12 components: LoadingSpinner, PageLayout, Alert, Card, CardBody, CardTitle, EmptyState, PageHeader, StepIndicator, SectionHeader, HelperText, Badge, FormField, Modal
+- Enables single-line imports: import { LoadingSpinner, Alert } from '@/app/components/ui'
+- Formatted with Prettier
+- All acceptance criteria met
+- Typecheck and lint pass
+- Commit: 327f03d
+- Decision: Standard barrel export pattern re-exporting all UI components
+- No blockers
+
