@@ -17,3 +17,9 @@ PRD #3: Add available-spots Next.js API route
 - Created GET /api/registration/[eventId]/available-spots proxy route
 - Uses fetchWithAuth pattern; proxies to NestJS /registration/{eventId}/available-spots
 Files: apps/web/app/api/registration/[eventId]/available-spots/route.ts
+
+PRD #4: Add create-slots Next.js API route
+- Created POST /api/registration/[eventId]/create-slots proxy route
+- Proxies to Django /events/{eventId}/create_slots/
+- Uses fetchWithAuth with DJANGO_API_URL env var
+Files: apps/web/app/api/registration/[eventId]/create-slots/route.ts
