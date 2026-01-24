@@ -14,6 +14,7 @@ import {
 	HoleScore,
 	HolesProps,
 	RoundScores,
+	RoundScoresProps,
 	RoundTotal,
 	ScoresByHoleProps,
 } from "./score-utils"
@@ -99,7 +100,7 @@ function RoundsByCourse({ course, holes, courseName, rounds }: RoundsByCoursePro
 					<HoleNumbers holes={holes} courseName={courseName} />
 					<HolePars holes={holes} courseName={courseName} />
 					{rounds.map((round) => {
-						return <RoundScores key={round.eventDate} round={round} />
+						return <RoundScores key={round.eventDate} round={round} scoreType={isNet ? "Net" : "Gross"} />
 					})}
 					<hr />
 					<AverageRound scores={averageScores()} />

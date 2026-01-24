@@ -70,11 +70,15 @@ export function HolePars({ holes, courseName }: HolesProps) {
 	)
 }
 
-export function RoundScores({ round }: RoundProps) {
+export interface RoundScoresProps extends RoundProps {
+	scoreType: string
+}
+
+export function RoundScores({ round, scoreType }: RoundScoresProps) {
 	return (
 		<div style={{ display: "flex" }}>
 			<div className="round" style={{ flex: 1 }}>
-				{round.eventDate} ({round.tee.name})
+				{round.eventDate} ({round.tee.name}) {scoreType}
 			</div>
 			<div className="scores">
 				{round.scores.map((score) => {
