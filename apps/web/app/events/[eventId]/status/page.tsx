@@ -64,6 +64,7 @@ export default function EventStatusPage() {
 	const [error, setError] = useState<string | null>(null)
 	const [showRecreateModal, setShowRecreateModal] = useState(false)
 	const [isCreatingSlots, setIsCreatingSlots] = useState(false)
+	const [isAddingTeeTime, setIsAddingTeeTime] = useState(false)
 
 	const fetchStatus = useCallback(async () => {
 		try {
@@ -109,6 +110,23 @@ export default function EventStatusPage() {
 			setShowRecreateModal(true)
 		} else {
 			void handleCreateSlots()
+		}
+	}
+
+	const handleAddTeeTime = async () => {
+		setIsAddingTeeTime(true)
+		try {
+			const response = await fetch(`/api/registration/${eventId}/append-teetime`, {
+				method: "PUT",
+			})
+			if (!response.ok) {
+				throw new Error(`Failed to add tee time: ${response.status}`)
+			}
+			await fetchStatus()
+		} catch (err) {
+			console.error("Error adding tee time:", err)
+		} finally {
+			setIsAddingTeeTime(false)
 		}
 	}
 
@@ -213,6 +231,20 @@ export default function EventStatusPage() {
 										"Recreate Slots"
 									) : (
 										"Create Slots"
+									)}
+								</button>
+								<button
+									className="btn btn-secondary btn-sm"
+									onClick={() => void handleAddTeeTime()}
+									disabled={totalSpots === 0 || isAddingTeeTime}
+								>
+									{isAddingTeeTime ? (
+										<>
+											<span className="loading loading-spinner loading-sm"></span>
+											Adding...
+										</>
+									) : (
+										"Add Tee Time"
 									)}
 								</button>
 							</div>
