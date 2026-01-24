@@ -7,6 +7,7 @@ import { useParams } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Card, CardBody, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { HelperText } from "@/components/ui/helper-text"
 import { parseLocalDate } from "@repo/domain/functions"
 import { StartTypeChoices } from "@repo/domain/types"
@@ -104,7 +105,7 @@ export default function EventStatusPage() {
 		)
 	}
 
-	const { event, availableSpots, totalSpots } = statusInfo
+	const { event, documentsCount, availableSpots, totalSpots } = statusInfo
 
 	return (
 		<main className="p-4 md:p-8">
@@ -155,6 +156,18 @@ export default function EventStatusPage() {
 									{availableSpots} / {totalSpots}
 								</span>
 							</div>
+						</div>
+					</CardBody>
+				</Card>
+
+				<Card>
+					<CardBody>
+						<div className="flex flex-wrap gap-2">
+							{event.canChoose && (
+								<Badge variant={totalSpots > 0 ? "success" : "warning"}>Slots Created</Badge>
+							)}
+							<Badge variant={event.ggId ? "success" : "warning"}>Golf Genius Integration</Badge>
+							<Badge variant={documentsCount > 0 ? "success" : "warning"}>Documents Uploaded</Badge>
 						</div>
 					</CardBody>
 				</Card>
