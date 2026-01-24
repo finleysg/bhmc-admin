@@ -5,3 +5,15 @@ PRD #1: Add getAvailableSpots method to registration service
 - non-canChoose: registrationMaximum minus RESERVED slots
 - Added 8 unit tests covering both event types
 Files: registration.repository.ts, registration.service.ts, registration.service.test.ts
+
+PRD #2: Add available-spots endpoint to registration controller
+- Added GET /registration/:eventId/available-spots to AdminRegistrationController
+- Injects RegistrationService, calls getAvailableSpots method
+- Returns { availableSpots, totalSpots }
+- No controller tests (none exist in codebase); service tests already cover logic
+Files: admin-registration.controller.ts
+
+PRD #3: Add available-spots Next.js API route
+- Created GET /api/registration/[eventId]/available-spots proxy route
+- Uses fetchWithAuth pattern; proxies to NestJS /registration/{eventId}/available-spots
+Files: apps/web/app/api/registration/[eventId]/available-spots/route.ts

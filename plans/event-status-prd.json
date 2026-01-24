@@ -25,7 +25,7 @@
 				"Returns JSON with availableSpots and totalSpots",
 				"Returns 404 for non-existent event"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 3,
@@ -37,7 +37,7 @@
 				"GET handler proxies to NestJS /registration/{eventId}/available-spots",
 				"Uses fetchWithAuth pattern"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 4,
