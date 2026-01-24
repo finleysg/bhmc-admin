@@ -323,7 +323,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms helper text displays correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 20,

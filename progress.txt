@@ -180,3 +180,14 @@ UI Components PRD Item 18: Create HelperText component for secondary/muted text 
 - Commit: ed37293
 - Decision: Standardizes opacity to /70 for consistent secondary text styling
 - No blockers
+
+UI Components PRD Item 19: Replace helper text patterns with HelperText component - COMPLETED
+- Updated 16 files to use HelperText component
+- Files updated: club/settings/page.tsx, club/documents/page.tsx, club/photos/page.tsx, components/calendar-card.tsx, components/results-card.tsx, components/report-card.tsx, components/action-card.tsx, events/[eventId]/golf-genius/page.tsx, events/[eventId]/players/move/page.tsx, events/[eventId]/players/add/page.tsx, events/[eventId]/players/components/group-search.tsx, events/[eventId]/players/components/player-event-fee-picker.tsx, events/[eventId]/players/components/player-fee-picker.tsx, events/[eventId]/golf-genius/components/integration-action-card.tsx, events/[eventId]/documents/components/document-list.tsx, events/[eventId]/documents/components/file-picker.tsx
+- Replaced patterns: text-sm text-base-content/70, text-sm text-base-content/60, text-muted-foreground
+- Imported HelperText from '@/components/ui/helper-text'
+- All acceptance criteria met
+- Typecheck, lint all pass
+- Commit: e2bc795
+- Decision: Standardized text opacity to /70, reduced duplication across multiple helper text usage sites
+- No blockers
