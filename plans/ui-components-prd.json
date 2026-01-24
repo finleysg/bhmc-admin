@@ -66,7 +66,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms layouts display correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 5,
@@ -99,7 +99,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms alerts display correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 7,
