@@ -2,21 +2,10 @@ import { MemberHub } from "./member-hub"
 import { MemberAccountScreen } from "./member-account"
 import { MemberFriendsScreen } from "./member-friends"
 import { MemberResultsScreen } from "./member-results"
+import { MemberScoresScreen } from "./member-scores"
 
-export { MemberHub, MemberAccountScreen, MemberFriendsScreen, MemberResultsScreen }
+export { MemberHub, MemberAccountScreen, MemberFriendsScreen, MemberResultsScreen, MemberScoresScreen }
 
-export function ScoresPlaceholder() {
-	return (
-		<div className="content__inner">
-			<div className="card">
-				<div className="card-body">
-					<h2>Scores</h2>
-					<p>This is a placeholder for the scores page.</p>
-				</div>
-			</div>
-		</div>
-	)
-}
 
 export function ResultsPlaceholder() {
 	return (

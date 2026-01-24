@@ -31,7 +31,7 @@ export function MemberHub() {
 							title="Scores"
 							description="View your scoring history and statistics"
 							icon={MdScore}
-							action="/member/scores"
+							action={`/member/scores/gross/${new Date().getFullYear()}`}
 						/>
 					</div>
 					<div className="col-12 col-md-6">

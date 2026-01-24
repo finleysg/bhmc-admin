@@ -45,7 +45,7 @@ import {
 	MemberAccountScreen,
 	MemberFriendsScreen,
 	MemberResultsScreen,
-	ScoresPlaceholder,
+	MemberScoresScreen,
 } from "../screens/member/member-routes"
 import { Member } from "../screens/member/member"
 import { LegacyScoresRedirect } from "../components/legacy-redirect"
@@ -113,7 +113,7 @@ export const mainRoutes = () =>
 						{ index: true, element: <MemberHub /> },
 						{ path: "account", element: <MemberAccountScreen /> },
 						{ path: "friends", element: <MemberFriendsScreen /> },
-						{ path: "scores/*", element: <ScoresPlaceholder /> },
+						{ path: "scores/:scoreType/:season", element: <MemberScoresScreen /> },
 						{ path: "results", element: <MemberResultsScreen /> },
 					],
 				},
