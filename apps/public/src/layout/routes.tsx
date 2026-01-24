@@ -48,6 +48,7 @@ import {
 	ScoresPlaceholder,
 	ResultsPlaceholder,
 } from "../screens/member/member-routes"
+import { Member } from "../screens/member/member"
 
 export const mainRoutes = () =>
 	config.maintenanceMode
@@ -106,6 +107,7 @@ export const mainRoutes = () =>
 				{ path: "/my-activity", element: <AccountSettingsScreen /> },
 				{
 					path: "/member",
+					element: <Member />,
 					children: [
 						{ index: true, element: <MemberPlaceholder /> },
 						{ path: "account", element: <AccountPlaceholder /> },
