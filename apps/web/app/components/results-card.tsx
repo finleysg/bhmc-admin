@@ -70,12 +70,6 @@ export default function ResultsCard({
 								</div>
 							))}
 						</div>
-
-						{selectedEvent && (
-							<div className="alert alert-info">
-								<span>Selected: {selectedEvent.name}</span>
-							</div>
-						)}
 					</div>
 				)}
 			</div>
