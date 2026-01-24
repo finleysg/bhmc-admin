@@ -65,7 +65,8 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 		)
 	}
 
-	const formatDate = (dateString: string) => {
+	const formatDate = (dateString: string | null | undefined) => {
+		if (!dateString) return "Unknown date"
 		const date = parseLocalDate(dateString)
 		return date.toLocaleDateString("en-US", {
 			month: "short",

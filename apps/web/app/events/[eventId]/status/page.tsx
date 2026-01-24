@@ -10,49 +10,20 @@ import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { HelperText } from "@/components/ui/helper-text"
 import { Modal } from "@/components/ui/modal"
-import { parseLocalDate } from "@repo/domain/functions"
-import { StartTypeChoices } from "@repo/domain/types"
-
 import type { EventStatusInfo } from "@/app/api/events/[id]/status/route"
-
-const START_TYPE_LABELS: Record<string, string> = {
-	[StartTypeChoices.TEETIMES]: "Tee Times",
-	[StartTypeChoices.SHOTGUN]: "Shotgun",
-	[StartTypeChoices.NONE]: "N/A",
-}
-
-function formatDate(dateString: string): string {
-	const date = parseLocalDate(dateString)
-	return date.toLocaleDateString("en-US", {
-		weekday: "short",
-		month: "short",
-		day: "numeric",
-		year: "numeric",
-	})
-}
-
-function formatDateTime(dateTimeString: string | null | undefined): string {
-	if (!dateTimeString) return "Not set"
-	const date = new Date(dateTimeString)
-	return date.toLocaleString("en-US", {
-		weekday: "short",
-		month: "short",
-		day: "numeric",
-		year: "numeric",
-		hour: "numeric",
-		minute: "2-digit",
-	})
-}
-
-function formatStartTime(startTime: string | null | undefined): string {
-	if (!startTime) return "Not set"
-	// startTime is stored as "HH:MM:SS" format
-	const [hours, minutes] = startTime.split(":")
-	const hour = parseInt(hours, 10)
-	const ampm = hour >= 12 ? "PM" : "AM"
-	const hour12 = hour % 12 || 12
-	return `${hour12}:${minutes} ${ampm}`
-}
+import { PageLayout } from "@/app/components/ui"
+import {
+	formatDate,
+	formatDateTime,
+	getStartTypeLabel,
+	getSlotsCreatedVariant,
+	getGolfGeniusVariant,
+	getDocumentsVariant,
+	shouldDisableCreateSlots,
+	shouldDisableAddTeeTime,
+	shouldShowRecreateModal,
+	getCreateButtonLabel,
+} from "./helpers"
 
 export default function EventStatusPage() {
 	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
@@ -65,6 +36,10 @@ export default function EventStatusPage() {
 	const [showRecreateModal, setShowRecreateModal] = useState(false)
 	const [isCreatingSlots, setIsCreatingSlots] = useState(false)
 	const [isAddingTeeTime, setIsAddingTeeTime] = useState(false)
+	const [feedback, setFeedback] = useState<{
+		type: "success" | "error"
+		message: string
+	} | null>(null)
 
 	const fetchStatus = useCallback(async () => {
 		try {
@@ -89,6 +64,7 @@ export default function EventStatusPage() {
 
 	const handleCreateSlots = async () => {
 		setIsCreatingSlots(true)
+		setFeedback(null)
 		try {
 			const response = await fetch(`/api/registration/${eventId}/create-slots`, {
 				method: "POST",
@@ -96,17 +72,20 @@ export default function EventStatusPage() {
 			if (!response.ok) {
 				throw new Error(`Failed to create slots: ${response.status}`)
 			}
+			const slots = (await response.json()) as unknown[]
 			setShowRecreateModal(false)
 			await fetchStatus()
+			setFeedback({ type: "success", message: `Created ${slots.length} slots` })
 		} catch (err) {
 			console.error("Error creating slots:", err)
+			setFeedback({ type: "error", message: "Failed to create slots" })
 		} finally {
 			setIsCreatingSlots(false)
 		}
 	}
 
 	const onClickCreateSlots = () => {
-		if (statusInfo && statusInfo.totalSpots > 0) {
+		if (statusInfo && shouldShowRecreateModal(statusInfo.totalSpots)) {
 			setShowRecreateModal(true)
 		} else {
 			void handleCreateSlots()
@@ -115,6 +94,7 @@ export default function EventStatusPage() {
 
 	const handleAddTeeTime = async () => {
 		setIsAddingTeeTime(true)
+		setFeedback(null)
 		try {
 			const response = await fetch(`/api/registration/${eventId}/append-teetime`, {
 				method: "PUT",
@@ -122,9 +102,12 @@ export default function EventStatusPage() {
 			if (!response.ok) {
 				throw new Error(`Failed to add tee time: ${response.status}`)
 			}
+			const event = (await response.json()) as { total_groups: number }
 			await fetchStatus()
+			setFeedback({ type: "success", message: `Added tee time (group ${event.total_groups})` })
 		} catch (err) {
 			console.error("Error adding tee time:", err)
+			setFeedback({ type: "error", message: "Failed to add tee time" })
 		} finally {
 			setIsAddingTeeTime(false)
 		}
@@ -154,7 +137,7 @@ export default function EventStatusPage() {
 	const { event, documentsCount, availableSpots, totalSpots } = statusInfo
 
 	return (
-		<main className="p-4 md:p-8">
+		<PageLayout>
 			<div className="max-w-3xl mx-auto space-y-4">
 				<Card>
 					<CardBody>
@@ -170,13 +153,11 @@ export default function EventStatusPage() {
 							</div>
 							<div className="flex justify-between">
 								<span className="text-base-content/70">Start Time</span>
-								<span className="font-medium">{formatStartTime(event.startTime)}</span>
+								<span className="font-medium">{event.startTime}</span>
 							</div>
 							<div className="flex justify-between">
 								<span className="text-base-content/70">Start Type</span>
-								<span className="font-medium">
-									{START_TYPE_LABELS[event.startType || ""] || "N/A"}
-								</span>
+								<span className="font-medium">{getStartTypeLabel(event.startType)}</span>
 							</div>
 							<div className="divider my-2" />
 							<div className="flex justify-between">
@@ -208,36 +189,36 @@ export default function EventStatusPage() {
 
 				<Card>
 					<CardBody>
+						<CardTitle>Status</CardTitle>
 						<div className="flex flex-wrap gap-2 mb-4">
 							{event.canChoose && (
-								<Badge variant={totalSpots > 0 ? "success" : "warning"}>Slots Created</Badge>
+								<Badge variant={getSlotsCreatedVariant(totalSpots)}>Slots Created</Badge>
 							)}
-							<Badge variant={event.ggId ? "success" : "warning"}>Golf Genius Integration</Badge>
-							<Badge variant={documentsCount > 0 ? "success" : "warning"}>Documents Uploaded</Badge>
+							<Badge variant={getGolfGeniusVariant(event.ggId)}>Golf Genius Integration</Badge>
+							<Badge variant={getDocumentsVariant(documentsCount)}>Documents Uploaded</Badge>
 						</div>
+						<div className="divider my-2" />
 						<div className="flex flex-wrap gap-2">
 							{event.canChoose && (
 								<>
 									<button
 										className="btn btn-primary btn-sm"
 										onClick={onClickCreateSlots}
-										disabled={isCreatingSlots}
+										disabled={shouldDisableCreateSlots(isCreatingSlots, event)}
 									>
 										{isCreatingSlots ? (
 											<>
 												<span className="loading loading-spinner loading-sm"></span>
 												Creating...
 											</>
-										) : totalSpots > 0 ? (
-											"Recreate Slots"
 										) : (
-											"Create Slots"
+											getCreateButtonLabel(totalSpots)
 										)}
 									</button>
 									<button
 										className="btn btn-secondary btn-sm"
 										onClick={() => void handleAddTeeTime()}
-										disabled={totalSpots === 0 || isAddingTeeTime}
+										disabled={shouldDisableAddTeeTime(totalSpots, isAddingTeeTime)}
 									>
 										{isAddingTeeTime ? (
 											<>
@@ -256,9 +237,16 @@ export default function EventStatusPage() {
 								rel="noopener noreferrer"
 								className="btn btn-outline btn-sm"
 							>
-								Django Admin
+								Settings
 							</a>
 						</div>
+						{feedback && (
+							<div
+								className={`mt-3 text-sm ${feedback.type === "success" ? "text-success" : "text-error"}`}
+							>
+								{feedback.message}
+							</div>
+						)}
 					</CardBody>
 				</Card>
 
@@ -296,6 +284,6 @@ export default function EventStatusPage() {
 					</div>
 				</Modal>
 			</div>
-		</main>
+		</PageLayout>
 	)
 }

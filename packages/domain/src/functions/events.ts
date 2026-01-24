@@ -166,3 +166,9 @@ export function getRegistrationTypeName(registrationType: string) {
 			return ""
 	}
 }
+
+export function registrationHasStarted(event: ClubEvent, now: Date = new Date()): boolean {
+	const startDate = event.prioritySignupStart ?? event.signupStart
+	if (!startDate) return false
+	return now >= new Date(startDate)
+}

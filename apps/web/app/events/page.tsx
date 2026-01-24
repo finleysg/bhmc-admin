@@ -54,7 +54,7 @@ export default function EventsPage() {
 
 	// Compute dates that have events for calendar highlighting
 	const eventDates = useMemo(() => {
-		return seasonEvents.map((e) => parseLocalDate(e.startDate))
+		return seasonEvents.filter((e) => e.startDate).map((e) => parseLocalDate(e.startDate))
 	}, [seasonEvents])
 
 	const handleDateSelect = (date: Date | undefined) => {

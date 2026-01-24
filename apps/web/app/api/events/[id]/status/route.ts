@@ -51,7 +51,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 	try {
 		// Fetch all data in parallel
 		const [eventResponse, documentsResponse, availableSpotsResponse] = await Promise.all([
-			fetch(`${djangoApiUrl}/events/${id}/`, { headers }),
+			fetch(`${nestApiUrl}/events/${id}`, { headers }),
 			fetch(`${djangoApiUrl}/documents/?event_id=${id}`, { headers }),
 			fetch(`${nestApiUrl}/registration/${id}/available-spots`, { headers }),
 		])
