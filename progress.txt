@@ -138,3 +138,23 @@ UI Components PRD Item 14: Create StepIndicator component - COMPLETED
 - Typecheck, lint, test all pass
 - Decision: Used "use client" directive matching UI component pattern
 - No blockers
+
+UI Components PRD Item 15: Replace step indicator patterns with StepIndicator component - COMPLETED
+- Replaced all 'Step X of Y: ' h4 headers with <StepIndicator> component
+- Files updated: add/page.tsx, move/page.tsx, drop/page.tsx, swap/page.tsx
+- Imported StepIndicator from '@/components/ui/step-indicator'
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Commit: fa3cf9f
+- Decision: Updated dynamic step headers in add/page.tsx (using stepNumber variable); used hardcoded step numbers in other pages where steps are constant
+- No blockers
+
+UI Components PRD Item 16: Create SectionHeader component for subsection titles - COMPLETED
+- File: apps/web/app/components/ui/section-header.tsx
+- Props: children, size ('lg' | 'md' | 'sm', default 'lg'), className (optional)
+- Size mappings: 'lg' = text-lg font-semibold mb-4, 'md' = text-md font-medium mb-2, 'sm' = text-sm font-medium mb-2
+- Exported as named export with "use client" directive
+- All acceptance criteria met
+- Typecheck and lint pass
+- Decision: Used "use client" directive following UI component pattern
+- No blockers

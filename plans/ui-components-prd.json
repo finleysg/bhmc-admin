@@ -257,7 +257,7 @@
 				"pnpm --filter web build passes",
 				"Visual inspection confirms step indicators display correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 16,
@@ -275,7 +275,7 @@
 				"File exists at apps/web/app/components/ui/section-header.tsx",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 17,
