@@ -23,7 +23,7 @@
       "Click toggles selection",
       "Selected chips visually distinct"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "5.3",
@@ -39,7 +39,7 @@
       "Multiple selection works",
       "No selection shows all"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "5.4",

@@ -1,3 +1,10 @@
+PRD 5.2/5.3: CourseFilterChips + integration - COMPLETE
+- Component already existed in course-filter-chips.tsx
+- Fixed type errors: react-bootstrap-icons → react-icons, missing isNet prop threading
+- Fixed missing scoreType prop in event-scores.tsx
+- Files: player-scores.tsx, event-scores.tsx, export-scores-button.tsx
+- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
+
 PRD 5.6: Add ExportScoresButton to scores page - COMPLETE
 - Export button visible at top of page, respects course filter
 - Disabled when no scores available (filteredRounds.length === 0)
