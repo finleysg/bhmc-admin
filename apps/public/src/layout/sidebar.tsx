@@ -3,7 +3,7 @@ import React from "react"
 import { BiEnvelope, BiLogInCircle } from "react-icons/bi"
 import { GiGolfFlag, GiLaurelsTrophy, GiTrophyCup } from "react-icons/gi"
 import { GoCalendar, GoHome, GoInfo, GoPlus, GoQuestion } from "react-icons/go"
-import { MdGridOn, MdPeopleOutline, MdPersonAdd } from "react-icons/md"
+import { MdAccountCircle, MdPeopleOutline, MdPersonAdd } from "react-icons/md"
 import { PiPencilLine } from "react-icons/pi"
 import { RiGalleryFill } from "react-icons/ri"
 import { TiContacts } from "react-icons/ti"
@@ -36,11 +36,7 @@ export function Sidebar() {
 				/>
 				<MenuItem path={`champions/${currentSeason}`} icon={<GiLaurelsTrophy />} name="Champions" />
 				{groups.indexOf(Groups.AuthenticatedUsers) >= 0 && (
-					<MenuItem
-						path={`my-scores/gross/${currentSeason}`}
-						icon={<MdGridOn />}
-						name={`My Scores`}
-					/>
+					<MenuItem path="member" icon={<MdAccountCircle />} name="Member" />
 				)}
 				<MenuItem path="policies/policies-and-procedures" icon={<GoInfo />} name="Policies" />
 				<MenuItem path="match-play" icon={<MdPeopleOutline />} name="Match Play" />

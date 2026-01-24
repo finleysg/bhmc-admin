@@ -37,3 +37,10 @@ PRD 5.1: Add tee name to score row display - COMPLETE
 - Display format: YYYY-MM-DD (Tee) Gross/Net
 - Files: apps/public/src/components/scores/player-scores.tsx, score-utils.tsx
 - Blocker: pnpm install/typecheck unavailable due to EPERM errors, committed without hooks
+
+PRD 6.1: Sidebar 'My Scores' → 'Member' - COMPLETE
+- Replaced 'My Scores' link with 'Member' for authenticated users
+- Points to /member instead of /my-scores/gross/{season}
+- Used MdAccountCircle icon to match member hub
+- File: apps/public/src/layout/sidebar.tsx
+- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify

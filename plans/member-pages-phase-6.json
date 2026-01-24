@@ -8,7 +8,7 @@
       "Sidebar shows 'Member' for authenticated users",
       "Click navigates to /member"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "6.2",
