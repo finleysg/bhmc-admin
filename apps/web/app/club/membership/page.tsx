@@ -8,6 +8,7 @@ import { Pagination } from "@/components/pagination"
 import { useIsMobile } from "@/lib/use-is-mobile"
 import { useAuthenticatedFetch, useExcelExport } from "@/lib/use-report"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { EmptyState } from "@/components/ui/empty-state"
 import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
 import { EventReportRow } from "@repo/domain/types"
 import {
@@ -296,9 +297,7 @@ export default function MembershipReportPage() {
 				{hasData ? (
 					<MembershipTable data={data} />
 				) : (
-					<div className="text-center py-12">
-						<p className="text-muted-foreground">No membership data available.</p>
-					</div>
+					<EmptyState message="No membership data available." />
 				)}
 			</div>
 		</main>

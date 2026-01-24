@@ -4,6 +4,7 @@ import Link from "next/link"
 
 import { useAuthenticatedFetch, useExcelExport } from "@/lib/use-report"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { EmptyState } from "@/components/ui/empty-state"
 
 interface ReportPageProps<T> {
 	title: string
@@ -76,13 +77,7 @@ export function ReportPage<T>({
 					)}
 				</div>
 
-				{hasData ? (
-					children(data)
-				) : (
-					<div className="text-center py-12">
-						<p className="text-muted-foreground">No data available for this event.</p>
-					</div>
-				)}
+				{hasData ? children(data) : <EmptyState message="No data available for this event." />}
 			</div>
 		</main>
 	)
