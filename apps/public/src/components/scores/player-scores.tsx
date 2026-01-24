@@ -14,7 +14,6 @@ import {
 	HoleScore,
 	HolesProps,
 	RoundScores,
-	RoundScoresProps,
 	RoundTotal,
 	ScoresByHoleProps,
 } from "./score-utils"
@@ -53,9 +52,10 @@ function BestBallRound({ scores }: ScoresByHoleProps) {
 
 interface RoundsByCourseProps extends HolesProps, RoundsProps {
 	course: CourseInRound
+	isNet: boolean
 }
 
-function RoundsByCourse({ course, holes, courseName, rounds }: RoundsByCourseProps) {
+function RoundsByCourse({ course, holes, courseName, rounds, isNet }: RoundsByCourseProps) {
 	const averageScores = () => {
 		return holes.map((hole) => {
 			const scores: ScoreByHole[] = []
@@ -100,7 +100,13 @@ function RoundsByCourse({ course, holes, courseName, rounds }: RoundsByCoursePro
 					<HoleNumbers holes={holes} courseName={courseName} />
 					<HolePars holes={holes} courseName={courseName} />
 					{rounds.map((round) => {
-						return <RoundScores key={round.eventDate} round={round} scoreType={isNet ? "Net" : "Gross"} />
+						return (
+							<RoundScores
+								key={round.eventDate}
+								round={round}
+								scoreType={isNet ? "Net" : "Gross"}
+							/>
+						)
 					})}
 					<hr />
 					<AverageRound scores={averageScores()} />
@@ -161,7 +167,9 @@ export function PlayerScores({ isNet, season, onFilteredRoundsChange }: PlayerSc
 
 	// Filter courses to display
 	const displayedCourses =
-		selectedCourseIds.length === 0 ? courses : courses.filter((c) => selectedCourseIds.includes(c.id))
+		selectedCourseIds.length === 0
+			? courses
+			: courses.filter((c) => selectedCourseIds.includes(c.id))
 
 	// Calculate filtered rounds for export
 	const filteredRounds = rounds.filter((r) => {
@@ -198,6 +206,7 @@ export function PlayerScores({ isNet, season, onFilteredRoundsChange }: PlayerSc
 									holes={holes}
 									courseName={course.name}
 									rounds={courseRounds}
+									isNet={isNet}
 								/>
 							</div>
 						)

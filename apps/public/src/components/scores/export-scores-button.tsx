@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx"
-import { Download } from "react-bootstrap-icons"
+import { FiDownload } from "react-icons/fi"
 import { IconActionButton } from "../buttons/icon-action-button"
 import { Round } from "../../models/scores"
 
@@ -22,7 +22,14 @@ export function ExportScoresButton({ rounds, season, disabled = false }: ExportS
 		const data: (string | number)[][] = []
 
 		// Header row
-		const headers = ["Date", "Tee", "Type", "Course", ...Array.from({ length: 9 }, (_, i) => `${i + 1}`), "Total"]
+		const headers = [
+			"Date",
+			"Tee",
+			"Type",
+			"Course",
+			...Array.from({ length: 9 }, (_, i) => `${i + 1}`),
+			"Total",
+		]
 		data.push(headers)
 
 		// Data rows
@@ -52,7 +59,7 @@ export function ExportScoresButton({ rounds, season, disabled = false }: ExportS
 
 	return (
 		<IconActionButton label="Export to Excel" onClick={handleExport} disabled={disabled}>
-			<Download size={20} />
+			<FiDownload size={20} />
 		</IconActionButton>
 	)
 }
