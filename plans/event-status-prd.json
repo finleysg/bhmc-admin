@@ -252,7 +252,7 @@
 				"Event Status card visible in grid",
 				"Clicking card navigates to status page"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 15,

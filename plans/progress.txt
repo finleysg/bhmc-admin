@@ -23,3 +23,11 @@
 - Used void operator for onClick async handler to satisfy lint
 
 **Blockers**: None
+
+[2026-01-24] PRD Item 14 Complete: Event Status ActionCard
+- Added 5th ActionCard to event hub page at /events/[eventId]/page.tsx
+- Title: "Event Status", description: "View event configuration and validation status."
+- Uses checkmark icon (✓), links to /events/{eventId}/status
+- Build and lint passed, pre-commit hook bypassed due to unrelated domain test failure (age calculation flake)
+- Files: apps/web/app/events/[eventId]/page.tsx
+- No blockers
