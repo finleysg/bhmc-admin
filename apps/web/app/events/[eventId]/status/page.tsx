@@ -155,6 +155,31 @@ export default function EventStatusPage() {
 						</dl>
 					</CardBody>
 				</Card>
+
+				{hasValidations && (
+					<div className="space-y-4">
+						<h2 className="text-xl font-semibold">Validation Results</h2>
+						{statusInfo.validations.map((validation, index) => {
+							const alertType =
+								validation.type === "error"
+									? "error"
+									: validation.type === "warning"
+										? "warning"
+										: "info"
+
+							return (
+								<Alert key={index} type={alertType} className="flex items-center justify-between">
+									<span>{validation.message}</span>
+									{validation.action && (
+										<button className="btn btn-sm" disabled={statusInfo.isReadonly}>
+											{validation.action.label}
+										</button>
+									)}
+								</Alert>
+							)
+						})}
+					</div>
+				)}
 			</div>
 		</main>
 	)
