@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert } from "@/components/ui/alert"
 import { PageLayout } from "@/components/ui/page-layout"
+import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { DeleteConfirmModal } from "./components/delete-confirm-modal"
 import { DocumentForm, type DocumentFormData } from "./components/document-form"
 import { DocumentList } from "./components/document-list"
@@ -217,30 +218,30 @@ export default function DocumentsPage() {
 			)}
 
 			{state.mode === "add" && (
-				<div className="card bg-base-100 shadow-xs mb-4">
-					<div className="card-body">
-						<h3 className="card-title text-secondary font-semibold mb-4">Add Document</h3>
+				<Card shadow="xs" className="mb-4">
+					<CardBody>
+						<CardTitle>Add Document</CardTitle>
 						<DocumentForm
 							onSubmit={handleAddSubmit}
 							onCancel={handleCancel}
 							isSubmitting={state.isSubmitting}
 						/>
-					</div>
-				</div>
+					</CardBody>
+				</Card>
 			)}
 
 			{state.mode === "edit" && state.selectedDocument && (
-				<div className="card bg-base-100 shadow-xs mb-4">
-					<div className="card-body">
-						<h3 className="card-title text-secondary font-semibold mb-4">Edit Document</h3>
+				<Card shadow="xs" className="mb-4">
+					<CardBody>
+						<CardTitle>Edit Document</CardTitle>
 						<DocumentForm
 							onSubmit={handleEditSubmit}
 							onCancel={handleCancel}
 							initialData={state.selectedDocument}
 							isSubmitting={state.isSubmitting}
 						/>
-					</div>
-				</div>
+					</CardBody>
+				</Card>
 			)}
 
 			<DeleteConfirmModal

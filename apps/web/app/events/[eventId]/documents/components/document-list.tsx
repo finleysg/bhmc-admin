@@ -1,6 +1,7 @@
 "use client"
 
 import { DOCUMENT_TYPES, type Document } from "@repo/domain/types"
+import { Card, CardBody } from "@/components/ui/card"
 
 interface DocumentListProps {
 	documents: Document[]
@@ -11,17 +12,17 @@ interface DocumentListProps {
 export function DocumentList({ documents, onEdit, onDelete }: DocumentListProps) {
 	if (documents.length === 0) {
 		return (
-			<div className="card bg-base-100 shadow-xs">
-				<div className="card-body">
+			<Card shadow="xs">
+				<CardBody>
 					<div className="text-center py-4 text-base-content/60">No documents</div>
-				</div>
-			</div>
+				</CardBody>
+			</Card>
 		)
 	}
 
 	return (
-		<div className="card bg-base-100 shadow-xs">
-			<div className="card-body">
+		<Card shadow="xs">
+			<CardBody>
 				{/* Desktop: table */}
 				<div className="hidden md:block overflow-x-auto">
 					<table className="table table-zebra">
@@ -113,7 +114,7 @@ export function DocumentList({ documents, onEdit, onDelete }: DocumentListProps)
 						)
 					})}
 				</div>
-			</div>
-		</div>
+			</CardBody>
+		</Card>
 	)
 }

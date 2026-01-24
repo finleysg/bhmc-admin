@@ -42,3 +42,25 @@ UI Components PRD Item 5: Create Alert component - COMPLETED
 - Decision: Used "use client" directive matching existing UI component patterns
 - pnpm typecheck, lint, and test all pass
 - No blockers
+
+UI Components PRD Item 6: Replace error alert patterns with Alert component - COMPLETED
+- Replaced all instances of 'alert alert-error' wrapped in <div> with <Alert type="error">
+- Files updated: events/[eventId]/documents/page.tsx, events/[eventId]/players/add/page.tsx, events/[eventId]/players/move/page.tsx, events/[eventId]/players/drop/page.tsx, events/[eventId]/players/swap/page.tsx, events/[eventId]/players/notes/page.tsx, events/[eventId]/players/replace/page.tsx, sign-in/page.tsx, events/[eventId]/golf-genius/components/integration-action-card.tsx
+- Imported Alert from '@/components/ui/alert'
+- All files typecheck/lint/test pass
+- Verified: grep -r 'alert alert-error' returns 0 results (except component file)
+- Commit: 3353143
+- Decision: Handled both simple spans and complex content (SVG icons) by passing children directly to Alert
+- No blockers
+
+UI Components PRD Item 7: Create Card component with CardBody and CardTitle - COMPLETED
+- File: apps/web/app/components/ui/card.tsx
+- Card: shadow prop ('xs' | 'sm' | 'md' | 'xl', default 'md'), children, className
+- CardBody: children, className props
+- CardTitle: children, className props
+- All three exported as named exports
+- All acceptance criteria met
+- Typecheck and lint pass
+- Commit: 0d86072
+- Decision: Structured as separate Card, CardBody, CardTitle exports following component pattern
+- No blockers
