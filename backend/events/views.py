@@ -19,10 +19,11 @@ from register.serializers import (
     get_starting_wave,
 )
 
-from .models import Event, FeeType, TournamentResult
+from .models import Event, FeeType, TournamentPoints, TournamentResult
 from .serializers import (
     EventSerializer,
     FeeTypeSerializer,
+    TournamentPointsSerializer,
     TournamentResultSerializer,
 )
 
@@ -295,6 +296,33 @@ class TournamentResultViewSet(viewsets.ModelViewSet):
             QuerySet: TournamentResult queryset filtered according to provided query parameters.
         """
         queryset = TournamentResult.objects.all()
+        player = self.request.query_params.get("player", None)
+        season = self.request.query_params.get("season", None)
+
+        if player is not None:
+            queryset = queryset.filter(player=player)
+        if season is not None:
+            queryset = queryset.filter(tournament__event__season=season)
+
+        return queryset
+
+
+class TournamentPointsViewSet(viewsets.ModelViewSet):
+    queryset = TournamentPoints.objects.all()
+    serializer_class = TournamentPointsSerializer
+
+    def get_queryset(self):
+        """
+        Return TournamentPoints objects filtered by optional query parameters.
+
+        Filters:
+        - Uses `player` to match TournamentPoints.player id.
+        - Uses `season` to match TournamentPoints.tournament.event.season.
+
+        Returns:
+            QuerySet: TournamentPoints queryset filtered according to provided query parameters.
+        """
+        queryset = TournamentPoints.objects.all()
         player = self.request.query_params.get("player", None)
         season = self.request.query_params.get("season", None)
 
