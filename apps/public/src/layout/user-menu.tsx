@@ -37,11 +37,8 @@ export function UserMenu() {
 					{user.name}
 				</button>
 				<div className={`dropdown-menu dropdown-menu-right ${showMenu ? "show" : ""}`}>
-					<Link onClick={() => setShowMenu(false)} to="/my-account" className="dropdown-item">
-						My Account
-					</Link>
-					<Link onClick={() => setShowMenu(false)} to="/my-activity" className="dropdown-item">
-						My Activity
+					<Link onClick={() => setShowMenu(false)} to="/member" className="dropdown-item">
+						My Pages
 					</Link>
 					<div className="dropdown-divider"></div>
 					<button onClick={handleLogout} className="dropdown-item">
