@@ -1,0 +1,164 @@
+"use client"
+
+import { useEffect, useState } from "react"
+
+import { useParams } from "next/navigation"
+
+import { useAuth } from "@/lib/auth-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Card, CardBody, CardTitle } from "@/components/ui/card"
+import { HelperText } from "@/components/ui/helper-text"
+import { parseLocalDate } from "@repo/domain/functions"
+import { StartTypeChoices } from "@repo/domain/types"
+
+import type { EventStatusInfo } from "@/app/api/events/[id]/status/route"
+
+const START_TYPE_LABELS: Record<string, string> = {
+	[StartTypeChoices.TEETIMES]: "Tee Times",
+	[StartTypeChoices.SHOTGUN]: "Shotgun",
+	[StartTypeChoices.NONE]: "N/A",
+}
+
+function formatDate(dateString: string): string {
+	const date = parseLocalDate(dateString)
+	return date.toLocaleDateString("en-US", {
+		weekday: "short",
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+	})
+}
+
+function formatDateTime(dateTimeString: string | null | undefined): string {
+	if (!dateTimeString) return "Not set"
+	const date = new Date(dateTimeString)
+	return date.toLocaleString("en-US", {
+		weekday: "short",
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+		hour: "numeric",
+		minute: "2-digit",
+	})
+}
+
+function formatStartTime(startTime: string | null | undefined): string {
+	if (!startTime) return "Not set"
+	// startTime is stored as "HH:MM:SS" format
+	const [hours, minutes] = startTime.split(":")
+	const hour = parseInt(hours, 10)
+	const ampm = hour >= 12 ? "PM" : "AM"
+	const hour12 = hour % 12 || 12
+	return `${hour12}:${minutes} ${ampm}`
+}
+
+export default function EventStatusPage() {
+	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
+	const params = useParams()
+	const eventId = params.eventId as string
+
+	const [statusInfo, setStatusInfo] = useState<EventStatusInfo | null>(null)
+	const [loading, setLoading] = useState(true)
+	const [error, setError] = useState<string | null>(null)
+
+	useEffect(() => {
+		if (!signedIn || !eventId) return
+
+		const fetchStatus = async () => {
+			try {
+				const response = await fetch(`/api/events/${eventId}/status`)
+				if (!response.ok) {
+					throw new Error(`Failed to fetch status: ${response.status}`)
+				}
+				const data = (await response.json()) as EventStatusInfo
+				setStatusInfo(data)
+			} catch (err) {
+				console.error("Error fetching event status:", err)
+				setError("Failed to load event status")
+			} finally {
+				setLoading(false)
+			}
+		}
+
+		void fetchStatus()
+	}, [eventId, signedIn])
+
+	if (isPending || loading) {
+		return (
+			<div className="flex items-center justify-center p-8">
+				<LoadingSpinner size="lg" />
+			</div>
+		)
+	}
+
+	if (!signedIn) {
+		return null
+	}
+
+	if (error || !statusInfo) {
+		return (
+			<div className="text-center p-8">
+				<h1 className="text-2xl font-bold mb-4">Error</h1>
+				<HelperText className="mb-4">{error || "Event not found"}</HelperText>
+			</div>
+		)
+	}
+
+	const { event, availableSpots, totalSpots } = statusInfo
+
+	return (
+		<main className="p-4 md:p-8">
+			<div className="max-w-3xl mx-auto space-y-4">
+				<Card>
+					<CardBody>
+						<CardTitle>Event Information</CardTitle>
+						<div className="space-y-3">
+							<div className="flex justify-between">
+								<span className="text-base-content/70">Name</span>
+								<span className="font-medium">{event.name}</span>
+							</div>
+							<div className="flex justify-between">
+								<span className="text-base-content/70">Start Date</span>
+								<span className="font-medium">{formatDate(event.startDate)}</span>
+							</div>
+							<div className="flex justify-between">
+								<span className="text-base-content/70">Start Time</span>
+								<span className="font-medium">{formatStartTime(event.startTime)}</span>
+							</div>
+							<div className="flex justify-between">
+								<span className="text-base-content/70">Start Type</span>
+								<span className="font-medium">
+									{START_TYPE_LABELS[event.startType || ""] || "N/A"}
+								</span>
+							</div>
+							<div className="divider my-2" />
+							<div className="flex justify-between">
+								<span className="text-base-content/70">Priority Signup</span>
+								<span className="font-medium">{formatDateTime(event.prioritySignupStart)}</span>
+							</div>
+							<div className="flex justify-between">
+								<span className="text-base-content/70">Signup Start</span>
+								<span className="font-medium">{formatDateTime(event.signupStart)}</span>
+							</div>
+							<div className="flex justify-between">
+								<span className="text-base-content/70">Signup End</span>
+								<span className="font-medium">{formatDateTime(event.signupEnd)}</span>
+							</div>
+							<div className="flex justify-between">
+								<span className="text-base-content/70">Payments End</span>
+								<span className="font-medium">{formatDateTime(event.paymentsEnd)}</span>
+							</div>
+							<div className="divider my-2" />
+							<div className="flex justify-between">
+								<span className="text-base-content/70">Available Spots</span>
+								<span className="font-medium">
+									{availableSpots} / {totalSpots}
+								</span>
+							</div>
+						</div>
+					</CardBody>
+				</Card>
+			</div>
+		</main>
+	)
+}

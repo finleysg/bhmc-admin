@@ -75,7 +75,7 @@
 				"Fetches available spots from NestJS",
 				"Returns combined response with event, documentsCount, availableSpots, totalSpots"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 7,
@@ -90,7 +90,7 @@
 				"Shows all 4 signup dates formatted in local timezone (not UTC)",
 				"Shows available spots as X / Y format"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 8,
