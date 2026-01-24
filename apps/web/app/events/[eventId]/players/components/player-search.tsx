@@ -1,11 +1,11 @@
 "use client"
 
 import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from "@headlessui/react"
-import { XMarkIcon } from "@heroicons/react/24/outline"
 import { useDebounceValue } from "usehooks-ts"
 import { useEffect, useState } from "react"
 
 import type { Player } from "@repo/domain/types"
+import { Badge } from "@/components/ui/badge"
 
 interface PlayerSearchProps {
 	eventId?: number
@@ -135,19 +135,9 @@ export function PlayerSearch({
 			{selectedPlayers.length > 0 && (
 				<div className="mt-2 flex flex-wrap gap-2">
 					{selectedPlayers.map((player) => (
-						<div key={player.id} className="badge badge-info gap-2">
-							<span>
-								{player.firstName} {player.lastName}
-							</span>
-							<button
-								type="button"
-								className="btn btn-ghost btn-xs btn-circle"
-								onClick={() => handlePlayerRemove(player)}
-								aria-label={`Remove ${player.firstName} ${player.lastName}`}
-							>
-								<XMarkIcon className="h-3 w-3" />
-							</button>
-						</div>
+						<Badge key={player.id} variant="info" onClose={() => handlePlayerRemove(player)}>
+							{player.firstName} {player.lastName}
+						</Badge>
 					))}
 				</div>
 			)}
