@@ -223,3 +223,14 @@ UI Components PRD Item 22: Consolidate action-card and report-card into single L
 - Decision: Created new LinkCard component and updated all files to use it; kept action-card.tsx and report-card.tsx for now (can be removed in follow-up)
 - No blockers
 
+UI Components PRD Item 23: Create FormField wrapper component - COMPLETED
+- File: apps/web/app/components/ui/form-field.tsx
+- Props: label (optional string), error (optional string), children, className (optional)
+- Renders: <div className='form-control {className}'>{label && <label className='label'><span className='label-text'>{label}</span></label>}{children}{error && <label className='label'><span className='label-text-alt text-error'>{error}</span></label>}</div>
+- Exported as named export
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Commit: 2292dc0
+- Decision: Simple wrapper component for form-control patterns; used optional props for label/error/className
+- No blockers
+
