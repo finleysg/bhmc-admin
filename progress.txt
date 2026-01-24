@@ -268,3 +268,15 @@ UI Components PRD Item 26: Refactor delete-confirm-modal to use Modal component 
 - Decision: Simplified component by delegating modal lifecycle to Modal component
 - No blockers
 
+UI Components PRD Item 27: Refactor integration-action-card modal to use Modal component - COMPLETED
+- File updated: apps/web/app/events/[eventId]/golf-genius/components/integration-action-card.tsx
+- Refactored modal to use Modal component with isOpen state
+- Removed getElementById modal trigger pattern
+- Added isDetailsModalOpen state for modal control
+- Updated Modal component to accept optional className prop (max-w-4xl)
+- All acceptance criteria met
+- Typecheck, lint, test all pass
+- Verified: grep -r 'getElementById' apps/web/app/events/[eventId]/golf-genius returns 0 results
+- Decision: Extended Modal component with className prop for size customization
+- No blockers
+

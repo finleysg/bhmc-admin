@@ -455,7 +455,7 @@
 				"pnpm --filter web build passes",
 				"Integration action modal opens and closes correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 28,
