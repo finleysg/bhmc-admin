@@ -6,6 +6,7 @@ import { GroupSearch } from "../components/group-search"
 import SelectPlayers from "../components/select-players"
 import type { CompleteClubEvent } from "@repo/domain/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { PageLayout } from "@/components/ui/page-layout"
 import { reducer, initialState, translateRefundRequests } from "./reducer"
 import { PaidFeePicker } from "../components/paid-fee-picker"
 
@@ -163,185 +164,183 @@ export default function DropPlayerPage() {
 	}
 
 	return (
-		<main className="min-h-screen flex justify-center md:p-8">
-			<div className="w-full max-w-3xl">
-				<div className="card bg-base-100 shadow-xs">
-					<div className="card-body">
-						<h3 className="card-title text-secondary font-semibold mb-4">Drop Player</h3>
+		<PageLayout maxWidth="3xl">
+			<div className="card bg-base-100 shadow-xs">
+				<div className="card-body">
+					<h3 className="card-title text-secondary font-semibold mb-4">Drop Player</h3>
 
-						{/* Step 1: Select Group */}
-						{state.step === "group" && (
-							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 1 of 4: Select Group</h4>
-								<GroupSearch
-									key={state.resetKey}
-									clubEvent={state.clubEvent}
-									onGroupSelected={(group) => dispatch({ type: "SET_GROUP", payload: group })}
-									onError={(err) => dispatch({ type: "SET_ERROR", payload: err })}
-								/>
+					{/* Step 1: Select Group */}
+					{state.step === "group" && (
+						<div className="mb-6">
+							<h4 className="font-semibold mb-2">Step 1 of 4: Select Group</h4>
+							<GroupSearch
+								key={state.resetKey}
+								clubEvent={state.clubEvent}
+								onGroupSelected={(group) => dispatch({ type: "SET_GROUP", payload: group })}
+								onError={(err) => dispatch({ type: "SET_ERROR", payload: err })}
+							/>
+						</div>
+					)}
+
+					{/* Step 2: Select Players */}
+					{state.step === "player" && state.selectedGroup && (
+						<div className="mb-6">
+							<h4 className="font-semibold mb-2">Step 2 of 4: Select Player(s) to Drop</h4>
+							<SelectPlayers
+								group={state.selectedGroup}
+								selectedPlayers={state.selectedPlayers}
+								onSelect={(player) => dispatch({ type: "SELECT_PLAYER", payload: player })}
+								onRemove={(player) => dispatch({ type: "REMOVE_PLAYER", payload: player })}
+							/>
+							<div className="flex justify-around gap-2 mt-4">
+								<button
+									className="btn btn-ghost btn-sm"
+									onClick={() => dispatch({ type: "GO_BACK" })}
+								>
+									← Back
+								</button>
+								<button
+									className="btn btn-ghost btn-sm"
+									onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
+								>
+									Start Over
+								</button>
+								<button
+									className="btn btn-primary btn-sm"
+									disabled={state.selectedPlayers.length === 0}
+									onClick={() => dispatch({ type: "NEXT_STEP" })}
+								>
+									Continue →
+								</button>
 							</div>
-						)}
+						</div>
+					)}
 
-						{/* Step 2: Select Players */}
-						{state.step === "player" && state.selectedGroup && (
-							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 2 of 4: Select Player(s) to Drop</h4>
-								<SelectPlayers
-									group={state.selectedGroup}
-									selectedPlayers={state.selectedPlayers}
-									onSelect={(player) => dispatch({ type: "SELECT_PLAYER", payload: player })}
-									onRemove={(player) => dispatch({ type: "REMOVE_PLAYER", payload: player })}
-								/>
-								<div className="flex justify-around gap-2 mt-4">
-									<button
-										className="btn btn-ghost btn-sm"
-										onClick={() => dispatch({ type: "GO_BACK" })}
-									>
-										← Back
-									</button>
-									<button
-										className="btn btn-ghost btn-sm"
-										onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
-									>
-										Start Over
-									</button>
-									<button
-										className="btn btn-primary btn-sm"
-										disabled={state.selectedPlayers.length === 0}
-										onClick={() => dispatch({ type: "NEXT_STEP" })}
-									>
-										Continue →
-									</button>
-								</div>
+					{/* Step 3: Select Fees */}
+					{state.step === "fee" && (
+						<div className="mb-6">
+							<h4 className="font-semibold mb-2">Step 3 of 4: Select Fees to Refund</h4>
+							<PaidFeePicker
+								clubEvent={state.clubEvent}
+								slots={slots}
+								onChange={handleFeesChange}
+							/>
+							<div className="flex gap-2 mt-4 justify-between">
+								<button
+									className="btn btn-ghost btn-sm"
+									onClick={() => dispatch({ type: "GO_BACK" })}
+								>
+									← Back
+								</button>
+								<button
+									className="btn btn-ghost btn-sm"
+									onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
+								>
+									Start Over
+								</button>
+								<button
+									className="btn btn-primary btn-sm"
+									onClick={() => dispatch({ type: "NEXT_STEP" })}
+								>
+									Continue →
+								</button>
 							</div>
-						)}
+						</div>
+					)}
 
-						{/* Step 3: Select Fees */}
-						{state.step === "fee" && (
-							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 3 of 4: Select Fees to Refund</h4>
-								<PaidFeePicker
-									clubEvent={state.clubEvent}
-									slots={slots}
-									onChange={handleFeesChange}
-								/>
-								<div className="flex gap-2 mt-4 justify-between">
-									<button
-										className="btn btn-ghost btn-sm"
-										onClick={() => dispatch({ type: "GO_BACK" })}
-									>
-										← Back
-									</button>
-									<button
-										className="btn btn-ghost btn-sm"
-										onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
-									>
-										Start Over
-									</button>
-									<button
-										className="btn btn-primary btn-sm"
-										onClick={() => dispatch({ type: "NEXT_STEP" })}
-									>
-										Continue →
-									</button>
-								</div>
-							</div>
-						)}
-
-						{/* Step 4: Confirm */}
-						{state.step === "confirm" && !state.dropSuccess && (
-							<div className="mb-6">
-								<h4 className="font-semibold mb-2">Step 4 of 4: Confirm Drop</h4>
-								<p className="mb-2">
-									Drop {state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}{" "}
-									from this event?
+					{/* Step 4: Confirm */}
+					{state.step === "confirm" && !state.dropSuccess && (
+						<div className="mb-6">
+							<h4 className="font-semibold mb-2">Step 4 of 4: Confirm Drop</h4>
+							<p className="mb-2">
+								Drop {state.selectedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}{" "}
+								from this event?
+							</p>
+							{state.selectedFees.length > 0 && (
+								<p className="text-sm text-base-content/70 mb-4">
+									{state.selectedFees.reduce((sum, f) => sum + f.registrationFeeIds.length, 0)}{" "}
+									fee(s) will be refunded.
 								</p>
-								{state.selectedFees.length > 0 && (
-									<p className="text-sm text-base-content/70 mb-4">
-										{state.selectedFees.reduce((sum, f) => sum + f.registrationFeeIds.length, 0)}{" "}
-										fee(s) will be refunded.
-									</p>
-								)}
-								<div className="flex gap-2 mt-4 justify-between">
-									<button
-										className="btn btn-ghost btn-sm"
-										onClick={() => dispatch({ type: "GO_BACK" })}
-										disabled={state.isProcessing}
-									>
-										← Back
-									</button>
-									<button
-										className="btn btn-ghost btn-sm"
-										onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
-										disabled={state.isProcessing}
-									>
-										Start Over
-									</button>
-									<button
-										className="btn btn-error btn-sm"
-										onClick={handleCompleteDrop}
-										disabled={state.isProcessing}
-									>
-										{state.isProcessing ? (
-											<>
-												<span className="loading loading-spinner loading-sm"></span>
-												Processing...
-											</>
-										) : (
-											"Complete Drop"
-										)}
-									</button>
-								</div>
-							</div>
-						)}
-
-						<div ref={resultRef}>
-							{state.dropSuccess && (
-								<div className="mt-6">
-									<div className="text-success mb-6">
-										Dropped{" "}
-										{state.droppedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}{" "}
-										successfully!
-										{state.droppedRefundCount > 0 &&
-											` ${state.droppedRefundCount} refund(s) processed.`}
-									</div>
-									<div>
-										<button
-											className="btn btn-success me-2"
-											onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
-										>
-											Drop More
-										</button>
-										<button
-											className="btn btn-neutral"
-											onClick={() => router.push(`/events/${eventId}/players`)}
-										>
-											Player Menu
-										</button>
-									</div>
-								</div>
 							)}
+							<div className="flex gap-2 mt-4 justify-between">
+								<button
+									className="btn btn-ghost btn-sm"
+									onClick={() => dispatch({ type: "GO_BACK" })}
+									disabled={state.isProcessing}
+								>
+									← Back
+								</button>
+								<button
+									className="btn btn-ghost btn-sm"
+									onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
+									disabled={state.isProcessing}
+								>
+									Start Over
+								</button>
+								<button
+									className="btn btn-error btn-sm"
+									onClick={handleCompleteDrop}
+									disabled={state.isProcessing}
+								>
+									{state.isProcessing ? (
+										<>
+											<span className="loading loading-spinner loading-sm"></span>
+											Processing...
+										</>
+									) : (
+										"Complete Drop"
+									)}
+								</button>
+							</div>
+						</div>
+					)}
 
-							{state.error != null && (
-								<div className="mb-6">
-									<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
-									<div className="alert alert-error text-xs mb-2">
-										<span className="text-wrap">
-											Error: {typeof state.error === "string" ? state.error : "Unknown error"}
-										</span>
-									</div>
+					<div ref={resultRef}>
+						{state.dropSuccess && (
+							<div className="mt-6">
+								<div className="text-success mb-6">
+									Dropped{" "}
+									{state.droppedPlayers.map((p) => `${p.firstName} ${p.lastName}`).join(", ")}{" "}
+									successfully!
+									{state.droppedRefundCount > 0 &&
+										` ${state.droppedRefundCount} refund(s) processed.`}
+								</div>
+								<div>
+									<button
+										className="btn btn-success me-2"
+										onClick={() => dispatch({ type: "RESET_SELECTIONS" })}
+									>
+										Drop More
+									</button>
 									<button
 										className="btn btn-neutral"
-										onClick={() => dispatch({ type: "RESET_ERROR" })}
+										onClick={() => router.push(`/events/${eventId}/players`)}
 									>
-										Try Again
+										Player Menu
 									</button>
 								</div>
-							)}
-						</div>
+							</div>
+						)}
+
+						{state.error != null && (
+							<div className="mb-6">
+								<h4 className="font-semibold mb-2 text-error">Unhandled Error</h4>
+								<div className="alert alert-error text-xs mb-2">
+									<span className="text-wrap">
+										Error: {typeof state.error === "string" ? state.error : "Unknown error"}
+									</span>
+								</div>
+								<button
+									className="btn btn-neutral"
+									onClick={() => dispatch({ type: "RESET_ERROR" })}
+								>
+									Try Again
+								</button>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>
-		</main>
+		</PageLayout>
 	)
 }
