@@ -44,3 +44,35 @@ PRD #7: Create event status page with event info card
 - Shows available spots as X / Y format
 - Uses existing Card/CardBody/CardTitle components
 Files: apps/web/app/events/[eventId]/status/page.tsx
+
+PRD #8: Add status badges to status page
+- Added second card (no title) with status badges
+- Slots Created: shows for canChoose events only; green if totalSpots > 0, warning otherwise
+- Golf Genius Integration: green if event.ggId exists, warning otherwise
+- Documents Uploaded: green if documentsCount > 0, warning otherwise
+- Uses existing Badge component with success/warning variants
+Files: apps/web/app/events/[eventId]/status/page.tsx
+
+PRD #9: Add Create/Recreate Slots action with confirmation
+- Button shows only for canChoose events
+- Label: "Create Slots" when totalSpots=0, "Recreate Slots" otherwise
+- Recreate triggers confirmation modal warning slots will be deleted
+- POSTs to /api/registration/{eventId}/create-slots on confirm
+- Refreshes page data after success via fetchStatus callback
+- Uses existing Modal component; follows delete-confirm-modal pattern
+Files: apps/web/app/events/[eventId]/status/page.tsx
+
+PRD #10: Add Add Tee Time action
+- Button shows only for canChoose events (same section as Create Slots)
+- Disabled when totalSpots=0; enabled otherwise
+- PUTs to /api/registration/{eventId}/append-teetime on click
+- Refreshes page data after success via fetchStatus callback
+- Uses btn-secondary style to differentiate from Create Slots
+Files: apps/web/app/events/[eventId]/status/page.tsx
+
+PRD #11: Add Django Admin link
+- Link button opens Django admin in new tab
+- Uses NEXT_PUBLIC_DJANGO_API_URL env var (will be renamed in PRD #13)
+- target=_blank with rel=noopener noreferrer
+- btn-outline style; always visible (not just for canChoose)
+Files: apps/web/app/events/[eventId]/status/page.tsx

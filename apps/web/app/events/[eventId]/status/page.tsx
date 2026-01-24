@@ -215,40 +215,50 @@ export default function EventStatusPage() {
 							<Badge variant={event.ggId ? "success" : "warning"}>Golf Genius Integration</Badge>
 							<Badge variant={documentsCount > 0 ? "success" : "warning"}>Documents Uploaded</Badge>
 						</div>
-						{event.canChoose && (
-							<div className="flex flex-wrap gap-2">
-								<button
-									className="btn btn-primary btn-sm"
-									onClick={onClickCreateSlots}
-									disabled={isCreatingSlots}
-								>
-									{isCreatingSlots ? (
-										<>
-											<span className="loading loading-spinner loading-sm"></span>
-											Creating...
-										</>
-									) : totalSpots > 0 ? (
-										"Recreate Slots"
-									) : (
-										"Create Slots"
-									)}
-								</button>
-								<button
-									className="btn btn-secondary btn-sm"
-									onClick={() => void handleAddTeeTime()}
-									disabled={totalSpots === 0 || isAddingTeeTime}
-								>
-									{isAddingTeeTime ? (
-										<>
-											<span className="loading loading-spinner loading-sm"></span>
-											Adding...
-										</>
-									) : (
-										"Add Tee Time"
-									)}
-								</button>
-							</div>
-						)}
+						<div className="flex flex-wrap gap-2">
+							{event.canChoose && (
+								<>
+									<button
+										className="btn btn-primary btn-sm"
+										onClick={onClickCreateSlots}
+										disabled={isCreatingSlots}
+									>
+										{isCreatingSlots ? (
+											<>
+												<span className="loading loading-spinner loading-sm"></span>
+												Creating...
+											</>
+										) : totalSpots > 0 ? (
+											"Recreate Slots"
+										) : (
+											"Create Slots"
+										)}
+									</button>
+									<button
+										className="btn btn-secondary btn-sm"
+										onClick={() => void handleAddTeeTime()}
+										disabled={totalSpots === 0 || isAddingTeeTime}
+									>
+										{isAddingTeeTime ? (
+											<>
+												<span className="loading loading-spinner loading-sm"></span>
+												Adding...
+											</>
+										) : (
+											"Add Tee Time"
+										)}
+									</button>
+								</>
+							)}
+							<a
+								href={`${process.env.NEXT_PUBLIC_DJANGO_API_URL}/admin/events/event/${event.id}/change/`}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="btn btn-outline btn-sm"
+							>
+								Django Admin
+							</a>
+						</div>
 					</CardBody>
 				</Card>
 
