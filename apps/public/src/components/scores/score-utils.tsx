@@ -74,7 +74,7 @@ export function RoundScores({ round }: RoundProps) {
 	return (
 		<div style={{ display: "flex" }}>
 			<div className="round" style={{ flex: 1 }}>
-				{round.eventDate}
+				{round.eventDate} ({round.tee.name})
 			</div>
 			<div className="scores">
 				{round.scores.map((score) => {

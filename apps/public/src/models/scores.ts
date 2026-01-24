@@ -151,13 +151,21 @@ export class ScoreByHole {
 
 export class Round {
 	course: CourseInRound
+	tee: Tee
 	eventName: string
 	eventDate: string
 	scores: ScoreByHole[]
 	holes: Hole[]
 
-	constructor(course: CourseInRound, event: ClubEvent, scores: ScoreByHole[], holes: Hole[]) {
+	constructor(
+		course: CourseInRound,
+		tee: Tee,
+		event: ClubEvent,
+		scores: ScoreByHole[],
+		holes: Hole[],
+	) {
 		this.course = course
+		this.tee = tee
 		this.eventName = event.name
 		this.eventDate = isoDayFormat(event.startDate)
 		this.scores = scores
@@ -173,7 +181,9 @@ export const LoadRounds = (events: ClubEvent[], playerRounds: PlayerRound[], isN
 		if (clubEvent) {
 			const filteredScores = playerRound.scores.filter((s) => s.isNet === isNet)
 			const scoresByHole = filteredScores.map((s) => new ScoreByHole(s))
-			rounds.push(new Round(playerRound.course, clubEvent, scoresByHole, playerRound.holes))
+			rounds.push(
+				new Round(playerRound.course, playerRound.tee, clubEvent, scoresByHole, playerRound.holes),
+			)
 		}
 	}
 

@@ -52,7 +52,7 @@ export function MemberResultsScreen() {
 					eventDate: result.eventDate,
 					result,
 					points: eventPoints,
-					hasSkins: result.details?.toLowerCase().includes("skins") ?? false,
+					hasSkins: result.details?.toLowerCase()?.includes("skins") ?? false,
 				})
 			})
 		}
