@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from courses.serializers import CourseSerializer
-from .models import Event, EventFee, FeeType, TournamentResult
+from .models import Event, EventFee, FeeType, TournamentResult, TournamentPoints
 
 
 class TournamentResultSerializer(serializers.ModelSerializer):
@@ -21,6 +21,21 @@ class TournamentResultSerializer(serializers.ModelSerializer):
             "flight",
             "summary",
             "details",
+        )
+
+
+class TournamentPointsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TournamentPoints
+        fields = (
+            "id",
+            "tournament",
+            "player",
+            "position",
+            "score",
+            "points",
+            "details",
+            "create_date",
         )
 
 
