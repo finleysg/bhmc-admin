@@ -54,6 +54,14 @@ export default function EventHubPage() {
 					disabled={false}
 					icon={"📄"}
 				/>
+
+				<LinkCard
+					title="Event Status"
+					description="View event configuration and validation status."
+					href={`/events/${eventId}/status`}
+					disabled={false}
+					icon={"✓"}
+				/>
 			</div>
 		</PageLayout>
 	)
