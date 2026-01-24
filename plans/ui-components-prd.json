@@ -170,7 +170,7 @@
 				"File exists at apps/web/app/components/ui/empty-state.tsx",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 11,
