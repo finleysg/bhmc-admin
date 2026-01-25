@@ -1,0 +1,163 @@
+[
+	{
+		"id": "1.1",
+		"category": "backend",
+		"description": "Create MemberScoresService - query scores by playerId/season/courseIds, generate Excel buffer with Gross/Net sheets",
+		"files": ["apps/api/src/reports/member-scores.service.ts (create)"],
+		"verify": [
+			"Service exports getPlayerScoresExcel(playerId, season, courseIds?, scoreType)",
+			"Queries eventScorecard + eventScore + event + course + tee via Drizzle",
+			"Filters by playerId, season (event year), optional courseIds",
+			"Sorts by course name, then event date",
+			"Generates worksheet(s) based on scoreType: gross, net, or both",
+			"Columns: Date, Tee, Type, Course, 1-9, Total",
+			"Uses excel.utils.ts functions"
+		],
+		"passes": true
+	},
+	{
+		"id": "1.2",
+		"category": "backend",
+		"description": "Create MemberReportsController with scores export endpoint (no @Admin)",
+		"files": ["apps/api/src/reports/member-reports.controller.ts (create)"],
+		"verify": [
+			"Controller at path 'reports/member'",
+			"No @Admin() decorator (any authenticated user)",
+			"GET scores/:season/export endpoint",
+			"Accepts query params: courseIds (optional), scoreType (default 'both')",
+			"Returns Excel file with correct Content-Type and Content-Disposition headers",
+			"Filename: my-scores-{season}.xlsx"
+		],
+		"passes": true
+	},
+	{
+		"id": "1.3",
+		"category": "backend",
+		"description": "Register MemberReportsController and MemberScoresService in ReportsModule",
+		"files": ["apps/api/src/reports/reports.module.ts"],
+		"verify": [
+			"MemberReportsController added to controllers array",
+			"MemberScoresService added to providers array",
+			"Module compiles without errors"
+		],
+		"passes": true
+	},
+	{
+		"id": "1.4",
+		"category": "frontend",
+		"description": "Create useExportScores hook - fetches Excel from API, triggers download",
+		"files": ["apps/public/src/hooks/use-export-scores.ts (create)"],
+		"verify": [
+			"Exports useExportScores() returning useMutation",
+			"mutationFn accepts { season, courseIds?, scoreType }",
+			"Fetches from reports/member/scores/{season}/export with query params",
+			"Uses credentials: 'include' for auth",
+			"Converts response to blob and triggers download",
+			"Download filename: my-scores-{season}.xlsx"
+		],
+		"passes": false
+	},
+	{
+		"id": "1.5",
+		"category": "frontend",
+		"description": "Update ExportScoresButton - use hook instead of client-side xlsx",
+		"files": ["apps/public/src/components/scores/export-scores-button.tsx"],
+		"verify": [
+			"Props changed to: season, courseIds, scoreType, disabled",
+			"Uses useExportScores hook",
+			"Shows loading state (spinner or disabled) during export",
+			"No xlsx import",
+			"Button disabled when mutation isPending"
+		],
+		"passes": false
+	},
+	{
+		"id": "1.6",
+		"category": "frontend",
+		"description": "Update PlayerScores component - pass filter props instead of rounds",
+		"files": ["apps/public/src/components/scores/player-scores.tsx"],
+		"verify": [
+			"ExportScoresButton receives season, courseIds, scoreType='both'",
+			"No onFilteredRoundsChange callback needed",
+			"courseIds derived from current filter selection"
+		],
+		"passes": false
+	},
+	{
+		"id": "1.7",
+		"category": "frontend",
+		"description": "Update member-scores screen - pass filter props to ExportScoresButton",
+		"files": ["apps/public/src/screens/member/member-scores.tsx"],
+		"verify": [
+			"ExportScoresButton receives season, courseIds, scoreType='both'",
+			"Works correctly with existing filtering UI"
+		],
+		"passes": false
+	},
+	{
+		"id": "1.8",
+		"category": "frontend",
+		"description": "Remove xlsx dependency from public app",
+		"files": ["apps/public/package.json"],
+		"verify": [
+			"xlsx removed from dependencies",
+			"pnpm install succeeds",
+			"App builds without errors"
+		],
+		"passes": false
+	},
+	{
+		"id": "1.9",
+		"category": "testing",
+		"description": "Add MemberScoresService tests - query logic and Excel generation",
+		"files": ["apps/api/src/reports/__tests__/member-scores.service.test.ts (create)"],
+		"verify": [
+			"Tests pass",
+			"Coverage for: filter by season, filter by courseIds, scoreType variants",
+			"Verifies correct worksheet names and column structure"
+		],
+		"passes": false
+	},
+	{
+		"id": "1.10",
+		"category": "testing",
+		"description": "Add MemberReportsController tests - endpoint auth and response",
+		"files": ["apps/api/src/reports/__tests__/member-reports.controller.test.ts (create)"],
+		"verify": [
+			"Tests pass",
+			"Verifies endpoint requires auth but not admin",
+			"Verifies correct headers on response",
+			"Verifies query param handling"
+		],
+		"passes": false
+	},
+	{
+		"id": "1.11",
+		"category": "testing",
+		"description": "Add useExportScores hook tests",
+		"files": ["apps/public/src/hooks/__tests__/use-export-scores.test.ts (create)"],
+		"verify": [
+			"Tests pass",
+			"Mocks fetch, verifies URL construction",
+			"Verifies download trigger mechanism"
+		],
+		"passes": false
+	},
+	{
+		"id": "1.12",
+		"category": "integration",
+		"description": "E2E verification - export scores from member UI",
+		"files": [],
+		"verify": [
+			"docker compose up -d --build succeeds",
+			"Login as member, navigate to My Scores",
+			"Apply course filter",
+			"Click export button",
+			"Excel downloads with correct filename",
+			"Excel contains Gross Scores and Net Scores sheets",
+			"Data matches filter selection",
+			"Rows sorted by course name, then event date"
+		],
+		"passes": false
+	}
+]

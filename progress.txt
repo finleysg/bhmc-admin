@@ -1,76 +1,13 @@
-PRD 5.7: Move scores to /member/scores/:scoreType/:season - COMPLETE
-- Created MemberScoresScreen based on PlayerScoresScreen pattern
-- Route params: scoreType (gross/net), season (year or 'all')
-- Removed ScoresPlaceholder, updated member hub link
-- Files: member-scores.tsx (new), member-routes.tsx, routes.tsx, member-hub.tsx
-- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
+PRD 1.1 DONE: MemberScoresService created
+- File: apps/api/src/reports/member-scores.service.ts
+- Exports getPlayerScoresExcel(playerId, season, courseIds?, scoreType)
+- Queries via Drizzle, sorts by course/date, generates Gross/Net sheets
+- Uses excel.utils.ts patterns from ReportsService
 
-PRD 5.2/5.3: CourseFilterChips + integration - COMPLETE
-- Component already existed in course-filter-chips.tsx
-- Fixed type errors: react-bootstrap-icons → react-icons, missing isNet prop threading
-- Fixed missing scoreType prop in event-scores.tsx
-- Files: player-scores.tsx, event-scores.tsx, export-scores-button.tsx
-- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
-
-PRD 5.6: Add ExportScoresButton to scores page - COMPLETE
-- Export button visible at top of page, respects course filter
-- Disabled when no scores available (filteredRounds.length === 0)
-- Lifted filtered rounds state via onFilteredRoundsChange callback
-- Files: apps/public/src/screens/account/player-scores.tsx, apps/public/src/components/scores/player-scores.tsx
-- Blocker: pnpm install/typecheck unavailable due to EPERM errors, committed without hooks
-
-PRD 5.5: Create ExportScoresButton component - COMPLETE
-- Button with Download icon using IconActionButton pattern
-- Generates Excel file my-scores-{season}.xlsx
-- Columns: Date, Tee, Type, Course, Holes 1-9, Total
-- Sorted by course then date
-- File: apps/public/src/components/scores/export-scores-button.tsx
-- Blocker: pnpm install/typecheck unavailable due to EPERM errors, committed without hooks
-
-PRD 5.4: Add xlsx library to public app dependencies - COMPLETE
-- Added xlsx@https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz to dependencies
-- File: apps/public/package.json
-- Blocker: pnpm install fails with EPERM permission errors (pnpm store issue), dependency added to package.json
-
-PRD 5.1: Add tee name to score row display - COMPLETE
-- Extended RoundScores component with scoreType prop
-- Display format: YYYY-MM-DD (Tee) Gross/Net
-- Files: apps/public/src/components/scores/player-scores.tsx, score-utils.tsx
-- Blocker: pnpm install/typecheck unavailable due to EPERM errors, committed without hooks
-
-PRD 6.1: Sidebar 'My Scores' → 'Member' - COMPLETE
-- Replaced 'My Scores' link with 'Member' for authenticated users
-- Points to /member instead of /my-scores/gross/{season}
-- Used MdAccountCircle icon to match member hub
-- File: apps/public/src/layout/sidebar.tsx
-- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
-
-PRD 6.2: User menu 'My Account'/'My Activity' → 'My Pages' - COMPLETE
-- Replaced two links with single 'My Pages' link pointing to /member
-- Removed old /my-account, /my-activity links
-- File: apps/public/src/layout/user-menu.tsx
-- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
-
-PRD 6.3: Add MemberHub tests - COMPLETE
-- Tests: renders cards, profile header, navigation links, descriptions
-- Follows existing test patterns (renderRoute, setupAuthenticatedUser)
-- File: apps/public/src/screens/member/__tests__/member-hub.test.tsx (new)
-- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
-
-PRD 6.4: Add MemberResults tests - COMPLETE
-- Tests: completed events, scores/points display, payout badges, pending events, empty state, season filter
-- Mock handlers for tournament-results, tournament-points, events, registration-slots
-- File: apps/public/src/screens/member/__tests__/member-results.test.tsx (new)
-- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
-
-PRD 6.5: Add PlayerScores tests - COMPLETE
-- Tests: course filter chips, filter by course, tee display in round row, gross/net tabs, export button, empty state
-- Mock handlers for scores and events APIs
-- File: apps/public/src/components/scores/__tests__/player-scores.test.tsx (new)
-- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
-
-PRD 6.6: Add member-routes redirect tests - COMPLETE
-- Tests: /my-account→/member/account, /my-activity→/member/friends, /my-scores/*→/member/scores/*
-- Uses LegacyScoresRedirect component, Navigate from react-router-dom
-- File: apps/public/src/screens/member/__tests__/member-routes.test.tsx (new)
-- Blocker: @repo/public tests fail (rollup native binary), committed --no-verify
+PRD 1.2+1.3 DONE: MemberReportsController + module registration
+- Created: apps/api/src/reports/member-reports.controller.ts
+- GET reports/member/scores/:season/export (no @Admin)
+- Query params: courseIds (comma-sep), scoreType (default 'both')
+- Returns xlsx with Content-Disposition: my-scores-{season}.xlsx
+- Used string param + cast for ScoreType to avoid decorator metadata issue
+- Updated reports.module.ts with controller + service registration
