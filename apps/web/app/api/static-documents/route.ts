@@ -48,3 +48,28 @@ export async function GET(request: NextRequest) {
 	}))
 	return NextResponse.json(transformed)
 }
+
+interface CreateStaticDocumentBody {
+	code: string
+	document: number
+}
+
+export async function POST(request: NextRequest) {
+	const body = (await request.json()) as CreateStaticDocumentBody
+	const response = await fetchWithAuth({
+		request,
+		backendPath: "/static-documents/",
+		method: "POST",
+		body,
+		apiBaseUrl: process.env.DJANGO_API_URL,
+	})
+
+	if (!response.ok) return response
+
+	const data = (await response.json()) as DjangoStaticDocument
+	return NextResponse.json({
+		id: data.id,
+		code: data.code,
+		document: transformDocument(data.document),
+	})
+}
