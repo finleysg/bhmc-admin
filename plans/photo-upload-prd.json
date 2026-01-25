@@ -123,7 +123,7 @@
 				"Validation prevents submit when fields invalid",
 				"onSubmit receives correct FormData structure"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 8,
