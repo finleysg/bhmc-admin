@@ -1,5 +1,5 @@
 import { useClubDocumentEdit } from "../../hooks/use-club-documents"
-import { DocumentType, getClubDocumentName } from "../../models/codes"
+import { DocumentType } from "../../models/codes"
 import { ClubDocument } from "../../models/document"
 import { ErrorDisplay } from "../feedback/error-display"
 import { OverlaySpinner } from "../spinners/overlay-spinner"
@@ -8,6 +8,7 @@ import { DocumentView } from "./document-view"
 
 interface ClubDocumentEditorProps {
 	code: string
+	displayName: string
 	document?: ClubDocument
 	onCancel: () => void
 	onComplete: () => void
@@ -18,6 +19,7 @@ export function ClubDocumentEditor({
 	onComplete,
 	document,
 	code,
+	displayName,
 }: ClubDocumentEditorProps) {
 	const { handleUpload, isBusy, error } = useClubDocumentEdit(code)
 
@@ -30,7 +32,7 @@ export function ClubDocumentEditor({
 		<div className="card">
 			<OverlaySpinner loading={isBusy} />
 			<div className="card-body">
-				<h5 className="card-header mb-2">Upload {getClubDocumentName(code)}</h5>
+				<h5 className="card-header mb-2">Upload {displayName}</h5>
 				{document && <DocumentView document={document.document} />}
 				<DocumentUploadForm
 					onSubmit={saveHandler}

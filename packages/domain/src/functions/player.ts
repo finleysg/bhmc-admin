@@ -28,9 +28,9 @@ function parseDate(input?: string | null): Date | null {
 }
 
 function calculateAge(birthDate: Date, asOfDate: Date): number {
-	let age = asOfDate.getFullYear() - birthDate.getFullYear()
-	const monthDiff = asOfDate.getMonth() - birthDate.getMonth()
-	const dayDiff = asOfDate.getDate() - birthDate.getDate()
+	let age = asOfDate.getUTCFullYear() - birthDate.getUTCFullYear()
+	const monthDiff = asOfDate.getUTCMonth() - birthDate.getUTCMonth()
+	const dayDiff = asOfDate.getUTCDate() - birthDate.getUTCDate()
 	if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
 		age--
 	}
@@ -64,7 +64,7 @@ export function getAge(player: Player, today: Date, referenceDate?: Date): AgeRe
 
 	const age = calculateAge(bd, today)
 	const eventAge = calculateAge(bd, ref)
-	const calendarEnd = new Date(ref.getFullYear(), 11, 31)
+	const calendarEnd = new Date(Date.UTC(ref.getUTCFullYear(), 11, 31))
 	const calendarAge = calculateAge(bd, calendarEnd)
 
 	return { age, eventAge, calendarAge }

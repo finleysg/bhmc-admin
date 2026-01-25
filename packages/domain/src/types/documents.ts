@@ -24,3 +24,16 @@ export interface Document {
 	createdBy: string
 	lastUpdate: string
 }
+
+export interface ClubDocumentCode {
+	id: number
+	code: string
+	displayName: string
+	location: string
+}
+
+export interface StaticDocument {
+	id: number
+	code: string
+	document: Document
+}

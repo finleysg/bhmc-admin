@@ -1,5 +1,28 @@
 import { z } from "zod"
 
+export const ClubDocumentCodeApiSchema = z.object({
+	id: z.number(),
+	code: z.string(),
+	display_name: z.string(),
+	location: z.string().nullish(),
+})
+
+export type ClubDocumentCodeData = z.infer<typeof ClubDocumentCodeApiSchema>
+
+export class ClubDocumentCode {
+	id: number
+	code: string
+	displayName: string
+	location: string | null
+
+	constructor(data: ClubDocumentCodeData) {
+		this.id = data.id
+		this.code = data.code
+		this.displayName = data.display_name
+		this.location = data.location ?? null
+	}
+}
+
 export const DocumentApiSchema = z.object({
 	id: z.number(),
 	year: z.number().nullish(),

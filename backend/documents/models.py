@@ -96,6 +96,19 @@ class PhotoTag(models.Model):
     tag = models.ForeignKey(verbose_name="Tag", to=Tag, on_delete=CASCADE)
 
 
+class ClubDocumentCode(models.Model):
+    code = models.CharField(verbose_name="Code", max_length=6, unique=True)
+    display_name = models.CharField(verbose_name="Display Name", max_length=100)
+    location = models.CharField(verbose_name="Location", max_length=50, blank=True)
+
+    class Meta:
+        verbose_name = "Club Document Code"
+        ordering = ["display_name"]
+
+    def __str__(self):
+        return "{}: {}".format(self.code, self.display_name)
+
+
 class StaticDocument(models.Model):
     code = models.CharField(verbose_name="Code", max_length=6, unique=True)
     document = models.ForeignKey(verbose_name="Document", to=Document, on_delete=CASCADE)

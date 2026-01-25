@@ -45,7 +45,7 @@ describe("getAge", () => {
 		const result = getAge(player, today, referenceDate)
 		expect(result.age).toBe(33)
 		expect(result.eventAge).toBe(32)
-		expect(result.calendarAge).toBe(33)
+		expect(result.calendarAge).toBe(32) // calendarAge uses ref year (2022), not today's year
 	})
 
 	it("returns n/a for invalid birth date", () => {

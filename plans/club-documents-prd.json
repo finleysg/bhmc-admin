@@ -1,0 +1,370 @@
+{
+	"feature": "Club Documents Upload",
+	"description": "Manage club documents (by-laws, standings, guides). Codes managed in Django admin. Web admin handles upload/replace/remove. Public site fetches display names from API.",
+	"items": [
+		{
+			"id": 1,
+			"category": "backend",
+			"description": "Add ClubDocumentCode model to Django",
+			"acceptance": [
+				"Model at backend/documents/models.py",
+				"Fields: code (CharField max_length=6, unique), display_name (CharField max_length=100), location (CharField max_length=50, blank=True)",
+				"Meta: verbose_name='Club Document Code', ordering=['display_name']",
+				"__str__ returns '{code}: {display_name}'"
+			],
+			"verify": [
+				"Model class exists in backend/documents/models.py",
+				"docker compose exec backend python manage.py makemigrations --dry-run shows no changes"
+			],
+			"passes": true
+		},
+		{
+			"id": 2,
+			"category": "backend",
+			"description": "Create data migration to seed 10 existing codes",
+			"acceptance": [
+				"Data migration in backend/documents/migrations/",
+				"Seeds codes: BYLAW, CUP, TUT1, TUT2, HCP, SLPG, SLPN, FIN, SO, ACCTS",
+				"Display names and locations match apps/public/src/models/codes.ts",
+				"Migration is reversible (noop reverse)"
+			],
+			"verify": [
+				"docker compose exec backend python manage.py migrate",
+				"Query ClubDocumentCode.objects.count() returns 10"
+			],
+			"passes": true
+		},
+		{
+			"id": 3,
+			"category": "backend",
+			"description": "Register ClubDocumentCode in Django admin",
+			"acceptance": [
+				"ClubDocumentCodeAdmin class in backend/documents/admin.py",
+				"list_display: code, display_name, location",
+				"search_fields: code, display_name",
+				"Registered with admin.site.register()"
+			],
+			"verify": [
+				"Navigate to /admin/documents/clubdocumentcode/",
+				"10 codes visible in admin list"
+			],
+			"passes": true
+		},
+		{
+			"id": 4,
+			"category": "backend",
+			"description": "Add ClubDocumentCodeSerializer",
+			"acceptance": [
+				"Serializer at backend/documents/serializers.py",
+				"ModelSerializer for ClubDocumentCode",
+				"Fields: id, code, display_name, location"
+			],
+			"verify": ["Class exists in serializers.py", "pnpm build passes (no Python syntax errors)"],
+			"passes": true
+		},
+		{
+			"id": 5,
+			"category": "backend",
+			"description": "Add ClubDocumentCodeViewSet and register URL",
+			"acceptance": [
+				"ViewSet at backend/documents/views.py",
+				"Read-only viewset (IsAuthenticatedOrReadOnly permission)",
+				"Route registered at /api/club-document-codes/ in backend/bhmc/urls.py"
+			],
+			"verify": [
+				"curl http://localhost:8000/api/club-document-codes/ returns JSON array of 10 codes"
+			],
+			"passes": true
+		},
+		{
+			"id": 6,
+			"category": "domain",
+			"description": "Add ClubDocumentCode type to domain package",
+			"acceptance": [
+				"Interface in packages/domain/src/types/documents.ts",
+				"Fields: id (number), code (string), displayName (string), location (string)",
+				"Exported from packages/domain/src/types/index.ts"
+			],
+			"verify": ["Type exists in documents.ts", "pnpm build passes"],
+			"passes": true
+		},
+		{
+			"id": 7,
+			"category": "domain",
+			"description": "Add StaticDocument type to domain package",
+			"acceptance": [
+				"Interface in packages/domain/src/types/documents.ts",
+				"Fields: id (number), code (string), document (Document type)",
+				"Exported from packages/domain/src/types/index.ts"
+			],
+			"verify": ["Type exists in documents.ts", "pnpm build passes"],
+			"passes": true
+		},
+		{
+			"id": 8,
+			"category": "web-api",
+			"description": "Add GET /api/club-document-codes route",
+			"acceptance": [
+				"GET handler at apps/web/app/api/club-document-codes/route.ts",
+				"Uses fetchWithAuth to proxy to Django /club-document-codes/",
+				"Transforms snake_case response to camelCase",
+				"Returns JSON array of ClubDocumentCode"
+			],
+			"verify": [
+				"File exists at apps/web/app/api/club-document-codes/route.ts",
+				"pnpm --filter web build passes"
+			],
+			"passes": true
+		},
+		{
+			"id": 9,
+			"category": "web-api",
+			"description": "Add GET /api/static-documents route",
+			"acceptance": [
+				"GET handler at apps/web/app/api/static-documents/route.ts",
+				"Uses fetchWithAuth to proxy to Django /static-documents/",
+				"Transforms snake_case response to camelCase",
+				"Returns JSON array of StaticDocument"
+			],
+			"verify": [
+				"File exists at apps/web/app/api/static-documents/route.ts",
+				"pnpm --filter web build passes"
+			],
+			"passes": true
+		},
+		{
+			"id": 10,
+			"category": "web-api",
+			"description": "Add POST /api/static-documents route",
+			"acceptance": [
+				"POST handler in apps/web/app/api/static-documents/route.ts",
+				"Uses fetchWithAuth to proxy JSON body to Django /static-documents/",
+				"Body: { code: string, document: number }",
+				"Returns created StaticDocument JSON"
+			],
+			"verify": ["POST handler exists in route.ts", "pnpm --filter web build passes"],
+			"passes": true
+		},
+		{
+			"id": 11,
+			"category": "web-api",
+			"description": "Add PUT /api/static-documents/[id] route",
+			"acceptance": [
+				"PUT handler at apps/web/app/api/static-documents/[id]/route.ts",
+				"Extracts id from route params",
+				"Uses fetchWithAuth to proxy JSON to Django /static-documents/{id}/",
+				"Returns updated StaticDocument JSON"
+			],
+			"verify": [
+				"File exists at apps/web/app/api/static-documents/[id]/route.ts",
+				"pnpm --filter web build passes"
+			],
+			"passes": true
+		},
+		{
+			"id": 12,
+			"category": "web-api",
+			"description": "Add DELETE /api/static-documents/[id] route",
+			"acceptance": [
+				"DELETE handler in apps/web/app/api/static-documents/[id]/route.ts",
+				"Extracts id from route params",
+				"Uses fetchWithAuth to proxy to Django DELETE /static-documents/{id}/",
+				"Returns 204 on success"
+			],
+			"verify": ["DELETE handler exists in route.ts", "pnpm --filter web build passes"],
+			"passes": true
+		},
+		{
+			"id": 13,
+			"category": "web-state",
+			"description": "Create club documents page reducer",
+			"acceptance": [
+				"File at apps/web/app/club/documents/reducer.ts",
+				"State: mode (list|upload|replace|delete), codes array, staticDocuments array, selectedCode, selectedDocument, isLoading, isSubmitting, error",
+				"Actions: SET_CODES, SET_STATIC_DOCUMENTS, SET_MODE, SELECT_CODE, SELECT_DOCUMENT, SET_SUBMITTING, SET_ERROR, SET_LOADING, RESET",
+				"Exports reducer, initialState, Action type, ClubDocumentsState type"
+			],
+			"verify": [
+				"File exists at apps/web/app/club/documents/reducer.ts",
+				"pnpm --filter web build passes"
+			],
+			"passes": true
+		},
+		{
+			"id": 14,
+			"category": "web-component",
+			"description": "Create code-list component for club documents",
+			"acceptance": [
+				"File at apps/web/app/club/documents/components/code-list.tsx",
+				"Props: codes, staticDocuments, onUpload, onReplace, onRemove callbacks",
+				"Table with columns: Code, Display Name, Location, Document, Actions",
+				"Document column: shows filename link if exists, 'No document' otherwise",
+				"Actions: Upload button if no doc, Replace/Remove buttons if has doc",
+				"File links open in new tab"
+			],
+			"verify": [
+				"Component renders table with all codes",
+				"Actions change based on document status"
+			],
+			"passes": true
+		},
+		{
+			"id": 15,
+			"category": "web-component",
+			"description": "Create upload-form component for club documents",
+			"acceptance": [
+				"File at apps/web/app/club/documents/components/upload-form.tsx",
+				"Props: code (ClubDocumentCode), onSubmit, onCancel, isSubmitting, existingDocument (optional for replace)",
+				"Title field: text input, pre-populated with code.displayName",
+				"Document type field: select with DOCUMENT_TYPES, default 'O' (Other)",
+				"Year field: number input, default current year",
+				"FilePicker component for file selection",
+				"Submit shows spinner when isSubmitting"
+			],
+			"verify": [
+				"Form renders all fields",
+				"File required on upload, optional on replace",
+				"Validation prevents empty submit"
+			],
+			"passes": true
+		},
+		{
+			"id": 16,
+			"category": "web-component",
+			"description": "Create delete-confirm-modal for club documents",
+			"acceptance": [
+				"File at apps/web/app/club/documents/components/delete-confirm-modal.tsx",
+				"Props: isOpen, code, document, onConfirm, onCancel, isDeleting",
+				"Message explains unlinking (not deleting file)",
+				"Confirm shows spinner when isDeleting",
+				"Uses daisyUI modal styling"
+			],
+			"verify": [
+				"Modal renders when isOpen",
+				"Shows code and document info",
+				"Buttons trigger callbacks"
+			],
+			"passes": true
+		},
+		{
+			"id": 17,
+			"category": "web-ui",
+			"description": "Create club documents page with list view",
+			"acceptance": [
+				"Page at apps/web/app/club/documents/page.tsx",
+				"Replaces 'Coming Soon' placeholder",
+				"Uses useReducer with club documents reducer",
+				"Fetches codes from /api/club-document-codes on mount",
+				"Fetches static documents from /api/static-documents on mount",
+				"Renders CodeList component",
+				"Shows loading spinner during fetch"
+			],
+			"verify": [
+				"Navigate to /club/documents",
+				"Codes listed with document status",
+				"No errors in console"
+			],
+			"passes": true
+		},
+		{
+			"id": 18,
+			"category": "web-ui",
+			"description": "Add upload document flow to club documents page",
+			"acceptance": [
+				"Clicking Upload on code without doc sets mode to 'upload' and selects code",
+				"Upload mode renders UploadForm component",
+				"Submit: POST to /api/documents (create Document), then POST to /api/static-documents (link code)",
+				"Success: refetch static documents, return to list mode",
+				"Error: show error, stay in upload mode",
+				"Cancel returns to list"
+			],
+			"verify": [
+				"Can upload document for code without one",
+				"Document appears linked after upload"
+			],
+			"passes": true
+		},
+		{
+			"id": 19,
+			"category": "web-ui",
+			"description": "Add replace document flow to club documents page",
+			"acceptance": [
+				"Clicking Replace on code with doc sets mode to 'replace' and selects code+document",
+				"Replace mode renders UploadForm with existingDocument prop",
+				"Submit: POST to /api/documents (create new Document), then PUT to /api/static-documents/{id} (update link)",
+				"Success: refetch static documents, return to list mode",
+				"Cancel returns to list"
+			],
+			"verify": ["Can replace existing document", "New document link appears after replace"],
+			"passes": true
+		},
+		{
+			"id": 20,
+			"category": "web-ui",
+			"description": "Add remove document flow to club documents page",
+			"acceptance": [
+				"Clicking Remove on code with doc sets mode to 'delete' and selects code+document",
+				"Delete mode renders DeleteConfirmModal",
+				"Confirm: DELETE /api/static-documents/{id} (unlinks only)",
+				"Success: refetch static documents, return to list mode",
+				"Cancel returns to list"
+			],
+			"verify": [
+				"Remove shows confirmation modal",
+				"Confirming unlinks document from code",
+				"Code shows 'No document' after removal"
+			],
+			"passes": true
+		},
+		{
+			"id": 21,
+			"category": "public",
+			"description": "Update use-club-documents hook to fetch ClubDocumentCode",
+			"acceptance": [
+				"Modify apps/public/src/hooks/use-club-documents.ts",
+				"Fetch ClubDocumentCode data from /api/club-document-codes/",
+				"Return displayName and location from API instead of hardcoded map",
+				"Maintain backward compatibility with existing usage"
+			],
+			"verify": ["Hook returns displayName from API", "Public site displays correct names"],
+			"passes": true
+		},
+		{
+			"id": 22,
+			"category": "public",
+			"description": "Remove hardcoded clubDocumentMap from public site",
+			"acceptance": [
+				"Modify apps/public/src/models/codes.ts",
+				"Remove or deprecate ClubDocuments enum and clubDocumentMap",
+				"Update any components still using hardcoded map to use hook data",
+				"Keep ClubDocuments enum if needed for type safety (optional)"
+			],
+			"verify": [
+				"No runtime references to clubDocumentMap",
+				"Public site builds and displays correctly"
+			],
+			"passes": true
+		},
+		{
+			"id": 23,
+			"category": "integration",
+			"description": "End-to-end test of club documents feature",
+			"acceptance": [
+				"Can navigate to /club/documents from admin",
+				"All 10 codes visible with correct display names",
+				"Can upload document for code without one",
+				"Can replace existing document",
+				"Can remove document (unlink)",
+				"Public site shows updated names from API",
+				"Django admin can add/edit/delete codes"
+			],
+			"verify": [
+				"docker compose up -d --build",
+				"Test all CRUD flows in web admin",
+				"Verify public site displays correctly",
+				"Verify Django admin code management"
+			],
+			"passes": false
+		}
+	]
+}
