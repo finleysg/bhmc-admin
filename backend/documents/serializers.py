@@ -121,6 +121,13 @@ class PhotoSerializer(serializers.ModelSerializer):
         return instance
 
 
+class ClubDocumentCodeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ClubDocumentCode
+        fields = ("id", "code", "display_name", "location", )
+
+
 class StaticDocumentSerializer(serializers.ModelSerializer):
 
     document = DocumentSerializer(read_only=True)
