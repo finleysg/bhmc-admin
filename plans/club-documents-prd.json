@@ -172,7 +172,7 @@
 				"Returns 204 on success"
 			],
 			"verify": ["DELETE handler exists in route.ts", "pnpm --filter web build passes"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 13,
@@ -188,7 +188,7 @@
 				"File exists at apps/web/app/club/documents/reducer.ts",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 14,
