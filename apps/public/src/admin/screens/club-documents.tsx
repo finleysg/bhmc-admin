@@ -4,28 +4,25 @@ import { toast } from "react-toastify"
 
 import { CardContent } from "../../components/card/content"
 import { ClubDocumentEditor } from "../../components/document/club-document-editor"
-import { SelectOption } from "../../components/forms/select-control"
 import { OverlaySpinner } from "../../components/spinners/overlay-spinner"
-import { useClubDocuments } from "../../hooks/use-club-documents"
-import { clubDocumentMap, getClubDocumentName } from "../../models/codes"
-import { ClubDocument } from "../../models/document"
+import { useClubDocumentCodes, useClubDocuments } from "../../hooks/use-club-documents"
+import { ClubDocument, ClubDocumentCode } from "../../models/document"
 
 export function ClubDocumentsScreen() {
 	const [currentDocument, setCurrentDocument] = useState<ClubDocument | null>(null)
+	const [selectedCodeObj, setSelectedCodeObj] = useState<ClubDocumentCode | null>(null)
 	const [selectedCode, setSelectedCode] = useState("NA")
-	const { data: documents, status } = useClubDocuments()
+	const { data: documents, status: documentsStatus } = useClubDocuments()
+	const { data: codes, status: codesStatus } = useClubDocumentCodes()
 
-	const documentOptions = () => {
-		const options: SelectOption[] = []
-		clubDocumentMap.forEach((value, key) => {
-			options.push({ value: key, name: value })
-		})
-		return options
-	}
+	const isLoading = documentsStatus === "pending" || codesStatus === "pending"
 
 	const handleDocumentSelect = (e: ChangeEvent<HTMLSelectElement>) => {
 		const code = e.target.value
 		setSelectedCode(code)
+
+		const codeObj = codes?.find((c) => c.code === code)
+		setSelectedCodeObj(codeObj ?? null)
 
 		const doc = documents?.find((doc) => doc.code === code)
 		if (doc) {
@@ -36,20 +33,22 @@ export function ClubDocumentsScreen() {
 	}
 
 	const handleComplete = () => {
-		toast.success(`${getClubDocumentName(selectedCode)} has been saved.`)
+		toast.success(`${selectedCodeObj?.displayName ?? selectedCode} has been saved.`)
 		setCurrentDocument(null)
+		setSelectedCodeObj(null)
 		setSelectedCode("NA")
 	}
 
 	const handleCancel = () => {
 		setCurrentDocument(null)
+		setSelectedCodeObj(null)
 		setSelectedCode("NA")
 	}
 
 	return (
 		<div className="row">
 			<div className="col-lg-4 col-md-6 col-sm-12 offset-lg-4 offset-md-3">
-				<OverlaySpinner loading={status === "pending"} />
+				<OverlaySpinner loading={isLoading} />
 				<CardContent contentKey="club-documents">
 					<div className="form-group mb-2">
 						<label htmlFor="doc-list">Club Documents</label>
@@ -62,20 +61,19 @@ export function ClubDocumentsScreen() {
 							<option key="NA" value="NA">
 								--Select--
 							</option>
-							{documentOptions().map((opt) => {
-								return (
-									<option key={opt.value} value={opt.value}>
-										{opt.name}
-									</option>
-								)
-							})}
+							{codes?.map((code) => (
+								<option key={code.code} value={code.code}>
+									{code.displayName} ({code.location})
+								</option>
+							))}
 						</select>
 					</div>
 				</CardContent>
-				{currentDocument && (
+				{selectedCodeObj && (
 					<ClubDocumentEditor
-						code={currentDocument.code}
-						document={currentDocument}
+						code={selectedCodeObj.code}
+						displayName={selectedCodeObj.displayName}
+						document={currentDocument ?? undefined}
 						onCancel={handleCancel}
 						onComplete={handleComplete}
 					/>

@@ -327,7 +327,7 @@
 				"Maintain backward compatibility with existing usage"
 			],
 			"verify": ["Hook returns displayName from API", "Public site displays correct names"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 22,

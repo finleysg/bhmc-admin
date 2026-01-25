@@ -3,13 +3,29 @@ import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { DocumentUploadData } from "../components/document/document-upload-form"
-import { ClubDocument, ClubDocumentApiSchema, ClubDocumentData } from "../models/document"
+import {
+	ClubDocument,
+	ClubDocumentApiSchema,
+	ClubDocumentCode,
+	ClubDocumentCodeApiSchema,
+	ClubDocumentCodeData,
+	ClubDocumentData,
+} from "../models/document"
 import { getMany, getOne, httpClient } from "../utils/api-client"
 import { apiUrl } from "../utils/api-utils"
 
 interface ClubDocumentArgs {
 	documentId?: number
 	formData: FormData
+}
+
+export function useClubDocumentCodes() {
+	const endpoint = "club-document-codes"
+	return useQuery({
+		queryKey: ["club-document-codes"],
+		queryFn: () => getMany<ClubDocumentCodeData>(endpoint, ClubDocumentCodeApiSchema),
+		select: (data) => data?.map((code) => new ClubDocumentCode(code)),
+	})
 }
 
 export function useClubDocument(code: string) {
