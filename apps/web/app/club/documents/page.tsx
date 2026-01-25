@@ -136,6 +136,61 @@ export default function ClubDocumentsPage() {
 		}
 	}
 
+	const handleReplaceSubmit = async (data: UploadFormData) => {
+		if (!state.selectedCode || !state.selectedDocument) return
+
+		dispatch({ type: "SET_SUBMITTING", payload: true })
+		dispatch({ type: "SET_ERROR", payload: null })
+
+		const formData = new FormData()
+		formData.append("title", data.title)
+		formData.append("document_type", data.documentType)
+		formData.append("year", String(data.year))
+		if (data.file) {
+			formData.append("file", data.file)
+		}
+
+		try {
+			// Step 1: Create new document
+			const docRes = await fetch("/api/documents", {
+				method: "POST",
+				body: formData,
+			})
+
+			if (!docRes.ok) {
+				const errorData = (await docRes.json().catch(() => ({}))) as { error?: string }
+				throw new Error(errorData.error ?? "Failed to create document")
+			}
+
+			const createdDoc = (await docRes.json()) as Document
+
+			// Step 2: Update static-document to point to new document
+			const updateRes = await fetch(`/api/static-documents/${state.selectedDocument.id}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					document: createdDoc.id,
+				}),
+			})
+
+			if (!updateRes.ok) {
+				const errorData = (await updateRes.json().catch(() => ({}))) as { error?: string }
+				throw new Error(errorData.error ?? "Failed to update document link")
+			}
+
+			// Refetch static documents
+			await fetchStaticDocuments()
+			dispatch({ type: "RESET" })
+		} catch (err) {
+			dispatch({
+				type: "SET_ERROR",
+				payload: err instanceof Error ? err.message : "Failed to replace document",
+			})
+		} finally {
+			dispatch({ type: "SET_SUBMITTING", payload: false })
+		}
+	}
+
 	if (isPending || state.isLoading) {
 		return <LoadingSpinner size="lg" />
 	}
@@ -161,6 +216,21 @@ export default function ClubDocumentsPage() {
 							onSubmit={handleUploadSubmit}
 							onCancel={handleCancel}
 							isSubmitting={state.isSubmitting}
+						/>
+					</CardBody>
+				</Card>
+			)}
+
+			{state.mode === "replace" && state.selectedCode && state.selectedDocument && (
+				<Card shadow="xs" className="mb-4">
+					<CardBody>
+						<CardTitle>Replace Document for {state.selectedCode.displayName}</CardTitle>
+						<UploadForm
+							code={state.selectedCode}
+							onSubmit={handleReplaceSubmit}
+							onCancel={handleCancel}
+							isSubmitting={state.isSubmitting}
+							existingDocument={state.selectedDocument.document}
 						/>
 					</CardBody>
 				</Card>
