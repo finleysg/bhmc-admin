@@ -37,3 +37,26 @@ export interface StaticDocument {
 	code: string
 	document: Document
 }
+
+export interface Tag {
+	id: number
+	name: string
+}
+
+export interface PhotoTag {
+	id: number
+	tag: string
+}
+
+export interface Photo {
+	id: number
+	year: number
+	caption: string | null
+	mobileUrl: string
+	webUrl: string
+	imageUrl: string
+	playerId: number | null
+	createdBy: string
+	lastUpdate: string
+	tags: PhotoTag[]
+}
