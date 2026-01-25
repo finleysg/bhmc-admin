@@ -244,7 +244,7 @@
 				"Shows code and document info",
 				"Buttons trigger callbacks"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 17,
@@ -264,7 +264,7 @@
 				"Codes listed with document status",
 				"No errors in console"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 18,
