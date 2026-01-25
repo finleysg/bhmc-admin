@@ -220,12 +220,16 @@ export default function ClubDocumentsPage() {
 		}
 	}
 
-	if (isPending || state.isLoading) {
+	if (isPending) {
 		return <LoadingSpinner size="lg" />
 	}
 
 	if (!signedIn) {
 		return null
+	}
+
+	if (state.isLoading) {
+		return <LoadingSpinner size="lg" />
 	}
 
 	return (
