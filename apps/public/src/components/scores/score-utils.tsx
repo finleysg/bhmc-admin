@@ -70,10 +70,17 @@ export function HolePars({ holes, courseName }: HolesProps) {
 	)
 }
 
-export function RoundScores({ round }: RoundProps) {
+export interface RoundScoresProps extends RoundProps {
+	scoreType: string
+}
+
+export function RoundScores({ round, scoreType }: RoundScoresProps) {
 	return (
 		<div style={{ display: "flex" }}>
-			<div className="round" style={{ flex: 1 }}>
+			<div
+				className="round"
+				style={scoreType == "Net" ? { flex: 1, fontStyle: "italic" } : { flex: 1 }}
+			>
 				{round.eventDate}
 			</div>
 			<div className="scores">

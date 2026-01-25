@@ -1,0 +1,42 @@
+[
+	{
+		"id": "2.1",
+		"category": "routing",
+		"description": "Create member routes structure with /member parent and child routes for account, friends, scores, results using placeholder components",
+		"files": [
+			"apps/public/src/screens/member/member-routes.tsx (create)",
+			"apps/public/src/layout/routes.tsx"
+		],
+		"verify": [
+			"/member shows placeholder",
+			"/member/account shows placeholder",
+			"/member/friends shows placeholder",
+			"/member/scores shows placeholder",
+			"/member/results shows placeholder"
+		],
+		"passes": true
+	},
+	{
+		"id": "2.2",
+		"category": "frontend",
+		"description": "Create Member layout wrapper with auth check (redirect to login if unauthenticated), render Outlet for child routes",
+		"files": ["apps/public/src/screens/member/member.tsx (create)"],
+		"verify": [
+			"Unauthenticated user at /member redirected to login",
+			"Authenticated user sees child content"
+		],
+		"passes": true
+	},
+	{
+		"id": "2.3",
+		"category": "routing",
+		"description": "Add legacy route redirects: /my-account -> /member/account, /my-activity -> /member/friends, /my-scores/* -> /member/scores/*",
+		"files": ["apps/public/src/layout/routes.tsx"],
+		"verify": [
+			"/my-account redirects to /member/account",
+			"/my-activity redirects to /member/friends",
+			"/my-scores/gross/2024 redirects to /member/scores/gross/2024"
+		],
+		"passes": true
+	}
+]

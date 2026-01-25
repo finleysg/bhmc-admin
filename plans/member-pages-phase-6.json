@@ -1,0 +1,55 @@
+[
+	{
+		"id": "6.1",
+		"category": "frontend",
+		"description": "Update sidebar: replace 'My Scores' with 'Member' -> /member",
+		"files": ["apps/public/src/layout/sidebar.tsx"],
+		"verify": ["Sidebar shows 'Member' for authenticated users", "Click navigates to /member"],
+		"passes": true
+	},
+	{
+		"id": "6.2",
+		"category": "frontend",
+		"description": "Update user menu: replace 'My Account'/'My Activity' with 'My Pages' -> /member",
+		"files": ["apps/public/src/layout/user-menu.tsx"],
+		"verify": ["Dropdown shows 'My Pages'", "Click navigates to /member", "Old links removed"],
+		"passes": true
+	},
+	{
+		"id": "6.3",
+		"category": "testing",
+		"description": "Add MemberHub tests - renders cards, profile header, navigation",
+		"files": ["apps/public/src/screens/member/__tests__/member-hub.test.tsx (create)"],
+		"verify": ["Tests pass", "Coverage for cards, profile, navigation"],
+		"passes": true
+	},
+	{
+		"id": "6.4",
+		"category": "testing",
+		"description": "Add MemberResults tests - displays events, empty state, season filter",
+		"files": ["apps/public/src/screens/member/__tests__/member-results.test.tsx (create)"],
+		"verify": ["Tests pass", "Coverage for data display, filtering, empty state"],
+		"passes": true
+	},
+	{
+		"id": "6.5",
+		"category": "testing",
+		"description": "Add scores enhancement tests - filter, tee display, export",
+		"files": ["apps/public/src/components/scores/__tests__/player-scores.test.tsx (create)"],
+		"verify": ["Tests pass", "Coverage for filter, export, tee display"],
+		"passes": true
+	},
+	{
+		"id": "6.6",
+		"category": "testing",
+		"description": "Add route redirect tests - legacy routes redirect correctly",
+		"files": ["apps/public/src/screens/member/__tests__/member-routes.test.tsx (create)"],
+		"verify": [
+			"Tests pass",
+			"/my-account -> /member/account",
+			"/my-activity -> /member/friends",
+			"/my-scores/* -> /member/scores/*"
+		],
+		"passes": true
+	}
+]

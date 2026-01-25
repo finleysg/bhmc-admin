@@ -1,9 +1,8 @@
+import { Navigate } from "react-router-dom"
 import { AboutUsScreen } from "../screens/about-us"
 import { AdminPaymentCompleteScreen } from "../screens/registration/admin-payment-complete"
 import { AdminPaymentFlow } from "../screens/registration/admin-payment-flow"
 import { AdminPaymentScreen } from "../screens/registration/admin-payment"
-import { AccountScreen } from "../screens/account/account"
-import { AccountSettingsScreen } from "../screens/account/account-settings"
 import { CalendarScreen } from "../screens/calendar"
 import { ChampionsScreen } from "../screens/champions"
 import { ContactScreen } from "../screens/contact"
@@ -41,6 +40,14 @@ import { SeasonLongPointsScreen } from "../screens/season-long-points"
 import { SendMessageScreen } from "../screens/send-message"
 import * as config from "../utils/app-config"
 import { MembershipScreen } from "../screens/membership"
+import {
+	MemberHub,
+	MemberAccountScreen,
+	MemberFriendsScreen,
+	MemberResultsScreen,
+	MemberScoresScreen,
+} from "../screens/member/member-routes"
+import { Member } from "../screens/member/member"
 
 export const mainRoutes = () =>
 	config.maintenanceMode
@@ -83,7 +90,8 @@ export const mainRoutes = () =>
 					],
 				},
 				{ path: "/champions/:season", element: <ChampionsScreen /> },
-				{ path: "/my-scores/:scoreType/:season", element: <PlayerScoresScreen /> },
+				{ path: "/my-scores", element: <PlayerScoresScreen /> },
+				{ path: "/my-scores/*", element: <Navigate to="/my-scores" replace /> },
 				{ path: "/policies/:policyType", element: <PolicyScreen /> },
 				{ path: "/match-play", element: <MatchPlayScreen /> },
 				{ path: "/season-long-points", element: <SeasonLongPointsScreen /> },
@@ -95,8 +103,20 @@ export const mainRoutes = () =>
 				{ path: "/about-us", element: <AboutUsScreen /> },
 				{ path: "/gallery", element: <PhotoGalleryScreen /> },
 				{ path: "/gallery/:id", element: <GalleryImageScreen /> },
-				{ path: "/my-account", element: <AccountScreen /> },
-				{ path: "/my-activity", element: <AccountSettingsScreen /> },
+				{ path: "/my-account", element: <Navigate to="/member/account" replace /> },
+				{ path: "/my-activity", element: <Navigate to="/member/friends" replace /> },
+				{
+					path: "/member",
+					element: <Member />,
+					children: [
+						{ index: true, element: <MemberHub /> },
+						{ path: "account", element: <MemberAccountScreen /> },
+						{ path: "friends", element: <MemberFriendsScreen /> },
+						{ path: "scores", element: <MemberScoresScreen /> },
+						{ path: "scores/*", element: <Navigate to="/member/scores" replace /> },
+						{ path: "results", element: <MemberResultsScreen /> },
+					],
+				},
 				{
 					path: "/registration/:registrationId/payment/:paymentId",
 					element: <AdminPaymentFlow />,

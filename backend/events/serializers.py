@@ -1,10 +1,13 @@
 from rest_framework import serializers
 
 from courses.serializers import CourseSerializer
-from .models import Event, EventFee, FeeType, TournamentResult
+from .models import Event, EventFee, FeeType, TournamentResult, TournamentPoints
 
 
 class TournamentResultSerializer(serializers.ModelSerializer):
+    event_name = serializers.SerializerMethodField()
+    event_date = serializers.SerializerMethodField()
+
     class Meta:
         model = TournamentResult
         fields = (
@@ -14,9 +17,48 @@ class TournamentResultSerializer(serializers.ModelSerializer):
             "team_id",
             "position",
             "score",
-            "points",
-            "is_net",
+            "amount",
+            "payout_type",
+            "payout_to",
+            "payout_status",
+            "flight",
+            "summary",
+            "details",
+            "event_name",
+            "event_date",
         )
+
+    def get_event_name(self, obj):
+        return obj.tournament.event.name
+
+    def get_event_date(self, obj):
+        return obj.tournament.event.start_date
+
+
+class TournamentPointsSerializer(serializers.ModelSerializer):
+    event_name = serializers.SerializerMethodField()
+    event_date = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TournamentPoints
+        fields = (
+            "id",
+            "tournament",
+            "player",
+            "position",
+            "score",
+            "points",
+            "details",
+            "create_date",
+            "event_name",
+            "event_date",
+        )
+
+    def get_event_name(self, obj):
+        return obj.tournament.event.name
+
+    def get_event_date(self, obj):
+        return obj.tournament.event.start_date
 
 
 class FeeTypeSerializer(serializers.ModelSerializer):
