@@ -86,7 +86,7 @@
 				"Exported from packages/domain/src/types/index.ts"
 			],
 			"verify": ["Type exists in documents.ts", "pnpm build passes"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 7,
@@ -98,7 +98,7 @@
 				"Exported from packages/domain/src/types/index.ts"
 			],
 			"verify": ["Type exists in documents.ts", "pnpm build passes"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 8,
@@ -114,7 +114,7 @@
 				"File exists at apps/web/app/api/club-document-codes/route.ts",
 				"pnpm --filter web build passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 9,
