@@ -31,3 +31,9 @@ export interface ClubDocumentCode {
 	displayName: string
 	location: string
 }
+
+export interface StaticDocument {
+	id: number
+	code: string
+	document: Document
+}
