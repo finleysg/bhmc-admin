@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useReducer, useState } from "react"
 import type { Tag } from "@repo/domain/types"
-import toast from "react-hot-toast"
 
 import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/app/components/ui/loading-spinner"
@@ -57,7 +56,6 @@ export default function PhotoUploadPage() {
 			}
 
 			dispatch({ type: "SET_SUCCESS", payload: true })
-			toast.success("Photo uploaded successfully")
 			setResetKey((k) => k + 1)
 
 			setTimeout(() => {
@@ -66,7 +64,6 @@ export default function PhotoUploadPage() {
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : "Failed to upload photo"
 			dispatch({ type: "SET_ERROR", payload: errorMessage })
-			toast.error(errorMessage)
 		} finally {
 			dispatch({ type: "SET_SUBMITTING", payload: false })
 		}

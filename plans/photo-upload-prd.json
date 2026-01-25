@@ -191,7 +191,7 @@
 				"Check Django admin: photo exists with correct caption, year, tags",
 				"Verify image files in storage (raw, mobile, web variants)"
 			],
-			"passes": false
+			"passes": true
 		}
 	]
 }

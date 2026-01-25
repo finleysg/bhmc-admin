@@ -9,7 +9,9 @@ You are running in sandbox mode with the command `docker sandbox run claude`.
 4. Plan tests if needed.
 5. Run `pnpm install --force` to rebuild native deps for Linux sandbox.
 6. Run feedback loops: pnpm typecheck, pnpm lint, pnpm test.
-7. Make ONE git commit for this single PRD item. Keep your commit message precise: task completed, PRD ref, decisions, files changed, blockers.
+7. Make ONE git commit for this single PRD item:
+   - Include the prd file name and task number.
+   - Keep your commit message precise: task completed, decisions, files changed, blockers.
 8. Update the work item status to true.
 
 STOP HERE. Do not continue to other work items.

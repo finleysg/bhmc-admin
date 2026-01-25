@@ -5,7 +5,6 @@ import type { Metadata } from "next"
 import { AuthProvider } from "../lib/auth-context"
 import Breadcrumb from "./components/breadcrumb"
 import Header from "./components/header"
-import { ToastProvider } from "./components/toast-provider"
 
 export const metadata: Metadata = {
 	title: "BHMC Event Administration",
@@ -34,7 +33,6 @@ document.documentElement.setAttribute('data-theme', theme);
 			</head>
 			<body>
 				<AuthProvider>
-					<ToastProvider />
 					<div className="min-h-screen bg-base-100 text-base-content">
 						<Header />
 						<Breadcrumb />
