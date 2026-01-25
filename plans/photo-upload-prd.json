@@ -163,7 +163,7 @@
 				"Toast appears with success message",
 				"Form resets to empty state"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 10,

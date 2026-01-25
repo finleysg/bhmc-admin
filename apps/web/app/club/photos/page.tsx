@@ -1,7 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useReducer } from "react"
+import { useCallback, useEffect, useReducer, useState } from "react"
 import type { Tag } from "@repo/domain/types"
+import toast from "react-hot-toast"
 
 import { useAuth } from "@/lib/auth-context"
 import { LoadingSpinner } from "@/app/components/ui/loading-spinner"
@@ -14,6 +15,7 @@ import { initialState, reducer } from "./reducer"
 export default function PhotoUploadPage() {
 	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const [state, dispatch] = useReducer(reducer, initialState)
+	const [resetKey, setResetKey] = useState(0)
 
 	const fetchTags = useCallback(async () => {
 		try {
@@ -55,16 +57,16 @@ export default function PhotoUploadPage() {
 			}
 
 			dispatch({ type: "SET_SUCCESS", payload: true })
+			toast.success("Photo uploaded successfully")
+			setResetKey((k) => k + 1)
 
-			// Reset form after brief delay
 			setTimeout(() => {
 				dispatch({ type: "RESET" })
 			}, 100)
 		} catch (err) {
-			dispatch({
-				type: "SET_ERROR",
-				payload: err instanceof Error ? err.message : "Failed to upload photo",
-			})
+			const errorMessage = err instanceof Error ? err.message : "Failed to upload photo"
+			dispatch({ type: "SET_ERROR", payload: errorMessage })
+			toast.error(errorMessage)
 		} finally {
 			dispatch({ type: "SET_SUBMITTING", payload: false })
 		}
@@ -99,7 +101,12 @@ export default function PhotoUploadPage() {
 			<Card shadow="xs">
 				<CardBody>
 					<CardTitle>Upload Photo</CardTitle>
-					<PhotoForm tags={state.tags} onSubmit={handleSubmit} isSubmitting={state.isSubmitting} />
+					<PhotoForm
+						tags={state.tags}
+						onSubmit={handleSubmit}
+						isSubmitting={state.isSubmitting}
+						resetKey={resetKey}
+					/>
 				</CardBody>
 			</Card>
 		</PageLayout>

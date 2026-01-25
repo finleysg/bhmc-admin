@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { Tag } from "@repo/domain/types"
 import { FormField } from "@/app/components/ui/form-field"
 import { ImagePicker } from "./image-picker"
@@ -10,6 +10,7 @@ interface PhotoFormProps {
 	tags: Tag[]
 	onSubmit: (formData: FormData) => void | Promise<void>
 	isSubmitting: boolean
+	resetKey?: number
 }
 
 interface FormErrors {
@@ -18,13 +19,22 @@ interface FormErrors {
 	image?: string
 }
 
-export function PhotoForm({ tags, onSubmit, isSubmitting }: PhotoFormProps) {
+export function PhotoForm({ tags, onSubmit, isSubmitting, resetKey = 0 }: PhotoFormProps) {
 	const [caption, setCaption] = useState("")
 	const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
 	const [file, setFile] = useState<File | null>(null)
 	const [errors, setErrors] = useState<FormErrors>({})
 
 	const maxCaptionLength = 240
+
+	useEffect(() => {
+		if (resetKey > 0) {
+			setCaption("")
+			setSelectedTagIds([])
+			setFile(null)
+			setErrors({})
+		}
+	}, [resetKey])
 
 	const validate = (): boolean => {
 		const newErrors: FormErrors = {}
