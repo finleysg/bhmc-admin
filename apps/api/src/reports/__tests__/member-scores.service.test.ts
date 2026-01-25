@@ -1,6 +1,15 @@
 import * as ExcelJS from "exceljs"
+import * as drizzleOrm from "drizzle-orm"
 
 import { MemberScoresService } from "../member-scores.service"
+
+jest.mock("drizzle-orm", () => {
+	const actual = jest.requireActual("drizzle-orm")
+	return {
+		...actual,
+		and: jest.fn((...args) => actual.and(...args)),
+	}
+})
 
 // =============================================================================
 // Test Fixtures
@@ -82,6 +91,12 @@ async function loadWorkbook(buffer: any): Promise<ExcelJS.Workbook> {
 
 describe("MemberScoresService.getPlayerScoresExcel", () => {
 	describe("query filtering", () => {
+		const mockedAnd = drizzleOrm.and as jest.Mock
+
+		beforeEach(() => {
+			mockedAnd.mockClear()
+		})
+
 		test("queries with playerId and season", async () => {
 			const { service, drizzle } = createService([])
 
@@ -105,6 +120,26 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 			await service.getPlayerScoresExcel(42, 2024)
 
 			expect(drizzle.db.orderBy).toHaveBeenCalled()
+		})
+
+		test("season=0 omits season filter (all seasons)", async () => {
+			const { service } = createService([])
+
+			await service.getPlayerScoresExcel(42, 0)
+
+			// and() should be called with only playerId condition (1 arg)
+			expect(mockedAnd).toHaveBeenCalledTimes(1)
+			expect(mockedAnd.mock.calls[0].length).toBe(1)
+		})
+
+		test("season > 0 includes season filter", async () => {
+			const { service } = createService([])
+
+			await service.getPlayerScoresExcel(42, 2024)
+
+			// and() should be called with playerId AND season conditions (2 args)
+			expect(mockedAnd).toHaveBeenCalledTimes(1)
+			expect(mockedAnd.mock.calls[0].length).toBe(2)
 		})
 	})
 

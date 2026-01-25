@@ -249,7 +249,7 @@ export function PlayerScores() {
 				<ExportScoresButton
 					season={selectedSeason}
 					courseIds={exportCourseIds}
-					scoreType="both"
+					scoreType={scoreType}
 					disabled={busy || grossRounds.length === 0}
 				/>
 			</div>

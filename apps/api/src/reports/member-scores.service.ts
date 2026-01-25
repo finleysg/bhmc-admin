@@ -41,7 +41,10 @@ export class MemberScoresService {
 		scoreType: ScoreType = "both",
 	): Promise<Buffer> {
 		// Query all scores for this player in the season
-		const whereConditions = [eq(eventScorecard.playerId, playerId), eq(event.season, season)]
+		const whereConditions = [eq(eventScorecard.playerId, playerId)]
+		if (season > 0) {
+			whereConditions.push(eq(event.season, season))
+		}
 		if (courseIds && courseIds.length > 0) {
 			whereConditions.push(inArray(eventScorecard.courseId, courseIds))
 		}

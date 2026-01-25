@@ -144,5 +144,6 @@ def save_scores(event, course, player, score_map, is_net):
     else:
         for hole in course.holes.all():
             score = next((obj for obj in scores if obj.hole.hole_number == hole.hole_number), None)
-            score.score = score_map[hole.hole_number]
+            if score:
+                score.score = score_map[hole.hole_number]
         EventScore.objects.bulk_update(scores, ["score"])
