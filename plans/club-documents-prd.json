@@ -48,7 +48,7 @@
 				"Navigate to /admin/documents/clubdocumentcode/",
 				"10 codes visible in admin list"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 4,

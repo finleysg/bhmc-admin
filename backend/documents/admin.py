@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
-from .models import Document, Tag, DocumentTag, PhotoTag, Photo, StaticDocument
+from .models import Document, Tag, DocumentTag, PhotoTag, Photo, StaticDocument, ClubDocumentCode
 
 
 class PhotoTagInline(admin.TabularInline):
@@ -46,6 +46,12 @@ class StaticDocumentAdmin(admin.ModelAdmin):
     save_on_top = True
 
 
+class ClubDocumentCodeAdmin(admin.ModelAdmin):
+    list_display = ["code", "display_name", "location"]
+    search_fields = ["code", "display_name"]
+
+
+admin.site.register(ClubDocumentCode, ClubDocumentCodeAdmin)
 admin.site.register(Document, DocumentAdmin)
 admin.site.register(Photo, PhotoAdmin)
 admin.site.register(StaticDocument, StaticDocumentAdmin)
