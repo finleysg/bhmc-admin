@@ -282,7 +282,7 @@
 				"Can upload document for code without one",
 				"Document appears linked after upload"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 19,
@@ -296,7 +296,7 @@
 				"Cancel returns to list"
 			],
 			"verify": ["Can replace existing document", "New document link appears after replace"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 20,
@@ -314,7 +314,7 @@
 				"Confirming unlinks document from code",
 				"Code shows 'No document' after removal"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 21,

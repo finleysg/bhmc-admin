@@ -10,6 +10,7 @@ import { PageLayout } from "@/app/components/ui/page-layout"
 import { Card, CardBody, CardTitle } from "@/app/components/ui/card"
 import { CodeList } from "./components/code-list"
 import { UploadForm, type UploadFormData } from "./components/upload-form"
+import { DeleteConfirmModal } from "./components/delete-confirm-modal"
 import { initialState, reducer } from "./reducer"
 
 export default function ClubDocumentsPage() {
@@ -191,6 +192,34 @@ export default function ClubDocumentsPage() {
 		}
 	}
 
+	const handleDeleteConfirm = async () => {
+		if (!state.selectedDocument) return
+
+		dispatch({ type: "SET_SUBMITTING", payload: true })
+		dispatch({ type: "SET_ERROR", payload: null })
+
+		try {
+			const res = await fetch(`/api/static-documents/${state.selectedDocument.id}`, {
+				method: "DELETE",
+			})
+
+			if (!res.ok) {
+				const errorData = (await res.json().catch(() => ({}))) as { error?: string }
+				throw new Error(errorData.error ?? "Failed to remove document")
+			}
+
+			await fetchStaticDocuments()
+			dispatch({ type: "RESET" })
+		} catch (err) {
+			dispatch({
+				type: "SET_ERROR",
+				payload: err instanceof Error ? err.message : "Failed to remove document",
+			})
+		} finally {
+			dispatch({ type: "SET_SUBMITTING", payload: false })
+		}
+	}
+
 	if (isPending || state.isLoading) {
 		return <LoadingSpinner size="lg" />
 	}
@@ -245,6 +274,15 @@ export default function ClubDocumentsPage() {
 					onRemove={handleRemove}
 				/>
 			)}
+
+			<DeleteConfirmModal
+				isOpen={state.mode === "delete"}
+				code={state.selectedCode}
+				document={state.selectedDocument?.document ?? null}
+				onConfirm={handleDeleteConfirm}
+				onCancel={handleCancel}
+				isDeleting={state.isSubmitting}
+			/>
 		</PageLayout>
 	)
 }
