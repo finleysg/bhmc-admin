@@ -81,7 +81,7 @@
 				"File selection triggers onFileSelect callback",
 				"Image preview displays selected file"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 6,
@@ -101,7 +101,7 @@
 				"Selecting checkbox triggers onChange with tag id",
 				"Error message displays when error prop set"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 7,
