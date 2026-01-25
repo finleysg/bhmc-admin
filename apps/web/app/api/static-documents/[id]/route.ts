@@ -61,3 +61,25 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 		document: transformDocument(data.document),
 	})
 }
+
+export async function DELETE(
+	request: NextRequest,
+	{ params }: { params: Promise<{ id: string }> },
+) {
+	const { id } = await params
+
+	if (!id) {
+		return NextResponse.json({ error: "Static document ID is required" }, { status: 400 })
+	}
+
+	const response = await fetchWithAuth({
+		request,
+		backendPath: `/static-documents/${id}/`,
+		method: "DELETE",
+		apiBaseUrl: process.env.DJANGO_API_URL,
+	})
+
+	if (!response.ok) return response
+
+	return new NextResponse(null, { status: 204 })
+}
