@@ -226,7 +226,7 @@
 				"File required on upload, optional on replace",
 				"Validation prevents empty submit"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 16,
