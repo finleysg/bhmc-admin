@@ -55,7 +55,7 @@
 			"Converts response to blob and triggers download",
 			"Download filename: my-scores-{season}.xlsx"
 		],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": "1.5",
@@ -69,7 +69,7 @@
 			"No xlsx import",
 			"Button disabled when mutation isPending"
 		],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": "1.6",
@@ -81,7 +81,7 @@
 			"No onFilteredRoundsChange callback needed",
 			"courseIds derived from current filter selection"
 		],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": "1.7",
@@ -92,7 +92,7 @@
 			"ExportScoresButton receives season, courseIds, scoreType='both'",
 			"Works correctly with existing filtering UI"
 		],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": "1.8",

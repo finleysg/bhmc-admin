@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { useClubEvents } from "../../hooks/use-club-events"
 import { useMyPlayerRecord } from "../../hooks/use-my-player-record"
 import { usePlayerScores } from "../../hooks/use-player-scores"
-import { RoundsProps, SeasonProps } from "../../models/common-props"
 import { Hole } from "../../models/course"
 import { CourseInRound, LoadRounds, Round, ScoreByHole } from "../../models/scores"
+import { currentSeason } from "../../utils/app-config"
 import { OverlaySpinner } from "../spinners/overlay-spinner"
-import { CourseFilterChips } from "./course-filter-chips"
 import {
 	AverageScore,
 	HoleNumbers,
@@ -17,6 +16,9 @@ import {
 	RoundTotal,
 	ScoresByHoleProps,
 } from "./score-utils"
+import { ExportScoresButton } from "./export-scores-button"
+
+type ScoreType = "gross" | "net" | "both"
 
 function AverageRound({ scores }: ScoresByHoleProps) {
 	return (
@@ -50,13 +52,22 @@ function BestBallRound({ scores }: ScoresByHoleProps) {
 	)
 }
 
-interface RoundsByCourseProps extends HolesProps, RoundsProps {
+interface RoundsByCourseProps extends HolesProps {
 	course: CourseInRound
-	isNet: boolean
+	grossRounds: Round[]
+	netRounds: Round[]
+	scoreType: ScoreType
 }
 
-function RoundsByCourse({ course, holes, courseName, rounds, isNet }: RoundsByCourseProps) {
-	const averageScores = () => {
+function RoundsByCourse({
+	course,
+	holes,
+	courseName,
+	grossRounds,
+	netRounds,
+	scoreType,
+}: RoundsByCourseProps) {
+	const calculateAverageScores = (rounds: Round[]) => {
 		return holes.map((hole) => {
 			const scores: ScoreByHole[] = []
 			rounds.forEach((round) => {
@@ -71,7 +82,7 @@ function RoundsByCourse({ course, holes, courseName, rounds, isNet }: RoundsByCo
 		})
 	}
 
-	const bestScores = () => {
+	const calculateBestScores = (rounds: Round[]) => {
 		return holes.map((hole) => {
 			const scores: ScoreByHole[] = []
 			rounds.forEach((round) => {
@@ -90,27 +101,40 @@ function RoundsByCourse({ course, holes, courseName, rounds, isNet }: RoundsByCo
 		return `scores-header bg-${course.name.toLowerCase()}`
 	}
 
+	const showGross = scoreType === "gross" || scoreType === "both"
+	const rounds = showGross ? grossRounds : netRounds
+	const hasRounds = rounds.length > 0
+
 	return (
 		<div className="card mb-2">
 			<div className={headerClass(course)}>
 				<span>{course.name}</span>
 			</div>
-			{rounds.length > 0 ? (
+			{hasRounds ? (
 				<div className="card-body">
 					<HoleNumbers holes={holes} courseName={courseName} />
 					<HolePars holes={holes} courseName={courseName} />
-					{rounds.map((round) => {
-						return (
-							<RoundScores
-								key={round.eventDate}
-								round={round}
-								scoreType={isNet ? "Net" : "Gross"}
-							/>
-						)
-					})}
+					{scoreType === "both"
+						? // Interleave gross and net rounds by date
+							grossRounds.map((grossRound) => {
+								const netRound = netRounds.find((r) => r.eventDate === grossRound.eventDate)
+								return (
+									<div key={grossRound.eventDate}>
+										<RoundScores round={grossRound} scoreType="Gross" />
+										{netRound && <RoundScores round={netRound} scoreType="Net" />}
+									</div>
+								)
+							})
+						: rounds.map((round) => (
+								<RoundScores
+									key={round.eventDate}
+									round={round}
+									scoreType={showGross ? "Gross" : "Net"}
+								/>
+							))}
 					<hr />
-					<AverageRound scores={averageScores()} />
-					<BestBallRound scores={bestScores()} />
+					<AverageRound scores={calculateAverageScores(rounds)} />
+					<BestBallRound scores={calculateBestScores(rounds)} />
 				</div>
 			) : (
 				<div className="card-body">No rounds played</div>
@@ -119,85 +143,122 @@ function RoundsByCourse({ course, holes, courseName, rounds, isNet }: RoundsByCo
 	)
 }
 
-interface PlayerScoresProps extends SeasonProps {
-	isNet: boolean
-	onFilteredRoundsChange?: (rounds: Round[]) => void
-}
-
-export function PlayerScores({ isNet, season, onFilteredRoundsChange }: PlayerScoresProps) {
+export function PlayerScores() {
 	const { data: player } = useMyPlayerRecord()
-	const { data: events } = useClubEvents(season)
-	const { data: playerRounds } = usePlayerScores(season, player?.id)
 
-	const rounds = LoadRounds(events ?? [], playerRounds ?? [], isNet)
+	// Filter state
+	const [selectedSeason, setSelectedSeason] = useState<number>(currentSeason)
+	const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
+	const [scoreType, setScoreType] = useState<ScoreType>("gross")
+
+	const { data: events } = useClubEvents(selectedSeason)
+	const { data: playerRounds } = usePlayerScores(selectedSeason, player?.id)
+
+	const grossRounds = useMemo(
+		() => LoadRounds(events ?? [], playerRounds ?? [], false),
+		[events, playerRounds],
+	)
+
+	const netRounds = useMemo(
+		() => LoadRounds(events ?? [], playerRounds ?? [], true),
+		[events, playerRounds],
+	)
 
 	// Derive unique courses from rounds
-	const getUniqueCourses = (): CourseInRound[] => {
+	const courses = useMemo(() => {
 		const courseMap = new Map<number, CourseInRound>()
-		for (const round of rounds) {
+		for (const round of grossRounds) {
 			if (!courseMap.has(round.course.id)) {
 				courseMap.set(round.course.id, round.course)
 			}
 		}
-		return Array.from(courseMap.values())
-	}
+		return Array.from(courseMap.values()).filter((c) => c.numberOfHoles === 9)
+	}, [grossRounds])
 
 	// Get holes for a course from the first round that has it
 	const getHolesForCourse = (courseId: number): Hole[] => {
-		const round = rounds.find((r) => r.course.id === courseId)
+		const round = grossRounds.find((r) => r.course.id === courseId)
 		return round?.holes ?? []
-	}
-
-	const busy = !playerRounds || !events
-
-	const courses = getUniqueCourses().filter((c) => c.numberOfHoles === 9)
-
-	// State for course filter
-	const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>([])
-
-	const handleToggleCourse = (courseId: number) => {
-		setSelectedCourseIds((prev) => {
-			if (prev.includes(courseId)) {
-				return prev.filter((id) => id !== courseId)
-			} else {
-				return [...prev, courseId]
-			}
-		})
 	}
 
 	// Filter courses to display
 	const displayedCourses =
-		selectedCourseIds.length === 0
-			? courses
-			: courses.filter((c) => selectedCourseIds.includes(c.id))
+		selectedCourseId === null ? courses : courses.filter((c) => c.id === selectedCourseId)
 
-	// Calculate filtered rounds for export
-	const filteredRounds = rounds.filter((r) => {
-		if (selectedCourseIds.length === 0) return true
-		return selectedCourseIds.includes(r.course.id)
-	})
+	// Derive courseIds for export
+	const exportCourseIds = useMemo(() => {
+		return selectedCourseId !== null ? [selectedCourseId] : undefined
+	}, [selectedCourseId])
 
-	// Notify parent when filtered rounds change
-	useEffect(() => {
-		if (onFilteredRoundsChange) {
-			onFilteredRoundsChange(filteredRounds)
+	// Generate season options (current year down to 2021)
+	const seasonOptions = useMemo(() => {
+		const seasons: number[] = []
+		for (let year = currentSeason; year >= 2021; year--) {
+			seasons.push(year)
 		}
-	}, [filteredRounds, onFilteredRoundsChange])
+		return seasons
+	}, [])
+
+	const busy = !playerRounds || !events
 
 	return (
 		<div className="mt-2">
 			<OverlaySpinner loading={busy} />
-			{!busy && courses.length > 0 && (
-				<CourseFilterChips
-					courses={courses}
-					selectedCourseIds={selectedCourseIds}
-					onToggleCourse={handleToggleCourse}
+			<h2 className="mb-4 text-primary">My Scores</h2>
+			{/* Filter Controls */}
+			<div className="d-flex flex-wrap gap-2 mb-3 align-items-center">
+				<select
+					className="form-select form-select-sm"
+					style={{ width: "auto" }}
+					value={selectedCourseId ?? ""}
+					onChange={(e) => setSelectedCourseId(e.target.value ? Number(e.target.value) : null)}
+				>
+					<option value="">All Courses</option>
+					{courses.map((c) => (
+						<option key={c.id} value={c.id}>
+							{c.name}
+						</option>
+					))}
+				</select>
+
+				<select
+					className="form-select form-select-sm"
+					style={{ width: "auto" }}
+					value={scoreType}
+					onChange={(e) => setScoreType(e.target.value as ScoreType)}
+				>
+					<option value="gross">Gross</option>
+					<option value="net">Net</option>
+					<option value="both">Both</option>
+				</select>
+
+				<select
+					className="form-select form-select-sm"
+					style={{ width: "auto" }}
+					value={selectedSeason}
+					onChange={(e) => setSelectedSeason(Number(e.target.value))}
+				>
+					{seasonOptions.map((year) => (
+						<option key={year} value={year}>
+							{year}
+						</option>
+					))}
+					<option value={0}>All</option>
+				</select>
+
+				<ExportScoresButton
+					season={selectedSeason}
+					courseIds={exportCourseIds}
+					scoreType="both"
+					disabled={busy || grossRounds.length === 0}
 				/>
-			)}
+			</div>
+
 			<div className="row">
 				{!busy &&
 					displayedCourses.map((course) => {
-						const courseRounds = rounds.filter((r) => r.course.id === course.id)
+						const courseGrossRounds = grossRounds.filter((r) => r.course.id === course.id)
+						const courseNetRounds = netRounds.filter((r) => r.course.id === course.id)
 						const holes = getHolesForCourse(course.id)
 						return (
 							<div key={course.id} className="col-lg-4 col-md-12">
@@ -205,8 +266,9 @@ export function PlayerScores({ isNet, season, onFilteredRoundsChange }: PlayerSc
 									course={course}
 									holes={holes}
 									courseName={course.name}
-									rounds={courseRounds}
-									isNet={isNet}
+									grossRounds={courseGrossRounds}
+									netRounds={courseNetRounds}
+									scoreType={scoreType}
 								/>
 							</div>
 						)

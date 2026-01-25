@@ -11,3 +11,23 @@ PRD 1.2+1.3 DONE: MemberReportsController + module registration
 - Returns xlsx with Content-Disposition: my-scores-{season}.xlsx
 - Used string param + cast for ScoreType to avoid decorator metadata issue
 - Updated reports.module.ts with controller + service registration
+
+PRD 1.4 DONE: useExportScores hook
+- Created: apps/public/src/hooks/use-export-scores.ts
+- useMutation wrapping fetch to reports/member/scores/{season}/export
+- Query params: courseIds (comma-sep), scoreType
+- Uses credentials: 'include', triggers blob download
+- Filename: my-scores-{season}.xlsx
+
+PRD 1.5+1.6+1.7 DONE: ExportScoresButton + consuming components
+- Updated: apps/public/src/components/scores/export-scores-button.tsx
+  - Props: season, courseIds?, scoreType?, disabled (removed rounds)
+  - Uses useExportScores hook, isPending disables button
+- Updated: apps/public/src/components/scores/player-scores.tsx
+  - ExportScoresButton moved inline, receives season/courseIds/scoreType
+  - Removed onFilteredRoundsChange callback, unused filteredRounds logic
+  - Added exportCourseIds derived from selectedCourseId
+- Updated: apps/public/src/screens/member/member-scores.tsx
+  - Simplified: just renders PlayerScores
+- Updated: apps/public/src/screens/account/player-scores.tsx
+  - Simplified: just renders PlayerScores
