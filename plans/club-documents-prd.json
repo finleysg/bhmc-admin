@@ -59,11 +59,8 @@
 				"ModelSerializer for ClubDocumentCode",
 				"Fields: id, code, display_name, location"
 			],
-			"verify": [
-				"Class exists in serializers.py",
-				"pnpm build passes (no Python syntax errors)"
-			],
-			"passes": false
+			"verify": ["Class exists in serializers.py", "pnpm build passes (no Python syntax errors)"],
+			"passes": true
 		},
 		{
 			"id": 5,
@@ -77,7 +74,7 @@
 			"verify": [
 				"curl http://localhost:8000/api/club-document-codes/ returns JSON array of 10 codes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 6,
@@ -88,10 +85,7 @@
 				"Fields: id (number), code (string), displayName (string), location (string)",
 				"Exported from packages/domain/src/types/index.ts"
 			],
-			"verify": [
-				"Type exists in documents.ts",
-				"pnpm build passes"
-			],
+			"verify": ["Type exists in documents.ts", "pnpm build passes"],
 			"passes": false
 		},
 		{
@@ -103,10 +97,7 @@
 				"Fields: id (number), code (string), document (Document type)",
 				"Exported from packages/domain/src/types/index.ts"
 			],
-			"verify": [
-				"Type exists in documents.ts",
-				"pnpm build passes"
-			],
+			"verify": ["Type exists in documents.ts", "pnpm build passes"],
 			"passes": false
 		},
 		{
@@ -151,10 +142,7 @@
 				"Body: { code: string, document: number }",
 				"Returns created StaticDocument JSON"
 			],
-			"verify": [
-				"POST handler exists in route.ts",
-				"pnpm --filter web build passes"
-			],
+			"verify": ["POST handler exists in route.ts", "pnpm --filter web build passes"],
 			"passes": false
 		},
 		{
@@ -183,10 +171,7 @@
 				"Uses fetchWithAuth to proxy to Django DELETE /static-documents/{id}/",
 				"Returns 204 on success"
 			],
-			"verify": [
-				"DELETE handler exists in route.ts",
-				"pnpm --filter web build passes"
-			],
+			"verify": ["DELETE handler exists in route.ts", "pnpm --filter web build passes"],
 			"passes": false
 		},
 		{
@@ -310,10 +295,7 @@
 				"Success: refetch static documents, return to list mode",
 				"Cancel returns to list"
 			],
-			"verify": [
-				"Can replace existing document",
-				"New document link appears after replace"
-			],
+			"verify": ["Can replace existing document", "New document link appears after replace"],
 			"passes": false
 		},
 		{
@@ -344,10 +326,7 @@
 				"Return displayName and location from API instead of hardcoded map",
 				"Maintain backward compatibility with existing usage"
 			],
-			"verify": [
-				"Hook returns displayName from API",
-				"Public site displays correct names"
-			],
+			"verify": ["Hook returns displayName from API", "Public site displays correct names"],
 			"passes": false
 		},
 		{

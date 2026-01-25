@@ -1,19 +1,19 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+from content import views as content_views
 from core import views as core_views
 from courses import views as course_views
 from damcup import views as damcup_views
 from documents import views as document_views
 from events import views as event_views
 from messaging import views as messaging_views
+from payments import views as payment_views
 from policies import views as policy_views
 from register import views as register_views
-from payments import views as payment_views
-from content import views as content_views
 from reporting import views as reporting_views
 from scores import views as scoring_views
 
@@ -42,21 +42,26 @@ router.register(r"refunds", payment_views.RefundViewSet, "refunds")
 router.register(r"players", register_views.PlayerViewSet, "players")
 router.register(r"registration", register_views.RegistrationViewSet, "registration")
 router.register(r"registration-fees", register_views.RegistrationFeeViewsSet, "registration-fees")
-router.register(r"registration-slots", register_views.RegistrationSlotViewsSet, "registration-slots")
+router.register(
+    r"registration-slots", register_views.RegistrationSlotViewsSet, "registration-slots"
+)
 router.register(r"reports", reporting_views.ReportViewSet, "reports")
 router.register(r"scores", scoring_views.EventScoreCardViewSet, "scores")
 router.register(r"season-long-points", damcup_views.SeasonLongPointsViewSet, "season-long-points")
 router.register(r"settings", core_views.SeasonSettingsViewSet, "settings")
+router.register(
+    r"club-document-codes", document_views.ClubDocumentCodeViewSet, "club-document-codes"
+)
 router.register(r"static-documents", document_views.StaticDocumentViewSet, "static-documents")
 router.register(r"tags", content_views.TagViewSet, "tags")
 
 urlpatterns = [
-      path("admin/", admin.site.urls),
-      path("api/", include(router.urls)),
-      path("api/contact/", messaging_views.contact_message),
-      path("api/hooks/stripe/acacia/", payment_views.payment_complete_acacia),
-      path("api/hooks/stripe/clover/", payment_views.payment_complete_clover),
-      path("auth/", include("djoser.urls")),
-      path("auth/token/login/", core_views.TokenCreateView.as_view(), name="login"),
-      path("auth/token/logout/", core_views.TokenDestroyView.as_view(), name="logout"),
-  ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path("admin/", admin.site.urls),
+    path("api/", include(router.urls)),
+    path("api/contact/", messaging_views.contact_message),
+    path("api/hooks/stripe/acacia/", payment_views.payment_complete_acacia),
+    path("api/hooks/stripe/clover/", payment_views.payment_complete_clover),
+    path("auth/", include("djoser.urls")),
+    path("auth/token/login/", core_views.TokenCreateView.as_view(), name="login"),
+    path("auth/token/logout/", core_views.TokenDestroyView.as_view(), name="logout"),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

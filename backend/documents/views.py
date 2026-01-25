@@ -1,10 +1,17 @@
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from rest_framework import viewsets, permissions, pagination
-from rest_framework.decorators import permission_classes, api_view, action
+from rest_framework import pagination, permissions, viewsets
+from rest_framework.decorators import action, permission_classes
 from rest_framework.response import Response
 
-from .serializers import *
+from .models import ClubDocumentCode, Document, Photo, StaticDocument
+from .serializers import (
+    ClubDocumentCodeSerializer,
+    DocumentSerializer,
+    PhotoSerializer,
+    StaticDocumentSerializer,
+    UpdatableStaticDocumentSerializer,
+)
 
 
 class GalleryPagination(pagination.PageNumberPagination):
@@ -18,9 +25,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Document.objects.all()
-        year = self.request.query_params.get('year', None)
-        event_id = self.request.query_params.get('event_id', None)
-        doc_type = self.request.query_params.get('type', None)
+        year = self.request.query_params.get("year", None)
+        event_id = self.request.query_params.get("event_id", None)
+        doc_type = self.request.query_params.get("type", None)
 
         if year is not None:
             queryset = queryset.filter(year=year)
@@ -42,9 +49,9 @@ class PhotoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Photo.objects.all()
-        year = self.request.query_params.get('year', None)
-        player_id = self.request.query_params.get('player', None)
-        tags = self.request.query_params.get('tags', None)
+        year = self.request.query_params.get("year", None)
+        player_id = self.request.query_params.get("player", None)
+        tags = self.request.query_params.get("tags", None)
 
         if player_id is not None:
             queryset = queryset.filter(player_id=player_id)
@@ -73,13 +80,18 @@ class PhotoViewSet(viewsets.ModelViewSet):
             photo = Photo.objects.random(tag, int(take))
             serializer = PhotoSerializer(photo, context={"request": request}, many=True)
             return Response(serializer.data)
-        except:
+        except Exception:
             return Response(status=204)
 
 
 @permission_classes((permissions.IsAuthenticatedOrReadOnly,))
-class StaticDocumentViewSet(viewsets.ModelViewSet):
+class ClubDocumentCodeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ClubDocumentCode.objects.all()
+    serializer_class = ClubDocumentCodeSerializer
 
+
+@permission_classes((permissions.IsAuthenticatedOrReadOnly,))
+class StaticDocumentViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "create" or self.action == "update":
             return UpdatableStaticDocumentSerializer
@@ -88,7 +100,7 @@ class StaticDocumentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = StaticDocument.objects.all()
-        code = self.request.query_params.get('code', None)
+        code = self.request.query_params.get("code", None)
 
         if code is not None:
             queryset = queryset.filter(code=code)
