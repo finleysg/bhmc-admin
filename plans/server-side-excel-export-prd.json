@@ -104,7 +104,7 @@
 			"pnpm install succeeds",
 			"App builds without errors"
 		],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": "1.9",
@@ -116,7 +116,7 @@
 			"Coverage for: filter by season, filter by courseIds, scoreType variants",
 			"Verifies correct worksheet names and column structure"
 		],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": "1.10",

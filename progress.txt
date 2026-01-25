@@ -31,3 +31,19 @@ PRD 1.5+1.6+1.7 DONE: ExportScoresButton + consuming components
   - Simplified: just renders PlayerScores
 - Updated: apps/public/src/screens/account/player-scores.tsx
   - Simplified: just renders PlayerScores
+
+PRD 1.8 DONE: Remove xlsx dependency from public app
+- File: apps/public/package.json
+- Removed xlsx from dependencies
+- No remaining xlsx imports in codebase
+- Note: pnpm install/build verification blocked by env issues (rollup platform mismatch)
+
+PRD 1.9 DONE: MemberScoresService tests
+- Created: apps/api/src/reports/__tests__/member-scores.service.test.ts
+- Tests query filtering (playerId, season, courseIds)
+- Tests scoreType variants: gross, net, both
+- Verifies worksheet names: "Gross Scores", "Net Scores"
+- Verifies column structure: Date, Tee, Type, Course, 1-9, Total
+- Tests sorting by course name then date
+- Tests edge cases: empty results, null tee, total calculation
+- Note: Test execution blocked by env issues (pnpm install permission errors)
