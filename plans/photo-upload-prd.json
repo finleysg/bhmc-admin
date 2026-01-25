@@ -1,0 +1,197 @@
+{
+	"feature": "Photo Upload",
+	"description": "Upload photos in admin site (apps/web). Caption required (max 240 chars), at least one tag required (select from predefined list), single photo per upload, year auto-populated.",
+	"items": [
+		{
+			"id": 1,
+			"category": "domain",
+			"description": "Add Tag and Photo types to domain package",
+			"acceptance": [
+				"Tag interface: id (number), name (string)",
+				"PhotoTag interface: id (number), tag (string)",
+				"Photo interface: id, year, caption (string|null), mobileUrl, webUrl, imageUrl, playerId (number|null), createdBy, lastUpdate, tags (PhotoTag[])",
+				"Exported from packages/domain/src/types/documents.ts",
+				"Re-exported from packages/domain/src/types/index.ts"
+			],
+			"verify": ["Types exist in packages/domain/src/types/documents.ts", "pnpm build passes"],
+			"passes": false
+		},
+		{
+			"id": 2,
+			"category": "web-api",
+			"description": "Add GET /api/tags route to fetch available tags",
+			"acceptance": [
+				"GET handler at apps/web/app/api/tags/route.ts",
+				"Uses fetchWithAuth to proxy to Django GET /tags/",
+				"apiBaseUrl uses DJANGO_API_URL env var",
+				"Returns JSON array of tags"
+			],
+			"verify": ["File exists at apps/web/app/api/tags/route.ts", "pnpm --filter web build passes"],
+			"passes": false
+		},
+		{
+			"id": 3,
+			"category": "web-api",
+			"description": "Add POST /api/photos route to upload photo",
+			"acceptance": [
+				"POST handler at apps/web/app/api/photos/route.ts",
+				"Uses fetchFormDataWithAuth to proxy multipart FormData",
+				"Proxies to Django POST /photos/",
+				"apiBaseUrl uses DJANGO_API_URL env var",
+				"Returns created photo JSON"
+			],
+			"verify": [
+				"File exists at apps/web/app/api/photos/route.ts",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 4,
+			"category": "web-state",
+			"description": "Create photo upload page reducer",
+			"acceptance": [
+				"File at apps/web/app/club/photos/reducer.ts",
+				"State: tags (Tag[]), isLoading (boolean), isSubmitting (boolean), error (string|null), success (boolean)",
+				"Actions: SET_TAGS, SET_LOADING, SET_SUBMITTING, SET_ERROR, SET_SUCCESS, RESET",
+				"RESET clears error, success, and sets isSubmitting false",
+				"Exports reducer, initialState, Action type, PhotoUploadState type"
+			],
+			"verify": [
+				"File exists at apps/web/app/club/photos/reducer.ts",
+				"pnpm --filter web build passes"
+			],
+			"passes": false
+		},
+		{
+			"id": 5,
+			"category": "web-component",
+			"description": "Create image picker component for photo uploads",
+			"acceptance": [
+				"File at apps/web/app/club/photos/components/image-picker.tsx",
+				"Uses react-dropzone for drag-drop file selection",
+				"Props: onFileSelect callback, file (File|null for preview)",
+				"Accepts only image types: image/jpeg, image/png, image/gif",
+				"Shows drop zone with daisyUI styling when no file selected",
+				"Shows image preview thumbnail when file selected",
+				"Preview uses URL.createObjectURL, revokes on unmount/change"
+			],
+			"verify": [
+				"Component renders drop zone",
+				"File selection triggers onFileSelect callback",
+				"Image preview displays selected file"
+			],
+			"passes": false
+		},
+		{
+			"id": 6,
+			"category": "web-component",
+			"description": "Create tag select component",
+			"acceptance": [
+				"File at apps/web/app/club/photos/components/tag-select.tsx",
+				"Props: tags (Tag[]), selectedTagIds (number[]), onChange callback, error (string|null)",
+				"Renders checkbox for each available tag",
+				"Checkbox checked state based on selectedTagIds",
+				"onChange called with updated selectedTagIds array when checkbox toggled",
+				"Shows error message in text-error when error prop provided",
+				"Uses daisyUI form-control and checkbox styling"
+			],
+			"verify": [
+				"Component renders checkbox for each tag",
+				"Selecting checkbox triggers onChange with tag id",
+				"Error message displays when error prop set"
+			],
+			"passes": false
+		},
+		{
+			"id": 7,
+			"category": "web-component",
+			"description": "Create photo form component",
+			"acceptance": [
+				"File at apps/web/app/club/photos/components/photo-form.tsx",
+				"Props: tags (Tag[]), onSubmit callback, isSubmitting (boolean)",
+				"Caption input: text field, required, maxLength 240, shows character counter (X/240)",
+				"Tag select: uses TagSelect component, required at least 1",
+				"Image picker: uses ImagePicker component, required",
+				"Client-side validation on submit: caption non-empty and <= 240, at least 1 tag, file selected",
+				"Shows validation errors below each field in text-error",
+				"Submit button disabled when isSubmitting, shows loading spinner",
+				"onSubmit called with FormData containing: year (current), caption, raw_image (file), tags (pipe-delimited names)"
+			],
+			"verify": [
+				"Form renders all fields",
+				"Validation prevents submit when fields invalid",
+				"onSubmit receives correct FormData structure"
+			],
+			"passes": false
+		},
+		{
+			"id": 8,
+			"category": "web-ui",
+			"description": "Create photo upload page",
+			"acceptance": [
+				"Page at apps/web/app/club/photos/page.tsx (replace placeholder if exists)",
+				"Uses useReducer with photo upload reducer",
+				"Fetches tags from /api/tags on mount",
+				"Shows loading spinner during tag fetch",
+				"Shows error alert if tag fetch fails",
+				"Renders PhotoForm when tags loaded",
+				"On form submit: POSTs FormData to /api/photos",
+				"Success: dispatches SET_SUCCESS(true), dispatches RESET after brief delay to clear form",
+				"Error: dispatches SET_ERROR with message"
+			],
+			"verify": [
+				"Navigate to /club/photos",
+				"Tags load and form displays",
+				"Form validation works correctly"
+			],
+			"passes": false
+		},
+		{
+			"id": 9,
+			"category": "web-ui",
+			"description": "Add success toast and form reset on upload",
+			"acceptance": [
+				"Uses toast notification (react-hot-toast or similar) for success message",
+				"Success toast: 'Photo uploaded successfully'",
+				"After success: form clears (caption empty, tags deselected, image cleared)",
+				"Form ready for next upload after reset",
+				"Error toast shown if upload fails"
+			],
+			"verify": [
+				"Upload photo successfully",
+				"Toast appears with success message",
+				"Form resets to empty state"
+			],
+			"passes": false
+		},
+		{
+			"id": 10,
+			"category": "integration",
+			"description": "End-to-end test of photo upload feature",
+			"acceptance": [
+				"Can navigate to photo upload page at /club/photos",
+				"Tags load from Django backend",
+				"Can select image file via dropzone",
+				"Image preview displays after selection",
+				"Can enter caption with character counter",
+				"Can select multiple tags via checkboxes",
+				"Validation errors show when fields missing",
+				"Upload creates photo with correct tags in Django",
+				"ImageKit generates mobile and web variants",
+				"Success toast appears and form resets"
+			],
+			"verify": [
+				"docker compose up -d --build",
+				"Login to admin site",
+				"Navigate to Club > Photos",
+				"Test validation errors (empty caption, no tags, no image)",
+				"Upload valid photo with caption and tags",
+				"Verify success toast and form reset",
+				"Check Django admin: photo exists with correct caption, year, tags",
+				"Verify image files in storage (raw, mobile, web variants)"
+			],
+			"passes": false
+		}
+	]
+}

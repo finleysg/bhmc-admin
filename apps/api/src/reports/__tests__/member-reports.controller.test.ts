@@ -2,7 +2,7 @@ import type { Response } from "express"
 
 import type { AuthenticatedRequest } from "../../auth"
 import { MemberReportsController } from "../member-reports.controller"
-import type { MemberScoresService, ScoreType } from "../member-scores.service"
+import type { MemberScoresService } from "../member-scores.service"
 
 // =============================================================================
 // Mock Setup
@@ -29,11 +29,10 @@ const createMockRequest = (playerId: number): AuthenticatedRequest =>
 	}) as unknown as AuthenticatedRequest
 
 const createMockResponse = () => {
-	const res: Partial<Response> = {
-		setHeader: jest.fn().mockReturnThis(),
-		send: jest.fn().mockReturnThis(),
-	}
-	return res as Response
+	const setHeader = jest.fn().mockReturnThis()
+	const send = jest.fn().mockReturnThis()
+	const res: Partial<Response> = { setHeader, send }
+	return { res: res as Response, setHeader, send }
 }
 
 function createController() {
@@ -51,14 +50,14 @@ describe("MemberReportsController", () => {
 		test("returns Excel with correct Content-Type header", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(42)
-			const res = createMockResponse()
+			const { res, setHeader } = createMockResponse()
 			const buffer = Buffer.from("test excel content")
 
 			service.getPlayerScoresExcel.mockResolvedValue(buffer)
 
 			await controller.getScoresExport(req, 2024, undefined, undefined, res)
 
-			expect(res.setHeader).toHaveBeenCalledWith(
+			expect(setHeader).toHaveBeenCalledWith(
 				"Content-Type",
 				"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 			)
@@ -67,14 +66,14 @@ describe("MemberReportsController", () => {
 		test("returns Excel with correct Content-Disposition header", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(42)
-			const res = createMockResponse()
+			const { res, setHeader } = createMockResponse()
 			const buffer = Buffer.from("test excel content")
 
 			service.getPlayerScoresExcel.mockResolvedValue(buffer)
 
 			await controller.getScoresExport(req, 2024, undefined, undefined, res)
 
-			expect(res.setHeader).toHaveBeenCalledWith(
+			expect(setHeader).toHaveBeenCalledWith(
 				"Content-Disposition",
 				'attachment; filename="my-scores-2024.xlsx"',
 			)
@@ -83,20 +82,20 @@ describe("MemberReportsController", () => {
 		test("sends buffer in response", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(42)
-			const res = createMockResponse()
+			const { res, send } = createMockResponse()
 			const buffer = Buffer.from("test excel content")
 
 			service.getPlayerScoresExcel.mockResolvedValue(buffer)
 
 			await controller.getScoresExport(req, 2024, undefined, undefined, res)
 
-			expect(res.send).toHaveBeenCalledWith(buffer)
+			expect(send).toHaveBeenCalledWith(buffer)
 		})
 
 		test("uses playerId from authenticated user", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(99)
-			const res = createMockResponse()
+			const { res } = createMockResponse()
 
 			service.getPlayerScoresExcel.mockResolvedValue(Buffer.from(""))
 
@@ -108,7 +107,7 @@ describe("MemberReportsController", () => {
 		test("passes season param to service", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(42)
-			const res = createMockResponse()
+			const { res } = createMockResponse()
 
 			service.getPlayerScoresExcel.mockResolvedValue(Buffer.from(""))
 
@@ -120,13 +119,13 @@ describe("MemberReportsController", () => {
 		test("includes season in filename", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(42)
-			const res = createMockResponse()
+			const { res, setHeader } = createMockResponse()
 
 			service.getPlayerScoresExcel.mockResolvedValue(Buffer.from(""))
 
 			await controller.getScoresExport(req, 2023, undefined, undefined, res)
 
-			expect(res.setHeader).toHaveBeenCalledWith(
+			expect(setHeader).toHaveBeenCalledWith(
 				"Content-Disposition",
 				'attachment; filename="my-scores-2023.xlsx"',
 			)
@@ -137,7 +136,7 @@ describe("MemberReportsController", () => {
 		test("parses courseIds from comma-separated string", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(42)
-			const res = createMockResponse()
+			const { res } = createMockResponse()
 
 			service.getPlayerScoresExcel.mockResolvedValue(Buffer.from(""))
 
@@ -149,7 +148,7 @@ describe("MemberReportsController", () => {
 		test("passes undefined courseIds when param not provided", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(42)
-			const res = createMockResponse()
+			const { res } = createMockResponse()
 
 			service.getPlayerScoresExcel.mockResolvedValue(Buffer.from(""))
 
@@ -161,7 +160,7 @@ describe("MemberReportsController", () => {
 		test("passes scoreType param to service", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(42)
-			const res = createMockResponse()
+			const { res } = createMockResponse()
 
 			service.getPlayerScoresExcel.mockResolvedValue(Buffer.from(""))
 
@@ -173,7 +172,7 @@ describe("MemberReportsController", () => {
 		test("defaults scoreType to 'both' when not provided", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(42)
-			const res = createMockResponse()
+			const { res } = createMockResponse()
 
 			service.getPlayerScoresExcel.mockResolvedValue(Buffer.from(""))
 
@@ -185,7 +184,7 @@ describe("MemberReportsController", () => {
 		test("accepts scoreType=net", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(42)
-			const res = createMockResponse()
+			const { res } = createMockResponse()
 
 			service.getPlayerScoresExcel.mockResolvedValue(Buffer.from(""))
 
@@ -197,7 +196,7 @@ describe("MemberReportsController", () => {
 		test("handles single courseId", async () => {
 			const { controller, service } = createController()
 			const req = createMockRequest(42)
-			const res = createMockResponse()
+			const { res } = createMockResponse()
 
 			service.getPlayerScoresExcel.mockResolvedValue(Buffer.from(""))
 

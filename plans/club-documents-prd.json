@@ -343,7 +343,7 @@
 				"No runtime references to clubDocumentMap",
 				"Public site builds and displays correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 23,
