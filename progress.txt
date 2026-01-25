@@ -47,3 +47,22 @@ PRD 1.9 DONE: MemberScoresService tests
 - Tests sorting by course name then date
 - Tests edge cases: empty results, null tee, total calculation
 - Note: Test execution blocked by env issues (pnpm install permission errors)
+
+PRD 1.10 DONE: MemberReportsController tests
+- Created: apps/api/src/reports/__tests__/member-reports.controller.test.ts
+- Tests correct Content-Type/Content-Disposition headers
+- Tests playerId from authenticated user passed to service
+- Tests season param in filename and service call
+- Tests courseIds parsing (comma-sep string to number array)
+- Tests scoreType handling (gross, net, defaults to 'both')
+- Note: Test execution blocked by env issues (pnpm install permission errors)
+
+PRD 1.11 DONE: useExportScores hook tests
+- Created: apps/public/src/hooks/__tests__/use-export-scores.test.tsx
+- Uses MSW to mock API endpoint, QueryClientProvider wrapper
+- Tests URL construction: season only, with courseIds, with scoreType, all params
+- Tests empty courseIds array skipped in query params
+- Tests download trigger: createObjectURL, link click, appendChild/removeChild, revokeObjectURL
+- Tests filename: my-scores-{season}.xlsx
+- Tests error handling on non-ok response
+- Note: Test execution blocked by env issues (pnpm install permission errors)

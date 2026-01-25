@@ -129,19 +129,19 @@
 			"Verifies correct headers on response",
 			"Verifies query param handling"
 		],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": "1.11",
 		"category": "testing",
 		"description": "Add useExportScores hook tests",
-		"files": ["apps/public/src/hooks/__tests__/use-export-scores.test.ts (create)"],
+		"files": ["apps/public/src/hooks/__tests__/use-export-scores.test.tsx (create)"],
 		"verify": [
 			"Tests pass",
 			"Mocks fetch, verifies URL construction",
 			"Verifies download trigger mechanism"
 		],
-		"passes": false
+		"passes": true
 	},
 	{
 		"id": "1.12",
