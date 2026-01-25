@@ -1,10 +1,6 @@
 import { expect, test } from "vitest"
 
-import {
-	renderRoute,
-	screen,
-	setupAuthenticatedUser,
-} from "../../../test/test-utils"
+import { renderRoute, screen, setupAuthenticatedUser } from "../../../test/test-utils"
 
 test("renders all four member cards", async () => {
 	setupAuthenticatedUser()
@@ -37,8 +33,7 @@ test("cards navigate to correct routes", async () => {
 	expect(hrefs).toContain("/member/account")
 	expect(hrefs).toContain("/member/friends")
 	expect(hrefs).toContain("/member/results")
-	// Scores link includes current year
-	expect(hrefs.some((href) => href?.startsWith("/member/scores/gross/"))).toBe(true)
+	expect(hrefs).toContain("/member/scores")
 })
 
 test("card descriptions are visible", async () => {

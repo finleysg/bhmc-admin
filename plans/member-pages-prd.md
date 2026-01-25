@@ -9,6 +9,7 @@ Member-specific pages (my-account, my-activity, my-scores) are scattered with in
 Consolidate all member pages under `/member/*` route with a hub page dispatching to sub-routes. Rename/restructure existing pages, add new My Results page, enhance My Scores with tee display and Excel export.
 
 ### Route Structure
+
 ```
 /member           → Hub page (card grid menu)
 /member/account   → Profile (renamed from my-account)
@@ -39,6 +40,7 @@ Consolidate all member pages under `/member/*` route with a hub page dispatching
 ## Implementation Decisions
 
 ### Routing
+
 - Add `/member` parent route rendering `MemberHub` component
 - Child routes: `/member/account`, `/member/friends`, `/member/scores`, `/member/results`
 - Redirect legacy `/my-account`, `/my-activity`, `/my-scores/*` to new routes
@@ -48,6 +50,7 @@ Consolidate all member pages under `/member/*` route with a hub page dispatching
 **Page Title:** "My Pages"
 
 **Layout**
+
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │ MY PAGES                                                             │
@@ -64,6 +67,7 @@ Consolidate all member pages under `/member/*` route with a hub page dispatching
 ```
 
 **Profile Header (top section)**
+
 - Profile picture centered, prominent
 - Player name displayed below photo
 - Edit icon (pencil) positioned to right of photo
@@ -72,6 +76,7 @@ Consolidate all member pages under `/member/*` route with a hub page dispatching
 - Reuses existing `ProfileImage` responsive picture pattern and `useUploadPhoto` hook
 
 **Navigation Cards (bottom section)**
+
 - Card grid layout (similar to event hub pattern)
 - Cards: Account, Friends, Scores, Results
 - Each card shows icon, title, brief description
@@ -80,6 +85,7 @@ Consolidate all member pages under `/member/*` route with a hub page dispatching
 ### My Results Page
 
 **Layout**
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ MY RESULTS                               Season: [2024 ▼]       │
@@ -111,7 +117,7 @@ Consolidate all member pages under `/member/*` route with a hub page dispatching
 │ │ Wednesday Weekday                                   Jul 10  │ │
 │ │ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │ │
 │ │ SCORES                                                      │ │
-│ │   Gross: 82                                                 | | 
+│ │   Gross: 82                                                 | |
 | |   Net: 74                                                   │ │
 │ │ POINTS                                                      │ │
 │ │   Gross: 5 pts (12th)                                       | |
@@ -121,11 +127,13 @@ Consolidate all member pages under `/member/*` route with a hub page dispatching
 ```
 
 **Structure**
+
 - Season selector at top (default: current season)
 - Events as cards, sorted chronologically (newest first)
 - Pending registered events interspersed by date with "Waiting for results" status
 
 **Each event card shows (vertical sections, no columns):**
+
 1. **SCORES** – Gross score+position, Net score+position
 2. **POINTS** – Gross points, Net points
 3. **PRO SHOP CREDIT** (only if player won) – Amount, description (e.g. "Second place net"), payout status
@@ -134,6 +142,7 @@ Consolidate all member pages under `/member/*` route with a hub page dispatching
 **Payout status badges:** ● Paid, ◐ Confirmed, ○ Pending
 
 **Data model:**
+
 - Each event has multiple Tournament records (gross stroke, net stroke, skins)
 - Tournament has `is_net` boolean and `format` field ("Stroke", "Skins", etc.)
 - Player has TournamentResult per tournament: position, score, amount, payout_status, summary, details
@@ -146,6 +155,7 @@ Consolidate all member pages under `/member/*` route with a hub page dispatching
 ### My Scores Enhancement
 
 **Layout**
+
 ```
 +-------------------------------------------------------------------------+
 | MY SCORES                                                               |
@@ -185,11 +195,13 @@ Consolidate all member pages under `/member/*` route with a hub page dispatching
 **Filters**
 
 Season Dropdown:
+
 - Options: "All Seasons" + list of seasons with data (newest first)
 - Default: Current season
 - Single-select
 
 Course Filter (Chip/Tag Selection):
+
 - Clickable chips for each course the player has rounds at
 - Click chip to toggle selection on/off
 - Selected chips shown first, then "+ Add" button to see unselected
@@ -199,11 +211,13 @@ Course Filter (Chip/Tag Selection):
 **Display**
 
 Grouping:
+
 - Scores grouped by course (course name as section header with colored background)
 - Sections ordered alphabetically by course name
 - Within each section: rounds sorted by date descending (newest first)
 
 Row Format:
+
 - Each round produces TWO rows: Gross row, then Net row immediately below
 - Date cell format: `YYYY-MM-DD (Tee) Gross` or `YYYY-MM-DD (Tee) Net`
 - Gross and net are separate PlayerRound records, grouped by date+tee
@@ -212,6 +226,7 @@ Row Format:
 - Cell highlighting for scoring: birdie (green), par (white), bogey (tan), double+ (orange)
 
 Summary Rows:
+
 - At bottom of each course section: Average row and Best Ball row
 - Average: per-hole averages across all Gross rows for that course
 - Best Ball: best score per hole across all Gross rows for that course
@@ -219,11 +234,13 @@ Summary Rows:
 **Export**
 
 Button:
+
 - Location: Top right, inline with filter controls
 - Label: "Export to Excel" (or download icon + "Export")
 - Disabled when no scores match filters
 
 Excel Output:
+
 - Filename: `my-scores-{season}.xlsx` (or `my-scores-all-seasons.xlsx`)
 - Single worksheet
 - Columns: Date, Tee, Type (Gross/Net), Course, Holes 1-9, Total
@@ -238,20 +255,24 @@ Empty: "No scores found for the selected filters"
 Loading: Skeleton/shimmer for table, filters remain interactive
 
 ### My Friends Page
+
 - Extract MyFriends component from current account-settings
 - Full page layout instead of column
 - Same functionality: view friends, add/remove via star toggle
 
 ### My Account Page
+
 - Remove profile picture display and edit (moved to hub)
 - Keep PlayerInfo and PlayerPassword components
 - Route moves from `/my-account` to `/member/account`
 
 ### Navigation Changes
+
 - Sidebar: Replace "My Scores" link with "Member" → `/member`
 - User menu: Replace individual links with "My Pages" → `/member`
 
 ### API Changes
+
 - Django: Add player filter to `TournamentResultViewSet.get_queryset()`
 - Django: Create `TournamentPointsViewSet` if not exists, with player filter
 - Django: Both need season filter support
@@ -260,17 +281,20 @@ Loading: Skeleton/shimmer for table, filters remain interactive
 ## Testing Decisions
 
 ### Good Test Characteristics
+
 - Test external behavior from user perspective
 - Mock API responses with MSW
 - No testing of implementation details (state, internal functions)
 
 ### Modules to Test
+
 1. MemberHub - renders all cards, links navigate correctly
 2. MyResults - displays results by event, handles empty state, season filter works
 3. MyScores (enhanced) - filter interactions, export triggers download
 4. Route redirects - legacy routes redirect to new paths
 
 ### Prior Art
+
 - `apps/public/src/__tests__/account.test.tsx` - authenticated user page tests
 - `apps/public/src/test/test-utils.tsx` - setupAuthenticatedUser pattern
 - MSW handlers for mocking API responses
@@ -287,6 +311,7 @@ Loading: Skeleton/shimmer for table, filters remain interactive
 ## Further Notes
 
 ### Existing File Locations
+
 - `apps/public/src/screens/account/` - current member screens
 - `apps/public/src/components/account/` - my-events, my-friends components
 - `apps/public/src/components/points/my-points.tsx` - points display
@@ -296,9 +321,11 @@ Loading: Skeleton/shimmer for table, filters remain interactive
 - `backend/events/serializers.py` - TournamentResultSerializer (needs update)
 
 ### Data Available
+
 - Tournament results: id, tournament, player, flight, position, score, amount, payout_type, payout_to, payout_status, team_id, summary, details
 - Tournament points: id, tournament, player, position, score, points, details, create_date
 - Player scores: includes tee.name via PlayerRound class
 
 ### Questions
+
 None - scope is well-defined.

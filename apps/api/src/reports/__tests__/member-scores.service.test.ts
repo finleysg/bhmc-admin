@@ -70,6 +70,12 @@ function createService(results: ScoreQueryResult[] = []) {
 	return { service, drizzle }
 }
 
+async function loadWorkbook(buffer: any): Promise<ExcelJS.Workbook> {
+	const workbook = new ExcelJS.Workbook()
+	await workbook.xlsx.load(buffer)
+	return workbook
+}
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -110,8 +116,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "both")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			expect(workbook.worksheets.length).toBe(2)
 			expect(workbook.worksheets[0].name).toBe("Gross Scores")
@@ -125,8 +130,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "both")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			const grossSheet = workbook.getWorksheet("Gross Scores")!
 			// Row 1 is header, row 2+ is data
@@ -142,8 +146,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "both")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			const netSheet = workbook.getWorksheet("Net Scores")!
 			expect(netSheet.rowCount).toBe(2) // header + 1 data row
@@ -160,8 +163,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "gross")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			expect(workbook.worksheets.length).toBe(1)
 			expect(workbook.worksheets[0].name).toBe("Gross Scores")
@@ -174,8 +176,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "gross")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			const sheet = workbook.worksheets[0]
 			// Only header + 1 gross row (no net rows)
@@ -191,8 +192,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "net")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			expect(workbook.worksheets.length).toBe(1)
 			expect(workbook.worksheets[0].name).toBe("Net Scores")
@@ -205,8 +205,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "net")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			const sheet = workbook.worksheets[0]
 			// Only header + 1 net row (no gross rows)
@@ -221,8 +220,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "gross")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			const sheet = workbook.worksheets[0]
 			const headerRow = sheet.getRow(1)
@@ -253,8 +251,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "gross")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			const sheet = workbook.worksheets[0]
 			const dataRow = sheet.getRow(2)
@@ -287,8 +284,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "gross")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			const sheet = workbook.worksheets[0]
 			// Sorted: East(06-10), East(06-15), West(06-20)
@@ -307,8 +303,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024)
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			// Should still create worksheets (with headers only)
 			expect(workbook.worksheets.length).toBe(2)
@@ -323,8 +318,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "gross")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			const sheet = workbook.worksheets[0]
 			expect(sheet.getRow(2).getCell(2).value).toBe("") // Empty string for null tee
@@ -336,8 +330,7 @@ describe("MemberScoresService.getPlayerScoresExcel", () => {
 
 			const buffer = await service.getPlayerScoresExcel(42, 2024, undefined, "gross")
 
-			const workbook = new ExcelJS.Workbook()
-			await workbook.xlsx.load(buffer)
+			const workbook = await loadWorkbook(buffer)
 
 			const sheet = workbook.worksheets[0]
 			expect(sheet.getRow(2).getCell(14).value).toBe(45) // 1+2+3+4+5+6+7+8+9

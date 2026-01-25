@@ -313,10 +313,6 @@ importers:
       vitest:
         specifier: ^4.0.15
         version: 4.0.17(@types/node@24.10.1)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(msw@2.12.7(@types/node@24.10.1)(typescript@5.9.3))(sass@1.97.2)(tsx@4.20.6)(yaml@2.8.2)
-    optionalDependencies:
-      '@rollup/rollup-linux-arm64-musl':
-        specifier: 4.53.3
-        version: 4.53.3
 
   apps/web:
     dependencies:
@@ -2088,11 +2084,6 @@ packages:
 
   '@rollup/rollup-linux-arm64-gnu@4.55.1':
     resolution: {integrity: sha512-a59mwd1k6x8tXKcUxSyISiquLwB5pX+fJW9TkWU46lCqD/GRDe9uDN31jrMmVP3feI3mhAdvcCClhV8V5MhJFQ==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@rollup/rollup-linux-arm64-musl@4.53.3':
-    resolution: {integrity: sha512-kASyvfBEWYPEwe0Qv4nfu6pNkITLTb32p4yTgzFCocHnJLAHs+9LjUu9ONIhvfT/5lv4YS5muBHyuV84epBo/A==}
     cpu: [arm64]
     os: [linux]
 
@@ -9035,9 +9026,6 @@ snapshots:
     optional: true
 
   '@rollup/rollup-linux-arm64-gnu@4.55.1':
-    optional: true
-
-  '@rollup/rollup-linux-arm64-musl@4.53.3':
     optional: true
 
   '@rollup/rollup-linux-arm64-musl@4.55.1':

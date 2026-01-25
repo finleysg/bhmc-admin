@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, Navigate } from "react-router-dom"
 import { expect, test, describe } from "vitest"
-import { LegacyScoresRedirect } from "../../../components/legacy-redirect"
 
 describe("legacy route redirects", () => {
 	test("/my-account redirects to /member/account", () => {
@@ -30,29 +29,29 @@ describe("legacy route redirects", () => {
 		expect(screen.getByText("Member Friends")).toBeInTheDocument()
 	})
 
-	test("/my-scores/gross/2024 redirects to /member/scores/gross/2024", () => {
+	test("/my-scores/gross/2024 redirects to /my-scores", () => {
 		render(
 			<MemoryRouter initialEntries={["/my-scores/gross/2024"]}>
 				<Routes>
-					<Route path="/my-scores/*" element={<LegacyScoresRedirect />} />
-					<Route path="/member/scores/gross/2024" element={<div>Gross 2024 Scores</div>} />
+					<Route path="/my-scores/*" element={<Navigate to="/my-scores" replace />} />
+					<Route path="/my-scores" element={<div>My Scores</div>} />
 				</Routes>
 			</MemoryRouter>,
 		)
 
-		expect(screen.getByText("Gross 2024 Scores")).toBeInTheDocument()
+		expect(screen.getByText("My Scores")).toBeInTheDocument()
 	})
 
-	test("/my-scores/net/all redirects to /member/scores/net/all", () => {
+	test("/member/scores/net/all redirects to /member/scores", () => {
 		render(
-			<MemoryRouter initialEntries={["/my-scores/net/all"]}>
+			<MemoryRouter initialEntries={["/member/scores/net/all"]}>
 				<Routes>
-					<Route path="/my-scores/*" element={<LegacyScoresRedirect />} />
-					<Route path="/member/scores/net/all" element={<div>Net All Scores</div>} />
+					<Route path="/member/scores/*" element={<Navigate to="/member/scores" replace />} />
+					<Route path="/member/scores" element={<div>Member Scores</div>} />
 				</Routes>
 			</MemoryRouter>,
 		)
 
-		expect(screen.getByText("Net All Scores")).toBeInTheDocument()
+		expect(screen.getByText("Member Scores")).toBeInTheDocument()
 	})
 })

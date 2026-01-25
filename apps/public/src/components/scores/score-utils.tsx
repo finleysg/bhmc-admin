@@ -77,8 +77,11 @@ export interface RoundScoresProps extends RoundProps {
 export function RoundScores({ round, scoreType }: RoundScoresProps) {
 	return (
 		<div style={{ display: "flex" }}>
-			<div className="round" style={{ flex: 1 }}>
-				{round.eventDate} ({round.tee.name}) {scoreType}
+			<div
+				className="round"
+				style={scoreType == "Net" ? { flex: 1, fontStyle: "italic" } : { flex: 1 }}
+			>
+				{round.eventDate}
 			</div>
 			<div className="scores">
 				{round.scores.map((score) => {

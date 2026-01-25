@@ -4,8 +4,13 @@ import { MemberFriendsScreen } from "./member-friends"
 import { MemberResultsScreen } from "./member-results"
 import { MemberScoresScreen } from "./member-scores"
 
-export { MemberHub, MemberAccountScreen, MemberFriendsScreen, MemberResultsScreen, MemberScoresScreen }
-
+export {
+	MemberHub,
+	MemberAccountScreen,
+	MemberFriendsScreen,
+	MemberResultsScreen,
+	MemberScoresScreen,
+}
 
 export function ResultsPlaceholder() {
 	return (

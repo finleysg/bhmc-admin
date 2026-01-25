@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, Navigate } from "react-router-dom"
 import { expect, test } from "vitest"
-import { LegacyScoresRedirect } from "../../components/legacy-redirect"
 
 test("redirects /my-account to /member/account", () => {
 	render(
@@ -29,15 +28,15 @@ test("redirects /my-activity to /member/friends", () => {
 	expect(screen.getByText("Member Friends")).toBeInTheDocument()
 })
 
-test("redirects /my-scores/gross/2024 to /member/scores/gross/2024", () => {
+test("redirects /my-scores/gross/2024 to /my-scores", () => {
 	render(
 		<MemoryRouter initialEntries={["/my-scores/gross/2024"]}>
 			<Routes>
-				<Route path="/my-scores/*" element={<LegacyScoresRedirect />} />
-				<Route path="/member/scores/gross/2024" element={<div>Gross 2024 Scores</div>} />
+				<Route path="/my-scores/*" element={<Navigate to="/my-scores" replace />} />
+				<Route path="/my-scores" element={<div>My Scores</div>} />
 			</Routes>
 		</MemoryRouter>,
 	)
 
-	expect(screen.getByText("Gross 2024 Scores")).toBeInTheDocument()
+	expect(screen.getByText("My Scores")).toBeInTheDocument()
 })

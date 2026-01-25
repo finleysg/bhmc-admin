@@ -48,7 +48,6 @@ import {
 	MemberScoresScreen,
 } from "../screens/member/member-routes"
 import { Member } from "../screens/member/member"
-import { LegacyScoresRedirect } from "../components/legacy-redirect"
 
 export const mainRoutes = () =>
 	config.maintenanceMode
@@ -91,7 +90,8 @@ export const mainRoutes = () =>
 					],
 				},
 				{ path: "/champions/:season", element: <ChampionsScreen /> },
-				{ path: "/my-scores/:scoreType/:season", element: <PlayerScoresScreen /> },
+				{ path: "/my-scores", element: <PlayerScoresScreen /> },
+				{ path: "/my-scores/*", element: <Navigate to="/my-scores" replace /> },
 				{ path: "/policies/:policyType", element: <PolicyScreen /> },
 				{ path: "/match-play", element: <MatchPlayScreen /> },
 				{ path: "/season-long-points", element: <SeasonLongPointsScreen /> },
@@ -105,7 +105,6 @@ export const mainRoutes = () =>
 				{ path: "/gallery/:id", element: <GalleryImageScreen /> },
 				{ path: "/my-account", element: <Navigate to="/member/account" replace /> },
 				{ path: "/my-activity", element: <Navigate to="/member/friends" replace /> },
-				{ path: "/my-scores/*", element: <LegacyScoresRedirect /> },
 				{
 					path: "/member",
 					element: <Member />,
@@ -113,7 +112,8 @@ export const mainRoutes = () =>
 						{ index: true, element: <MemberHub /> },
 						{ path: "account", element: <MemberAccountScreen /> },
 						{ path: "friends", element: <MemberFriendsScreen /> },
-						{ path: "scores/:scoreType/:season", element: <MemberScoresScreen /> },
+						{ path: "scores", element: <MemberScoresScreen /> },
+						{ path: "scores/*", element: <Navigate to="/member/scores" replace /> },
 						{ path: "results", element: <MemberResultsScreen /> },
 					],
 				},
