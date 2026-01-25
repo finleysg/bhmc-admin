@@ -145,7 +145,7 @@
 				"Tags load and form displays",
 				"Form validation works correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 9,
