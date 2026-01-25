@@ -14,7 +14,7 @@
 				"Re-exported from packages/domain/src/types/index.ts"
 			],
 			"verify": ["Types exist in packages/domain/src/types/documents.ts", "pnpm build passes"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 2,
@@ -27,7 +27,7 @@
 				"Returns JSON array of tags"
 			],
 			"verify": ["File exists at apps/web/app/api/tags/route.ts", "pnpm --filter web build passes"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 3,
