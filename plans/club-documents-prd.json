@@ -206,7 +206,7 @@
 				"Component renders table with all codes",
 				"Actions change based on document status"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 15,
