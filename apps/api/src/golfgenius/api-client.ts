@@ -298,24 +298,28 @@ export class ApiClient {
 	}
 
 	/**
-	 * Identify the current season for the current calendar year.
+	 * Identify the season for a given year.
 	 * Rules:
-	 * - If Golf Genius marks a season `current` but its name != current year -> throw (conflict)
-	 * - Prefer a season whose name equals the current year
+	 * - Prefer a season whose name equals the requested year
 	 * - Otherwise, if a current-flagged season exists and its name equals the year, use it
-	 * - Otherwise throw (we require an explicit season for the current year)
+	 * - Otherwise throw (we require an explicit season for the year)
+	 * @param year The year to find a season for
+	 * @param checkCurrentFlagConflict If true, throws when GG current flag points to different year
 	 */
-	async getCurrentSeasonForYear(): Promise<GgSeason> {
+	async getSeasonForYear(year: string, checkCurrentFlagConflict = false): Promise<GgSeason> {
 		const seasons = await this.getSeasons()
-		const year = new Date().getFullYear().toString()
 
 		if (!seasons || seasons.length === 0) {
 			throw new ApiError("No seasons returned from Golf Genius")
 		}
 
 		const currentFlagSeason = seasons.find((s) => !!s.current)
-		if (currentFlagSeason && currentFlagSeason.name && currentFlagSeason.name !== year) {
-			// Conflict between GG current flag and calendar year
+		if (
+			checkCurrentFlagConflict &&
+			currentFlagSeason &&
+			currentFlagSeason.name &&
+			currentFlagSeason.name !== year
+		) {
 			throw new ApiError(
 				`Golf Genius indicates a current season (${currentFlagSeason.name}) that does not match the calendar year (${year})`,
 			)
@@ -326,8 +330,16 @@ export class ApiClient {
 
 		if (currentFlagSeason && currentFlagSeason.name === year) return currentFlagSeason
 
-		// No explicit current season matching the year
-		throw new ApiError(`No Golf Genius season found for the current year: ${year}`)
+		throw new ApiError(`No Golf Genius season found for year: ${year}`)
+	}
+
+	/**
+	 * Identify the current season for the current calendar year.
+	 * Throws if GG current flag conflicts with calendar year.
+	 */
+	async getCurrentSeasonForYear(): Promise<GgSeason> {
+		const year = new Date().getFullYear().toString()
+		return this.getSeasonForYear(year, true)
 	}
 
 	private normalizeDateOnly(s?: string | null) {
@@ -372,11 +384,11 @@ export class ApiClient {
 	 * - throws if not confident in a unique match
 	 */
 	async findMatchingEventByStartDate(startDate: string, name?: string): Promise<GgEvent> {
-		const season = await this.getCurrentSeasonForYear()
+		const targetDate = this.normalizeDateOnly(startDate)
+		const year = targetDate.substring(0, 4)
+		const season = await this.getSeasonForYear(year)
 		const categoryId = this.configService.get<string>("golfGenius.categoryId")
 		const events = await this.getEvents(season.id?.toString(), categoryId)
-
-		const targetDate = this.normalizeDateOnly(startDate)
 		const dateMatches = events.filter((e) => this.normalizeDateOnly(e.start_date) === targetDate)
 
 		if (dateMatches.length === 0) {

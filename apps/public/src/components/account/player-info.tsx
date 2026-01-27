@@ -1,6 +1,6 @@
 import React from "react"
 
-import { MdEdit, MdPerson } from "react-icons/md"
+import { MdPerson } from "react-icons/md"
 import { Link } from "react-router-dom"
 
 import { EditAccountHandler } from "../../forms/edit-account-handler"
@@ -17,20 +17,20 @@ export function PlayerInfo() {
 				<h2>
 					<MdPerson /> Player Profile
 				</h2>
-				<ul className="actions">
-					<li>
-						<button
-							id="edit-account"
-							onClick={() => setMode("edit")}
-							className={`actions__item bg-transparent`}
-							title="Update your player profile"
-						>
-							<i>
-								<MdEdit />
-							</i>
-						</button>
-					</li>
-				</ul>
+				{mode === "view" && (
+					<ul className="actions">
+						<li>
+							<button
+								id="edit-account"
+								onClick={() => setMode("edit")}
+								className="btn btn-link"
+								title="Update your player profile"
+							>
+								edit
+							</button>
+						</li>
+					</ul>
+				)}
 			</div>
 			<LoadingSpinner
 				loading={status === "pending" || fetchStatus === "fetching"}
@@ -75,8 +75,8 @@ export function PlayerInfo() {
 				<React.Fragment>
 					<EditAccountHandler player={player} onClose={() => setMode("view")} />
 					<p className="text-primary" style={{ marginTop: "1rem" }}>
-						<span style={{ fontWeight: "bold" }}>NOTE:</span> If you want to change the tees you
-						will play for this season, send us a contact message.
+						<span style={{ fontWeight: "bold" }}>NOTE:</span> If you want to move to the forward
+						tees and you qualify using the rule of 78, send us a contact message.
 					</p>
 				</React.Fragment>
 			)}

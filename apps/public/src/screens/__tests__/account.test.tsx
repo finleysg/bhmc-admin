@@ -20,7 +20,7 @@ test("can edit profile on the player account screen", async () => {
 	await waitForLoadingToFinish()
 
 	// update player
-	await user.click(screen.getByRole("button", { name: /update your player profile/i }))
+	await user.click(screen.getByRole("button", { name: /edit/i }))
 	await user.clear(screen.getByRole("textbox", { name: /ghin/i }))
 	await user.type(screen.getByRole("textbox", { name: /ghin/i }), "1234567")
 	await user.click(screen.getByRole("button", { name: /save changes/i }))
@@ -39,7 +39,7 @@ test.skip("the form is not submitted when it fails validation", async () => {
 	await waitForLoadingToFinish()
 
 	// perform an invalid update
-	await user.click(screen.getByRole("button", { name: /update your player profile/i }))
+	await user.click(screen.getByRole("button", { name: /edit/i }))
 	await user.clear(screen.getByRole("textbox", { name: /email/i }))
 	await user.type(screen.getByRole("textbox", { name: /email/i }), "not valid")
 	await user.click(screen.getByRole("button", { name: /save/i }))

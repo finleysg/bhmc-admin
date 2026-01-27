@@ -13,7 +13,7 @@ export function MemberHub() {
 					<div className="col-12 col-md-6">
 						<MemberCard
 							title="Account"
-							description="Manage your account settings and profile information"
+							description="Manage your account information and change your password"
 							icon={MdAccountCircle}
 							action="/member/account"
 						/>
@@ -29,7 +29,7 @@ export function MemberHub() {
 					<div className="col-12 col-md-6">
 						<MemberCard
 							title="Scores"
-							description="View your scoring history and statistics"
+							description="View your scoring history and download your scores to Excel"
 							icon={MdScore}
 							action="/member/scores"
 						/>
@@ -37,7 +37,7 @@ export function MemberHub() {
 					<div className="col-12 col-md-6">
 						<MemberCard
 							title="Results"
-							description="Check tournament results and standings"
+							description="Check your tournament results, season long points, and skins"
 							icon={MdEmojiEvents}
 							action="/member/results"
 						/>
