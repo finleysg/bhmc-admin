@@ -106,6 +106,10 @@ export class ImportAllResultsService {
 						}, // Tournament completion callback
 					)
 
+					this.logger.log(
+						`Processed tournamentResult for ${tournamentResult.tournamentName}: ${tournamentResult.resultsImported}`,
+					)
+
 					// Aggregate results
 					result.created += tournamentResult.resultsImported
 					result.totalProcessed += tournamentResult.resultsImported
@@ -162,7 +166,7 @@ export class ImportAllResultsService {
 			case "quota":
 				return this.processQuotaResults.bind(this)
 			default:
-				this.logger.debug(`Format ${format} is not handled by Import Results process.`)
+				this.logger.log(`Format ${format} is not handled by Import Results process.`)
 				return async () => {
 					// Do nothing
 				}
@@ -282,6 +286,10 @@ export class ImportAllResultsService {
 		) => PreparedTournamentResult | PreparedTournamentResult[] | null,
 		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 	): Promise<void> {
+		this.logger.log(
+			`Processing results for tournament ${tournamentData.name}: ${tournamentData.format}`,
+		)
+
 		// Validate response structure
 		const error = parser.validateResponse(ggResults)
 		if (error) {
@@ -533,7 +541,7 @@ export class ImportAllResultsService {
 		// Score is not relevant for skins tournaments
 		const score: number | null = null
 
-		this.logger.debug(`Skins player data: ${JSON.stringify(playerData)}`)
+		this.logger.log(`Skins player data: ${JSON.stringify(playerData)}`)
 
 		// Return prepared data instead of inserting
 		return {
@@ -561,12 +569,16 @@ export class ImportAllResultsService {
 		result: ImportResultSummary,
 		playerMap: PlayerMap,
 	): PreparedTournamentResult | PreparedTournamentResult[] | null {
+		this.logger.debug(`Choosing team or individual results for tournament ${tournamentData.name}`)
+
 		// Check if this is a team result (multiple member_cards or individual_results)
 		if (aggregate.member_cards?.length > 1 || aggregate.individual_results?.length) {
+			this.logger.log(`Prepare team results for ${tournamentData.name}: ${aggregate.name}`)
 			return this.prepareTeamPlayerResult(tournamentData, aggregate, flightName, result, playerMap)
 		}
 		// Skip empty aggregates silently (no member_cards)
 		if (!aggregate.member_cards?.length) {
+			this.logger.debug(`No member_cards found for ${tournamentData.name}`)
 			return null
 		}
 		// Otherwise use individual stroke processing
@@ -866,16 +878,17 @@ export class ImportAllResultsService {
 			}
 		}
 
-		// Loop over individual_results (or member_cards if no indiv array)
-		const individualResults = aggregate.individual_results || []
-		const preparedRecords: PreparedTournamentResult[] = [] // Collect multiple
+		// Get player member IDs from either individual_results or member_cards
+		const memberIds = aggregate.individual_results?.length
+			? aggregate.individual_results.map((ir) => ir.member_id_str)
+			: aggregate.member_cards?.map((mc) => mc.member_id_str) || []
+		const preparedRecords: PreparedTournamentResult[] = []
 
-		for (const indiv of individualResults) {
-			const memberId = indiv.member_id_str
-
+		for (const memberId of memberIds) {
 			// Resolve player
 			const player = this.resolvePlayerFromMap(memberId, playerMap, result)
 			if (!player) {
+				this.logger.log(`No player found for ${memberId}: skipping`)
 				continue // Skip this player, but continue for others
 			}
 
@@ -893,6 +906,7 @@ export class ImportAllResultsService {
 			const position = parseInt(aggregate.position || "0", 10) || 0
 			const amount = parsePurseAmount(aggregate.purse) // Full purse per player (no split)
 			if (amount === null) {
+				this.logger.log(`No amount won for ${playerFullName}`)
 				continue
 			}
 

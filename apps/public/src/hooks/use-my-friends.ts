@@ -1,9 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { Player, PlayerApiSchema } from "../models/player"
+import { Player, PlayerApiData, PlayerApiSchema } from "../models/player"
 import { getMany, httpClient } from "../utils/api-client"
 import { apiUrl } from "../utils/api-utils"
 import { useMyPlayerRecord } from "./use-my-player-record"
+
+const selectFriends = (data: PlayerApiData[]) => {
+	return data.map((p) => new Player(p, true))
+}
 
 export function useMyFriends() {
 	const { data: player } = useMyPlayerRecord()
@@ -12,7 +16,7 @@ export function useMyFriends() {
 	return useQuery({
 		queryKey: ["friends"],
 		queryFn: () => getMany(endpoint, PlayerApiSchema),
-		select: (data) => data.map((p) => new Player(p, true)),
+		select: selectFriends,
 		enabled: player !== undefined,
 	})
 }

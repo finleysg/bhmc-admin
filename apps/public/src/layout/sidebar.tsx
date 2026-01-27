@@ -36,7 +36,7 @@ export function Sidebar() {
 				/>
 				<MenuItem path={`champions/${currentSeason}`} icon={<GiLaurelsTrophy />} name="Champions" />
 				{groups.indexOf(Groups.AuthenticatedUsers) >= 0 && (
-					<MenuItem path="member" icon={<MdAccountCircle />} name="Member" />
+					<MenuItem path="member" icon={<MdAccountCircle />} name="My Pages" />
 				)}
 				<MenuItem path="policies/policies-and-procedures" icon={<GoInfo />} name="Policies" />
 				<MenuItem path="match-play" icon={<MdPeopleOutline />} name="Match Play" />

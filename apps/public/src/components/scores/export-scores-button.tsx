@@ -1,5 +1,3 @@
-import { FiDownload } from "react-icons/fi"
-import { IconActionButton } from "../buttons/icon-action-button"
 import { ScoreType, useExportScores } from "../../hooks/use-export-scores"
 
 interface ExportScoresButtonProps {
@@ -22,12 +20,12 @@ export function ExportScoresButton({
 	}
 
 	return (
-		<IconActionButton
-			label="Export to Excel"
+		<button
+			className="btn btn-sm btn-primary"
 			onClick={handleExport}
 			disabled={disabled || isPending}
 		>
-			<FiDownload size={20} />
-		</IconActionButton>
+			Export
+		</button>
 	)
 }

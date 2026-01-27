@@ -27,7 +27,7 @@ test("cards navigate to correct routes", async () => {
 
 	await screen.findByText("Account")
 
-	const links = screen.getAllByText("Go")
+	const links = screen.getAllByText("Open")
 	const hrefs = links.map((link) => link.getAttribute("href"))
 
 	expect(hrefs).toContain("/member/account")
@@ -42,8 +42,12 @@ test("card descriptions are visible", async () => {
 
 	await screen.findByText("Account")
 
-	expect(screen.getByText("Manage your account settings and profile information")).toBeVisible()
+	expect(screen.getByText("Manage your account information and change your password")).toBeVisible()
 	expect(screen.getByText("View and manage your friends list")).toBeVisible()
-	expect(screen.getByText("View your scoring history and statistics")).toBeVisible()
-	expect(screen.getByText("Check tournament results and standings")).toBeVisible()
+	expect(
+		screen.getByText("View your scoring history and download your scores to Excel"),
+	).toBeVisible()
+	expect(
+		screen.getByText("Check your tournament results, season long points, and skins"),
+	).toBeVisible()
 })

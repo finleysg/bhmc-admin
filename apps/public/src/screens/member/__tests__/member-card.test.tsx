@@ -19,7 +19,7 @@ test("renders title, icon, description", () => {
 
 	expect(screen.getByText("Test Card")).toBeInTheDocument()
 	expect(screen.getByText("Test description")).toBeInTheDocument()
-	expect(screen.getByText("Go")).toBeInTheDocument()
+	expect(screen.getByText("Open")).toBeInTheDocument()
 })
 
 test("click navigates to specified route", () => {
@@ -34,6 +34,6 @@ test("click navigates to specified route", () => {
 		</BrowserRouter>,
 	)
 
-	const link = screen.getByText("Go")
+	const link = screen.getByText("Open")
 	expect(link).toHaveAttribute("href", "/member/account")
 })

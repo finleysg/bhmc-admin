@@ -35,7 +35,7 @@ export function SeasonSelect({ season, startAt, onSelect }: SeasonSelectProps) {
 				id="season-select"
 				value={selectedSeason}
 				onChange={handleSelect}
-				className="form-control"
+				className="form-control w-auto"
 			>
 				{seasons().map((opt) => {
 					return (
