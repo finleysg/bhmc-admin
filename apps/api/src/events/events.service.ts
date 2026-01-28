@@ -169,6 +169,48 @@ export class EventsService {
 		}))
 	}
 
+	async markPayoutsPaid(eventId: number, payoutType: string): Promise<PayoutSummary[]> {
+		const tournaments = await this.repository.findTournamentsByEventId(eventId)
+		if (tournaments.length === 0) {
+			throw new BadRequestException(`No tournaments found for event ${eventId}`)
+		}
+
+		const tournamentIds = tournaments.map((t) => t.id)
+
+		const matchingResults = await this.drizzle.db
+			.select({
+				id: tournamentResult.id,
+				payoutStatus: tournamentResult.payoutStatus,
+			})
+			.from(tournamentResult)
+			.where(
+				and(
+					inArray(tournamentResult.tournamentId, tournamentIds),
+					eq(tournamentResult.payoutType, payoutType),
+					sql`${tournamentResult.amount} > 0`,
+				),
+			)
+
+		if (matchingResults.length === 0) {
+			throw new BadRequestException(`No ${payoutType} results found for event ${eventId}`)
+		}
+
+		const notConfirmed = matchingResults.filter((r) => r.payoutStatus !== "Confirmed")
+		if (notConfirmed.length > 0) {
+			throw new BadRequestException(
+				`Cannot mark payouts as paid: ${notConfirmed.length} result(s) are not in Confirmed status`,
+			)
+		}
+
+		const resultIds = matchingResults.map((r) => r.id)
+		await this.drizzle.db
+			.update(tournamentResult)
+			.set({ payoutStatus: "Paid" })
+			.where(inArray(tournamentResult.id, resultIds))
+
+		return this.getPayoutSummary(eventId, payoutType)
+	}
+
 	async deleteTournamentPoints(tournamentId: number) {
 		await this.repository.deleteTournamentPoints(tournamentId)
 	}
