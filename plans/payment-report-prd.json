@@ -130,7 +130,7 @@
 				"Only one row expanded at a time (or multiple - follow existing patterns)",
 				"pnpm build succeeds"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "5.1",

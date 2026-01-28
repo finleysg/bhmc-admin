@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 
 import { useParams } from "next/navigation"
 
@@ -9,17 +9,80 @@ import { ReportPage } from "@/components/report-page"
 import { useIsMobile } from "@/lib/use-is-mobile"
 import { formatCurrency } from "@/lib/use-report"
 import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
-import { PaymentReportRow } from "@repo/domain/types"
+import { PaymentReportDetail, PaymentReportRefund, PaymentReportRow } from "@repo/domain/types"
 import {
 	ColumnDef,
+	ExpandedState,
 	flexRender,
 	getCoreRowModel,
+	getExpandedRowModel,
 	getFilteredRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
+	Row,
 	SortingState,
 	useReactTable,
 } from "@tanstack/react-table"
+
+const PaymentDetailsSection = ({ row }: { row: Row<PaymentReportRow> }) => {
+	const details = row.original.details
+	const refunds = row.original.refunds
+
+	return (
+		<div className="p-4 bg-base-200 space-y-4">
+			{details.length > 0 && (
+				<div>
+					<h4 className="font-semibold text-sm mb-2">Payment Details</h4>
+					<table className="table table-xs">
+						<thead>
+							<tr>
+								<th>Player</th>
+								<th>Event Fee</th>
+								<th>Amount</th>
+								<th>Is Paid</th>
+							</tr>
+						</thead>
+						<tbody>
+							{details.map((d: PaymentReportDetail, i: number) => (
+								<tr key={i}>
+									<td>{d.player}</td>
+									<td>{d.eventFee}</td>
+									<td>{formatCurrency(d.amount)}</td>
+									<td>{d.isPaid ? "Yes" : "No"}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			)}
+			{refunds.length > 0 && (
+				<div>
+					<h4 className="font-semibold text-sm mb-2">Refunds</h4>
+					<table className="table table-xs">
+						<thead>
+							<tr>
+								<th>Refund Code</th>
+								<th>Refund Amount</th>
+								<th>Refund Date</th>
+								<th>Issued By</th>
+							</tr>
+						</thead>
+						<tbody>
+							{refunds.map((r: PaymentReportRefund, i: number) => (
+								<tr key={i}>
+									<td>{r.refundCode}</td>
+									<td>{formatCurrency(r.refundAmount)}</td>
+									<td>{r.refundDate}</td>
+									<td>{r.issuedBy}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			)}
+		</div>
+	)
+}
 
 const PaymentsTable = ({ data }: { data: PaymentReportRow[] | null }) => {
 	const isMobile = useIsMobile()
@@ -27,6 +90,7 @@ const PaymentsTable = ({ data }: { data: PaymentReportRow[] | null }) => {
 	const [globalFilter, setGlobalFilter] = useState("")
 	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 })
 	const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({})
+	const [expanded, setExpanded] = useState<ExpandedState>({})
 
 	const columns: ColumnDef<PaymentReportRow>[] = [
 		{
@@ -113,15 +177,19 @@ const PaymentsTable = ({ data }: { data: PaymentReportRow[] | null }) => {
 			globalFilter,
 			pagination,
 			columnVisibility,
+			expanded,
 		},
 		onSortingChange: setSorting,
 		onGlobalFilterChange: setGlobalFilter,
 		onPaginationChange: setPagination,
 		onColumnVisibilityChange: setColumnVisibility,
+		onExpandedChange: setExpanded,
+		getRowCanExpand: (row) => row.original.details.length > 0 || row.original.refunds.length > 0,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
+		getExpandedRowModel: getExpandedRowModel(),
 	})
 
 	return (
@@ -170,11 +238,25 @@ const PaymentsTable = ({ data }: { data: PaymentReportRow[] | null }) => {
 					</thead>
 					<tbody>
 						{table.getRowModel().rows.map((row) => (
-							<tr key={row.id}>
-								{row.getVisibleCells().map((cell) => (
-									<td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-								))}
-							</tr>
+							<Fragment key={row.id}>
+								<tr
+									className={row.getCanExpand() ? "cursor-pointer hover" : ""}
+									onClick={() => row.getCanExpand() && row.toggleExpanded()}
+								>
+									{row.getVisibleCells().map((cell) => (
+										<td key={cell.id}>
+											{flexRender(cell.column.columnDef.cell, cell.getContext())}
+										</td>
+									))}
+								</tr>
+								{row.getIsExpanded() && (
+									<tr>
+										<td colSpan={row.getVisibleCells().length}>
+											<PaymentDetailsSection row={row} />
+										</td>
+									</tr>
+								)}
+							</Fragment>
 						))}
 					</tbody>
 				</table>
