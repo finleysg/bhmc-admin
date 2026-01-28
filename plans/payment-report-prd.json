@@ -48,7 +48,7 @@
 				"Returns Buffer",
 				"pnpm --filter api test passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "2.3",

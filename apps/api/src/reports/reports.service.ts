@@ -534,6 +534,30 @@ export class ReportsService {
 		}
 	}
 
+	async generatePaymentReportExcel(eventId: number): Promise<Buffer> {
+		const rows = await this.getPaymentReport(eventId)
+
+		const workbook = createWorkbook()
+		const worksheet = workbook.addWorksheet("Payment Report")
+
+		const fixedColumns = [
+			{ header: "User Name", key: "userName", width: 20 },
+			{ header: "Payment ID", key: "paymentId", width: 12 },
+			{ header: "Payment Code", key: "paymentCode", width: 15 },
+			{ header: "Payment Date", key: "paymentDate", width: 15 },
+			{ header: "Confirm Date", key: "confirmDate", width: 15 },
+			{ header: "Amount Paid", key: "amountPaid", width: 12 },
+			{ header: "Transaction Fee", key: "transactionFee", width: 15 },
+			{ header: "Amount Refunded", key: "amountRefunded", width: 15 },
+		]
+
+		addFixedColumns(worksheet, fixedColumns)
+		styleHeaderRow(worksheet, 1)
+		addDataRows(worksheet, 2, rows as unknown as Record<string, unknown>[], fixedColumns)
+
+		return generateBuffer(workbook)
+	}
+
 	async generateFinanceReportExcel(eventId: number): Promise<Buffer> {
 		const report = await this.getFinanceReport(eventId)
 
