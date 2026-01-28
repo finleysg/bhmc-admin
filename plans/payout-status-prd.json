@@ -127,7 +127,7 @@
 				"Uses PageLayout and auth pattern consistent with other sub-menu pages",
 				"pnpm build succeeds"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.3",
