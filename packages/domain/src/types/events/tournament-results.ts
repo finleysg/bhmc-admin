@@ -14,3 +14,11 @@ export interface TournamentResults {
 	payoutTo?: PayoutValue
 	player?: Player
 }
+
+export interface PayoutSummary {
+	playerId: number
+	playerName: string
+	playerEmail: string
+	totalAmount: number
+	payoutType: string
+}
