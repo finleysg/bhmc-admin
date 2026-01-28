@@ -1,28 +1,58 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { useRouter } from "next/navigation"
 
-import { parseLocalDate } from "@repo/domain/functions"
+import { getEventTypeName, parseLocalDate } from "@repo/domain/functions"
+import { EventTypeChoices } from "@repo/domain/types"
 import { ClubEvent } from "@repo/domain/types"
 
 import { useAuth } from "../../lib/auth-context"
-import CalendarCard from "../components/calendar-card"
-import ResultsCard from "../components/results-card"
 import { LoadingSpinner } from "../components/ui/loading-spinner"
+
+const eventTypeFilter = new Set<string>([
+	EventTypeChoices.WEEKNIGHT,
+	EventTypeChoices.WEEKEND_MAJOR,
+	EventTypeChoices.OPEN,
+	EventTypeChoices.OTHER,
+])
+
+const eventTypeColor: Record<string, string> = {
+	[EventTypeChoices.WEEKNIGHT]: "text-success",
+	[EventTypeChoices.WEEKEND_MAJOR]: "text-info",
+	[EventTypeChoices.OPEN]: "text-secondary",
+	[EventTypeChoices.OTHER]: "text-error",
+}
+
+function seasonOptions() {
+	const currentYear = new Date().getFullYear()
+	const years: number[] = []
+	for (let y = currentYear + 1; y >= 2020; y--) {
+		years.push(y)
+	}
+	return years
+}
+
+function formatDate(dateString: string) {
+	const date = parseLocalDate(dateString)
+	return date.toLocaleDateString("en-US", {
+		weekday: "short",
+		month: "short",
+		day: "numeric",
+	})
+}
 
 export default function EventsPage() {
 	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const router = useRouter()
 
-	const [selectedDate, setSelectedDate] = useState<Date>(new Date())
 	const [currentSeason, setCurrentSeason] = useState<number>(new Date().getFullYear())
 	const [seasonEvents, setSeasonEvents] = useState<ClubEvent[]>([])
 	const [isLoadingSeason, setIsLoadingSeason] = useState(false)
-	const [selectedEvent, setSelectedEvent] = useState<ClubEvent | null>(null)
+	const upcomingRef = useRef<HTMLTableRowElement>(null)
+	const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-	// Fetch events when season changes
 	useEffect(() => {
 		if (signedIn) {
 			void fetchSeasonEvents(currentSeason)
@@ -46,35 +76,28 @@ export default function EventsPage() {
 		}
 	}
 
-	// Filter events for selected date
-	const eventsForDate = useMemo(() => {
-		const dateString = selectedDate.toISOString().split("T")[0]
-		return seasonEvents.filter((e) => e.startDate === dateString)
-	}, [selectedDate, seasonEvents])
-
-	// Compute dates that have events for calendar highlighting
-	const eventDates = useMemo(() => {
-		return seasonEvents.filter((e) => e.startDate).map((e) => parseLocalDate(e.startDate))
+	const filteredEvents = useMemo(() => {
+		return seasonEvents
+			.filter((e) => eventTypeFilter.has(e.eventType))
+			.sort((a, b) => a.startDate.localeCompare(b.startDate))
 	}, [seasonEvents])
 
-	const handleDateSelect = (date: Date | undefined) => {
-		if (date) {
-			setSelectedDate(date)
-			setSelectedEvent(null)
-		}
-	}
+	const upcomingIndex = useMemo(() => {
+		const today = new Date().toISOString().split("T")[0]
+		return filteredEvents.findIndex((e) => e.startDate >= today)
+	}, [filteredEvents])
 
-	const handleMonthChange = (date: Date) => {
-		const newSeason = date.getFullYear()
-		if (newSeason !== currentSeason) {
-			setCurrentSeason(newSeason)
+	useEffect(() => {
+		if (
+			!isLoadingSeason &&
+			filteredEvents.length > 0 &&
+			upcomingRef.current &&
+			scrollContainerRef.current
+		) {
+			scrollContainerRef.current.scrollTop =
+				upcomingRef.current.offsetTop - scrollContainerRef.current.offsetTop
 		}
-	}
-
-	const handleEventSelect = (event: ClubEvent) => {
-		setSelectedEvent(event)
-		router.push(`/events/${event.id}`)
-	}
+	}, [isLoadingSeason, filteredEvents])
 
 	if (isPending) {
 		return (
@@ -85,27 +108,69 @@ export default function EventsPage() {
 	}
 
 	if (!signedIn && !isPending) {
-		return null // Redirecting
+		return null
 	}
 
 	return (
 		<main className="min-h-screen p-0 md:p-8 bg-base-200">
-			<div className="max-w-6xl mx-auto">
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-					<CalendarCard
-						selectedDate={selectedDate}
-						onDateSelect={handleDateSelect}
-						eventDates={eventDates}
-						onMonthChange={handleMonthChange}
-					/>
+			<div className="max-w-3xl mx-auto">
+				<h2 className="text-xl text-primary mb-3">Select an Event</h2>
+				<div className="card bg-base-100 shadow-xl">
+					<div className="card-body">
+						<div className="flex items-center justify-between mb-4">
+							<h2 className="card-title">Events</h2>
+							<select
+								className="select select-bordered select-sm w-auto"
+								value={currentSeason}
+								onChange={(e) => setCurrentSeason(Number(e.target.value))}
+							>
+								{seasonOptions().map((y) => (
+									<option key={y} value={y}>
+										{y}
+									</option>
+								))}
+							</select>
+						</div>
 
-					<ResultsCard
-						isLoading={isLoadingSeason}
-						searchResults={eventsForDate}
-						selectedEvent={selectedEvent}
-						onEventSelect={handleEventSelect}
-						selectedDate={selectedDate}
-					/>
+						{isLoadingSeason ? (
+							<div className="flex items-center gap-3 py-8 justify-center">
+								<span className="loading loading-spinner loading-md"></span>
+								<p className="font-medium">Loading events...</p>
+							</div>
+						) : filteredEvents.length === 0 ? (
+							<p className="text-center py-8 text-base-content/60">No events found</p>
+						) : (
+							<div ref={scrollContainerRef} className="overflow-y-auto max-h-[70vh]">
+								<table className="table table-sm">
+									<thead>
+										<tr>
+											<th>Date</th>
+											<th>Event</th>
+											<th>Type</th>
+										</tr>
+									</thead>
+									<tbody>
+										{filteredEvents.map((event, idx) => (
+											<tr
+												key={event.id}
+												ref={idx === upcomingIndex ? upcomingRef : undefined}
+												className="hover cursor-pointer"
+												onClick={() => router.push(`/events/${event.id}`)}
+											>
+												<td className="whitespace-nowrap">{formatDate(event.startDate)}</td>
+												<td>{event.name}</td>
+												<td
+													className={`whitespace-nowrap font-medium ${eventTypeColor[event.eventType] ?? ""}`}
+												>
+													{getEventTypeName(event.eventType)}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						)}
+					</div>
 				</div>
 			</div>
 		</main>

@@ -39,7 +39,6 @@
 		"@tanstack/react-table": "^8.21.3",
 		"date-fns": "^4.1.0",
 		"framer-motion": "^12.23.24",
-		"react-day-picker": "^9.11.1",
 		"react-dropzone": "^14.3.8",
 		"usehooks-ts": "^3.1.1"
 	}

@@ -31,7 +31,8 @@
 			"WebSearch",
 			"WebFetch(domain:docs.docker.com)",
 			"Bash(lsof:*)",
-			"Bash(pgrep:*)"
+			"Bash(pgrep:*)",
+			"WebFetch(domain:docs.stripe.com)"
 		]
 	},
 	"hooks": {
