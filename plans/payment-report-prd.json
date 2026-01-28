@@ -73,7 +73,7 @@
 				"Uses fetchWithAuth pattern consistent with existing report proxy routes",
 				"pnpm build succeeds"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "3.2",
@@ -85,7 +85,7 @@
 				"Uses fetchWithAuth binary pattern consistent with existing Excel proxy routes",
 				"pnpm build succeeds"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.1",
