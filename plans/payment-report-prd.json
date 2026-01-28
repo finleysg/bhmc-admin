@@ -28,7 +28,7 @@
 			"steps_to_verify": [
 				"Method getPaymentReport(eventId) exists on ReportsService",
 				"Queries payment table where event_id = eventId AND confirmed = 1, joined to auth_user for userName",
-				"For each payment, fetches registrationFee joined to registrationSlot → player and eventFee → feeType for details",
+				"For each payment, fetches registrationFee joined to registrationSlot \u2192 player and eventFee \u2192 feeType for details",
 				"For each payment, fetches refund where confirmed = 1 for refunds array",
 				"Computes amountRefunded as sum of confirmed refund amounts",
 				"Returns PaymentReportRow[]",
@@ -115,7 +115,7 @@
 				"Mobile column visibility: hide Payment Code, Confirm Date, Transaction Fee",
 				"pnpm build succeeds"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.3",
