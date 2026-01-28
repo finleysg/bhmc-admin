@@ -9,6 +9,9 @@ import {
 	EventResultsSection,
 	FinanceReportSummary,
 	Hole,
+	PaymentReportDetail,
+	PaymentReportRefund,
+	PaymentReportRow,
 	PointsReportRow,
 	TournamentFormatChoices,
 	TournamentFormatValue,
@@ -17,6 +20,7 @@ import {
 
 import { CoursesService, toHole } from "../courses"
 import {
+	authUser,
 	DrizzleService,
 	eventFee,
 	feeType,
@@ -24,6 +28,7 @@ import {
 	player,
 	refund,
 	registrationFee,
+	registrationSlot,
 	tournament,
 	tournamentPoints,
 	tournamentResult,
@@ -84,6 +89,90 @@ export class ReportsService {
 		if (!exists) {
 			throw new Error(`Event with id ${eventId} does not exist.`)
 		}
+	}
+
+	async getPaymentReport(eventId: number): Promise<PaymentReportRow[]> {
+		await this.validateEvent(eventId)
+
+		// Get confirmed payments for the event with user name
+		const payments = await this.drizzle.db
+			.select({
+				id: payment.id,
+				paymentCode: payment.paymentCode,
+				paymentDate: payment.paymentDate,
+				confirmDate: payment.confirmDate,
+				paymentAmount: payment.paymentAmount,
+				transactionFee: payment.transactionFee,
+				firstName: authUser.firstName,
+				lastName: authUser.lastName,
+			})
+			.from(payment)
+			.innerJoin(authUser, eq(payment.userId, authUser.id))
+			.where(and(eq(payment.eventId, eventId), eq(payment.confirmed, 1)))
+
+		const rows: PaymentReportRow[] = await Promise.all(
+			payments.map(async (p) => {
+				// Fetch registration fee details with player and fee type
+				const feeRows = await this.drizzle.db
+					.select({
+						firstName: player.firstName,
+						lastName: player.lastName,
+						feeTypeName: feeType.name,
+						amount: registrationFee.amount,
+						isPaid: registrationFee.isPaid,
+					})
+					.from(registrationFee)
+					.innerJoin(eventFee, eq(registrationFee.eventFeeId, eventFee.id))
+					.innerJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
+					.leftJoin(registrationSlot, eq(registrationFee.registrationSlotId, registrationSlot.id))
+					.leftJoin(player, eq(registrationSlot.playerId, player.id))
+					.where(eq(registrationFee.paymentId, p.id))
+
+				const details: PaymentReportDetail[] = feeRows.map((f) => ({
+					player: f.firstName && f.lastName ? `${f.firstName} ${f.lastName}` : "",
+					eventFee: f.feeTypeName,
+					amount: parseFloat(f.amount.toString()),
+					isPaid: f.isPaid === 1,
+				}))
+
+				// Fetch confirmed refunds
+				const refundRows = await this.drizzle.db
+					.select({
+						refundCode: refund.refundCode,
+						refundAmount: refund.refundAmount,
+						refundDate: refund.refundDate,
+						issuerFirstName: authUser.firstName,
+						issuerLastName: authUser.lastName,
+					})
+					.from(refund)
+					.innerJoin(authUser, eq(refund.issuerId, authUser.id))
+					.where(and(eq(refund.paymentId, p.id), eq(refund.confirmed, 1)))
+
+				const refunds: PaymentReportRefund[] = refundRows.map((r) => ({
+					refundCode: r.refundCode,
+					refundAmount: parseFloat(r.refundAmount.toString()),
+					refundDate: r.refundDate || "",
+					issuedBy: `${r.issuerFirstName} ${r.issuerLastName}`,
+				}))
+
+				const amountRefunded = refunds.reduce((sum, r) => sum + r.refundAmount, 0)
+
+				return {
+					userName: `${p.firstName} ${p.lastName}`,
+					paymentId: p.id,
+					paymentCode: p.paymentCode,
+					paymentDate: p.paymentDate || "",
+					confirmDate: p.confirmDate || "",
+					amountPaid: parseFloat(p.paymentAmount.toString()),
+					transactionFee: parseFloat(p.transactionFee.toString()),
+					amountRefunded,
+					details,
+					refunds,
+				}
+			}),
+		)
+
+		return rows
 	}
 
 	async getMembershipReport(season: number): Promise<MembershipReport> {
