@@ -16,7 +16,7 @@ export function ResultEventCard({ summary }: ResultEventCardProps) {
 	const renderPayoutBadge = (status: string) => {
 		const badgeMap: Record<string, { text: string; className: string }> = {
 			paid: { text: "Paid", className: "badge bg-success ms-2" },
-			confirmed: { text: "Confirmed", className: "badge bg-info ms-2" },
+			confirmed: { text: "Confirmed", className: "badge bg-primary ms-2" },
 			pending: { text: "Pending", className: "badge fst-italic text-muted ms-2" },
 		}
 

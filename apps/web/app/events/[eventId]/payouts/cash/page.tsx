@@ -122,17 +122,25 @@ export default function CashPayoutPage() {
 					<table className="table table-zebra table-xs">
 						<thead>
 							<tr>
+								<th className="text-left text-xs">#</th>
 								<th className="text-left text-xs">Player Name</th>
 								<th className="text-left text-xs">Total Amount</th>
 							</tr>
 						</thead>
 						<tbody>
-							{payouts.map((payout) => (
-								<tr key={payout.playerId}>
-									<td>{payout.playerName}</td>
-									<td>{formatCurrency(payout.totalAmount)}</td>
-								</tr>
-							))}
+							{[...payouts]
+								.sort((a, b) => {
+									const lastA = a.playerName.split(" ").pop() ?? ""
+									const lastB = b.playerName.split(" ").pop() ?? ""
+									return lastA.localeCompare(lastB)
+								})
+								.map((payout, index) => (
+									<tr key={payout.playerId}>
+										<td>{index + 1}</td>
+										<td>{payout.playerName}</td>
+										<td>{formatCurrency(payout.totalAmount)}</td>
+									</tr>
+								))}
 						</tbody>
 					</table>
 				</div>
