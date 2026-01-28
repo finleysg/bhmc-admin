@@ -159,7 +159,7 @@
 				"Navigation displays correctly on payouts, payouts/credit, and payouts/cash pages",
 				"pnpm build succeeds"
 			],
-			"passes": false
+			"passes": true
 		}
 	]
 }

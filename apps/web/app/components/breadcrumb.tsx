@@ -44,6 +44,12 @@ function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
 					label = "Reports"
 				} else if (segment === "players") {
 					label = "Players"
+				} else if (segment === "payouts") {
+					label = "Payouts"
+				} else if (segment === "credit") {
+					label = "Post Credit"
+				} else if (segment === "cash") {
+					label = "Post Cash"
 				} else if (segment === "membership") {
 					label = "Membership Report"
 				} else if (segment === "documents") {

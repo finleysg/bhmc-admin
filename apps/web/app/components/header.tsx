@@ -15,6 +15,7 @@ function getTitle(pathname: string): string {
 			if (subpage === "golf-genius") return "Golf Genius Integration"
 			if (subpage === "reports") return "Event Reports"
 			if (subpage === "players") return "Player Management"
+			if (subpage === "payouts") return "Payout Status"
 		}
 		return "Event Administration"
 	}
