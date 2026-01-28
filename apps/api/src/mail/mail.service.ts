@@ -13,6 +13,7 @@ import {
 	ClubEvent,
 	CompletePayment,
 	DjangoUser,
+	PayoutSummary,
 	Player,
 	CompleteRegistration,
 	EventTypeChoices,
@@ -24,6 +25,7 @@ import type { ReactElement } from "react"
 import {
 	AdminRegistrationNotificationEmail,
 	MatchPlayEmail,
+	PayoutNotificationEmail,
 	PlayerReplacementNotificationEmail,
 	PlayerSwapNotificationEmail,
 	RefundNotificationEmail,
@@ -500,5 +502,31 @@ export class MailService {
 				newStartInfo,
 			}),
 		})
+	}
+
+	async sendPayoutNotification(
+		eventName: string,
+		eventDate: string,
+		payouts: PayoutSummary[],
+	): Promise<void> {
+		for (const payout of payouts) {
+			try {
+				await this.sendEmail({
+					to: payout.playerEmail,
+					subject: `Payout Notification: ${eventName}`,
+					template: PayoutNotificationEmail({
+						recipientName: payout.playerName,
+						eventName,
+						eventDate,
+						payoutType: payout.payoutType,
+						totalAmount: formatCurrency(payout.totalAmount),
+					}),
+				})
+			} catch (error) {
+				this.logger.error(
+					`Failed to send payout notification to ${payout.playerEmail}: ${error instanceof Error ? error.message : "Unknown error"}`,
+				)
+			}
+		}
 	}
 }

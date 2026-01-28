@@ -76,10 +76,13 @@ export async function fetchWithAuth({
 
 		if (!response.ok) {
 			const errorText = await response.text()
-			return NextResponse.json(
-				{ error: `Backend API error: ${errorText}` },
-				{ status: response.status },
-			)
+			let errorBody: unknown
+			try {
+				errorBody = JSON.parse(errorText)
+			} catch {
+				errorBody = { error: errorText }
+			}
+			return NextResponse.json(errorBody, { status: response.status })
 		}
 
 		if (responseType === "binary") {
@@ -195,10 +198,13 @@ export async function fetchFormDataWithAuth({
 
 		if (!response.ok) {
 			const errorText = await response.text()
-			return NextResponse.json(
-				{ error: `Backend API error: ${errorText}` },
-				{ status: response.status },
-			)
+			let errorBody: unknown
+			try {
+				errorBody = JSON.parse(errorText)
+			} catch {
+				errorBody = { error: errorText }
+			}
+			return NextResponse.json(errorBody, { status: response.status })
 		}
 
 		const data: unknown = await response.json()

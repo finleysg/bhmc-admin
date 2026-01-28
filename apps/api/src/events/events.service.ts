@@ -1,10 +1,11 @@
-import { and, eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, sql } from "drizzle-orm"
 
 import { BadRequestException, Inject, Injectable, Logger } from "@nestjs/common"
 import { validateClubEvent } from "@repo/domain/functions"
 import {
 	ClubEvent,
 	EventFeeWithType,
+	PayoutSummary,
 	PreparedTournamentPoints,
 	PreparedTournamentResult,
 	TournamentResults,
@@ -12,7 +13,7 @@ import {
 } from "@repo/domain/types"
 
 import { CoursesService } from "../courses"
-import { DrizzleService, player, toDbString, tournamentResult } from "../database"
+import { DrizzleService, player, toDbString, tournament, tournamentResult } from "../database"
 import {
 	mapPreparedPointsToTournamentPointsInsert,
 	mapPreparedResultsToTournamentResultInsert,
@@ -135,6 +136,79 @@ export class EventsService {
 			.where(inArray(tournamentResult.tournamentId, tournamentIds))
 
 		return { success: true }
+	}
+
+	async getPayoutSummary(eventId: number, payoutType: string): Promise<PayoutSummary[]> {
+		const rows = await this.drizzle.db
+			.select({
+				playerId: player.id,
+				playerName: sql<string>`concat(${player.firstName}, ' ', ${player.lastName})`.as(
+					"player_name",
+				),
+				playerEmail: player.email,
+				totalAmount: sql<number>`sum(${tournamentResult.amount})`.as("total_amount"),
+			})
+			.from(tournamentResult)
+			.innerJoin(tournament, eq(tournamentResult.tournamentId, tournament.id))
+			.innerJoin(player, eq(tournamentResult.playerId, player.id))
+			.where(
+				and(
+					eq(tournament.eventId, eventId),
+					eq(tournamentResult.payoutType, payoutType),
+					sql`${tournamentResult.amount} > 0`,
+				),
+			)
+			.groupBy(player.id, player.firstName, player.lastName, player.email)
+
+		return rows.map((r) => ({
+			playerId: r.playerId,
+			playerName: r.playerName,
+			playerEmail: r.playerEmail,
+			totalAmount: parseFloat(r.totalAmount.toString()),
+			payoutType,
+		}))
+	}
+
+	async markPayoutsPaid(eventId: number, payoutType: string): Promise<PayoutSummary[]> {
+		const tournaments = await this.repository.findTournamentsByEventId(eventId)
+		if (tournaments.length === 0) {
+			throw new BadRequestException(`No tournaments found for event ${eventId}`)
+		}
+
+		const tournamentIds = tournaments.map((t) => t.id)
+
+		const matchingResults = await this.drizzle.db
+			.select({
+				id: tournamentResult.id,
+				payoutStatus: tournamentResult.payoutStatus,
+			})
+			.from(tournamentResult)
+			.where(
+				and(
+					inArray(tournamentResult.tournamentId, tournamentIds),
+					eq(tournamentResult.payoutType, payoutType),
+					sql`${tournamentResult.amount} > 0`,
+				),
+			)
+
+		if (matchingResults.length === 0) {
+			throw new BadRequestException(`No ${payoutType} results found for event ${eventId}`)
+		}
+
+		const notConfirmed = matchingResults.filter((r) => r.payoutStatus !== "Confirmed")
+		if (notConfirmed.length > 0) {
+			throw new BadRequestException(
+				`Cannot mark payouts as paid: ${notConfirmed.length} result(s) are not in Confirmed status`,
+			)
+		}
+
+		const resultIds = matchingResults.map((r) => r.id)
+		await this.drizzle.db
+			.update(tournamentResult)
+			.set({ payoutStatus: "Paid" })
+			.where(inArray(tournamentResult.id, resultIds))
+
+		return this.getPayoutSummary(eventId, payoutType)
 	}
 
 	async deleteTournamentPoints(tournamentId: number) {

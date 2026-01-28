@@ -1,4 +1,5 @@
 import {
+	Body,
 	ClassSerializerInterceptor,
 	Controller,
 	Get,
@@ -6,12 +7,14 @@ import {
 	Logger,
 	Param,
 	ParseIntPipe,
+	Post,
 	Query,
 	UseInterceptors,
 } from "@nestjs/common"
-import { ClubEvent } from "@repo/domain/types"
+import { ClubEvent, PayoutSummary } from "@repo/domain/types"
 
 import { Admin } from "../auth"
+import { MailService } from "../mail/mail.service"
 
 import { EventsRepository } from "./events.repository"
 import { toEvent } from "./mappers"
@@ -25,6 +28,7 @@ export class EventsController {
 	constructor(
 		@Inject(EventsRepository) private readonly events: EventsRepository,
 		@Inject(EventsService) private readonly service: EventsService,
+		@Inject(MailService) private readonly mail: MailService,
 	) {}
 
 	@Get()
@@ -48,6 +52,39 @@ export class EventsController {
 	): Promise<{ eventId: number }> {
 		const eventId = await this.service.getSeasonRegistrationEventId(season)
 		return { eventId }
+	}
+
+	@Get(":eventId/payouts")
+	async getPayoutSummary(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Query("payoutType") payoutType: string,
+	): Promise<PayoutSummary[]> {
+		return this.service.getPayoutSummary(eventId, payoutType)
+	}
+
+	@Post(":eventId/payouts/mark-paid")
+	async markPayoutsPaid(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Body("payoutType") payoutType: string,
+	): Promise<PayoutSummary[]> {
+		const payouts = await this.service.markPayoutsPaid(eventId, payoutType)
+
+		const event = await this.service.getEventById(eventId)
+		const eventDate = new Date(event.startDate).toLocaleDateString("en-US", {
+			weekday: "long",
+			month: "long",
+			day: "numeric",
+			year: "numeric",
+		})
+
+		// Fire-and-forget: send payout notifications without blocking the response
+		void this.mail.sendPayoutNotification(event.name, eventDate, payouts).catch((error) => {
+			this.logger.error(
+				`Failed to send payout notifications for event ${eventId}: ${error instanceof Error ? error.message : "Unknown error"}`,
+			)
+		})
+
+		return payouts
 	}
 
 	@UseInterceptors(ClassSerializerInterceptor)

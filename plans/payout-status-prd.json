@@ -1,0 +1,165 @@
+{
+	"title": "Add Payout Status Feature to Event Menu",
+	"github_issue": 83,
+	"github_issue_url": "https://github.com/finleysg/bhmc-admin/issues/83",
+	"tasks": [
+		{
+			"id": "1.1",
+			"category": "domain",
+			"description": "Add PayoutSummary type to tournament-results.ts",
+			"files": ["packages/domain/src/types/events/tournament-results.ts"],
+			"steps_to_verify": [
+				"PayoutSummary type exists with fields: playerId (number), playerName (string), playerEmail (string), totalAmount (number), payoutType (string)",
+				"Type is exported from the domain package barrel exports",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.1",
+			"category": "api",
+			"description": "Add getPayoutSummary method to events service - query tournament results filtered by payoutType, grouped by player, summing amounts",
+			"files": ["apps/api/src/events/events.service.ts"],
+			"steps_to_verify": [
+				"Method getPayoutSummary(eventId, payoutType) exists on EventsService",
+				"Queries tournament results joined with player, filtered by payoutType and event tournaments",
+				"Groups by player and sums amounts into PayoutSummary[]",
+				"Returns empty array when no results match",
+				"pnpm --filter api test passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.2",
+			"category": "api",
+			"description": "Add markPayoutsPaid method to events service - validate all matching results are Confirmed, update to Paid",
+			"files": ["apps/api/src/events/events.service.ts"],
+			"steps_to_verify": [
+				"Method markPayoutsPaid(eventId, payoutType) exists on EventsService",
+				"Throws BadRequestException if any matching results have payoutStatus != Confirmed",
+				"Updates all matching results payoutStatus to Paid",
+				"Returns PayoutSummary[] for the updated records",
+				"pnpm --filter api test passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.3",
+			"category": "api",
+			"description": "Add GET and POST payout endpoints to events controller",
+			"files": ["apps/api/src/events/events.controller.ts"],
+			"steps_to_verify": [
+				"GET /events/:eventId/payouts?payoutType=Credit|Cash returns PayoutSummary[]",
+				"POST /events/:eventId/payouts/mark-paid with body { payoutType } calls markPayoutsPaid",
+				"Both endpoints require @Admin() auth",
+				"pnpm --filter api test passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.4",
+			"category": "api",
+			"description": "Create payout notification email template",
+			"files": [
+				"apps/api/src/mail/templates/payout-notification-email.tsx",
+				"apps/api/src/mail/templates/index.ts"
+			],
+			"steps_to_verify": [
+				"Template file exists with props: recipientName, eventName, eventDate, payoutType, totalAmount",
+				"Credit message: 'Your pro shop credit of $X has been posted to your account'",
+				"Cash message: 'Your skins winnings of $X are ready for pickup at the pro shop'",
+				"Template exported from index.ts barrel",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.5",
+			"category": "api",
+			"description": "Add sendPayoutNotification to mail service and wire into controller POST endpoint (fire-and-forget with error logging)",
+			"files": ["apps/api/src/mail/mail.service.ts", "apps/api/src/events/events.controller.ts"],
+			"steps_to_verify": [
+				"sendPayoutNotification method exists on MailService",
+				"POST mark-paid endpoint sends emails to each winner after successful update",
+				"Email sending is fire-and-forget (does not block response)",
+				"Errors in email sending are logged, not thrown",
+				"docker compose up -d --build, trigger mark-paid, check mailpit at localhost:8025 for emails"
+			],
+			"passes": true
+		},
+		{
+			"id": "3.1",
+			"category": "web-api",
+			"description": "Add Next.js API proxy routes for payouts GET and mark-paid POST",
+			"files": [
+				"apps/web/app/api/events/[id]/payouts/route.ts",
+				"apps/web/app/api/events/[id]/payouts/mark-paid/route.ts"
+			],
+			"steps_to_verify": [
+				"GET /api/events/[id]/payouts proxies to backend /events/{id}/payouts with auth",
+				"POST /api/events/[id]/payouts/mark-paid proxies to backend /events/{id}/payouts/mark-paid with auth",
+				"Both use fetchWithAuth pattern consistent with existing proxy routes",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.1",
+			"category": "web-ui",
+			"description": "Add Payout Status LinkCard to event hub page as 6th card",
+			"files": ["apps/web/app/events/[eventId]/page.tsx"],
+			"steps_to_verify": [
+				"6th LinkCard appears with title 'Payout Status', icon, and href to /events/{eventId}/payouts",
+				"Card renders in the existing grid layout",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.2",
+			"category": "web-ui",
+			"description": "Create payouts sub-menu page with Post Credit and Post Cash LinkCards",
+			"files": ["apps/web/app/events/[eventId]/payouts/page.tsx"],
+			"steps_to_verify": [
+				"Page renders two LinkCards: 'Post Credit' and 'Post Cash'",
+				"Post Credit links to /events/{eventId}/payouts/credit",
+				"Post Cash links to /events/{eventId}/payouts/cash",
+				"Uses PageLayout and auth pattern consistent with other sub-menu pages",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.3",
+			"category": "web-ui",
+			"description": "Create credit and cash payout action pages with player summary table and Mark Paid button",
+			"files": [
+				"apps/web/app/events/[eventId]/payouts/credit/page.tsx",
+				"apps/web/app/events/[eventId]/payouts/cash/page.tsx"
+			],
+			"steps_to_verify": [
+				"Each page fetches GET /api/events/{eventId}/payouts?payoutType=Credit|Cash",
+				"Displays table with Player Name and Total Amount columns",
+				"Mark Paid button above table POSTs to /api/events/{eventId}/payouts/mark-paid",
+				"Error displayed if results not confirmed (BadRequest response)",
+				"Success message shown and button disabled after successful mark-paid",
+				"Empty state shown when no results",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.4",
+			"category": "web-ui",
+			"description": "Update header and breadcrumb components for payouts navigation",
+			"files": ["apps/web/app/components/header.tsx", "apps/web/app/components/breadcrumb.tsx"],
+			"steps_to_verify": [
+				"Header shows 'Payout Status' when subpage is 'payouts'",
+				"Breadcrumb renders 'Payouts' label for payouts segment",
+				"Navigation displays correctly on payouts, payouts/credit, and payouts/cash pages",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		}
+	]
+}
