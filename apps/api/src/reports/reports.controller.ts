@@ -96,4 +96,24 @@ export class ReportsController {
 		res.setHeader("Content-Disposition", `attachment; filename="event-results-${eventId}.xlsx"`)
 		res.send(buffer)
 	}
+
+	@Get("events/:eventId/payments")
+	async getPaymentReport(@Param("eventId", ParseIntPipe) eventId: number) {
+		return this.reports.getPaymentReport(eventId)
+	}
+
+	@Get("events/:eventId/payments/excel")
+	async getPaymentReportExcel(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Res() res: Response,
+	) {
+		const buffer = await this.reports.generatePaymentReportExcel(eventId)
+
+		res.setHeader(
+			"Content-Type",
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		)
+		res.setHeader("Content-Disposition", `attachment; filename="payment-report-${eventId}.xlsx"`)
+		res.send(buffer)
+	}
 }
