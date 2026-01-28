@@ -71,7 +71,7 @@
 				"Template exported from index.ts barrel",
 				"pnpm build succeeds"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "2.5",
