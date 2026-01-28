@@ -64,6 +64,7 @@ const PaymentDetailsSection = ({ row }: { row: Row<PaymentReportRow> }) => {
 								<th>Refund Code</th>
 								<th>Refund Amount</th>
 								<th>Refund Date</th>
+								<th>Status</th>
 								<th>Issued By</th>
 							</tr>
 						</thead>
@@ -73,6 +74,13 @@ const PaymentDetailsSection = ({ row }: { row: Row<PaymentReportRow> }) => {
 									<td>{r.refundCode}</td>
 									<td>{formatCurrency(r.refundAmount)}</td>
 									<td>{r.refundDate}</td>
+									<td>
+										<span
+											className={`badge badge-sm ${r.confirmed ? "badge-success" : "badge-warning"}`}
+										>
+											{r.confirmed ? "Confirmed" : "Pending"}
+										</span>
+									</td>
 									<td>{r.issuedBy}</td>
 								</tr>
 							))}
@@ -134,7 +142,10 @@ const PaymentsTable = ({ data }: { data: PaymentReportRow[] | null }) => {
 			accessorKey: "amountRefunded",
 			header: "Amount Refunded",
 			enableSorting: true,
-			cell: ({ getValue }) => formatCurrency(getValue<number>()),
+			cell: ({ getValue }) => {
+				const val = getValue<number>()
+				return <span className={val > 0 ? "text-error" : ""}>{formatCurrency(val)}</span>
+			},
 		},
 	]
 

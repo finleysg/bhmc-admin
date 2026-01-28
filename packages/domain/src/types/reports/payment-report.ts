@@ -9,6 +9,7 @@ export interface PaymentReportRefund {
 	refundCode: string
 	refundAmount: number
 	refundDate: string
+	confirmed: boolean
 	issuedBy: string
 }
 

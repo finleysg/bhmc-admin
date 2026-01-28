@@ -135,23 +135,25 @@ export class ReportsService {
 					isPaid: f.isPaid === 1,
 				}))
 
-				// Fetch confirmed refunds
+				// Fetch refunds (confirmed and unconfirmed)
 				const refundRows = await this.drizzle.db
 					.select({
 						refundCode: refund.refundCode,
 						refundAmount: refund.refundAmount,
 						refundDate: refund.refundDate,
+						confirmed: refund.confirmed,
 						issuerFirstName: authUser.firstName,
 						issuerLastName: authUser.lastName,
 					})
 					.from(refund)
 					.innerJoin(authUser, eq(refund.issuerId, authUser.id))
-					.where(and(eq(refund.paymentId, p.id), eq(refund.confirmed, 1)))
+					.where(eq(refund.paymentId, p.id))
 
 				const refunds: PaymentReportRefund[] = refundRows.map((r) => ({
 					refundCode: r.refundCode,
 					refundAmount: parseFloat(r.refundAmount.toString()),
 					refundDate: r.refundDate || "",
+					confirmed: r.confirmed === 1,
 					issuedBy: `${r.issuerFirstName} ${r.issuerLastName}`,
 				}))
 
