@@ -146,7 +146,7 @@
 				"Empty state shown when no results",
 				"pnpm build succeeds"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.4",
