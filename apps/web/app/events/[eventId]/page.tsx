@@ -62,6 +62,14 @@ export default function EventHubPage() {
 					disabled={false}
 					icon={"✅"}
 				/>
+
+				<LinkCard
+					title="Payout Status"
+					description="View and manage event payouts."
+					href={`/events/${eventId}/payouts`}
+					disabled={false}
+					icon={"💰"}
+				/>
 			</div>
 		</PageLayout>
 	)

@@ -113,7 +113,7 @@
 				"Card renders in the existing grid layout",
 				"pnpm build succeeds"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.2",
