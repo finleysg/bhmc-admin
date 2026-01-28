@@ -1,135 +1,79 @@
 "use client"
 
-import { useState } from "react"
-
 import { useParams } from "next/navigation"
 
 import { ReportPage } from "@/components/report-page"
 import { formatCurrency } from "@/lib/use-report"
 import { FinanceReportSummary } from "@repo/domain/types"
-import {
-	ColumnDef,
-	flexRender,
-	getCoreRowModel,
-	getSortedRowModel,
-	SortingState,
-	useReactTable,
-} from "@tanstack/react-table"
 
-const FinanceTable = ({ data }: { data: FinanceReportSummary | null }) => {
-	const [sorting, setSorting] = useState<SortingState>([])
-
-	// Prepare table data from the finance report
-	const tableData = data
-		? [
-				{
-					bucket: "Credit",
-					grossCollected: data.creditCollected,
-					refunds: data.creditRefunds,
-					netInflow: data.creditNet,
-					totalPayouts: data.creditTotalPayouts,
-					netProfit: data.creditNet - data.creditTotalPayouts,
-				},
-				{
-					bucket: "Cash",
-					grossCollected: data.cashCollected,
-					refunds: data.cashRefunds,
-					netInflow: data.cashNet,
-					totalPayouts: data.cashTotalPayouts,
-					netProfit: data.cashNet - data.cashTotalPayouts,
-				},
-				{
-					bucket: "Passthru",
-					grossCollected: data.passthruCollected,
-					refunds: data.passthruRefunds,
-					netInflow: data.passthruNet,
-					totalPayouts: 0,
-					netProfit: data.passthruNet - 0,
-				},
-			]
-		: []
-
-	// Define fixed columns
-	const fixedColumns: ColumnDef<Record<string, unknown>>[] = [
-		{
-			accessorKey: "bucket",
-			header: "Bucket",
-			enableSorting: true,
-		},
-		{
-			accessorKey: "grossCollected",
-			header: "Gross Collected",
-			enableSorting: true,
-			cell: ({ getValue }) => formatCurrency(getValue() as number),
-		},
-		{
-			accessorKey: "refunds",
-			header: "Refunds",
-			enableSorting: true,
-			cell: ({ getValue }) => formatCurrency(getValue() as number),
-		},
-		{
-			accessorKey: "netInflow",
-			header: "Net Inflow",
-			enableSorting: true,
-			cell: ({ getValue }) => formatCurrency(getValue() as number),
-		},
-		{
-			accessorKey: "totalPayouts",
-			header: "Total Payouts",
-			enableSorting: true,
-			cell: ({ getValue }) => formatCurrency(getValue() as number),
-		},
-		{
-			accessorKey: "netProfit",
-			header: "Net Profit",
-			enableSorting: true,
-			cell: ({ getValue }) => formatCurrency(getValue() as number),
-		},
-	]
-
-	const allColumns = fixedColumns
-
-	// Create table instance
-	const table = useReactTable({
-		data: tableData,
-		columns: allColumns,
-		state: {
-			sorting,
-		},
-		onSortingChange: setSorting,
-		getCoreRowModel: getCoreRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-	})
+const FinanceSummary = ({ data }: { data: FinanceReportSummary | null }) => {
+	if (!data) return null
 
 	return (
-		<div className="overflow-x-auto bg-base-100">
-			<table className="table table-zebra table-xs">
-				<thead>
-					{table.getHeaderGroups().map((headerGroup) => (
-						<tr key={headerGroup.id}>
-							{headerGroup.headers.map((header) => (
-								<th key={header.id} className="text-left text-xs">
-									{header.isPlaceholder ? null : (
-										<div className="cursor-pointer select-none flex items-center">
-											{flexRender(header.column.columnDef.header, header.getContext())}
-										</div>
-									)}
-								</th>
-							))}
-						</tr>
-					))}
-				</thead>
-				<tbody>
-					{table.getRowModel().rows.map((row) => (
-						<tr key={row.id}>
-							{row.getVisibleCells().map((cell) => (
-								<td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-							))}
-						</tr>
-					))}
-				</tbody>
-			</table>
+		<div className="card bg-base-100 shadow-xl">
+			<div className="card-body font-mono text-sm">
+				{/* Fee type sums */}
+				{data.feeTypeSums.map((fee) => (
+					<div key={fee.feeTypeName} className="flex justify-between">
+						<span>{fee.feeTypeName}</span>
+						<span>{formatCurrency(fee.amount)}</span>
+					</div>
+				))}
+
+				{/* Collection totals */}
+				<div className="flex justify-between">
+					<span>Total collected online</span>
+					<span>{formatCurrency(data.totalCollectedOnline)}</span>
+				</div>
+				<div className="flex justify-between">
+					<span>Collected cash</span>
+					<span>{formatCurrency(data.collectedCash)}</span>
+				</div>
+				<div className="flex justify-between font-bold">
+					<span>Total collected</span>
+					<span>{formatCurrency(data.totalCollected)}</span>
+				</div>
+
+				<div className="divider my-1"></div>
+
+				{/* Payouts */}
+				<div className="flex justify-between">
+					<span>Pro shop payouts</span>
+					<span>{formatCurrency(data.proShopPayouts)}</span>
+				</div>
+				<div className="flex justify-between">
+					<span>Cash payouts</span>
+					<span>{formatCurrency(data.cashPayouts)}</span>
+				</div>
+				<div className="flex justify-between font-bold">
+					<span>Total payouts</span>
+					<span>{formatCurrency(data.totalPayouts)}</span>
+				</div>
+
+				<div className="divider my-1"></div>
+
+				{/* Pass-through fees */}
+				<div className="flex justify-between">
+					<span>Green fees</span>
+					<span>{formatCurrency(data.greenFees)}</span>
+				</div>
+				<div className="flex justify-between">
+					<span>Cart fees</span>
+					<span>{formatCurrency(data.cartFees)}</span>
+				</div>
+				<div className="flex justify-between font-bold">
+					<span>Total pass-through fees</span>
+					<span>{formatCurrency(data.totalPassThrough)}</span>
+				</div>
+
+				<div className="divider my-1"></div>
+
+				{/* Balance */}
+				<div className="flex justify-between font-bold text-base">
+					<span>Balance</span>
+					<span>{formatCurrency(data.balance)}</span>
+				</div>
+			</div>
 		</div>
 	)
 }
@@ -146,7 +90,7 @@ export default function FinanceReportPage() {
 			excelPath={`/api/events/${eventId}/reports/finance/excel`}
 			filenamePrefix="finance-report"
 		>
-			{(data) => <FinanceTable data={data} />}
+			{(data) => <FinanceSummary data={data} />}
 		</ReportPage>
 	)
 }

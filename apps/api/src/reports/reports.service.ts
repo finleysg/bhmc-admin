@@ -7,6 +7,7 @@ import {
 	EventResultsReport,
 	EventResultsReportRow,
 	EventResultsSection,
+	FeeTypeSum,
 	FinanceReportSummary,
 	Hole,
 	PaymentReportDetail,
@@ -411,10 +412,10 @@ export class ReportsService {
 	async getFinanceReport(eventId: number): Promise<FinanceReportSummary> {
 		await this.validateEvent(eventId)
 
-		// Get gross inflows by bucket
-		const inflows = await this.drizzle.db
+		// Get gross inflows by fee type
+		const grossByFeeType = await this.drizzle.db
 			.select({
-				bucket: feeType.payout,
+				feeTypeName: feeType.name,
 				total: sql<number>`sum(${registrationFee.amount})`.as("total"),
 			})
 			.from(payment)
@@ -422,22 +423,15 @@ export class ReportsService {
 			.innerJoin(eventFee, eq(registrationFee.eventFeeId, eventFee.id))
 			.innerJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
 			.where(eq(payment.eventId, eventId))
-			.groupBy(feeType.payout)
+			.groupBy(feeType.name)
 
-		let creditCollected = 0
-		let cashCollected = 0
-		let passthruCollected = 0
-
-		for (const inflow of inflows) {
-			const amount = parseFloat(inflow.total.toString())
-			if (inflow.bucket === "Credit") creditCollected += amount
-			else if (inflow.bucket === "Cash") cashCollected += amount
-			else if (inflow.bucket === "Passthru") passthruCollected += amount
+		// Build fee type -> gross amount map
+		const grossByFeeTypeMap = new Map<string, number>()
+		for (const row of grossByFeeType) {
+			grossByFeeTypeMap.set(row.feeTypeName, parseFloat(row.total.toString()))
 		}
 
-		const totalCollected = creditCollected + cashCollected + passthruCollected
-
-		// Get refunds and allocate by bucket
+		// Get refunds and allocate proportionally by fee type
 		const refunds = await this.drizzle.db
 			.select({
 				paymentId: refund.paymentId,
@@ -447,14 +441,12 @@ export class ReportsService {
 			.innerJoin(payment, eq(refund.paymentId, payment.id))
 			.where(and(eq(payment.eventId, eventId), eq(refund.confirmed, 1)))
 
-		let creditRefunds = 0
-		let cashRefunds = 0
-		let passthruRefunds = 0
+		const refundByFeeTypeMap = new Map<string, number>()
 
 		for (const r of refunds) {
 			const fees = await this.drizzle.db
 				.select({
-					bucket: feeType.payout,
+					feeTypeName: feeType.name,
 					amount: registrationFee.amount,
 				})
 				.from(registrationFee)
@@ -472,67 +464,67 @@ export class ReportsService {
 				for (const f of fees) {
 					const proportion = parseFloat(f.amount.toString()) / totalFees
 					const allocated = parseFloat(r.refundAmount.toString()) * proportion
-					if (f.bucket === "Credit") creditRefunds += allocated
-					else if (f.bucket === "Cash") cashRefunds += allocated
-					else if (f.bucket === "Passthru") passthruRefunds += allocated
+					const prev = refundByFeeTypeMap.get(f.feeTypeName) || 0
+					refundByFeeTypeMap.set(f.feeTypeName, prev + allocated)
 				}
 			}
 		}
 
-		const totalRefunds = creditRefunds + cashRefunds + passthruRefunds
+		// Build feeTypeSums (net = gross - refund)
+		const feeTypeSums: FeeTypeSum[] = []
+		for (const [feeTypeName, gross] of grossByFeeTypeMap) {
+			const refunded = refundByFeeTypeMap.get(feeTypeName) || 0
+			feeTypeSums.push({ feeTypeName, amount: gross - refunded })
+		}
 
-		// Net inflows
-		const creditNet = creditCollected - creditRefunds
-		const cashNet = cashCollected - cashRefunds
-		const passthruNet = passthruCollected - passthruRefunds
+		const totalCollectedOnline = feeTypeSums.reduce((a, b) => a + b.amount, 0)
+		const collectedCash = 0
+		const totalCollected = totalCollectedOnline + collectedCash
 
-		// Get outflows by bucket and format
+		// Get payouts by type (Credit vs Cash)
 		const outflows = await this.drizzle.db
 			.select({
-				bucket: tournamentResult.payoutType,
-				format: tournament.format,
+				payoutType: tournamentResult.payoutType,
 				total: sql<number>`sum(${tournamentResult.amount})`.as("total"),
 			})
 			.from(tournamentResult)
 			.innerJoin(tournament, eq(tournamentResult.tournamentId, tournament.id))
 			.where(and(eq(tournament.eventId, eventId), sql`${tournamentResult.amount} > 0`))
-			.groupBy(tournamentResult.payoutType, tournament.format)
+			.groupBy(tournamentResult.payoutType)
 
-		const creditPayouts: Record<string, number> = {}
-		const cashPayouts: Record<string, number> = {}
-		let creditTotalPayouts = 0
-		let cashTotalPayouts = 0
+		let proShopPayouts = 0
+		let cashPayouts = 0
 
 		for (const outflow of outflows) {
 			const amount = parseFloat(outflow.total.toString())
-			const bucket = outflow.bucket
-			const format = outflow.format
-			if (bucket === "Credit" && format) {
-				creditPayouts[format] = (creditPayouts[format] || 0) + amount
-				creditTotalPayouts += amount
-			} else if (bucket === "Cash" && format) {
-				cashPayouts[format] = (cashPayouts[format] || 0) + amount
-				cashTotalPayouts += amount
-			}
+			if (outflow.payoutType === "Credit") proShopPayouts += amount
+			else if (outflow.payoutType === "Cash") cashPayouts += amount
 		}
+
+		const totalPayouts = proShopPayouts + cashPayouts
+
+		// Get pass-through fees (Greens Fee and Cart Fee)
+		const greenFeeSum = feeTypeSums.find((f) => f.feeTypeName === "Greens Fee")
+		const cartFeeSum = feeTypeSums.find((f) => f.feeTypeName === "Cart Fee")
+		const greenFees = greenFeeSum?.amount || 0
+		const cartFees = cartFeeSum?.amount || 0
+		const totalPassThrough = greenFees + cartFees
+
+		const balance = totalCollected - (totalPayouts + totalPassThrough)
 
 		return {
 			eventId,
-			creditCollected,
-			cashCollected,
-			passthruCollected,
+			feeTypeSums,
+			totalCollectedOnline,
+			collectedCash,
 			totalCollected,
-			creditRefunds,
-			cashRefunds,
-			passthruRefunds,
-			totalRefunds,
-			creditNet,
-			cashNet,
-			passthruNet,
-			creditPayouts,
-			creditTotalPayouts,
+			proShopPayouts,
 			cashPayouts,
-			cashTotalPayouts,
+			totalPayouts,
+			greenFees,
+			cartFees,
+			totalPassThrough,
+			balance,
 		}
 	}
 
@@ -566,49 +558,83 @@ export class ReportsService {
 		const workbook = createWorkbook()
 		const worksheet = workbook.addWorksheet("Finance Report")
 
-		// Define fixed columns
-		const fixedColumns = [
-			{ header: "Bucket", key: "bucket", width: 15 },
-			{ header: "Gross Collected", key: "grossCollected", width: 15 },
-			{ header: "Refunds", key: "refunds", width: 15 },
-			{ header: "Net Inflow", key: "netInflow", width: 15 },
-			{ header: "Total Payouts", key: "totalPayouts", width: 15 },
-			{ header: "Net Profit", key: "netProfit", width: 15 },
-		]
+		worksheet.columns = [{ width: 30 }, { width: 15 }]
 
-		const allColumns = fixedColumns
+		let row = 1
 
-		// Prepare data rows
-		const rows = [
-			{
-				bucket: "Credit",
-				grossCollected: report.creditCollected,
-				refunds: report.creditRefunds,
-				netInflow: report.creditNet,
-				totalPayouts: report.creditTotalPayouts,
-				netProfit: report.creditNet - report.creditTotalPayouts,
-			},
-			{
-				bucket: "Cash",
-				grossCollected: report.cashCollected,
-				refunds: report.cashRefunds,
-				netInflow: report.cashNet,
-				totalPayouts: report.cashTotalPayouts,
-				netProfit: report.cashNet - report.cashTotalPayouts,
-			},
-			{
-				bucket: "Passthru",
-				grossCollected: report.passthruCollected,
-				refunds: report.passthruRefunds,
-				netInflow: report.passthruNet,
-				totalPayouts: 0, // No payouts for passthru
-				netProfit: report.passthruNet - 0,
-			},
-		]
+		// Fee type sums
+		for (const feeSum of report.feeTypeSums) {
+			worksheet.getRow(row).getCell(1).value = feeSum.feeTypeName
+			worksheet.getRow(row).getCell(2).value = feeSum.amount
+			worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+			row++
+		}
 
-		addFixedColumns(worksheet, allColumns)
-		styleHeaderRow(worksheet, 1)
-		addDataRows(worksheet, 2, rows as unknown as Record<string, unknown>[], allColumns)
+		// Collection totals
+		worksheet.getRow(row).getCell(1).value = "Total collected online"
+		worksheet.getRow(row).getCell(2).value = report.totalCollectedOnline
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		row++
+
+		worksheet.getRow(row).getCell(1).value = "Collected cash"
+		worksheet.getRow(row).getCell(2).value = report.collectedCash
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		row++
+
+		worksheet.getRow(row).getCell(1).value = "Total collected"
+		worksheet.getRow(row).getCell(2).value = report.totalCollected
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		worksheet.getRow(row).font = { bold: true }
+		row++
+
+		// Divider
+		row++
+
+		// Payouts
+		worksheet.getRow(row).getCell(1).value = "Pro shop payouts"
+		worksheet.getRow(row).getCell(2).value = report.proShopPayouts
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		row++
+
+		worksheet.getRow(row).getCell(1).value = "Cash payouts"
+		worksheet.getRow(row).getCell(2).value = report.cashPayouts
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		row++
+
+		worksheet.getRow(row).getCell(1).value = "Total payouts"
+		worksheet.getRow(row).getCell(2).value = report.totalPayouts
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		worksheet.getRow(row).font = { bold: true }
+		row++
+
+		// Divider
+		row++
+
+		// Pass-through fees
+		worksheet.getRow(row).getCell(1).value = "Green fees"
+		worksheet.getRow(row).getCell(2).value = report.greenFees
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		row++
+
+		worksheet.getRow(row).getCell(1).value = "Cart fees"
+		worksheet.getRow(row).getCell(2).value = report.cartFees
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		row++
+
+		worksheet.getRow(row).getCell(1).value = "Total pass-through fees"
+		worksheet.getRow(row).getCell(2).value = report.totalPassThrough
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		worksheet.getRow(row).font = { bold: true }
+		row++
+
+		// Divider
+		row++
+
+		// Balance
+		worksheet.getRow(row).getCell(1).value = "Balance"
+		worksheet.getRow(row).getCell(2).value = report.balance
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		worksheet.getRow(row).font = { bold: true }
 
 		return generateBuffer(workbook)
 	}
