@@ -1,4 +1,5 @@
 import {
+	Body,
 	ClassSerializerInterceptor,
 	Controller,
 	Get,
@@ -6,10 +7,11 @@ import {
 	Logger,
 	Param,
 	ParseIntPipe,
+	Post,
 	Query,
 	UseInterceptors,
 } from "@nestjs/common"
-import { ClubEvent } from "@repo/domain/types"
+import { ClubEvent, PayoutSummary } from "@repo/domain/types"
 
 import { Admin } from "../auth"
 
@@ -48,6 +50,22 @@ export class EventsController {
 	): Promise<{ eventId: number }> {
 		const eventId = await this.service.getSeasonRegistrationEventId(season)
 		return { eventId }
+	}
+
+	@Get(":eventId/payouts")
+	async getPayoutSummary(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Query("payoutType") payoutType: string,
+	): Promise<PayoutSummary[]> {
+		return this.service.getPayoutSummary(eventId, payoutType)
+	}
+
+	@Post(":eventId/payouts/mark-paid")
+	async markPayoutsPaid(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Body("payoutType") payoutType: string,
+	): Promise<PayoutSummary[]> {
+		return this.service.markPayoutsPaid(eventId, payoutType)
 	}
 
 	@UseInterceptors(ClassSerializerInterceptor)
