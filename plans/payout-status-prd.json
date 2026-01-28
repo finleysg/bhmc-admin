@@ -101,7 +101,7 @@
 				"Both use fetchWithAuth pattern consistent with existing proxy routes",
 				"pnpm build succeeds"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.1",
