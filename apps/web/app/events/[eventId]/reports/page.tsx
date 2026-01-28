@@ -48,6 +48,11 @@ export default function EventReportsPage() {
 			description: "Fees, payments, and budget summary",
 			href: `/events/${eventId}/reports/finance`,
 		},
+		{
+			title: "Payment Report",
+			description: "Per-event payment details, fees, and refunds",
+			href: `/events/${eventId}/reports/payments`,
+		},
 	]
 
 	return (

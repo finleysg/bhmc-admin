@@ -1,0 +1,149 @@
+{
+	"title": "Payment Report",
+	"github_issue": 84,
+	"github_issue_url": "https://github.com/finleysg/bhmc-admin/issues/84",
+	"tasks": [
+		{
+			"id": "1.1",
+			"category": "domain",
+			"description": "Create PaymentReportRow, PaymentReportDetail, and PaymentReportRefund types in packages/domain/src/types/reports/payment-report.ts",
+			"files": [
+				"packages/domain/src/types/reports/payment-report.ts",
+				"packages/domain/src/types/reports/index.ts"
+			],
+			"steps_to_verify": [
+				"PaymentReportRow has: userName, paymentId, paymentCode, paymentDate, confirmDate, amountPaid, transactionFee, amountRefunded, details (PaymentReportDetail[]), refunds (PaymentReportRefund[])",
+				"PaymentReportDetail has: player, eventFee, amount, isPaid",
+				"PaymentReportRefund has: refundCode, refundAmount, refundDate, issuedBy",
+				"index.ts re-exports from payment-report",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.1",
+			"category": "api",
+			"description": "Add getPaymentReport method to reports service - query confirmed payments for event with user name, registration fees with player/fee details, and confirmed refunds",
+			"files": ["apps/api/src/reports/reports.service.ts"],
+			"steps_to_verify": [
+				"Method getPaymentReport(eventId) exists on ReportsService",
+				"Queries payment table where event_id = eventId AND confirmed = 1, joined to auth_user for userName",
+				"For each payment, fetches registrationFee joined to registrationSlot \u2192 player and eventFee \u2192 feeType for details",
+				"For each payment, fetches refund where confirmed = 1 for refunds array",
+				"Computes amountRefunded as sum of confirmed refund amounts",
+				"Returns PaymentReportRow[]",
+				"pnpm --filter api test passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.2",
+			"category": "api",
+			"description": "Add generatePaymentReportExcel method to reports service - flat summary rows only (no detail expansion)",
+			"files": ["apps/api/src/reports/reports.service.ts"],
+			"steps_to_verify": [
+				"Method generatePaymentReportExcel(eventId) exists on ReportsService",
+				"Columns: User Name, Payment ID, Payment Code, Payment Date, Confirm Date, Amount Paid, Transaction Fee, Amount Refunded",
+				"Uses existing excel utils (createWorkbook, addFixedColumns, addDataRows, styleHeaderRow, generateBuffer)",
+				"Returns Buffer",
+				"pnpm --filter api test passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.3",
+			"category": "api",
+			"description": "Add GET payments and GET payments/excel endpoints to reports controller",
+			"files": ["apps/api/src/reports/reports.controller.ts"],
+			"steps_to_verify": [
+				"GET /reports/events/:eventId/payments returns PaymentReportRow[]",
+				"GET /reports/events/:eventId/payments/excel returns Buffer with Content-Disposition header",
+				"Both endpoints require @Admin() auth",
+				"pnpm --filter api test passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "3.1",
+			"category": "web-api",
+			"description": "Add Next.js API proxy route for payment report JSON data",
+			"files": ["apps/web/app/api/events/[id]/reports/payments/route.ts"],
+			"steps_to_verify": [
+				"GET /api/events/[id]/reports/payments proxies to /reports/events/{id}/payments with auth",
+				"Uses fetchWithAuth pattern consistent with existing report proxy routes",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "3.2",
+			"category": "web-api",
+			"description": "Add Next.js API proxy route for payment report Excel export",
+			"files": ["apps/web/app/api/events/[id]/reports/payments/excel/route.ts"],
+			"steps_to_verify": [
+				"GET /api/events/[id]/reports/payments/excel proxies to /reports/events/{id}/payments/excel with responseType binary",
+				"Uses fetchWithAuth binary pattern consistent with existing Excel proxy routes",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.1",
+			"category": "web-ui",
+			"description": "Add Payment Report LinkCard to reports hub page as 5th card",
+			"files": ["apps/web/app/events/[eventId]/reports/page.tsx"],
+			"steps_to_verify": [
+				"5th LinkCard appears with title 'Payment Report' and description about per-event payment details",
+				"Links to /events/{eventId}/reports/payments",
+				"Card renders in existing grid layout",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.2",
+			"category": "web-ui",
+			"description": "Create payment report page with summary table using ReportPage wrapper and TanStack Table",
+			"files": ["apps/web/app/events/[eventId]/reports/payments/page.tsx"],
+			"steps_to_verify": [
+				"Uses ReportPage<PaymentReportRow[]> wrapper with fetchPath and excelPath",
+				"TanStack Table with columns: User Name, Payment ID, Payment Code, Payment Date, Confirm Date, Amount Paid, Transaction Fee, Amount Refunded",
+				"Sorting enabled on all columns",
+				"Global filter/search enabled",
+				"Pagination at 25 items per page",
+				"Currency formatting on Amount Paid, Transaction Fee, Amount Refunded",
+				"Mobile column visibility: hide Payment Code, Confirm Date, Transaction Fee",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.3",
+			"category": "web-ui",
+			"description": "Add expandable row detail to payment report table - clicking a row toggles detail section showing fee line items and refunds",
+			"files": ["apps/web/app/events/[eventId]/reports/payments/page.tsx"],
+			"steps_to_verify": [
+				"Clicking a row toggles an expandable detail section below that row",
+				"Detail section shows Payment Details sub-table: Player, Event Fee, Amount, Is Paid",
+				"Detail section shows Refunds sub-table (if any): Refund Code, Refund Amount, Refund Date, Issued By",
+				"Currency formatting on amount columns in sub-tables",
+				"Only one row expanded at a time (or multiple - follow existing patterns)",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		},
+		{
+			"id": "5.1",
+			"category": "web-ui",
+			"description": "Update header/breadcrumb for payments report navigation if needed",
+			"files": ["apps/web/app/components/header.tsx", "apps/web/app/components/breadcrumb.tsx"],
+			"steps_to_verify": [
+				"Header shows correct title when on payments report page",
+				"Breadcrumb renders correct label for payments segment",
+				"Navigation displays correctly on /events/{eventId}/reports/payments",
+				"pnpm build succeeds"
+			],
+			"passes": true
+		}
+	]
+}
