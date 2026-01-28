@@ -85,7 +85,7 @@
 				"Errors in email sending are logged, not thrown",
 				"docker compose up -d --build, trigger mark-paid, check mailpit at localhost:8025 for emails"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "3.1",

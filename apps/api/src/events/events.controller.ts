@@ -14,6 +14,7 @@ import {
 import { ClubEvent, PayoutSummary } from "@repo/domain/types"
 
 import { Admin } from "../auth"
+import { MailService } from "../mail/mail.service"
 
 import { EventsRepository } from "./events.repository"
 import { toEvent } from "./mappers"
@@ -27,6 +28,7 @@ export class EventsController {
 	constructor(
 		@Inject(EventsRepository) private readonly events: EventsRepository,
 		@Inject(EventsService) private readonly service: EventsService,
+		@Inject(MailService) private readonly mail: MailService,
 	) {}
 
 	@Get()
@@ -65,7 +67,24 @@ export class EventsController {
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Body("payoutType") payoutType: string,
 	): Promise<PayoutSummary[]> {
-		return this.service.markPayoutsPaid(eventId, payoutType)
+		const payouts = await this.service.markPayoutsPaid(eventId, payoutType)
+
+		const event = await this.service.getEventById(eventId)
+		const eventDate = new Date(event.startDate).toLocaleDateString("en-US", {
+			weekday: "long",
+			month: "long",
+			day: "numeric",
+			year: "numeric",
+		})
+
+		// Fire-and-forget: send payout notifications without blocking the response
+		void this.mail.sendPayoutNotification(event.name, eventDate, payouts).catch((error) => {
+			this.logger.error(
+				`Failed to send payout notifications for event ${eventId}: ${error instanceof Error ? error.message : "Unknown error"}`,
+			)
+		})
+
+		return payouts
 	}
 
 	@UseInterceptors(ClassSerializerInterceptor)
