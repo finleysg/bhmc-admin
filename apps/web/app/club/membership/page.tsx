@@ -11,7 +11,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { EmptyState } from "@/components/ui/empty-state"
 import { PageHeader } from "@/components/ui/page-header"
 import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
-import { EventReportRow } from "@repo/domain/types"
+import { MembershipReportRow } from "@repo/domain/types"
 import {
 	ColumnDef,
 	flexRender,
@@ -24,20 +24,7 @@ import {
 } from "@tanstack/react-table"
 
 // Fixed columns definition
-const fixedColumnDefs: Record<string, ColumnDef<EventReportRow>> = {
-	teamId: {
-		accessorKey: "teamId",
-		header: "Team",
-		enableSorting: true,
-	},
-	course: {
-		accessorKey: "course",
-		header: "Course",
-	},
-	start: {
-		accessorKey: "start",
-		header: "Start",
-	},
+const fixedColumnDefs: Record<string, ColumnDef<MembershipReportRow>> = {
 	ghin: {
 		accessorKey: "ghin",
 		header: "GHIN",
@@ -92,14 +79,14 @@ const fixedColumnDefs: Record<string, ColumnDef<EventReportRow>> = {
 	},
 }
 
-const MembershipTable = ({ data }: { data: EventReportRow[] | null }) => {
+const MembershipTable = ({ data }: { data: MembershipReportRow[] | null }) => {
 	const isMobile = useIsMobile()
 	const [sorting, setSorting] = useState<SortingState>([{ id: "fullName", desc: false }])
 	const [globalFilter, setGlobalFilter] = useState("")
 	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 })
 	const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({})
 
-	const columns: ColumnDef<EventReportRow>[] = []
+	const columns: ColumnDef<MembershipReportRow>[] = []
 
 	Object.keys(fixedColumnDefs).forEach((key) => {
 		columns.push(fixedColumnDefs[key])
@@ -121,12 +108,13 @@ const MembershipTable = ({ data }: { data: EventReportRow[] | null }) => {
 		if (!data || data.length === 0) return
 
 		const visibility: Record<string, boolean> = {}
-		const screenHiddenColumns = ["teamId", "fullName", "course", "start"]
+		const screenHiddenColumns = ["fullName", "notes"]
 		const mobileVisibleColumns = ["ghin", "tee", "firstName", "lastName"]
 
 		const allColumnKeys = Object.keys(fixedColumnDefs)
 		const feeKeys = Object.keys(data[0]).filter(
-			(key) => !Object.keys(fixedColumnDefs).includes(key) && key !== "signupDate",
+			(key) =>
+				!Object.keys(fixedColumnDefs).includes(key) && key !== "signupDate" && key !== "notes",
 		)
 		const allKeys = [...allColumnKeys, ...feeKeys]
 
@@ -242,10 +230,10 @@ export default function MembershipReportPage() {
 		void fetchSeasonEvent()
 	}, [currentSeason])
 
-	// Then fetch the event report data
-	const fetchPath = eventId ? `/api/events/${eventId}/reports/event` : null
-	const excelPath = eventId ? `/api/events/${eventId}/reports/event/excel` : ""
-	const { data, loading, error } = useAuthenticatedFetch<EventReportRow[]>(fetchPath)
+	// Then fetch the membership report data
+	const fetchPath = eventId ? `/api/events/${eventId}/reports/membership` : null
+	const excelPath = eventId ? `/api/events/${eventId}/reports/membership/excel` : ""
+	const { data, loading, error } = useAuthenticatedFetch<MembershipReportRow[]>(fetchPath)
 	const { download } = useExcelExport(excelPath, `membership-report-${currentSeason}`)
 
 	if (eventError) {

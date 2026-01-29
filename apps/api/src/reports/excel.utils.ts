@@ -1,7 +1,5 @@
 import * as ExcelJS from "exceljs"
 
-import { EventReportRow } from "@repo/domain/types"
-
 export function createWorkbook(): ExcelJS.Workbook {
 	return new ExcelJS.Workbook()
 }
@@ -38,8 +36,8 @@ export function addDataRows<T extends Record<string, unknown>>(
 	return currentRow
 }
 
-export function deriveDynamicColumns(
-	rows: EventReportRow[],
+export function deriveDynamicColumns<T extends Record<string, unknown>>(
+	rows: T[],
 	fixedKeys: string[],
 ): Array<{ header: string; key: string; width: number }> {
 	if (rows.length === 0) return []

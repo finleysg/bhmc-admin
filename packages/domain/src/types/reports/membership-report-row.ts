@@ -1,7 +1,4 @@
-export interface EventReportRow {
-	teamId: string
-	course: string
-	start: string
+export interface MembershipReportRow {
 	ghin: string
 	age: string
 	tee: string
@@ -11,5 +8,7 @@ export interface EventReportRow {
 	email: string
 	signedUpBy: string
 	signupDate: string
+	type: string
+	notes: string
 	[feeName: string]: string | undefined
 }

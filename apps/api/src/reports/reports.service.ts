@@ -10,6 +10,7 @@ import {
 	FeeTypeSum,
 	FinanceReportSummary,
 	Hole,
+	MembershipReportRow,
 	PaymentReportDetail,
 	PaymentReportRefund,
 	PaymentReportRow,
@@ -306,6 +307,34 @@ export class ReportsService {
 	async getEventReport(eventId: number): Promise<EventReportRow[]> {
 		await this.validateEvent(eventId)
 
+		const registeredPlayers = await this.getPlayers(eventId)
+		const rows = registeredPlayers.map((slot) => {
+			const row: EventReportRow = {
+				teamId: slot.team,
+				course: slot.course,
+				start: slot.start,
+				ghin: slot.ghin || "",
+				age: slot.age ? slot.age.toString() : "n/a",
+				tee: slot.tee || "",
+				lastName: slot.lastName,
+				firstName: slot.firstName,
+				fullName: slot.fullName,
+				email: slot.email || "",
+				signedUpBy: slot.signedUpBy || "",
+				signupDate: slot.signupDate?.split(" ")[0] || "",
+			}
+			for (const fee of slot.fees) {
+				row[fee.name] = fee.amount
+			}
+			return row
+		})
+
+		return rows.sort((a, b) => a.teamId.localeCompare(b.teamId))
+	}
+
+	async getMembershipEventReport(eventId: number): Promise<MembershipReportRow[]> {
+		await this.validateEvent(eventId)
+
 		const eventData = await this.drizzle.db
 			.select({ season: event.season })
 			.from(event)
@@ -315,12 +344,8 @@ export class ReportsService {
 		const lastSeasonMemberIds = await this.getLastSeasonMemberIds(eventData[0].season)
 
 		const registeredPlayers = await this.getPlayers(eventId)
-		const summary = { eventId, total: registeredPlayers.length, slots: registeredPlayers }
-		const rows = summary.slots.map((slot) => {
-			const row: EventReportRow = {
-				teamId: slot.team,
-				course: slot.course,
-				start: slot.start,
+		const rows = registeredPlayers.map((slot) => {
+			const row: MembershipReportRow = {
 				ghin: slot.ghin || "",
 				age: slot.age ? slot.age.toString() : "n/a",
 				tee: slot.tee || "",
@@ -339,7 +364,7 @@ export class ReportsService {
 			return row
 		})
 
-		return rows.sort((a, b) => a.teamId.localeCompare(b.teamId))
+		return rows.sort((a, b) => a.lastName.localeCompare(b.lastName))
 	}
 
 	async generateEventReportExcel(eventId: number): Promise<Buffer> {
@@ -362,13 +387,54 @@ export class ReportsService {
 			"email",
 			"signedUpBy",
 			"signupDate",
-			"type",
-			"notes",
 		]
 		const fixedColumns = [
 			{ header: "Team", key: "teamId", width: 15 },
 			{ header: "Course", key: "course", width: 20 },
 			{ header: "Start", key: "start", width: 15 },
+			{ header: "GHIN", key: "ghin", width: 10 },
+			{ header: "Age", key: "age", width: 8 },
+			{ header: "Tee", key: "tee", width: 10 },
+			{ header: "Last Name", key: "lastName", width: 15 },
+			{ header: "First Name", key: "firstName", width: 15 },
+			{ header: "Full Name", key: "fullName", width: 20 },
+			{ header: "Email", key: "email", width: 25 },
+			{ header: "Signed Up By", key: "signedUpBy", width: 15 },
+			{ header: "Signup Date", key: "signupDate", width: 12 },
+		]
+
+		// Add dynamic fee columns
+		const dynamicColumns = deriveDynamicColumns(rows, fixedKeys)
+		const allColumns = [...fixedColumns, ...dynamicColumns]
+
+		addFixedColumns(worksheet, allColumns)
+		styleHeaderRow(worksheet, 1)
+		addDataRows(worksheet, 2, rows, allColumns)
+
+		return generateBuffer(workbook)
+	}
+
+	async generateMembershipReportExcel(eventId: number): Promise<Buffer> {
+		const rows = await this.getMembershipEventReport(eventId)
+
+		const workbook = createWorkbook()
+		const worksheet = workbook.addWorksheet("Membership Report")
+
+		// Define fixed columns
+		const fixedKeys = [
+			"ghin",
+			"age",
+			"tee",
+			"lastName",
+			"firstName",
+			"fullName",
+			"email",
+			"signedUpBy",
+			"signupDate",
+			"type",
+			"notes",
+		]
+		const fixedColumns = [
 			{ header: "GHIN", key: "ghin", width: 10 },
 			{ header: "Age", key: "age", width: 8 },
 			{ header: "Tee", key: "tee", width: 10 },

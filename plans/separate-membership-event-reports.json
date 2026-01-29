@@ -1,0 +1,168 @@
+{
+	"title": "Separate Membership Report from Event Report",
+	"description": "Recent commits added type (Returning/New) and notes columns for the membership report, but these changes bled into the general event report. This PRD creates dedicated endpoints and types to properly separate these concerns.",
+	"problem": "The getEventReport() service method includes membership-specific logic (type classification, notes) for ALL events. This causes the event report to display type and notes columns that are only relevant for membership reports.",
+	"solution": "Create separate MembershipReportRow type, backend methods (getMembershipEventReport, generateMembershipReportExcel), controller endpoints, and web API routes. Clean getEventReport() to remove membership-specific logic.",
+	"outOfScope": [
+		"Changes to other report types (points, finance, payments, results)",
+		"Changes to the event report UI beyond removing type/notes",
+		"Backward compatibility for EventReportRow type"
+	],
+	"items": [
+		{
+			"id": "1.1",
+			"category": "domain",
+			"description": "Create MembershipReportRow type in domain package",
+			"details": "Create packages/domain/src/types/reports/membership-report-row.ts with fields: ghin, age, tee, lastName, firstName, fullName, email, signedUpBy, signupDate, type (string), notes (string), and index signature for fee columns. Excludes teamId, course, start.",
+			"stepsToVerify": [
+				"File exists at packages/domain/src/types/reports/membership-report-row.ts",
+				"Interface includes all required fields",
+				"Interface does NOT include teamId, course, start"
+			],
+			"passes": true
+		},
+		{
+			"id": "1.2",
+			"category": "domain",
+			"description": "Export MembershipReportRow from domain index",
+			"details": "Update packages/domain/src/types/reports/index.ts to export MembershipReportRow",
+			"stepsToVerify": ["MembershipReportRow is exported from @repo/domain/types"],
+			"passes": true
+		},
+		{
+			"id": "1.3",
+			"category": "domain",
+			"description": "Remove type and notes from EventReportRow",
+			"details": "Remove the optional type?: string and notes?: string fields from EventReportRow in packages/domain/src/types/reports/event-report-row.ts",
+			"stepsToVerify": [
+				"EventReportRow does NOT have type field",
+				"EventReportRow does NOT have notes field"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.1",
+			"category": "api",
+			"description": "Add getMembershipEventReport method to reports service",
+			"details": "Create getMembershipEventReport(eventId: number) in apps/api/src/reports/reports.service.ts. This method should contain the current getEventReport logic including getLastSeasonMemberIds() call, type calculation, and notes mapping. Return MembershipReportRow[] without teamId, course, start fields.",
+			"stepsToVerify": [
+				"Method exists and returns MembershipReportRow[]",
+				"Method calculates type as 'Returning' or 'New'",
+				"Method includes notes field",
+				"Returned rows do NOT include teamId, course, start"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.2",
+			"category": "api",
+			"description": "Add generateMembershipReportExcel method to reports service",
+			"details": "Create generateMembershipReportExcel(eventId: number) in reports.service.ts. Should call getMembershipEventReport() and generate Excel with columns: GHIN, Age, Tee, Last Name, First Name, Full Name, Email, Signed Up By, Signup Date, Type, Notes, plus dynamic fee columns.",
+			"stepsToVerify": [
+				"Method exists and returns Buffer",
+				"Excel includes Type and Notes columns",
+				"Excel does NOT include Team, Course, Start columns"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.3",
+			"category": "api",
+			"description": "Clean getEventReport to remove membership logic",
+			"details": "Modify getEventReport() in reports.service.ts to remove: fetching season, getLastSeasonMemberIds() call, type field assignment, notes field assignment. Keep getLastSeasonMemberIds() private method for use by getMembershipEventReport.",
+			"stepsToVerify": [
+				"getEventReport() does NOT call getLastSeasonMemberIds()",
+				"getEventReport() does NOT return type field",
+				"getEventReport() does NOT return notes field",
+				"getLastSeasonMemberIds() still exists as private method"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.4",
+			"category": "api",
+			"description": "Clean generateEventReportExcel to remove membership columns",
+			"details": "Modify generateEventReportExcel() in reports.service.ts to remove 'type' and 'notes' from fixedKeys array and remove Type/Notes from fixedColumns array.",
+			"stepsToVerify": [
+				"fixedKeys array does NOT include 'type' or 'notes'",
+				"fixedColumns array does NOT include Type or Notes columns"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.5",
+			"category": "api",
+			"description": "Add membership report endpoints to controller",
+			"details": "Add two new endpoints to apps/api/src/reports/reports.controller.ts: GET events/:eventId/membership-report and GET events/:eventId/membership-report/excel. Both should call corresponding service methods.",
+			"stepsToVerify": [
+				"GET /reports/events/:eventId/membership-report endpoint exists",
+				"GET /reports/events/:eventId/membership-report/excel endpoint exists",
+				"Endpoints call correct service methods"
+			],
+			"passes": true
+		},
+		{
+			"id": "3.1",
+			"category": "web",
+			"description": "Create membership report API route",
+			"details": "Create apps/web/app/api/events/[id]/reports/membership/route.ts that proxies to the NestJS membership-report endpoint.",
+			"stepsToVerify": [
+				"Route file exists",
+				"GET handler proxies to backend /reports/events/{id}/membership-report"
+			],
+			"passes": true
+		},
+		{
+			"id": "3.2",
+			"category": "web",
+			"description": "Create membership report Excel API route",
+			"details": "Create apps/web/app/api/events/[id]/reports/membership/excel/route.ts that proxies to the NestJS membership-report/excel endpoint.",
+			"stepsToVerify": [
+				"Route file exists",
+				"GET handler proxies to backend /reports/events/{id}/membership-report/excel"
+			],
+			"passes": true
+		},
+		{
+			"id": "3.3",
+			"category": "web",
+			"description": "Update membership page to use new type and endpoints",
+			"details": "Modify apps/web/app/club/membership/page.tsx: import MembershipReportRow instead of EventReportRow, update all type references, change fetchPath to /api/events/${eventId}/reports/membership, change excelPath to /api/events/${eventId}/reports/membership/excel. Remove teamId, course, start from fixedColumnDefs. Remove notes from fixedColumnDefs (Excel only).",
+			"stepsToVerify": [
+				"Import uses MembershipReportRow",
+				"fetchPath uses /reports/membership",
+				"excelPath uses /reports/membership/excel",
+				"fixedColumnDefs does NOT include teamId, course, start",
+				"fixedColumnDefs does NOT include notes (notes is Excel-only)"
+			],
+			"passes": true
+		}
+	],
+	"testPlan": [
+		{
+			"test": "Event report at /events/617/reports/event does NOT show type or notes columns",
+			"type": "manual"
+		},
+		{
+			"test": "Event report Excel export does NOT include Type or Notes columns",
+			"type": "manual"
+		},
+		{
+			"test": "Membership report at /club/membership shows type column but NOT notes column",
+			"type": "manual"
+		},
+		{
+			"test": "Membership report at /club/membership does NOT show Team, Course, Start columns",
+			"type": "manual"
+		},
+		{
+			"test": "Membership report Excel export includes Type and Notes columns",
+			"type": "manual"
+		},
+		{
+			"test": "Membership report Excel export does NOT include Team, Course, Start columns",
+			"type": "manual"
+		}
+	],
+	"verification": "Run docker compose up -d --build, then manually verify the test plan items in browser at localhost:3100"
+}
