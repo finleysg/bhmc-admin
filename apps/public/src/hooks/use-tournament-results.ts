@@ -10,6 +10,11 @@ import {
 } from "../models/tournament-results"
 import { getMany } from "../utils/api-client"
 
+const resultsMapper = (data: TournamentResultData[]) =>
+	data.map((result) => new TournamentResult(result))
+const pointsMapper = (data: TournamentPointsData[]) =>
+	data.map((points) => new TournamentPoints(points))
+
 interface TournamentResultsArgs {
 	playerId?: number
 	season?: number
@@ -27,7 +32,7 @@ export function useTournamentResults({ playerId, season }: TournamentResultsArgs
 	return useQuery({
 		queryKey: ["tournament-results", playerId ?? 0, season ?? 0],
 		queryFn: () => getMany<TournamentResultData>(endpoint, TournamentResultApiSchema),
-		select: (data) => data.map((result) => new TournamentResult(result)),
+		select: resultsMapper,
 		enabled: playerId !== undefined && playerId > 0,
 	})
 }
@@ -49,7 +54,7 @@ export function useTournamentPoints({ playerId, season }: TournamentPointsArgs) 
 	return useQuery({
 		queryKey: ["tournament-points", playerId ?? 0, season ?? 0],
 		queryFn: () => getMany<TournamentPointsData>(endpoint, TournamentPointsApiSchema),
-		select: (data) => data.map((points) => new TournamentPoints(points)),
+		select: pointsMapper,
 		enabled: playerId !== undefined && playerId > 0,
 	})
 }

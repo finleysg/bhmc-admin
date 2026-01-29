@@ -4,13 +4,16 @@ import { httpClient } from "../utils/api-client"
 import { apiUrl, serverUrl } from "../utils/api-utils"
 import { StripeAmount } from "../models/payment"
 
+const stripeAmountMapper = (data: unknown) => data as StripeAmount
+const clientSecretMapper = (data: { client_secret: string }) => data.client_secret
+
 export function usePaymentAmount(paymentId: number) {
 	const endpoint = serverUrl(`payments/${paymentId}/stripe-amount/`)
 	return useQuery({
 		queryKey: [endpoint],
 		queryFn: () => httpClient(endpoint),
 		staleTime: 0,
-		select: (data) => data as StripeAmount,
+		select: stripeAmountMapper,
 	})
 }
 
@@ -20,6 +23,6 @@ export function useCustomerSession() {
 		queryKey: [endpoint],
 		queryFn: () => httpClient(endpoint, { method: "POST", body: JSON.stringify({}) }),
 		staleTime: 0,
-		select: (data) => data.client_secret,
+		select: clientSecretMapper,
 	})
 }

@@ -5,6 +5,8 @@ import { getOne, httpClient } from "../utils/api-client"
 import { apiUrl } from "../utils/api-utils"
 import { useAuth } from "./use-auth"
 
+const mapper = (data: PlayerApiData | null | undefined) => new Player(data!)
+
 export function useMyPlayerRecord() {
 	const { user } = useAuth()
 	const queryClient = useQueryClient()
@@ -17,7 +19,7 @@ export function useMyPlayerRecord() {
 			return queryClient.getQueryData<PlayerApiData | null>(["player", email])
 		},
 		enabled: email !== undefined && email !== "unknown",
-		select: (data) => new Player(data),
+		select: mapper,
 	})
 }
 

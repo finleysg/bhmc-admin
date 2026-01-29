@@ -1,8 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 
-import { Photo, PhotoApiSchema } from "../models/photo"
+import { Photo, PhotoApiSchema, PhotoData } from "../models/photo"
 import { getMany, getOne, httpClient } from "../utils/api-client"
 import { apiUrl } from "../utils/api-utils"
+
+const photosMapper = (data: PhotoData[]) => data.map((photo) => new Photo(photo))
+const photoMapper = (data: PhotoData | undefined) => (data ? new Photo(data) : undefined)
 
 export function usePhotos(season: number, tags: string[]) {
 	const taglist = tags.map((tag) => `tags=${tag}`).join("&")
@@ -10,7 +13,7 @@ export function usePhotos(season: number, tags: string[]) {
 	return useQuery({
 		queryKey: [endpoint],
 		queryFn: () => getMany(endpoint, PhotoApiSchema),
-		select: (data) => data.map((photo) => new Photo(photo)),
+		select: photosMapper,
 	})
 }
 
@@ -19,11 +22,7 @@ export function usePhoto(photoId: number) {
 	return useQuery({
 		queryKey: [endpoint],
 		queryFn: () => getOne(endpoint, PhotoApiSchema),
-		select: (data) => {
-			if (data) {
-				return new Photo(data)
-			}
-		},
+		select: photoMapper,
 	})
 }
 

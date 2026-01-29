@@ -10,11 +10,13 @@ interface DocumentArgs {
 	formData: FormData
 }
 
+const mapper = (data: DocumentData[]) => data.map((doc) => new BhmcDocument(doc))
+
 export function useEventDocuments(eventId: number) {
 	return useQuery({
 		queryKey: ["documents", eventId],
 		queryFn: () => getMany(`documents/?event_id=${eventId}`, DocumentApiSchema),
-		select: (data) => data.map((doc) => new BhmcDocument(doc)),
+		select: mapper,
 		staleTime: twoMinutes,
 		enabled: eventId > 0,
 	})
