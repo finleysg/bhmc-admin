@@ -1,4 +1,5 @@
 export * from "./event-report-row"
+export * from "./membership-report-row"
 export * from "./event-results-report-row"
 export * from "./event-results-report"
 export * from "./event-results-section"

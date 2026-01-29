@@ -32,6 +32,26 @@ export class ReportsController {
 		res.send(buffer)
 	}
 
+	@Get("events/:eventId/membership-report")
+	async getMembershipEventReport(@Param("eventId", ParseIntPipe) eventId: number) {
+		return this.reports.getMembershipEventReport(eventId)
+	}
+
+	@Get("events/:eventId/membership-report/excel")
+	async getMembershipReportExcel(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Res() res: Response,
+	) {
+		const buffer = await this.reports.generateMembershipReportExcel(eventId)
+
+		res.setHeader(
+			"Content-Type",
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		)
+		res.setHeader("Content-Disposition", `attachment; filename="membership-report-${eventId}.xlsx"`)
+		res.send(buffer)
+	}
+
 	@Get("events/:eventId/points")
 	async getPointsReport(@Param("eventId", ParseIntPipe) eventId: number) {
 		return this.reports.getPointsReport(eventId)
