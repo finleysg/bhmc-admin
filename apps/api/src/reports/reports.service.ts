@@ -26,6 +26,7 @@ import {
 	DrizzleService,
 	event,
 	eventFee,
+	eventScorecard,
 	feeType,
 	payment,
 	player,
@@ -474,10 +475,15 @@ export class ReportsService {
 				firstName: player.firstName,
 				lastName: player.lastName,
 				ghin: player.ghin,
+				handicapIndex: eventScorecard.handicapIndex,
 			})
 			.from(tournamentPoints)
 			.innerJoin(tournament, eq(tournamentPoints.tournamentId, tournament.id))
 			.innerJoin(player, eq(tournamentPoints.playerId, player.id))
+			.leftJoin(
+				eventScorecard,
+				and(eq(eventScorecard.eventId, eventId), eq(eventScorecard.playerId, player.id)),
+			)
 			.where(eq(tournament.eventId, eventId))
 			.orderBy(tournament.name, tournamentPoints.position)
 
@@ -487,6 +493,7 @@ export class ReportsService {
 			position: result.position,
 			fullName: `${result.firstName} ${result.lastName}`,
 			ghin: result.ghin || "",
+			handicapIndex: result.handicapIndex ? parseFloat(result.handicapIndex) : null,
 			score: result.score,
 			points: result.points,
 			type: result.isNet ? "Net" : "Gross",
@@ -507,6 +514,7 @@ export class ReportsService {
 			{ header: "Position", key: "position", width: 10 },
 			{ header: "Full Name", key: "fullName", width: 20 },
 			{ header: "GHIN", key: "ghin", width: 10 },
+			{ header: "Handicap Index", key: "handicapIndex", width: 12 },
 			{ header: "Score", key: "score", width: 8 },
 			{ header: "Points", key: "points", width: 8 },
 			{ header: "Type", key: "type", width: 8 },

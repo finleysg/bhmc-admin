@@ -53,6 +53,15 @@ const PointsTable = ({ data }: { data: PointsReportRow[] | null }) => {
 			enableSorting: true,
 		},
 		{
+			accessorKey: "handicapIndex",
+			header: "HI",
+			enableSorting: true,
+			cell: ({ getValue }) => {
+				const value = getValue()
+				return value === null ? "" : value
+			},
+		},
+		{
 			accessorKey: "score",
 			header: "Score",
 			cell: ({ getValue }) => {
@@ -93,6 +102,7 @@ const PointsTable = ({ data }: { data: PointsReportRow[] | null }) => {
 			"position",
 			"fullName",
 			"ghin",
+			"handicapIndex",
 			"score",
 			"points",
 			"type",
