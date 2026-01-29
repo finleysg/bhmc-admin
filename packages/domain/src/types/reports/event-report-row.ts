@@ -11,5 +11,6 @@ export interface EventReportRow {
 	email: string
 	signedUpBy: string
 	signupDate: string
-	[feeName: string]: string
+	type?: string
+	[feeName: string]: string | undefined
 }

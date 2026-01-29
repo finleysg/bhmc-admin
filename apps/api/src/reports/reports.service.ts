@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm"
+import { and, eq, isNotNull, sql } from "drizzle-orm"
 
 import { Inject, Injectable } from "@nestjs/common"
 import { getAge, getFullName, getPlayerStartName, getPlayerTeamName } from "@repo/domain/functions"
@@ -23,6 +23,7 @@ import { CoursesService, toHole } from "../courses"
 import {
 	authUser,
 	DrizzleService,
+	event,
 	eventFee,
 	feeType,
 	payment,
@@ -61,6 +62,7 @@ interface EventPlayerFee {
 }
 
 interface EventPlayerSlot {
+	playerId: number
 	team: string
 	course: string
 	start: string
@@ -255,6 +257,7 @@ export class ReportsService {
 			})
 
 			return {
+				playerId: player.id,
 				team,
 				course: courseName,
 				start: startValue,
@@ -273,8 +276,41 @@ export class ReportsService {
 		return transformed
 	}
 
+	private async getLastSeasonMemberIds(currentSeason: number): Promise<Set<number>> {
+		const lastSeason = currentSeason - 1
+		const lastSeasonEvent = await this.drizzle.db
+			.select({ id: event.id })
+			.from(event)
+			.where(and(eq(event.eventType, "R"), eq(event.season, lastSeason)))
+			.limit(1)
+
+		if (!lastSeasonEvent.length) return new Set()
+
+		const slots = await this.drizzle.db
+			.select({ playerId: registrationSlot.playerId })
+			.from(registrationSlot)
+			.where(
+				and(
+					eq(registrationSlot.eventId, lastSeasonEvent[0].id),
+					eq(registrationSlot.status, "R"),
+					isNotNull(registrationSlot.playerId),
+				),
+			)
+
+		return new Set(slots.map((s) => s.playerId!))
+	}
+
 	async getEventReport(eventId: number): Promise<EventReportRow[]> {
 		await this.validateEvent(eventId)
+
+		const eventData = await this.drizzle.db
+			.select({ season: event.season })
+			.from(event)
+			.where(eq(event.id, eventId))
+			.limit(1)
+
+		const lastSeasonMemberIds = await this.getLastSeasonMemberIds(eventData[0].season)
+
 		const registeredPlayers = await this.getPlayers(eventId)
 		const summary = { eventId, total: registeredPlayers.length, slots: registeredPlayers }
 		const rows = summary.slots.map((slot) => {
@@ -291,6 +327,7 @@ export class ReportsService {
 				email: slot.email || "",
 				signedUpBy: slot.signedUpBy || "",
 				signupDate: slot.signupDate || "",
+				type: lastSeasonMemberIds.has(slot.playerId) ? "Returning" : "New",
 			}
 			for (const fee of slot.fees) {
 				row[fee.name] = fee.amount
@@ -321,6 +358,7 @@ export class ReportsService {
 			"email",
 			"signedUpBy",
 			"signupDate",
+			"type",
 		]
 		const fixedColumns = [
 			{ header: "Team", key: "teamId", width: 15 },
@@ -335,6 +373,7 @@ export class ReportsService {
 			{ header: "Email", key: "email", width: 25 },
 			{ header: "Signed Up By", key: "signedUpBy", width: 15 },
 			{ header: "Signup Date", key: "signupDate", width: 12 },
+			{ header: "Type", key: "type", width: 10 },
 		]
 
 		// Add dynamic fee columns

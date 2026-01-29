@@ -80,6 +80,11 @@ const fixedColumnDefs: Record<string, ColumnDef<EventReportRow>> = {
 		accessorKey: "signedUpBy",
 		header: "Signed Up By",
 	},
+	type: {
+		accessorKey: "type",
+		header: "Type",
+		enableSorting: true,
+	},
 }
 
 const MembershipTable = ({ data }: { data: EventReportRow[] | null }) => {
