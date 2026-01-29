@@ -14,6 +14,12 @@ import {
 import { getMany, getOne, httpClient } from "../utils/api-client"
 import { apiUrl } from "../utils/api-utils"
 
+const clubDocumentCodesMapper = (data: ClubDocumentCodeData[] | undefined) =>
+	data?.map((code) => new ClubDocumentCode(code))
+const clubDocumentMapper = (data: ClubDocumentData | undefined) => new ClubDocument(data!)
+const clubDocumentsMapper = (data: ClubDocumentData[] | undefined) =>
+	data?.map((doc) => new ClubDocument(doc))
+
 interface ClubDocumentArgs {
 	documentId?: number
 	formData: FormData
@@ -24,7 +30,7 @@ export function useClubDocumentCodes() {
 	return useQuery({
 		queryKey: ["club-document-codes"],
 		queryFn: () => getMany<ClubDocumentCodeData>(endpoint, ClubDocumentCodeApiSchema),
-		select: (data) => data?.map((code) => new ClubDocumentCode(code)),
+		select: clubDocumentCodesMapper,
 	})
 }
 
@@ -33,7 +39,7 @@ export function useClubDocument(code: string) {
 	return useQuery({
 		queryKey: ["club-documents", code],
 		queryFn: () => getOne<ClubDocumentData>(endpoint, ClubDocumentApiSchema),
-		select: (data) => new ClubDocument(data!),
+		select: clubDocumentMapper,
 	})
 }
 
@@ -42,7 +48,7 @@ export function useClubDocuments() {
 	return useQuery({
 		queryKey: ["club-documents"],
 		queryFn: () => getMany<ClubDocumentData>(endpoint, ClubDocumentApiSchema),
-		select: (data) => data?.map((doc) => new ClubDocument(doc)),
+		select: clubDocumentsMapper,
 	})
 }
 

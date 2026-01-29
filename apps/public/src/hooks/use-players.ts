@@ -6,11 +6,13 @@ import { apiUrl } from "../utils/api-utils"
 
 const endpoint = "players"
 
+const mapper = (data: PlayerApiData[]) => data.map((player) => new Player(player))
+
 export function usePlayers() {
 	return useQuery({
 		queryKey: [endpoint],
 		queryFn: () => getMany<PlayerApiData>(endpoint, PlayerApiSchema),
-		select: (data) => data.map((player) => new Player(player)),
+		select: mapper,
 	})
 }
 

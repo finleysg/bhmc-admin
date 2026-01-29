@@ -10,6 +10,9 @@ import {
 } from "../models/points"
 import { getMany } from "../utils/api-client"
 
+const topPointsMapper = (data: TopPointsData[]) => data.map((pt) => new TopPoints(pt))
+const playerPointsMapper = (data: PlayerPointsData[]) => data.map((pp) => new PlayerPoints(pp))
+
 interface TopPointsArgs {
 	season: number
 	topN: number
@@ -22,7 +25,7 @@ export function useTopPoints({ season, topN, category }: TopPointsArgs) {
 	return useQuery({
 		queryKey: ["season-long-points", season, category, topN],
 		queryFn: () => getMany<TopPointsData>(endpoint, TopPointsSchema),
-		select: (data) => data.map((pt) => new TopPoints(pt)),
+		select: topPointsMapper,
 	})
 }
 
@@ -47,7 +50,7 @@ export function useSeasonLongPoints({ season, eventId, playerId }: SeasonLongPoi
 	return useQuery({
 		queryKey: ["season-long-points", season ?? 0, playerId ?? 0, eventId ?? 0],
 		queryFn: () => getMany<PlayerPointsData>(endpoint, PlayerPointsApiSchema),
-		select: (data) => data.map((pp) => new PlayerPoints(pp)),
+		select: playerPointsMapper,
 	})
 }
 
@@ -56,7 +59,7 @@ export function usePlayerPoints({ season, playerId }: SeasonLongPointsArgs) {
 	return useQuery({
 		queryKey: ["season-long-points", season, playerId],
 		queryFn: () => getMany<PlayerPointsData>(endpoint, PlayerPointsApiSchema),
-		select: (data) => data.map((pp) => new PlayerPoints(pp)),
+		select: playerPointsMapper,
 		enabled: playerId !== undefined,
 	})
 }
