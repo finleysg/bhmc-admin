@@ -80,6 +80,11 @@ const fixedColumnDefs: Record<string, ColumnDef<EventReportRow>> = {
 		accessorKey: "signedUpBy",
 		header: "Signed Up By",
 	},
+	signupDate: {
+		accessorKey: "signupDate",
+		header: "Signup Date",
+		enableSorting: true,
+	},
 	type: {
 		accessorKey: "type",
 		header: "Type",

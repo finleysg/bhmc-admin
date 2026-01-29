@@ -75,6 +75,7 @@ interface EventPlayerSlot {
 	email?: string | null
 	signedUpBy?: string | null
 	signupDate?: string | null
+	notes?: string | null
 	fees: EventPlayerFee[]
 }
 
@@ -269,6 +270,8 @@ export class ReportsService {
 				fullName,
 				email: player.email,
 				signedUpBy: registration.signedUpBy,
+				signupDate: registration.createdDate,
+				notes: registration.notes,
 				fees,
 			}
 		})
@@ -326,8 +329,9 @@ export class ReportsService {
 				fullName: slot.fullName,
 				email: slot.email || "",
 				signedUpBy: slot.signedUpBy || "",
-				signupDate: slot.signupDate || "",
+				signupDate: slot.signupDate?.split(" ")[0] || "",
 				type: lastSeasonMemberIds.has(slot.playerId) ? "Returning" : "New",
+				notes: slot.notes || "",
 			}
 			for (const fee of slot.fees) {
 				row[fee.name] = fee.amount
@@ -359,6 +363,7 @@ export class ReportsService {
 			"signedUpBy",
 			"signupDate",
 			"type",
+			"notes",
 		]
 		const fixedColumns = [
 			{ header: "Team", key: "teamId", width: 15 },
@@ -374,6 +379,7 @@ export class ReportsService {
 			{ header: "Signed Up By", key: "signedUpBy", width: 15 },
 			{ header: "Signup Date", key: "signupDate", width: 12 },
 			{ header: "Type", key: "type", width: 10 },
+			{ header: "Notes", key: "notes", width: 30 },
 		]
 
 		// Add dynamic fee columns

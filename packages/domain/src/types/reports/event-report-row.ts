@@ -12,5 +12,6 @@ export interface EventReportRow {
 	signedUpBy: string
 	signupDate: string
 	type?: string
+	notes?: string
 	[feeName: string]: string | undefined
 }
