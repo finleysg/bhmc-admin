@@ -94,7 +94,8 @@ const MembershipTable = ({ data }: { data: MembershipReportRow[] | null }) => {
 
 	if (data && data.length > 0) {
 		const feeKeys = Object.keys(data[0]).filter(
-			(key) => !Object.keys(fixedColumnDefs).includes(key) && key !== "signupDate",
+			(key) =>
+				!Object.keys(fixedColumnDefs).includes(key) && key !== "signupDate" && key !== "notes",
 		)
 		feeKeys.forEach((key) => {
 			columns.push({
