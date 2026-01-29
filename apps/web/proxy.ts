@@ -28,7 +28,7 @@ export function proxy(request: NextRequest): NextResponse {
 	if (!accessToken?.value) {
 		// No token, redirect to sign-in
 		const signInUrl = new URL("/sign-in", request.url)
-		signInUrl.searchParams.set("callbackUrl", pathname)
+		signInUrl.searchParams.set("returnUrl", pathname)
 		return NextResponse.redirect(signInUrl)
 	}
 
