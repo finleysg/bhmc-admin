@@ -21,6 +21,7 @@ import {
 	RefundService,
 	PlayerService,
 	CleanupService,
+	BulkRefundProgressTracker,
 } from "./"
 
 @Module({
@@ -39,6 +40,7 @@ import {
 	],
 	providers: [
 		AdminRegistrationService,
+		BulkRefundProgressTracker,
 		CleanupService,
 		PaymentsRepository,
 		PaymentsService,
@@ -52,6 +54,7 @@ import {
 	],
 	exports: [
 		AdminRegistrationService,
+		BulkRefundProgressTracker,
 		CleanupService,
 		PaymentsService,
 		PlayerService,
