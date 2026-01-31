@@ -4,6 +4,7 @@ import {
 	calculateCourseHandicap,
 	distributeStrokes,
 	calculateHandicapFromTeeData,
+	needsHandicapCalculation,
 	TeeData,
 } from "../handicap.utils"
 
@@ -482,6 +483,60 @@ describe("calculateHandicapFromTeeData", () => {
 			expect(result!.handicapDotsByHole).toEqual([
 				-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			])
+		})
+	})
+})
+
+describe("needsHandicapCalculation", () => {
+	describe("returns true (needs calculation)", () => {
+		it("should return true when courseHandicap is 0 and all dots are 0", () => {
+			expect(needsHandicapCalculation(0, [0, 0, 0, 0, 0, 0, 0, 0, 0])).toBe(true)
+		})
+
+		it("should return true when courseHandicap is 0 and dots is empty array", () => {
+			expect(needsHandicapCalculation(0, [])).toBe(true)
+		})
+
+		it("should return true when courseHandicap is 0 and dots is undefined", () => {
+			expect(needsHandicapCalculation(0, undefined)).toBe(true)
+		})
+
+		it("should return true when courseHandicap is 0 and dots is null", () => {
+			expect(needsHandicapCalculation(0, null)).toBe(true)
+		})
+
+		it("should return true when courseHandicap is undefined and dots are all 0", () => {
+			expect(needsHandicapCalculation(undefined, [0, 0, 0, 0, 0, 0, 0, 0, 0])).toBe(true)
+		})
+
+		it("should return true when courseHandicap is null and dots are all 0", () => {
+			expect(needsHandicapCalculation(null, [0, 0, 0, 0, 0, 0, 0, 0, 0])).toBe(true)
+		})
+
+		it("should return true when courseHandicap is 0 and dots contain nulls", () => {
+			expect(needsHandicapCalculation(0, [0, null, 0, null, 0, 0, 0, 0, 0])).toBe(true)
+		})
+	})
+
+	describe("returns false (GG data is valid)", () => {
+		it("should return false when courseHandicap is non-zero", () => {
+			expect(needsHandicapCalculation(4, [1, 1, 0, 0, 0, 1, 1, 0, 0])).toBe(false)
+		})
+
+		it("should return false when courseHandicap is non-zero even with all dots 0", () => {
+			expect(needsHandicapCalculation(4, [0, 0, 0, 0, 0, 0, 0, 0, 0])).toBe(false)
+		})
+
+		it("should return false when courseHandicap is 0 but some dots are non-zero", () => {
+			expect(needsHandicapCalculation(0, [1, 0, 0, 0, 0, 0, 0, 0, 0])).toBe(false)
+		})
+
+		it("should return false for negative courseHandicap (plus handicap)", () => {
+			expect(needsHandicapCalculation(-2, [-1, -1, 0, 0, 0, 0, 0, 0, 0])).toBe(false)
+		})
+
+		it("should return false when courseHandicap is 0 but dots have negative values", () => {
+			expect(needsHandicapCalculation(0, [-1, 0, 0, 0, 0, 0, 0, 0, 0])).toBe(false)
 		})
 	})
 })

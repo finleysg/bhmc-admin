@@ -240,3 +240,39 @@ export function calculateHandicapFromTeeData(
 
 	return { courseHandicap, handicapDotsByHole }
 }
+
+/**
+ * Determines if handicap calculation is needed because GG returned missing data.
+ *
+ * Returns true when courseHandicap is 0/empty AND all handicapDotsByHole are zero,
+ * indicating Golf Genius did not provide handicap data.
+ *
+ * @param courseHandicap - The course handicap from GG (0 or undefined if missing)
+ * @param handicapDotsByHole - Array of handicap dots from GG
+ * @returns true if calculation is needed, false if GG data is valid
+ *
+ * @example
+ * needsHandicapCalculation(0, [0,0,0,0,0,0,0,0,0])  // returns true
+ * needsHandicapCalculation(4, [1,1,0,0,0,1,1,0,0])  // returns false
+ * needsHandicapCalculation(0, [1,0,0,0,0,0,0,0,0])  // returns false
+ */
+export function needsHandicapCalculation(
+	courseHandicap: number | undefined | null,
+	handicapDotsByHole: (number | null | undefined)[] | undefined | null,
+): boolean {
+	// If courseHandicap is non-zero, GG data is valid
+	if (courseHandicap !== 0 && courseHandicap !== undefined && courseHandicap !== null) {
+		return false
+	}
+
+	// If any handicapDot is non-zero, GG data is valid
+	if (
+		handicapDotsByHole &&
+		handicapDotsByHole.some((dot) => dot !== 0 && dot !== null && dot !== undefined)
+	) {
+		return false
+	}
+
+	// courseHandicap is 0/empty AND all dots are zero/empty - needs calculation
+	return true
+}
