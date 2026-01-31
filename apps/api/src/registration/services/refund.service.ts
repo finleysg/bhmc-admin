@@ -1,7 +1,12 @@
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { inArray } from "drizzle-orm"
 
-import { Refund, RefundRequest } from "@repo/domain/types"
+import {
+	BulkRefundPaymentPreview,
+	BulkRefundPreview,
+	Refund,
+	RefundRequest,
+} from "@repo/domain/types"
 
 import { DrizzleService, refund, registrationFee, toDbString } from "../../database"
 import { StripeService } from "../../stripe/stripe.service"
@@ -129,5 +134,40 @@ export class RefundService {
 			return
 		}
 		await this.paymentsRepository.confirmRefund(row.id)
+	}
+
+	/** Get bulk refund preview for an event. */
+	async getBulkRefundPreview(eventId: number): Promise<BulkRefundPreview> {
+		const confirmedPayments =
+			await this.paymentsRepository.findConfirmedPaymentsByEventWithDetails(eventId)
+
+		const payments: BulkRefundPaymentPreview[] = []
+		let skippedCount = 0
+
+		for (const p of confirmedPayments) {
+			const paidFees = p.fees.filter((f) => f.isPaid === 1)
+			if (paidFees.length === 0) {
+				skippedCount++
+				continue
+			}
+
+			const refundAmount = paidFees.reduce((sum, f) => sum + parseFloat(f.amount), 0)
+			payments.push({
+				paymentId: p.paymentId,
+				playerName: p.playerName,
+				feeCount: paidFees.length,
+				refundAmount,
+				registrationFeeIds: paidFees.map((f) => f.registrationFeeId),
+			})
+		}
+
+		const totalRefundAmount = payments.reduce((sum, p) => sum + p.refundAmount, 0)
+
+		return {
+			eventId,
+			payments,
+			totalRefundAmount,
+			skippedCount,
+		}
 	}
 }
