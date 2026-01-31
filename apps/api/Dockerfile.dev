@@ -16,5 +16,6 @@ RUN pnpm --filter @repo/domain build
 WORKDIR /app/apps/api
 
 EXPOSE 3333
+EXPOSE 9229
 
-CMD ["pnpm", "dev"]
+CMD ["pnpm", "debug"]
