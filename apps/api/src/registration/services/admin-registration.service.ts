@@ -97,7 +97,7 @@ export class AdminRegistrationService {
 				const season = new Date(eventRecord.startDate).getFullYear()
 				for (const slot of dto.slots) {
 					this.logger.log(`Updating membership status for player ${slot.playerId}.`)
-					await this.updateMembershipStatus(slot.playerId, season)
+					await this.updateMembershipStatus(dto.userId, season)
 				}
 			}
 
@@ -380,6 +380,7 @@ export class AdminRegistrationService {
 				signedUpBy: dto.signedUpBy,
 				expires: toDbString(expires),
 				createdDate: toDbString(new Date()),
+				notes: dto.notes ?? "",
 			})
 			registrationId = Number(result.insertId)
 
