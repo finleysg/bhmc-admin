@@ -124,7 +124,7 @@
 				"Uses fetchWithAuth pattern",
 				"Returns BulkRefundPreview JSON"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 9,
@@ -138,7 +138,7 @@
 				"Sets Content-Type: text/event-stream header",
 				"Streams response body back to client"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 10,
