@@ -34,7 +34,9 @@ export const eventScore = mysqlTable(
 		holeId: int("hole_id")
 			.notNull()
 			.references(() => hole.id),
-		scorecardId: int("scorecard_id").references(() => eventScorecard.id),
+		scorecardId: int("scorecard_id")
+			.notNull()
+			.references(() => eventScorecard.id),
 	},
 	(table) => [
 		primaryKey({ columns: [table.id], name: "scores_eventscore_id" }),
