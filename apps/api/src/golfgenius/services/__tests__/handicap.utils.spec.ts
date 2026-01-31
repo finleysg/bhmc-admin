@@ -1,4 +1,4 @@
-import { parseHandicapIndex } from "../handicap.utils"
+import { parseHandicapIndex, calculateCoursePar } from "../handicap.utils"
 
 describe("parseHandicapIndex", () => {
 	describe("positive handicaps", () => {
@@ -77,5 +77,88 @@ describe("parseHandicapIndex", () => {
 		it("should return null for plus with non-numeric", () => {
 			expect(parseHandicapIndex("+abc")).toBeNull()
 		})
+	})
+})
+
+describe("calculateCoursePar", () => {
+	it("should sum front 9 par values", () => {
+		const parValues = [
+			4,
+			5,
+			3,
+			4,
+			5,
+			4,
+			4,
+			3,
+			4,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+		]
+		expect(calculateCoursePar(parValues)).toBe(36)
+	})
+
+	it("should sum back 9 par values", () => {
+		const parValues = [
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			4,
+			4,
+			3,
+			5,
+			4,
+			4,
+			5,
+			3,
+			4,
+		]
+		expect(calculateCoursePar(parValues)).toBe(36)
+	})
+
+	it("should sum full 18 holes", () => {
+		const parValues = [4, 5, 3, 4, 5, 4, 4, 3, 4, 4, 4, 3, 5, 4, 4, 5, 3, 4]
+		expect(calculateCoursePar(parValues)).toBe(72)
+	})
+
+	it("should return 0 for all-null array", () => {
+		const parValues = [
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+		]
+		expect(calculateCoursePar(parValues)).toBe(0)
+	})
+
+	it("should return 0 for empty array", () => {
+		expect(calculateCoursePar([])).toBe(0)
 	})
 })

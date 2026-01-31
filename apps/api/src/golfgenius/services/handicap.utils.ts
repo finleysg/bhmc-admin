@@ -32,3 +32,20 @@ export function parseHandicapIndex(handicapIndex: string | undefined | null): nu
 	const value = parseFloat(trimmed)
 	return isNaN(value) ? null : value
 }
+
+/**
+ * Calculates course par from hole par values.
+ *
+ * Sums all non-null par values from the array. Handles both 9-hole
+ * courses (9 non-null values) and 18-hole courses (18 non-null values).
+ *
+ * @param parValues - Array of 18 par values (null for unplayed holes)
+ * @returns Sum of non-null par values, or 0 if all null
+ *
+ * @example
+ * calculateCoursePar([4,5,3,4,5,4,4,3,4,null,...]) // returns 36 (front 9)
+ * calculateCoursePar([4,5,3,4,5,4,4,3,4,4,4,3,5,4,4,5,3,4]) // returns 72
+ */
+export function calculateCoursePar(parValues: (number | null)[]): number {
+	return parValues.reduce<number>((sum, par) => sum + (par ?? 0), 0)
+}
