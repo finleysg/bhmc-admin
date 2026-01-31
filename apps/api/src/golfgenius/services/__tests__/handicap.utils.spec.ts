@@ -186,4 +186,27 @@ describe("calculateCourseHandicap", () => {
 			expect(calculateCourseHandicap(36, 127, 35.9, 36, true)).toBe(20)
 		})
 	})
+
+	describe("18-hole formula", () => {
+		it("should calculate 18-hole course handicap", () => {
+			// Formula: index x (slope/113) + (rating - par)
+			// 10 x (127/113) + (71.5 - 72) = 10 x 1.124 - 0.5 = 10.74 ≈ 11
+			expect(calculateCourseHandicap(10, 127, 71.5, 72, false)).toBe(11)
+		})
+
+		it("should handle scratch handicap (0)", () => {
+			// 0 x (slope/113) + (rating - par) = 0 + (71.5 - 72) = -0.5 ≈ 0
+			expect(calculateCourseHandicap(0, 127, 71.5, 72, false)).toBe(0)
+		})
+
+		it("should handle plus handicap (negative index)", () => {
+			// -3 x (127/113) + (71.5 - 72) = -3 x 1.124 - 0.5 = -3.87 ≈ -4
+			expect(calculateCourseHandicap(-3, 127, 71.5, 72, false)).toBe(-4)
+		})
+
+		it("should handle high handicap", () => {
+			// 36 x (127/113) + (71.5 - 72) = 36 x 1.124 - 0.5 = 39.96 ≈ 40
+			expect(calculateCourseHandicap(36, 127, 71.5, 72, false)).toBe(40)
+		})
+	})
 })
