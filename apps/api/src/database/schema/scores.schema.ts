@@ -31,17 +31,13 @@ export const eventScore = mysqlTable(
 		id: int().autoincrement().notNull(),
 		score: int("score").notNull(),
 		isNet: int("is_net").notNull().default(0),
-		eventId: int("event_id").references(() => event.id), // Legacy field
 		holeId: int("hole_id")
 			.notNull()
 			.references(() => hole.id),
-		playerId: int("player_id").references(() => player.id), // Legacy field
-		courseId: int("course_id").references(() => course.id), // Legacy field
-		teeId: int("tee_id").references(() => tee.id), // Legacy field
 		scorecardId: int("scorecard_id").references(() => eventScorecard.id),
 	},
 	(table) => [
 		primaryKey({ columns: [table.id], name: "scores_eventscore_id" }),
-		unique("unique_event_score").on(table.eventId, table.playerId, table.holeId, table.isNet),
+		unique("unique_event_score").on(table.scorecardId, table.holeId, table.isNet),
 	],
 )

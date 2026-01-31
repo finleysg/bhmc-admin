@@ -1,0 +1,203 @@
+{
+	"title": "Handicap Calculation for Scores Import",
+	"description": "Calculate course handicap and stroke distribution when Golf Genius returns missing/zero data",
+	"tasks": [
+		{
+			"id": "1.1",
+			"category": "Schema",
+			"description": "Add slope_and_rating schema to GgTeesheetTeeSchema",
+			"file": "apps/api/src/golfgenius/api-data/teesheet.ts",
+			"acceptance_criteria": [
+				"GgSlopeRatingSchema with rating (number|null) and slope (number|null)",
+				"slope_and_rating object with all18, front9, back9 properties",
+				"Schema validates actual GG API response format"
+			],
+			"verification": [
+				"TypeScript compiles without errors",
+				"Existing tests pass: pnpm --filter api test"
+			],
+			"passes": true
+		},
+		{
+			"id": "1.2",
+			"category": "Schema",
+			"description": "Add nine_hole_course field to GgTeesheetTeeSchema",
+			"file": "apps/api/src/golfgenius/api-data/teesheet.ts",
+			"acceptance_criteria": [
+				"nine_hole_course: z.boolean() field added to schema",
+				"GgTeesheetTee type includes nine_hole_course property"
+			],
+			"verification": ["TypeScript compiles without errors", "Existing tests pass"],
+			"passes": true
+		},
+		{
+			"id": "2.1",
+			"category": "Utility",
+			"description": "Create parseHandicapIndex function",
+			"file": "apps/api/src/golfgenius/services/handicap.utils.ts",
+			"acceptance_criteria": [
+				"Parses '6.7' to 6.7",
+				"Parses '+2.3' to -2.3 (plus handicap is negative)",
+				"Returns null for empty/whitespace strings",
+				"Handles whitespace trimming"
+			],
+			"verification": ["Unit test with positive, plus, empty, whitespace cases"],
+			"passes": true
+		},
+		{
+			"id": "2.2",
+			"category": "Utility",
+			"description": "Create calculateCoursePar function",
+			"file": "apps/api/src/golfgenius/services/handicap.utils.ts",
+			"acceptance_criteria": [
+				"Sums non-null values from par array",
+				"Returns 0 for all-null array",
+				"Handles 9-hole (9 non-null) and 18-hole (18 non-null) arrays"
+			],
+			"verification": ["Unit test: [4,5,3,4,5,4,4,3,4,null,...] returns 36"],
+			"passes": true
+		},
+		{
+			"id": "2.3",
+			"category": "Utility",
+			"description": "Create calculateCourseHandicap function with 9-hole formula",
+			"file": "apps/api/src/golfgenius/services/handicap.utils.ts",
+			"acceptance_criteria": [
+				"9-hole formula: (index/2) x (slope/113) + (rating - par)",
+				"Maintains full precision in intermediary calculations",
+				"Rounds only as final step using Math.round()"
+			],
+			"verification": ["Unit test: index=6.7, slope=127, rating=35.9, par=36, 9-hole -> 4"],
+			"passes": true
+		},
+		{
+			"id": "2.4",
+			"category": "Utility",
+			"description": "Add 18-hole formula to calculateCourseHandicap",
+			"file": "apps/api/src/golfgenius/services/handicap.utils.ts",
+			"acceptance_criteria": [
+				"18-hole formula: index x (slope/113) + (rating - par)",
+				"isNineHole parameter determines which formula to use"
+			],
+			"verification": ["Unit test: index=10, slope=127, rating=71.5, par=72, 18-hole -> 11"],
+			"passes": true
+		},
+		{
+			"id": "2.5",
+			"category": "Utility",
+			"description": "Create distributeStrokes function for normal handicaps",
+			"file": "apps/api/src/golfgenius/services/handicap.utils.ts",
+			"acceptance_criteria": [
+				"Accepts courseHandicap and strokeIndices array",
+				"Stroke index 1 = hardest hole, gets stroke first",
+				"Returns array same length as strokeIndices with stroke counts",
+				"Handles null values in strokeIndices (skip them)"
+			],
+			"verification": ["Unit test: handicap=4, indices=[1,5,8,9,6,4,2,3,7] -> [1,0,0,0,0,1,1,1,0]"],
+			"passes": true
+		},
+		{
+			"id": "2.6",
+			"category": "Utility",
+			"description": "Extend distributeStrokes for high handicaps (2+ strokes/hole)",
+			"file": "apps/api/src/golfgenius/services/handicap.utils.ts",
+			"acceptance_criteria": [
+				"When courseHandicap > numHoles, cycle through for additional strokes",
+				"Hardest holes get 2nd stroke first, then 3rd, etc."
+			],
+			"verification": ["Unit test: handicap=12, 9 holes -> all get 1, indices 1-3 get 2nd stroke"],
+			"passes": true
+		},
+		{
+			"id": "2.7",
+			"category": "Utility",
+			"description": "Extend distributeStrokes for plus handicaps (negative)",
+			"file": "apps/api/src/golfgenius/services/handicap.utils.ts",
+			"acceptance_criteria": [
+				"Negative courseHandicap distributes negative strokes",
+				"Plus handicap player adds strokes to net (gross - negative = higher)",
+				"Returns zeroes when courseHandicap is 0"
+			],
+			"verification": [
+				"Unit test: handicap=-2, 9 holes -> [-1,-1,0,0,0,0,0,0,0] (hardest 2 get -1)"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.8",
+			"category": "Utility",
+			"description": "Create TeeData interface and calculateHandicapFromTeeData function",
+			"file": "apps/api/src/golfgenius/services/handicap.utils.ts",
+			"acceptance_criteria": [
+				"TeeData interface with nineHoleCourse, holeData, slopeAndRating",
+				"Selects correct slope/rating: front9 for 9-hole front, back9 for 9-hole back, all18 for 18-hole",
+				"Falls back to all18 if front9/back9 slope is null",
+				"Returns null if slope/rating unavailable",
+				"Returns null if handicapIndex is empty"
+			],
+			"verification": [
+				"Unit test: full calculation with sample tee data returns courseHandicap and handicapDotsByHole"
+			],
+			"passes": true
+		},
+		{
+			"id": "2.9",
+			"category": "Utility",
+			"description": "Create needsHandicapCalculation function",
+			"file": "apps/api/src/golfgenius/services/handicap.utils.ts",
+			"acceptance_criteria": [
+				"Returns true when courseHandicap is 0/empty AND handicapDotsByHole are all zeroes",
+				"Returns false when courseHandicap is non-zero",
+				"Returns false when any handicapDot is non-zero"
+			],
+			"verification": ["Unit tests for all combinations of courseHandicap and dots"],
+			"passes": true
+		},
+		{
+			"id": "3.1",
+			"category": "Integration",
+			"description": "Add mapToTeeData helper method to ScoresImportService",
+			"file": "apps/api/src/golfgenius/services/scores-import.service.ts",
+			"acceptance_criteria": [
+				"Maps GgTeesheetTee to TeeData interface",
+				"Handles snake_case to camelCase conversion"
+			],
+			"verification": ["TypeScript compiles without errors"],
+			"passes": true
+		},
+		{
+			"id": "3.2",
+			"category": "Integration",
+			"description": "Integrate handicap calculation into createOrUpdateScorecard",
+			"file": "apps/api/src/golfgenius/services/scores-import.service.ts",
+			"acceptance_criteria": [
+				"Check needsHandicapCalculation before using GG data",
+				"Calculate courseHandicap from tee data when GG data missing",
+				"Log when fallback calculation is used",
+				"Use calculated value in scorecard create/update"
+			],
+			"verification": [
+				"Docker compose up, import scores for event with missing GG handicap",
+				"Verify scorecard.courseHandicap is calculated correctly"
+			],
+			"passes": true
+		},
+		{
+			"id": "3.3",
+			"category": "Integration",
+			"description": "Integrate handicap calculation into createOrUpdateScores",
+			"file": "apps/api/src/golfgenius/services/scores-import.service.ts",
+			"acceptance_criteria": [
+				"Check needsHandicapCalculation before using GG handicap_dots_by_hole",
+				"Calculate handicapDotsByHole from tee data when GG data missing",
+				"Use calculated dots for net score calculation",
+				"Net score = gross - handicapDots (works for positive and negative dots)"
+			],
+			"verification": [
+				"Import scores, verify net scores reflect calculated strokes",
+				"Verify plus handicap player has net > gross"
+			],
+			"passes": true
+		}
+	]
+}

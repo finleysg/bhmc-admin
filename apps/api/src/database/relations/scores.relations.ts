@@ -23,25 +23,9 @@ export const eventScorecardRelations = relations(eventScorecard, ({ one, many })
 }))
 
 export const eventScoreRelations = relations(eventScore, ({ one }) => ({
-	event: one(event, {
-		fields: [eventScore.eventId],
-		references: [event.id],
-	}),
 	hole: one(hole, {
 		fields: [eventScore.holeId],
 		references: [hole.id],
-	}),
-	player: one(player, {
-		fields: [eventScore.playerId],
-		references: [player.id],
-	}),
-	course: one(course, {
-		fields: [eventScore.courseId],
-		references: [course.id],
-	}),
-	tee: one(tee, {
-		fields: [eventScore.teeId],
-		references: [tee.id],
 	}),
 	scorecard: one(eventScorecard, {
 		fields: [eventScore.scorecardId],

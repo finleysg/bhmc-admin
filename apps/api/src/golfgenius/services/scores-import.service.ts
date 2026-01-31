@@ -11,7 +11,8 @@ import { ScoresService } from "../../scores"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import { ProgressTracker } from "./progress-tracker"
-import { GgPlayer } from "../api-data"
+import { GgPlayer, GgTeesheetTee } from "../api-data"
+import { TeeData, needsHandicapCalculation, calculateHandicapFromTeeData } from "./handicap.utils"
 
 interface ImportScoresResult {
 	scorecards: {
@@ -96,11 +97,12 @@ export class ScoresImportService {
 						eventId,
 						playerId,
 						player,
+						player.tee,
 						courseId,
 						teeId,
 						results,
 					)
-					await this.createOrUpdateScores(scorecard.id, player, courseId)
+					await this.createOrUpdateScores(scorecard.id, player, player.tee, courseId)
 
 					// Emit progress for successfully processed player
 					if (onPlayerProcessed) {
@@ -170,13 +172,28 @@ export class ScoresImportService {
 		eventId: number,
 		playerId: number,
 		playerData: GgPlayer,
+		teeData: GgTeesheetTee,
 		courseId: number,
 		teeId: number,
 		results: ImportScoresResult,
 	) {
 		const existing = await this.scoresService.findScorecard(eventId, playerId)
 		const handicapIndex = this.parseHandicap(playerData.handicap_index)
-		const courseHandicap = this.parseHandicap(playerData.course_handicap)
+		let courseHandicap = this.parseHandicap(playerData.course_handicap)
+
+		// Check if GG data is missing and calculate from tee data
+		if (needsHandicapCalculation(courseHandicap, playerData.handicap_dots_by_hole)) {
+			const calculated = calculateHandicapFromTeeData(
+				playerData.handicap_index,
+				this.mapToTeeData(teeData),
+			)
+			if (calculated) {
+				this.logger.log(
+					`Calculated courseHandicap ${calculated.courseHandicap} for player ${playerData.name} (GG data missing)`,
+				)
+				courseHandicap = calculated.courseHandicap
+			}
+		}
 
 		if (existing) {
 			results.scorecards.updated++
@@ -204,6 +221,7 @@ export class ScoresImportService {
 	private async createOrUpdateScores(
 		scoreCardId: number,
 		playerData: GgPlayer,
+		teeData: GgTeesheetTee,
 		courseId: number,
 	): Promise<void> {
 		// Delete all existing scores for this scorecard first
@@ -211,6 +229,22 @@ export class ScoresImportService {
 
 		const holes = await this.courses.findHolesByCourseId(courseId)
 		const allScores: ScoreInsert[] = []
+
+		// Determine which handicap dots to use
+		let handicapDotsByHole = playerData.handicap_dots_by_hole
+		const courseHandicap = this.parseHandicap(playerData.course_handicap)
+		if (needsHandicapCalculation(courseHandicap, playerData.handicap_dots_by_hole)) {
+			const calculated = calculateHandicapFromTeeData(
+				playerData.handicap_index,
+				this.mapToTeeData(teeData),
+			)
+			if (calculated) {
+				this.logger.log(
+					`Calculated handicapDotsByHole for player ${playerData.name} (GG data missing)`,
+				)
+				handicapDotsByHole = calculated.handicapDotsByHole
+			}
+		}
 
 		for (let i = 0; i < playerData.score_array.length; i++) {
 			const grossScore = playerData.score_array[i]
@@ -227,8 +261,10 @@ export class ScoresImportService {
 				isNet: 0,
 			})
 
-			// Calculate and prepare net score
-			const handicapDots = playerData.handicap_dots_by_hole[i] || 0
+			// Calculate net score: gross - handicapDots
+			// For positive handicap: dots are positive, net < gross
+			// For plus handicap: dots are negative, net > gross
+			const handicapDots = handicapDotsByHole[i] || 0
 			const netScore = grossScore - handicapDots
 
 			allScores.push({
@@ -250,6 +286,33 @@ export class ScoresImportService {
 			return -parseFloat(trimmed.substring(1))
 		}
 		return parseFloat(trimmed)
+	}
+
+	/**
+	 * Maps GgTeesheetTee to TeeData for handicap calculation.
+	 */
+	private mapToTeeData(tee: GgTeesheetTee): TeeData {
+		return {
+			nineHoleCourse: tee.nine_hole_course,
+			holeData: {
+				par: tee.hole_data.par,
+				handicap: tee.hole_data.handicap,
+			},
+			slopeAndRating: {
+				all18: {
+					rating: tee.slope_and_rating.all18.rating,
+					slope: tee.slope_and_rating.all18.slope,
+				},
+				front9: {
+					rating: tee.slope_and_rating.front9.rating,
+					slope: tee.slope_and_rating.front9.slope,
+				},
+				back9: {
+					rating: tee.slope_and_rating.back9.rating,
+					slope: tee.slope_and_rating.back9.slope,
+				},
+			},
+		}
 	}
 
 	async importScoresForEvent(eventId: number): Promise<ImportEventScoresResult> {
