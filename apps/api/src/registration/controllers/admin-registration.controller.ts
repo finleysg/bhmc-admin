@@ -12,6 +12,7 @@ import {
 import type {
 	AdminRegistration,
 	AvailableSlotGroup,
+	BulkRefundPreview,
 	RefundRequest,
 	PlayerQuery,
 	RegisteredPlayer,
@@ -188,5 +189,12 @@ export class AdminRegistrationController {
 		const issuerId = 1 // TODO: change issuer to a string
 		await this.refundService.processRefunds(refundRequests, issuerId)
 		return { success: true }
+	}
+
+	@Get(":eventId/bulk-refund-preview")
+	async getBulkRefundPreview(
+		@Param("eventId", ParseIntPipe) eventId: number,
+	): Promise<BulkRefundPreview> {
+		return this.refundService.getBulkRefundPreview(eventId)
 	}
 }
