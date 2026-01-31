@@ -102,7 +102,7 @@ export class ScoresImportService {
 						teeId,
 						results,
 					)
-					await this.createOrUpdateScores(scorecard.id, player, courseId)
+					await this.createOrUpdateScores(scorecard.id, player, player.tee, courseId)
 
 					// Emit progress for successfully processed player
 					if (onPlayerProcessed) {
@@ -221,6 +221,7 @@ export class ScoresImportService {
 	private async createOrUpdateScores(
 		scoreCardId: number,
 		playerData: GgPlayer,
+		teeData: GgTeesheetTee,
 		courseId: number,
 	): Promise<void> {
 		// Delete all existing scores for this scorecard first
@@ -228,6 +229,22 @@ export class ScoresImportService {
 
 		const holes = await this.courses.findHolesByCourseId(courseId)
 		const allScores: ScoreInsert[] = []
+
+		// Determine which handicap dots to use
+		let handicapDotsByHole = playerData.handicap_dots_by_hole
+		const courseHandicap = this.parseHandicap(playerData.course_handicap)
+		if (needsHandicapCalculation(courseHandicap, playerData.handicap_dots_by_hole)) {
+			const calculated = calculateHandicapFromTeeData(
+				playerData.handicap_index,
+				this.mapToTeeData(teeData),
+			)
+			if (calculated) {
+				this.logger.log(
+					`Calculated handicapDotsByHole for player ${playerData.name} (GG data missing)`,
+				)
+				handicapDotsByHole = calculated.handicapDotsByHole
+			}
+		}
 
 		for (let i = 0; i < playerData.score_array.length; i++) {
 			const grossScore = playerData.score_array[i]
@@ -244,8 +261,10 @@ export class ScoresImportService {
 				isNet: 0,
 			})
 
-			// Calculate and prepare net score
-			const handicapDots = playerData.handicap_dots_by_hole[i] || 0
+			// Calculate net score: gross - handicapDots
+			// For positive handicap: dots are positive, net < gross
+			// For plus handicap: dots are negative, net > gross
+			const handicapDots = handicapDotsByHole[i] || 0
 			const netScore = grossScore - handicapDots
 
 			allScores.push({

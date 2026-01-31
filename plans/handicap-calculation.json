@@ -180,7 +180,7 @@
 				"Docker compose up, import scores for event with missing GG handicap",
 				"Verify scorecard.courseHandicap is calculated correctly"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "3.3",
@@ -197,7 +197,7 @@
 				"Import scores, verify net scores reflect calculated strokes",
 				"Verify plus handicap player has net > gross"
 			],
-			"passes": false
+			"passes": true
 		}
 	]
 }
