@@ -94,7 +94,7 @@
 				"Returns BulkRefundPreview JSON",
 				"Requires admin authentication"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 7,
@@ -110,7 +110,7 @@
 				"Pipes events through map() to wrap as {data: JSON string}",
 				"Requires admin authentication"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 8,

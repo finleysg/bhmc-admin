@@ -1,3 +1,6 @@
+import { Observable } from "rxjs"
+import { map } from "rxjs/operators"
+
 import {
 	Body,
 	Controller,
@@ -8,6 +11,7 @@ import {
 	ParseIntPipe,
 	Post,
 	Query,
+	Sse,
 } from "@nestjs/common"
 import type {
 	AdminRegistration,
@@ -28,6 +32,7 @@ import type {
 
 import { Admin } from "../../auth"
 import { AdminRegistrationService } from "../services/admin-registration.service"
+import { BulkRefundProgressTracker } from "../services/bulk-refund-progress-tracker"
 import { PlayerService } from "../services/player.service"
 import { RefundService } from "../services/refund.service"
 import { RegistrationService } from "../services/registration.service"
@@ -43,6 +48,7 @@ export class AdminRegistrationController {
 		@Inject(PlayerService) private readonly adminRegisterService: PlayerService,
 		@Inject(RefundService) private readonly refundService: RefundService,
 		@Inject(RegistrationService) private readonly registrationService: RegistrationService,
+		@Inject(BulkRefundProgressTracker) private readonly progressTracker: BulkRefundProgressTracker,
 	) {}
 
 	@Get("players")
@@ -196,5 +202,28 @@ export class AdminRegistrationController {
 		@Param("eventId", ParseIntPipe) eventId: number,
 	): Promise<BulkRefundPreview> {
 		return this.refundService.getBulkRefundPreview(eventId)
+	}
+
+	@Sse(":eventId/bulk-refund")
+	bulkRefund(@Param("eventId", ParseIntPipe) eventId: number): Observable<{ data: string }> {
+		// Check if operation is already running
+		const existing = this.progressTracker.getProgressObservable(eventId)
+		if (existing) {
+			return existing.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		}
+
+		// Start new bulk refund and return progress stream
+		const issuerId = 1 // TODO: change issuer to a string
+		const observable = this.refundService.processBulkRefundsStream(eventId, issuerId)
+
+		return observable.pipe(
+			map((progress) => ({
+				data: JSON.stringify(progress),
+			})),
+		)
 	}
 }
