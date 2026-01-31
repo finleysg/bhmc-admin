@@ -11,7 +11,8 @@ import { ScoresService } from "../../scores"
 import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import { ProgressTracker } from "./progress-tracker"
-import { GgPlayer } from "../api-data"
+import { GgPlayer, GgTeesheetTee } from "../api-data"
+import { TeeData } from "./handicap.utils"
 
 interface ImportScoresResult {
 	scorecards: {
@@ -250,6 +251,33 @@ export class ScoresImportService {
 			return -parseFloat(trimmed.substring(1))
 		}
 		return parseFloat(trimmed)
+	}
+
+	/**
+	 * Maps GgTeesheetTee to TeeData for handicap calculation.
+	 */
+	private mapToTeeData(tee: GgTeesheetTee): TeeData {
+		return {
+			nineHoleCourse: tee.nine_hole_course,
+			holeData: {
+				par: tee.hole_data.par,
+				handicap: tee.hole_data.handicap,
+			},
+			slopeAndRating: {
+				all18: {
+					rating: tee.slope_and_rating.all18.rating,
+					slope: tee.slope_and_rating.all18.slope,
+				},
+				front9: {
+					rating: tee.slope_and_rating.front9.rating,
+					slope: tee.slope_and_rating.front9.slope,
+				},
+				back9: {
+					rating: tee.slope_and_rating.back9.rating,
+					slope: tee.slope_and_rating.back9.slope,
+				},
+			},
+		}
 	}
 
 	async importScoresForEvent(eventId: number): Promise<ImportEventScoresResult> {
