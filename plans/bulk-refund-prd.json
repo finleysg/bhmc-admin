@@ -175,7 +175,7 @@
 				"Shows total refund amount",
 				"Lists per-payment failures with error messages"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 12,
