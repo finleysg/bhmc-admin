@@ -1,4 +1,9 @@
-import { parseHandicapIndex, calculateCoursePar, calculateCourseHandicap } from "../handicap.utils"
+import {
+	parseHandicapIndex,
+	calculateCoursePar,
+	calculateCourseHandicap,
+	distributeStrokes,
+} from "../handicap.utils"
 
 describe("parseHandicapIndex", () => {
 	describe("positive handicaps", () => {
@@ -207,6 +212,64 @@ describe("calculateCourseHandicap", () => {
 		it("should handle high handicap", () => {
 			// 36 x (127/113) + (71.5 - 72) = 36 x 1.124 - 0.5 = 39.96 ≈ 40
 			expect(calculateCourseHandicap(36, 127, 71.5, 72, false)).toBe(40)
+		})
+	})
+})
+
+describe("distributeStrokes", () => {
+	describe("normal handicaps", () => {
+		it("should distribute 4 strokes to hardest 4 holes", () => {
+			// Stroke indices: [1,5,8,9,6,4,2,3,7] - holes with SI 1,2,3,4 get strokes
+			// Position 0 (SI=1), Position 6 (SI=2), Position 7 (SI=3), Position 5 (SI=4)
+			const strokeIndices = [1, 5, 8, 9, 6, 4, 2, 3, 7]
+			expect(distributeStrokes(4, strokeIndices)).toEqual([1, 0, 0, 0, 0, 1, 1, 1, 0])
+		})
+
+		it("should return zeroes for handicap 0", () => {
+			const strokeIndices = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+			expect(distributeStrokes(0, strokeIndices)).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0])
+		})
+
+		it("should handle single stroke", () => {
+			const strokeIndices = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+			expect(distributeStrokes(1, strokeIndices)).toEqual([1, 0, 0, 0, 0, 0, 0, 0, 0])
+		})
+
+		it("should handle all holes getting one stroke", () => {
+			const strokeIndices = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+			expect(distributeStrokes(9, strokeIndices)).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1])
+		})
+
+		it("should handle null values in stroke indices", () => {
+			// Front 9 only - back 9 are null
+			const strokeIndices = [
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+			]
+			expect(distributeStrokes(4, strokeIndices)).toEqual([
+				1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			])
+		})
+
+		it("should handle all-null stroke indices", () => {
+			const strokeIndices = [null, null, null, null, null, null, null, null, null]
+			expect(distributeStrokes(4, strokeIndices)).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0])
 		})
 	})
 })

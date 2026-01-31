@@ -82,3 +82,52 @@ export function calculateCourseHandicap(
 	const rounded = Math.round(courseHandicap)
 	return rounded === 0 ? 0 : rounded // Normalize -0 to 0
 }
+
+/**
+ * Distributes handicap strokes across holes based on stroke indices.
+ *
+ * Stroke index 1 = hardest hole (gets stroke first).
+ * For handicaps > numHoles, cycles through again for additional strokes.
+ * For negative handicaps (plus players), distributes negative strokes.
+ *
+ * @param courseHandicap - The player's course handicap (can be negative for plus handicaps)
+ * @param strokeIndices - Array of stroke index values (1-18, lower = harder hole)
+ * @returns Array of stroke counts per hole (same length as strokeIndices)
+ *
+ * @example
+ * distributeStrokes(4, [1,5,8,9,6,4,2,3,7]) // returns [1,0,0,0,0,1,1,1,0]
+ * distributeStrokes(12, [1,2,3,4,5,6,7,8,9]) // returns [2,2,2,1,1,1,1,1,1]
+ * distributeStrokes(-2, [1,2,3,4,5,6,7,8,9]) // returns [-1,-1,0,0,0,0,0,0,0]
+ */
+export function distributeStrokes(
+	courseHandicap: number,
+	strokeIndices: (number | null)[],
+): number[] {
+	const result: number[] = new Array<number>(strokeIndices.length).fill(0)
+
+	if (courseHandicap === 0) return result
+
+	// Build list of valid holes with their indices, sorted by stroke index (hardest first)
+	const validHoles: { position: number; strokeIndex: number }[] = []
+	for (let i = 0; i < strokeIndices.length; i++) {
+		const si = strokeIndices[i]
+		if (si !== null) {
+			validHoles.push({ position: i, strokeIndex: si })
+		}
+	}
+	validHoles.sort((a, b) => a.strokeIndex - b.strokeIndex)
+
+	const numValidHoles = validHoles.length
+	if (numValidHoles === 0) return result
+
+	const absHandicap = Math.abs(courseHandicap)
+	const strokeValue = courseHandicap > 0 ? 1 : -1
+
+	// Distribute strokes, cycling through holes for high handicaps
+	for (let i = 0; i < absHandicap; i++) {
+		const holeIndex = validHoles[i % numValidHoles].position
+		result[holeIndex] += strokeValue
+	}
+
+	return result
+}
