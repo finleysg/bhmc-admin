@@ -2,6 +2,23 @@ import { z } from "zod"
 
 import { GgHoleDataSchema } from "./course"
 
+// Slope and rating for a specific 9/18 hole set
+export const GgSlopeRatingSchema = z.object({
+	rating: z.number().nullable(),
+	slope: z.number().nullable(),
+})
+
+export type GgSlopeRating = z.infer<typeof GgSlopeRatingSchema>
+
+// Slope and rating data for all hole configurations
+export const GgSlopeAndRatingSchema = z.object({
+	all18: GgSlopeRatingSchema,
+	front9: GgSlopeRatingSchema,
+	back9: GgSlopeRatingSchema,
+})
+
+export type GgSlopeAndRating = z.infer<typeof GgSlopeAndRatingSchema>
+
 // Tee schema for teesheet (includes course_id)
 export const GgTeesheetTeeSchema = z.object({
 	name: z.string(),
@@ -9,6 +26,7 @@ export const GgTeesheetTeeSchema = z.object({
 	hole_data: GgHoleDataSchema,
 	id: z.string(),
 	course_id: z.string(),
+	slope_and_rating: GgSlopeAndRatingSchema,
 })
 
 export type GgTeesheetTee = z.infer<typeof GgTeesheetTeeSchema>
