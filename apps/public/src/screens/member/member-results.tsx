@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react"
+import { Link } from "react-router-dom"
 
 import { SeasonSelect } from "../../admin/season-select"
 import { PendingEventCard } from "../../components/results/pending-event-card"
@@ -147,6 +148,9 @@ export function MemberResultsScreen() {
 	return (
 		<div className="content__inner">
 			<div className="container py-4">
+				<Link to="/member" className="btn btn-link text-secondary ps-0 mb-2">
+					Back
+				</Link>
 				<h2 className="mb-4 text-primary">My Results</h2>
 
 				<SeasonSelect season={season} onSelect={setSeason} />

@@ -4,6 +4,8 @@ import { Typeahead, TypeaheadRef } from "react-bootstrap-typeahead"
 import { MdClose, MdPersonAdd } from "react-icons/md"
 import { toast } from "react-toastify"
 
+import { Link } from "react-router-dom"
+
 import { PlayerRow } from "../../components/directory/search"
 import { useAddFriend, useMyFriends } from "../../hooks/use-my-friends"
 import { usePlayers } from "../../hooks/use-players"
@@ -42,6 +44,9 @@ export function MemberFriendsScreen() {
 		<div className="content__inner">
 			<div className="container py-4">
 				<div style={{ maxWidth: "400px" }}>
+					<Link to="/member" className="btn btn-link text-secondary ps-0 mb-2">
+						Back
+					</Link>
 					<h2 className="mb-4 text-primary">My Friends</h2>
 
 					{!showPicker && (

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom"
+
 import { PlayerInfo } from "../../components/account/player-info"
 import { PlayerPassword } from "../../components/account/player-password"
 
@@ -6,6 +8,9 @@ export function MemberAccountScreen() {
 		<div className="content__inner">
 			<div className="container py-4">
 				<div style={{ maxWidth: "400px" }}>
+					<Link to="/member" className="btn btn-link text-secondary ps-0 mb-2">
+						Back
+					</Link>
 					<h2 className="mb-4 text-primary">Account Settings</h2>
 					<PlayerInfo />
 					<div className="mt-4">
