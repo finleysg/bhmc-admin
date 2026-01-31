@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, like } from "drizzle-orm"
 
 import { Inject, Injectable } from "@nestjs/common"
 
@@ -6,6 +6,8 @@ import {
 	DrizzleService,
 	payment,
 	PaymentRowWithDetails,
+	PaymentWithPlayerDetails,
+	player,
 	refund,
 	registrationFee,
 	registrationSlot,
@@ -68,6 +70,62 @@ export class PaymentsRepository {
 			...results[0].payment,
 			paymentDetails: results.filter((r) => r.details !== null).map((r) => r.details!) ?? [],
 		}
+	}
+
+	async findConfirmedPaymentsByEventWithDetails(
+		eventId: number,
+	): Promise<PaymentWithPlayerDetails[]> {
+		const results = await this.drizzle.db
+			.select({
+				paymentId: payment.id,
+				paymentCode: payment.paymentCode,
+				paymentAmount: payment.paymentAmount,
+				playerFirstName: player.firstName,
+				playerLastName: player.lastName,
+				registrationFeeId: registrationFee.id,
+				feeAmount: registrationFee.amount,
+				isPaid: registrationFee.isPaid,
+			})
+			.from(payment)
+			.innerJoin(registrationFee, eq(payment.id, registrationFee.paymentId))
+			.innerJoin(registrationSlot, eq(registrationFee.registrationSlotId, registrationSlot.id))
+			.innerJoin(player, eq(registrationSlot.playerId, player.id))
+			.where(
+				and(
+					eq(payment.eventId, eventId),
+					eq(payment.confirmed, 1),
+					like(payment.paymentCode, "pi_%"),
+				),
+			)
+
+		// Group by payment ID
+		const paymentsMap = new Map<number, PaymentWithPlayerDetails>()
+		for (const row of results) {
+			const existing = paymentsMap.get(row.paymentId)
+			if (existing) {
+				existing.fees.push({
+					registrationFeeId: row.registrationFeeId,
+					amount: row.feeAmount,
+					isPaid: row.isPaid,
+				})
+			} else {
+				paymentsMap.set(row.paymentId, {
+					paymentId: row.paymentId,
+					paymentCode: row.paymentCode,
+					paymentAmount: row.paymentAmount,
+					playerName: `${row.playerFirstName} ${row.playerLastName}`,
+					fees: [
+						{
+							registrationFeeId: row.registrationFeeId,
+							amount: row.feeAmount,
+							isPaid: row.isPaid,
+						},
+					],
+				})
+			}
+		}
+
+		return Array.from(paymentsMap.values())
 	}
 
 	async createPayment(data: PaymentInsert): Promise<number> {
