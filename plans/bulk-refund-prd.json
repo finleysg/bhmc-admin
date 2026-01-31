@@ -1,0 +1,223 @@
+{
+	"feature": "Bulk Refund for Cancelled Events",
+	"description": "Add bulk refund feature to web admin event menu for refunding all payments when weather cancels an event. Uses SSE streaming for real-time progress feedback.",
+	"issueUrl": "https://github.com/finleysg/bhmc-admin/issues/81",
+	"items": [
+		{
+			"id": 1,
+			"category": "domain",
+			"description": "Add bulk refund types to domain package",
+			"details": "Add BulkRefundPaymentPreview, BulkRefundPreview, BulkRefundResult, BulkRefundResponse, and BulkRefundProgressEvent interfaces to packages/domain/src/types/register/refund.ts",
+			"stepsToVerify": [
+				"BulkRefundPaymentPreview has: paymentId, playerName, feeCount, refundAmount, registrationFeeIds[]",
+				"BulkRefundPreview has: eventId, payments[], totalRefundAmount, skippedCount",
+				"BulkRefundResult has: paymentId, success, error?",
+				"BulkRefundResponse has: refundedCount, failedCount, skippedCount, totalRefundAmount, results[]",
+				"BulkRefundProgressEvent has: status ('processing'|'complete'|'error'), current, total, playerName?, error?, result? (BulkRefundResponse when complete)",
+				"Types are exported from domain package index"
+			],
+			"passes": true
+		},
+		{
+			"id": 2,
+			"category": "api",
+			"description": "Add repository method to find confirmed payments by event",
+			"details": "Add findConfirmedPaymentsByEventWithDetails(eventId) to apps/api/src/registration/repositories/payments.repository.ts. Query payment joined with registrationFee, registrationSlot, player where eventId matches, confirmed=1, and paymentCode starts with 'pi_'. Return array with player names.",
+			"stepsToVerify": [
+				"Method exists in payments.repository.ts",
+				"Joins payment with registrationFee, registrationSlot, and player tables",
+				"Filters by eventId, confirmed=1, paymentCode LIKE 'pi_%'",
+				"Returns payment details including player name for each payment",
+				"Groups results by payment ID"
+			],
+			"passes": true
+		},
+		{
+			"id": 3,
+			"category": "api",
+			"description": "Add getBulkRefundPreview service method",
+			"details": "Add getBulkRefundPreview(eventId) to apps/api/src/registration/services/refund.service.ts. Call repository to get confirmed payments, filter to payments with at least one paid fee (isPaid=1), build BulkRefundPreview with per-payment details, skip payments with no paid fees (increment skippedCount).",
+			"stepsToVerify": [
+				"Method exists in refund.service.ts",
+				"Calls findConfirmedPaymentsByEventWithDetails",
+				"Filters payments to those with at least one isPaid=1 fee",
+				"Returns BulkRefundPreview with correct totals",
+				"Skipped payments (no paid fees) increment skippedCount",
+				"Each payment preview includes playerName, feeCount, refundAmount"
+			],
+			"passes": true
+		},
+		{
+			"id": 4,
+			"category": "api",
+			"description": "Add bulk refund progress tracker",
+			"details": "Add BulkRefundProgressTracker class to apps/api/src/registration/services/bulk-refund-progress-tracker.ts following the pattern in apps/api/src/golfgenius/services/progress-tracker.ts. Manages RxJS Subject per eventId, emits BulkRefundProgressEvent, handles startTracking(), emitProgress(), completeOperation(), errorOperation().",
+			"stepsToVerify": [
+				"File exists at apps/api/src/registration/services/bulk-refund-progress-tracker.ts",
+				"Class is injectable (@Injectable)",
+				"Maintains Map<eventId, Subject<BulkRefundProgressEvent>>",
+				"startTracking(eventId) creates Subject and returns Observable",
+				"getProgressObservable(eventId) returns existing Observable if running",
+				"emitProgress(eventId, current, total, playerName) sends processing event",
+				"completeOperation(eventId, result) sends complete event and cleans up",
+				"errorOperation(eventId, error) sends error event and cleans up"
+			],
+			"passes": true
+		},
+		{
+			"id": 5,
+			"category": "api",
+			"description": "Add processBulkRefundsStream service method",
+			"details": "Add processBulkRefundsStream(eventId, issuerId) to apps/api/src/registration/services/refund.service.ts. Returns Observable<BulkRefundProgressEvent> immediately. Spawns async operation that gets preview, loops through payments calling per-payment refund individually in try/catch, emits progress for each payment via tracker. On failure: log error, add to failed results, continue.",
+			"stepsToVerify": [
+				"Method exists in refund.service.ts",
+				"Returns Observable<BulkRefundProgressEvent> immediately (non-blocking)",
+				"Checks if operation already running via tracker.getProgressObservable()",
+				"Calls tracker.startTracking() to initialize stream",
+				"Spawns async background operation (IIFE)",
+				"Calls getBulkRefundPreview to get payment list",
+				"Emits progress via tracker.emitProgress() for each payment processed",
+				"Continues processing on individual payment failure",
+				"Calls tracker.completeOperation() with BulkRefundResponse on success",
+				"Calls tracker.errorOperation() on fatal error"
+			],
+			"passes": true
+		},
+		{
+			"id": 6,
+			"category": "api",
+			"description": "Add bulk refund preview endpoint to controller",
+			"details": "Add GET :eventId/bulk-refund-preview endpoint to apps/api/src/registration/controllers/admin-registration.controller.ts that calls refundService.getBulkRefundPreview(eventId) and returns BulkRefundPreview.",
+			"stepsToVerify": [
+				"Endpoint exists at GET /admin-registration/:eventId/bulk-refund-preview",
+				"Calls refundService.getBulkRefundPreview with eventId",
+				"Returns BulkRefundPreview JSON",
+				"Requires admin authentication"
+			],
+			"passes": false
+		},
+		{
+			"id": 7,
+			"category": "api",
+			"description": "Add bulk refund SSE endpoint to controller",
+			"details": "Add @Sse :eventId/bulk-refund endpoint to apps/api/src/registration/controllers/admin-registration.controller.ts. Checks if operation already running, calls refundService.processBulkRefundsStream(), pipes Observable to SSE format with map(data => ({data: JSON.stringify(data)})).",
+			"stepsToVerify": [
+				"Endpoint exists at GET /admin-registration/:eventId/bulk-refund (SSE)",
+				"Uses @Sse() decorator",
+				"Checks if operation already running via tracker.getProgressObservable()",
+				"Returns existing Observable if already running",
+				"Calls refundService.processBulkRefundsStream() for new operations",
+				"Pipes events through map() to wrap as {data: JSON string}",
+				"Requires admin authentication"
+			],
+			"passes": false
+		},
+		{
+			"id": 8,
+			"category": "web-api",
+			"description": "Add bulk-refund-preview Next.js API route",
+			"details": "Create apps/web/app/api/registration/bulk-refund-preview/route.ts with GET handler that proxies to NestJS /admin-registration/{eventId}/bulk-refund-preview. Use query param eventId. Follow drop-players/route.ts pattern.",
+			"stepsToVerify": [
+				"File exists at apps/web/app/api/registration/bulk-refund-preview/route.ts",
+				"GET handler reads eventId from query params",
+				"Proxies to NestJS /admin-registration/{eventId}/bulk-refund-preview",
+				"Uses fetchWithAuth pattern",
+				"Returns BulkRefundPreview JSON"
+			],
+			"passes": false
+		},
+		{
+			"id": 9,
+			"category": "web-api",
+			"description": "Add bulk-refund SSE proxy Next.js API route",
+			"details": "Create apps/web/app/api/registration/bulk-refund/route.ts with GET handler that proxies SSE to NestJS /admin-registration/{eventId}/bulk-refund. Use fetchSSEWithAuth() from lib/api-proxy.ts. Follow golfgenius import-scores/route.ts pattern.",
+			"stepsToVerify": [
+				"File exists at apps/web/app/api/registration/bulk-refund/route.ts",
+				"GET handler reads eventId from query params",
+				"Uses fetchSSEWithAuth() to proxy SSE stream",
+				"Sets Content-Type: text/event-stream header",
+				"Streams response body back to client"
+			],
+			"passes": false
+		},
+		{
+			"id": 10,
+			"category": "web-ui",
+			"description": "Create bulk refund page with preview phase",
+			"details": "Create apps/web/app/events/[eventId]/refunds/page.tsx. On mount fetch preview from /api/registration/bulk-refund-preview?eventId={id}. Show table with columns: player name, fee count, refund amount. Show total refund amount and skipped count. Include 'Refund All' button.",
+			"stepsToVerify": [
+				"Page exists at /events/{eventId}/refunds",
+				"Fetches preview on mount",
+				"Shows loading state while fetching",
+				"Displays table with player name, fee count, refund amount columns",
+				"Shows total refund amount",
+				"Shows skipped count if > 0",
+				"'Refund All' button is visible and enabled when payments exist",
+				"'Refund All' button is disabled when no refundable payments"
+			],
+			"passes": false
+		},
+		{
+			"id": 11,
+			"category": "web-ui",
+			"description": "Add SSE streaming result phase to bulk refund page",
+			"details": "Extend apps/web/app/events/[eventId]/refunds/page.tsx to handle result phase with SSE streaming. Use useReducer for state management. Clicking 'Refund All' creates EventSource to /api/registration/bulk-refund?eventId={id}. Display progress bar showing current/total, current player name. On 'complete' status show final results: refunded count, failed count, total amount, per-payment failures.",
+			"stepsToVerify": [
+				"Page uses useReducer for state management",
+				"Clicking 'Refund All' creates new EventSource",
+				"EventSource subscribes to /api/registration/bulk-refund?eventId={id}",
+				"onmessage handler parses JSON and updates progress state",
+				"Shows progress bar with current/total during processing",
+				"Shows current player name being processed",
+				"Closes EventSource on 'complete' or 'error' status",
+				"Shows refunded count after completion",
+				"Shows failed count if > 0",
+				"Shows total refund amount",
+				"Lists per-payment failures with error messages"
+			],
+			"passes": false
+		},
+		{
+			"id": 12,
+			"category": "web-ui",
+			"description": "Add Bulk Refunds LinkCard to event hub",
+			"details": "Add LinkCard to apps/web/app/events/[eventId]/page.tsx with title 'Bulk Refunds', description 'Refund all payments for a cancelled event.', href to /events/{eventId}/refunds, and appropriate icon.",
+			"stepsToVerify": [
+				"LinkCard exists on event hub page",
+				"Title is 'Bulk Refunds'",
+				"Description is 'Refund all payments for a cancelled event.'",
+				"Links to /events/{eventId}/refunds",
+				"Has an icon (suggested: money/refund related)"
+			],
+			"passes": false
+		},
+		{
+			"id": 13,
+			"category": "test",
+			"description": "Add tests for getBulkRefundPreview",
+			"details": "Add tests to apps/api/src/registration/services/__tests__/refund.service.test.ts for getBulkRefundPreview method.",
+			"stepsToVerify": [
+				"Test file exists or is extended",
+				"Test: preview with mix of paid/unpaid fees returns correct counts",
+				"Test: preview with no payments returns empty result",
+				"Test: payments with no paid fees are skipped"
+			],
+			"passes": false
+		},
+		{
+			"id": 14,
+			"category": "test",
+			"description": "Add tests for processBulkRefundsStream",
+			"details": "Add tests to apps/api/src/registration/services/__tests__/refund.service.test.ts for processBulkRefundsStream method.",
+			"stepsToVerify": [
+				"Test: returns Observable immediately",
+				"Test: emits progress events for each payment",
+				"Test: bulk refund continues processing on individual failure",
+				"Test: bulk refund with no refundable payments completes with zeros",
+				"Test: final event has status 'complete' with BulkRefundResponse",
+				"Test: failed refunds appear in results with error messages"
+			],
+			"passes": false
+		}
+	]
+}
