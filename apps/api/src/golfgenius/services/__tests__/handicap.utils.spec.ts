@@ -1,4 +1,4 @@
-import { parseHandicapIndex, calculateCoursePar } from "../handicap.utils"
+import { parseHandicapIndex, calculateCoursePar, calculateCourseHandicap } from "../handicap.utils"
 
 describe("parseHandicapIndex", () => {
 	describe("positive handicaps", () => {
@@ -160,5 +160,30 @@ describe("calculateCoursePar", () => {
 
 	it("should return 0 for empty array", () => {
 		expect(calculateCoursePar([])).toBe(0)
+	})
+})
+
+describe("calculateCourseHandicap", () => {
+	describe("9-hole formula", () => {
+		it("should calculate 9-hole course handicap", () => {
+			// Formula: (index/2) x (slope/113) + (rating - par)
+			// (6.7/2) x (127/113) + (35.9 - 36) = 3.35 x 1.124 - 0.1 = 3.67 ≈ 4
+			expect(calculateCourseHandicap(6.7, 127, 35.9, 36, true)).toBe(4)
+		})
+
+		it("should handle scratch handicap (0)", () => {
+			// (0/2) x (slope/113) + (rating - par) = 0 + (35.9 - 36) = -0.1 ≈ 0
+			expect(calculateCourseHandicap(0, 127, 35.9, 36, true)).toBe(0)
+		})
+
+		it("should handle plus handicap (negative index)", () => {
+			// (-2/2) x (127/113) + (35.9 - 36) = -1 x 1.124 - 0.1 = -1.22 ≈ -1
+			expect(calculateCourseHandicap(-2, 127, 35.9, 36, true)).toBe(-1)
+		})
+
+		it("should handle high handicap", () => {
+			// (36/2) x (127/113) + (35.9 - 36) = 18 x 1.124 - 0.1 = 20.13 ≈ 20
+			expect(calculateCourseHandicap(36, 127, 35.9, 36, true)).toBe(20)
+		})
 	})
 })

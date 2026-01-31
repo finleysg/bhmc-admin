@@ -49,3 +49,36 @@ export function parseHandicapIndex(handicapIndex: string | undefined | null): nu
 export function calculateCoursePar(parValues: (number | null)[]): number {
 	return parValues.reduce<number>((sum, par) => sum + (par ?? 0), 0)
 }
+
+/**
+ * Calculates course handicap from handicap index and course data.
+ *
+ * Uses the USGA formula with adjustments for 9-hole play:
+ * - 9-hole: (index/2) × (slope/113) + (rating - par)
+ * - 18-hole: index × (slope/113) + (rating - par)
+ *
+ * Maintains full precision during calculation and rounds only at the end.
+ *
+ * @param index - The player's handicap index
+ * @param slope - Course slope rating
+ * @param rating - Course rating
+ * @param par - Course par
+ * @param isNineHole - Whether this is a 9-hole round
+ * @returns Rounded course handicap
+ *
+ * @example
+ * calculateCourseHandicap(6.7, 127, 35.9, 36, true)  // returns 4
+ * calculateCourseHandicap(10, 127, 71.5, 72, false)  // returns 11
+ */
+export function calculateCourseHandicap(
+	index: number,
+	slope: number,
+	rating: number,
+	par: number,
+	isNineHole: boolean,
+): number {
+	const adjustedIndex = isNineHole ? index / 2 : index
+	const courseHandicap = adjustedIndex * (slope / 113) + (rating - par)
+	const rounded = Math.round(courseHandicap)
+	return rounded === 0 ? 0 : rounded // Normalize -0 to 0
+}
