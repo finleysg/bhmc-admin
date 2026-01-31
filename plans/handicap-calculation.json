@@ -42,7 +42,7 @@
 				"Handles whitespace trimming"
 			],
 			"verification": ["Unit test with positive, plus, empty, whitespace cases"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "2.2",
