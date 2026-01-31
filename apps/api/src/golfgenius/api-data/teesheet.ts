@@ -27,6 +27,7 @@ export const GgTeesheetTeeSchema = z.object({
 	id: z.string(),
 	course_id: z.string(),
 	slope_and_rating: GgSlopeAndRatingSchema,
+	nine_hole_course: z.boolean(),
 })
 
 export type GgTeesheetTee = z.infer<typeof GgTeesheetTeeSchema>
