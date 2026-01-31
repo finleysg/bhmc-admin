@@ -155,7 +155,7 @@
 				"'Refund All' button is visible and enabled when payments exist",
 				"'Refund All' button is disabled when no refundable payments"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": 11,
