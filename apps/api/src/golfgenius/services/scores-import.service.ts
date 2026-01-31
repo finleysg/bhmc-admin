@@ -12,7 +12,7 @@ import { ApiClient } from "../api-client"
 import { ImportResult } from "../dto"
 import { ProgressTracker } from "./progress-tracker"
 import { GgPlayer, GgTeesheetTee } from "../api-data"
-import { TeeData } from "./handicap.utils"
+import { TeeData, needsHandicapCalculation, calculateHandicapFromTeeData } from "./handicap.utils"
 
 interface ImportScoresResult {
 	scorecards: {
@@ -97,6 +97,7 @@ export class ScoresImportService {
 						eventId,
 						playerId,
 						player,
+						player.tee,
 						courseId,
 						teeId,
 						results,
@@ -171,13 +172,28 @@ export class ScoresImportService {
 		eventId: number,
 		playerId: number,
 		playerData: GgPlayer,
+		teeData: GgTeesheetTee,
 		courseId: number,
 		teeId: number,
 		results: ImportScoresResult,
 	) {
 		const existing = await this.scoresService.findScorecard(eventId, playerId)
 		const handicapIndex = this.parseHandicap(playerData.handicap_index)
-		const courseHandicap = this.parseHandicap(playerData.course_handicap)
+		let courseHandicap = this.parseHandicap(playerData.course_handicap)
+
+		// Check if GG data is missing and calculate from tee data
+		if (needsHandicapCalculation(courseHandicap, playerData.handicap_dots_by_hole)) {
+			const calculated = calculateHandicapFromTeeData(
+				playerData.handicap_index,
+				this.mapToTeeData(teeData),
+			)
+			if (calculated) {
+				this.logger.log(
+					`Calculated courseHandicap ${calculated.courseHandicap} for player ${playerData.name} (GG data missing)`,
+				)
+				courseHandicap = calculated.courseHandicap
+			}
+		}
 
 		if (existing) {
 			results.scorecards.updated++
