@@ -3,6 +3,8 @@ import {
 	calculateCoursePar,
 	calculateCourseHandicap,
 	distributeStrokes,
+	calculateHandicapFromTeeData,
+	TeeData,
 } from "../handicap.utils"
 
 describe("parseHandicapIndex", () => {
@@ -318,6 +320,168 @@ describe("distributeStrokes", () => {
 		it("should handle all-null stroke indices", () => {
 			const strokeIndices = [null, null, null, null, null, null, null, null, null]
 			expect(distributeStrokes(4, strokeIndices)).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0])
+		})
+	})
+})
+
+describe("calculateHandicapFromTeeData", () => {
+	// Helper to create 9-hole front tee data
+	const createFront9TeeData = (overrides?: Partial<TeeData>): TeeData => ({
+		nineHoleCourse: true,
+		holeData: {
+			par: [4, 5, 3, 4, 5, 4, 4, 3, 4, null, null, null, null, null, null, null, null, null],
+			handicap: [1, 3, 9, 5, 7, 2, 4, 8, 6, null, null, null, null, null, null, null, null, null],
+		},
+		slopeAndRating: {
+			all18: { rating: 71.5, slope: 127 },
+			front9: { rating: 35.9, slope: 127 },
+			back9: { rating: 35.6, slope: 125 },
+		},
+		...overrides,
+	})
+
+	// Helper to create 9-hole back tee data
+	const createBack9TeeData = (): TeeData => ({
+		nineHoleCourse: true,
+		holeData: {
+			par: [null, null, null, null, null, null, null, null, null, 4, 4, 3, 5, 4, 4, 5, 3, 4],
+			handicap: [null, null, null, null, null, null, null, null, null, 1, 3, 9, 5, 7, 2, 4, 8, 6],
+		},
+		slopeAndRating: {
+			all18: { rating: 71.5, slope: 127 },
+			front9: { rating: 35.9, slope: 127 },
+			back9: { rating: 35.6, slope: 125 },
+		},
+	})
+
+	// Helper to create 18-hole tee data
+	const create18HoleTeeData = (): TeeData => ({
+		nineHoleCourse: false,
+		holeData: {
+			par: [4, 5, 3, 4, 5, 4, 4, 3, 4, 4, 4, 3, 5, 4, 4, 5, 3, 4],
+			handicap: [1, 5, 17, 9, 13, 3, 7, 15, 11, 2, 6, 18, 10, 14, 4, 8, 16, 12],
+		},
+		slopeAndRating: {
+			all18: { rating: 71.5, slope: 127 },
+			front9: { rating: 35.9, slope: 127 },
+			back9: { rating: 35.6, slope: 125 },
+		},
+	})
+
+	describe("full calculation with sample tee data", () => {
+		it("should calculate courseHandicap and handicapDotsByHole for 9-hole front", () => {
+			const teeData = createFront9TeeData()
+			// index=6.7, slope=127, rating=35.9, par=36, 9-hole -> 4
+			const result = calculateHandicapFromTeeData("6.7", teeData)
+
+			expect(result).not.toBeNull()
+			expect(result!.courseHandicap).toBe(4)
+			// 4 strokes distributed to SI 1,2,3,4 = positions 0,5,1,6
+			expect(result!.handicapDotsByHole).toEqual([
+				1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			])
+		})
+
+		it("should calculate for 9-hole back using back9 slope/rating", () => {
+			const teeData = createBack9TeeData()
+			// index=6.7, slope=125, rating=35.6, par=36, 9-hole
+			// (6.7/2) x (125/113) + (35.6 - 36) = 3.35 x 1.106 - 0.4 = 3.31 ≈ 3
+			const result = calculateHandicapFromTeeData("6.7", teeData)
+
+			expect(result).not.toBeNull()
+			expect(result!.courseHandicap).toBe(3)
+			// 3 strokes distributed to SI 1,2,3 = positions 9,14,10
+			expect(result!.handicapDotsByHole).toEqual([
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0,
+			])
+		})
+
+		it("should calculate for 18-hole using all18 slope/rating", () => {
+			const teeData = create18HoleTeeData()
+			// index=10, slope=127, rating=71.5, par=72, 18-hole -> 11
+			const result = calculateHandicapFromTeeData("10", teeData)
+
+			expect(result).not.toBeNull()
+			expect(result!.courseHandicap).toBe(11)
+			// 11 strokes distributed to SI 1-11
+			// handicap: [1, 5, 17, 9, 13, 3, 7, 15, 11, 2, 6, 18, 10, 14, 4, 8, 16, 12]
+			// SI 1=pos0, 2=pos9, 3=pos5, 4=pos14, 5=pos1, 6=pos10, 7=pos6, 8=pos15, 9=pos3, 10=pos12, 11=pos8
+			expect(result!.handicapDotsByHole).toEqual([
+				1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0,
+			])
+		})
+	})
+
+	describe("empty/null handicap index", () => {
+		it("should return null for empty handicap index", () => {
+			const teeData = createFront9TeeData()
+			expect(calculateHandicapFromTeeData("", teeData)).toBeNull()
+		})
+
+		it("should return null for null handicap index", () => {
+			const teeData = createFront9TeeData()
+			expect(calculateHandicapFromTeeData(null, teeData)).toBeNull()
+		})
+
+		it("should return null for undefined handicap index", () => {
+			const teeData = createFront9TeeData()
+			expect(calculateHandicapFromTeeData(undefined, teeData)).toBeNull()
+		})
+	})
+
+	describe("slope/rating unavailable", () => {
+		it("should return null when all18 slope is null for 18-hole", () => {
+			const teeData = create18HoleTeeData()
+			teeData.slopeAndRating.all18.slope = null
+			expect(calculateHandicapFromTeeData("10", teeData)).toBeNull()
+		})
+
+		it("should return null when all18 rating is null for 18-hole", () => {
+			const teeData = create18HoleTeeData()
+			teeData.slopeAndRating.all18.rating = null
+			expect(calculateHandicapFromTeeData("10", teeData)).toBeNull()
+		})
+
+		it("should fall back to all18 when front9 slope is null", () => {
+			const teeData = createFront9TeeData({
+				slopeAndRating: {
+					all18: { rating: 71.5, slope: 127 },
+					front9: { rating: null, slope: null },
+					back9: { rating: 35.6, slope: 125 },
+				},
+			})
+			// Falls back to all18: index=6.7, slope=127, rating=71.5, par=36, 9-hole
+			// (6.7/2) x (127/113) + (71.5 - 36) = 3.35 x 1.124 + 35.5 = 39.27 ≈ 39
+			const result = calculateHandicapFromTeeData("6.7", teeData)
+			expect(result).not.toBeNull()
+			expect(result!.courseHandicap).toBe(39)
+		})
+
+		it("should return null when fallback all18 also unavailable", () => {
+			const teeData = createFront9TeeData({
+				slopeAndRating: {
+					all18: { rating: null, slope: null },
+					front9: { rating: null, slope: null },
+					back9: { rating: 35.6, slope: 125 },
+				},
+			})
+			expect(calculateHandicapFromTeeData("6.7", teeData)).toBeNull()
+		})
+	})
+
+	describe("plus handicaps", () => {
+		it("should handle plus handicap (negative course handicap)", () => {
+			const teeData = createFront9TeeData()
+			// index=+2 (-2), slope=127, rating=35.9, par=36, 9-hole
+			// (-2/2) x (127/113) + (35.9 - 36) = -1 x 1.124 - 0.1 = -1.22 ≈ -1
+			const result = calculateHandicapFromTeeData("+2", teeData)
+
+			expect(result).not.toBeNull()
+			expect(result!.courseHandicap).toBe(-1)
+			// -1 stroke to hardest hole (SI 1 = position 0)
+			expect(result!.handicapDotsByHole).toEqual([
+				-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			])
 		})
 	})
 })
