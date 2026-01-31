@@ -217,6 +217,28 @@ describe("calculateCourseHandicap", () => {
 })
 
 describe("distributeStrokes", () => {
+	describe("high handicaps (2+ strokes per hole)", () => {
+		it("should give 2nd stroke to hardest holes when handicap exceeds hole count", () => {
+			// Handicap 12 on 9 holes: all get 1, hardest 3 (SI 1,2,3) get 2nd stroke
+			const strokeIndices = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+			expect(distributeStrokes(12, strokeIndices)).toEqual([2, 2, 2, 1, 1, 1, 1, 1, 1])
+		})
+
+		it("should distribute 3+ strokes per hole for very high handicaps", () => {
+			// Handicap 20 on 9 holes: all get 2, hardest 2 (SI 1,2) get 3rd stroke
+			const strokeIndices = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+			expect(distributeStrokes(20, strokeIndices)).toEqual([3, 3, 2, 2, 2, 2, 2, 2, 2])
+		})
+
+		it("should handle high handicap with non-sequential stroke indices", () => {
+			// Handicap 11 on 9 holes with scrambled indices
+			// SI order: 1(pos0), 2(pos6), 3(pos7), 4(pos5), 5(pos1), 6(pos4), 7(pos8), 8(pos2), 9(pos3)
+			const strokeIndices = [1, 5, 8, 9, 6, 4, 2, 3, 7]
+			// All 9 get 1 stroke, then SI 1,2 get 2nd stroke = positions 0, 6
+			expect(distributeStrokes(11, strokeIndices)).toEqual([2, 1, 1, 1, 1, 1, 2, 1, 1])
+		})
+	})
+
 	describe("normal handicaps", () => {
 		it("should distribute 4 strokes to hardest 4 holes", () => {
 			// Stroke indices: [1,5,8,9,6,4,2,3,7] - holes with SI 1,2,3,4 get strokes
