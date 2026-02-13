@@ -4,7 +4,6 @@ import { BiEnvelope, BiLogInCircle } from "react-icons/bi"
 import { GiGolfFlag, GiLaurelsTrophy, GiTrophyCup } from "react-icons/gi"
 import { GoCalendar, GoHome, GoInfo, GoPlus, GoQuestion } from "react-icons/go"
 import { MdAccountCircle, MdPeopleOutline, MdPersonAdd } from "react-icons/md"
-import { PiPencilLine } from "react-icons/pi"
 import { RiGalleryFill } from "react-icons/ri"
 import { TiContacts } from "react-icons/ti"
 
@@ -12,7 +11,7 @@ import { useLayout } from "../hooks/use-layout"
 import { useMyGroups } from "../hooks/use-my-groups"
 import { useSelectedMonth } from "../hooks/use-selected-month"
 import { Groups } from "../models/codes"
-import { currentSeason } from "../utils/app-config"
+import { adminUrl, currentSeason } from "../utils/app-config"
 import { MenuItem } from "./menu-item"
 
 export function Sidebar() {
@@ -26,7 +25,11 @@ export function Sidebar() {
 				<MenuItem path="home" icon={<GoHome />} name="Home" />
 				{(groups.indexOf(Groups.Administrators) >= 0 ||
 					groups.indexOf(Groups.TournamentAdmins) >= 0) && (
-					<MenuItem path="admin" icon={<PiPencilLine />} name="Administration" />
+					<li>
+						<a href={adminUrl} target="_blank" rel="noreferrer">
+							Administration
+						</a>
+					</li>
 				)}
 				<MenuItem path="membership" icon={<GoPlus />} name={`${currentSeason} Signup Page`} />
 				<MenuItem

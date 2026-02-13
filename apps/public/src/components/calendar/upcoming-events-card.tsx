@@ -5,7 +5,6 @@ import { useClubEvents } from "../../hooks/use-club-events"
 import { EventStatusType } from "../../models/codes"
 import { ClubEventProps } from "../../models/common-props"
 import { dayAndDateFormat } from "../../utils/date-utils"
-import { AdminLinkButton } from "../buttons/admin-link-button"
 import { OverlaySpinner } from "../spinners/overlay-spinner"
 
 function UpcomingEvent({ clubEvent }: ClubEventProps) {
@@ -49,14 +48,7 @@ export function UpcomingEventsCard() {
 				<h4 className="card-header mb-3">Upcoming Events</h4>
 				<div className="listview">
 					{upcoming().map((event) => (
-						<div style={{ position: "relative" }} key={event.id}>
-							<UpcomingEvent clubEvent={event} />
-							<AdminLinkButton
-								to={event.adminUrl}
-								label="Event administration home"
-								color="transparent"
-							/>
-						</div>
+						<UpcomingEvent key={event.id} clubEvent={event} />
 					))}
 				</div>
 			</div>

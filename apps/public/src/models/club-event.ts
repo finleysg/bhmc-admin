@@ -69,7 +69,6 @@ export class ClubEvent {
 	[immerable] = true
 
 	id: number
-	adminUrl: string
 	ageRestriction?: number | null
 	ageRestrictionType: string
 	canChoose: boolean
@@ -155,7 +154,6 @@ export class ClubEvent {
 		this.totalGroups = json.total_groups
 
 		// derived properties
-		this.adminUrl = `/admin/event/${this.id}`
 		this.endDate = this.rounds <= 1 ? this.startDate : addDays(this.startDate, this.rounds - 1)
 		this.eventTypeClass = getEventTypeName(json.event_type).toLowerCase().replace(" ", "-")
 		this.eventUrl = `/event/${isoDayFormat(this.startDate)}/${slugify(json.name)}`

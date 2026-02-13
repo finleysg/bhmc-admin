@@ -12,7 +12,6 @@ import { LayoutProvider } from "./context/layout-provider"
 import { ErrorScreen } from "./screens/error"
 import { AuthProvider } from "./context/auth-context-provider"
 
-const AdminLayout = React.lazy(() => import("./admin/layout/admin-layout"))
 const AuthLayout = React.lazy(() => import("./layout/auth-layout"))
 const MainLayout = React.lazy(() => import("./layout/main-layout"))
 
@@ -20,11 +19,6 @@ const routeConfig = [
 	{
 		path: "*",
 		element: <MainLayout />,
-		errorElement: <ErrorScreen />,
-	},
-	{
-		path: "admin/*",
-		element: <AdminLayout />,
 		errorElement: <ErrorScreen />,
 	},
 	{

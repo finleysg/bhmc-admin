@@ -3,13 +3,7 @@ import { expect, test } from "vitest"
 
 import { ClubEvent, ClubEventApiSchema } from "../../../models/club-event"
 import { EventStatusType, EventType, RegistrationType } from "../../../models/codes"
-import {
-	renderWithAuth,
-	screen,
-	setupAdminUser,
-	setupAuthenticatedUser,
-	verifyNeverOccurs,
-} from "../../../test/test-utils"
+import { renderWithAuth, screen, verifyNeverOccurs } from "../../../test/test-utils"
 import { Day } from "../calendar"
 import { CalendarDay } from "../calendar-day"
 
@@ -223,68 +217,6 @@ test("renders an external url for non-club events", async () => {
 	expect(screen.getByRole("link", { name: /mpga fourball/i })).toHaveAttribute("href", externalUrl)
 
 	// Need a wait to ensure all promises are resolved in the auth provider.
-	await verifyNeverOccurs(() => expect(screen.getByRole("button")).toBeVisible(), {
-		timeout: 100,
-	})
-})
-
-test("renders a link to event admin for administrators", async () => {
-	const day = new Day(parseISO("2020-11-15"))
-	day.events.push(
-		new ClubEvent(
-			ClubEventApiSchema.parse({
-				id: 11,
-				name: "2 Man Best Ball",
-				start_date: "2020-11-15",
-				signup_start: subDays(new Date("2020-11-15"), 1).toISOString(),
-				signup_end: addDays(new Date("2020-11-15"), 7).toISOString(),
-				rounds: 1,
-				can_choose: true,
-				event_type: EventType.Weeknight,
-				ghin_required: true,
-				registration_type: RegistrationType.MembersOnly,
-				registration_window: "registration",
-				season: 2020,
-				status: EventStatusType.Scheduled,
-				age_restriction_type: "N",
-			}),
-		),
-	)
-
-	setupAdminUser()
-
-	renderWithAuth(<CalendarDay day={day} month={10} />)
-
-	expect(await screen.findByRole("button")).toBeInTheDocument()
-})
-
-test("does not render a link to event admin for non-administrators", async () => {
-	const day = new Day(parseISO("2020-11-15"))
-	day.events.push(
-		new ClubEvent(
-			ClubEventApiSchema.parse({
-				id: 11,
-				name: "2 Man Best Ball",
-				start_date: "2020-11-15",
-				signup_start: subDays(new Date("2020-11-15"), 1).toISOString(),
-				signup_end: addDays(new Date("2020-11-15"), 7).toISOString(),
-				rounds: 1,
-				can_choose: true,
-				event_type: EventType.Weeknight,
-				ghin_required: true,
-				registration_type: RegistrationType.MembersOnly,
-				registration_window: "registration",
-				season: 2020,
-				status: EventStatusType.Scheduled,
-				age_restriction_type: "N",
-			}),
-		),
-	)
-
-	setupAuthenticatedUser()
-
-	renderWithAuth(<CalendarDay day={day} month={10} />)
-
 	await verifyNeverOccurs(() => expect(screen.getByRole("button")).toBeVisible(), {
 		timeout: 100,
 	})

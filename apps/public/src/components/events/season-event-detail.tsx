@@ -5,9 +5,7 @@ import { Link } from "react-router-dom"
 import remarkGfm from "remark-gfm"
 
 import { useMyPlayerRecord } from "../../hooks/use-my-player-record"
-import * as colors from "../../styles/colors"
 import { currentSeason } from "../../utils/app-config"
-import { AdminLinkButton } from "../buttons/admin-link-button"
 import { RegisterButton } from "../buttons/register-button"
 import { RegisteredButton } from "../buttons/registered-button"
 import { OverlaySpinner } from "../spinners/overlay-spinner"
@@ -27,11 +25,6 @@ export function SeasonEventDetail({
 
 	return (
 		<div className="card">
-			<AdminLinkButton
-				to={clubEvent?.adminUrl}
-				label="Event administration home"
-				color={colors.teal}
-			/>
 			<div className="card-body">
 				<OverlaySpinner loading={!clubEvent.id} />
 				<h3 className="card-header mb-2">{currentSeason} Membership Information</h3>

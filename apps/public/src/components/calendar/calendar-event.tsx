@@ -4,7 +4,6 @@ import { Link } from "react-router-dom"
 
 import { ClubEvent } from "../../models/club-event"
 import { EventType } from "../../models/codes"
-import { AdminLinkButton } from "../buttons/admin-link-button"
 
 interface CalendarEventProps {
 	clubEvent: ClubEvent
@@ -50,7 +49,6 @@ function CalendarEvent({ clubEvent }: CalendarEventProps) {
 							</p>
 						</div>
 					</Link>
-					<AdminLinkButton to={clubEvent.adminUrl} label="Event administration home" />
 				</div>
 			)}
 		</React.Fragment>

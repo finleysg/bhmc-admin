@@ -10,6 +10,7 @@ export const seniorRateAge = +import.meta.env.VITE_SENIOR_AGE
 export const seniorCompetitionAge = +import.meta.env.VITE_SENIOR_COMPETITION_AGE
 export const version = import.meta.env.VITE_VERSION
 
+export const adminUrl = import.meta.env.VITE_ADMIN_URL
 export const maintenanceMode = import.meta.env.VITE_MODE !== "Live"
 export const currentSeason = getYear(Date.now())
 export const twoMinutes = 1000 * 60 * 2

@@ -148,14 +148,6 @@ $layout-spacer: 20px;
 	background-position: left;
 }
 
-.admin-sidebar--bg {
-	background-image:
-		linear-gradient(to right bottom, rgba($teal, 0.8), rgba($green, 0.8)),
-		url("../img/ThreeEastJimmy.jpg");
-	background-size: cover;
-	background-position: left;
-}
-
 // Site Navigation
 .navigation {
 	list-style: none;
@@ -478,32 +470,6 @@ $layout-spacer: 20px;
 	background-repeat: no-repeat;
 	background-size: contain;
 	background-position: center;
-}
-
-.administration {
-	height: 100vh;
-	position: relative;
-
-	&::after {
-		content: "";
-		position: absolute;
-		top: 0;
-		right: 0;
-		bottom: 0;
-		left: 0;
-		opacity: 0.75;
-		z-index: -1;
-		background-image: url("../img/FourEastSunset.jpg");
-		background-size: cover;
-		background-position: center;
-	}
-}
-
-.admin-screen {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
 }
 
 .logo {
