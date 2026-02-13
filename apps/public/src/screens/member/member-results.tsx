@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react"
 import { Link } from "react-router-dom"
 
-import { SeasonSelect } from "../../admin/season-select"
+import { SeasonSelect } from "../../components/forms/season-select"
 import { PendingEventCard } from "../../components/results/pending-event-card"
 import { ResultEventCard } from "../../components/results/result-event-card"
 import { useTournamentPoints, useTournamentResults } from "../../hooks/use-tournament-results"

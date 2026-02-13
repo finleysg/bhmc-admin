@@ -8,7 +8,6 @@ import { ClubEvent } from "../../models/club-event"
 import { EventStatusType, getRegistrationTypeName, getStartTypeName } from "../../models/codes"
 import { dayAndDateFormat, dayDateAndTimeFormat } from "../../utils/date-utils"
 import { ManageRegistrationButton } from "../buttons/manage-registration-button"
-import { EventAdminButton } from "../buttons/event-admin-button"
 import { EventPortalButton } from "../buttons/portal-button"
 import { RegisterButton } from "../buttons/register-button"
 import { RegisteredButton } from "../buttons/registered-button"
@@ -39,7 +38,6 @@ export function EventDetail({ clubEvent, onRegister, onEditRegistration }: Event
 						<h3 className="text-primary-emphasis">{clubEvent.name}</h3>
 					</div>
 					<div className="event-header--actions">
-						<EventAdminButton clubEvent={clubEvent} />
 						<EventPortalButton clubEvent={clubEvent} />
 						<RegisteredButton clubEvent={clubEvent} />
 						<ManageRegistrationButton

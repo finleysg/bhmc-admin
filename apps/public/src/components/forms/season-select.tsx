@@ -1,7 +1,7 @@
 import { ChangeEvent, useState } from "react"
 
-import { SelectOption } from "../components/forms/select-control"
-import { currentSeason } from "../utils/app-config"
+import { SelectOption } from "./select-control"
+import { currentSeason } from "../../utils/app-config"
 
 interface SeasonSelectProps {
 	season: number
