@@ -1,41 +1,6 @@
 {
 	"permissions": {
-		"allow": [
-			"Bash(tree *)",
-			"Bash(xargs *)",
-			"Bash(cat *)",
-			"Bash(ls *)",
-			"Bash(grep *)",
-			"Bash(head *)",
-			"Bash(wc *)",
-			"Bash(curl *)",
-			"Bash(chmod *)",
-			"Bash(echo *)",
-			"Bash(pnpm *)",
-			"Bash(npx *)",
-			"Bash(npm *)",
-			"Bash(git *)",
-			"Bash(gh *)",
-			"Bash(docker *)",
-			"Bash(docker-compose *)",
-			"Bash(uv *)",
-			"Bash(CI=true pnpm *)",
-			"Bash(bash *)",
-			"Skill(commit)",
-			"Bash(gh pr create:*)",
-			"Bash(gh issue create:*)",
-			"WebFetch(domain:caprover.com)",
-			"WebFetch(domain:github.com)",
-			"Bash(git commit:*)",
-			"Bash(docker exec:*)",
-			"WebSearch",
-			"WebFetch(domain:docs.docker.com)",
-			"Bash(lsof:*)",
-			"Bash(pgrep:*)",
-			"WebFetch(domain:docs.stripe.com)",
-			"Bash(xxd:*)",
-			"Bash(done)"
-		]
+		"allow": ["WebFetch", "Bash(curl:*)", "Bash(git commit:*)"]
 	},
 	"hooks": {
 		"PreToolUse": [

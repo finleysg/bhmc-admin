@@ -1,67 +1,119 @@
 # CLAUDE.md
 
-In all interactions and commit messages, be extremely concise and sacrifice grammar for the sake of concision.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-Bunker Hills Men's Club is a group of golf enthusiastics who compete in weekly and monthly competitions throughout
-the summery. This monorepo contains the websites and services to manage every aspect of the club's online experience:
+Golf tournament management system for Bunker Hills Men's Club (BHMC). This monorepo contains the admin API and admin web dashboard. It complements a separate Django backend (data.bhmc.org) that owns the database schema and a React SPA (bhmc.org) for public-facing users.
 
-- Public facing website for club information and event registration
-- Django backend provides a RESTful layer over club data and django's built-in table administration screens
-- MySQL to store club data
-- Backend nestjs api to orchestrate administration, registration and payments, and integration with the Golf Genius
-  tournament management system
-- Administrative next.js website to manage events, members, players, reports, etc.
+## Monorepo Structure
 
-```
-bhmc-admin/
-├── apps/
-│   ├── api/        # NestJS (API)
-│   ├── web/        # Next.js (admin website)
-│   └── public/     # React SPA (member site)
-├── backend/        # Django RESTful backend
-├── packages/
-│   ├── domain/     # Shared TS types (used by all TS apps)
-│   └── eslint-config/
-├── pnpm-workspace.yaml
-└── turbo.json
-```
+- **apps/api** — NestJS admin API: Golf Genius sync, Stripe callbacks, registration flow with SSE. Uses Drizzle ORM against external MySQL (no migrations here).
+- **apps/web** — Next.js admin dashboard: player management, Golf Genius UI, reporting, Excel export. Uses better-auth with SQLite for authentication.
+- **apps/public** — Legacy React SPA (being replaced by public-next). Bootstrap v5, Tanstack Query, React Hook Form.
+- **apps/public-next** — Next.js rewrite of the public site (in progress).
+- **packages/domain** — Shared TypeScript types and DTOs, aliased as `dto` in tsconfig paths.
+- **packages/eslint-config** — Shared ESLint 9 config used by api, web, and domain.
+- **backend/** — Django REST backend (separate project, included for reference). Owns schema/migrations. Run with `uv`.
+
+Each app has its own `CLAUDE.md` with app-specific patterns — read those before working in an app.
 
 ## Commands
 
-This monorepo uses `pnpm`.
-
-We always run and test locally using the `docker-compose.yml` file at the root.
-
-Inspect the logs from these containers when troubleshooting.
-
 ```bash
-# Development
-docker compose up -d --build
-
-# Build
-pnpm build                  # Build all packages
-
-# Testing
-pnpm test                   # Run all tests
-pnpm --filter api test      # API tests only
-pnpm --filter web test      # Web tests only
-pnpm --filter api test -- --testPathPattern="events"  # Run specific test file/pattern
-
-# Linting & Formatting
-pnpm lint                   # ESLint check
-pnpm lint:fix               # ESLint fix
-pnpm format                 # Prettier format
-pnpm format:check           # Prettier check
+pnpm install              # Install all dependencies
+pnpm dev                  # Run all apps in parallel
+pnpm build                # Build all packages/apps
+pnpm lint                 # Lint all code
+pnpm lint:fix             # Lint + auto-fix
+pnpm format               # Format with prettier
+pnpm test                 # Run all tests
+pnpm typecheck            # TypeScript noEmit check
+pnpm docker:up            # Start dev containers (MySQL, Redis, Stripe CLI, Mailpit)
+pnpm docker:down          # Stop dev containers
 ```
 
-## General Agent Instructions
+Run commands for a single app:
 
-Please write a high-quality, general-purpose solution using the standard tools available. Do not create helper scripts or workarounds to accomplish the task more efficiently. Implement a solution that works correctly for all valid inputs, not just the test cases. Do not hard-code values or create solutions that only work for specific test inputs. Instead, implement the actual logic that solves the problem generally.
+```bash
+pnpm --filter api dev     # Run just the API
+pnpm --filter web dev     # Run just the web dashboard
+pnpm --filter api test    # Test just the API
+```
 
-Focus on understanding the problem requirements and implementing the correct algorithm. Tests are there to verify correctness, not to define the solution. Provide a principled implementation that follows best practices and software design principles.
+Single test file (apps/public uses vitest, others use jest):
 
-If the task is unreasonable or infeasible, or if any of the tests are incorrect, please inform me rather than working around them. The solution should be robust, maintainable, and extendable.
+```bash
+# Jest (api, web)
+npx jest --testPathPattern=path/to/test.test.ts
 
-**IMPORTANT**: At the end of each plan, give me a list of unresolved questions to answer, if any. Make the questions extremely concise.
+# Vitest (public)
+npx vitest run src/path/to/test.test.tsx
+```
+
+Backend (Django):
+
+```bash
+cd backend && uv sync
+uv run python manage.py runserver
+uv run python manage.py test
+```
+
+## Code Style
+
+- **Formatter**: Prettier — tabs, no semicolons, double quotes, 100 char print width
+- **TypeScript**: Strict mode, no `any` in production code
+- **Pre-commit hooks**: Husky runs lint-staged, typecheck, and tests before every commit
+
+NOTE: we have customized Prettier in the following way:
+
+```json
+{
+	"printWidth": 100,
+	"semi": false,
+	"singleQuote": false,
+	"useTabs": true
+}
+```
+
+This project uses TypeScript with strict mode. Always handle possibly-undefined array accesses with non-null assertions or proper guards. Use the full markdown editor component (ContentEditor) for any rich text fields, not simplified alternatives.
+
+## Architecture
+
+```
+UI Layer:  apps/web (admin)  |  apps/public (users)
+API Layer: apps/api (NestJS) |  backend/ (Django)
+Data:      External managed MySQL  |  SQLite (web auth only)
+External:  Stripe, AWS S3, Mailgun, Golf Genius
+```
+
+- The Django backend at data.bhmc.org is the source of truth for data. The NestJS API reads/writes the same MySQL database using Drizzle ORM (schema defined externally — no migrations in this repo).
+- The web admin authenticates users via better-auth (SQLite) then proxies API calls to the Django backend with Django auth tokens.
+- The NestJS API handles Golf Genius integration, Stripe webhooks, and the registration SSE flow.
+
+## Deployment
+
+Deployed to DigitalOcean via CapRover. GitHub Actions triggers on release tags (`v*`). See `DEPLOYMENT.md` for full details.
+
+- `apps/api/Dockerfile` — API production build
+- `apps/web/Dockerfile` — Web production build
+- `.github/workflows/deploy.yml` — CI/CD pipeline
+
+## Feedback
+
+Use the following tools / commands as feedback on your work.
+
+`pnpm format`
+`pnpm lint` (fix warnings and errors, even if pre-existing)
+`pnpm test` (fix failures, even if pre-existing)
+`pnpm build`
+
+When a change is made to a next app, rebuild the container.
+
+### IMPORTANT: UX Feedback
+
+Use the `chrome-devtools` skill to validate your work directly in the browser:
+
+- Public site: http://localhost:3000
+- Admin next site: http://localhost:3100
+- Public next site: http://localhost:3200

@@ -1,0 +1,22 @@
+FROM node:24-alpine
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
+COPY apps/public-next/package.json ./apps/public-next/
+COPY packages/domain/package.json ./packages/domain/
+
+RUN pnpm install --frozen-lockfile
+
+COPY packages/domain ./packages/domain
+RUN pnpm --filter @repo/domain build
+
+COPY apps/public-next ./apps/public-next
+
+WORKDIR /app/apps/public-next
+
+EXPOSE 3200
+
+CMD ["pnpm", "dev"]

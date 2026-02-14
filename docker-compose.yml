@@ -103,6 +103,23 @@ services:
     depends_on:
       - backend
 
+  public-next:
+    build:
+      context: .
+      dockerfile: apps/public-next/Dockerfile.dev
+    volumes:
+      - ./apps/public-next/app:/app/apps/public-next/app
+      - ./apps/public-next/components:/app/apps/public-next/components
+      - ./apps/public-next/lib:/app/apps/public-next/lib
+    ports:
+      - "3200:3200"
+    env_file:
+      - ./apps/public-next/.env.development
+    depends_on:
+      - api
+      - backend
+    restart: unless-stopped
+
 volumes:
   dev-data:
     external: true
