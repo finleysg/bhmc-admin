@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@plugin "@tailwindcss/typography";
+
 @theme inline {
 	--color-background: hsl(var(--background));
 	--color-foreground: hsl(var(--foreground));
@@ -28,19 +30,19 @@
 @layer base {
 	:root {
 		--background: 0 0% 100%;
-		--foreground: 226 47% 11%;
+		--foreground: 226 24% 28%;
 		--card: 0 0% 100%;
-		--card-foreground: 226 47% 11%;
+		--card-foreground: 226 24% 28%;
 		--popover: 0 0% 100%;
-		--popover-foreground: 226 47% 11%;
+		--popover-foreground: 226 24% 28%;
 		--primary: 226 52% 27%;
 		--primary-foreground: 226 40% 98%;
-		--secondary: 226 40% 96%;
-		--secondary-foreground: 226 47% 11%;
+		--secondary: 152 44% 24%;
+		--secondary-foreground: 150 40% 98%;
 		--muted: 226 40% 96%;
 		--muted-foreground: 226 16% 47%;
 		--accent: 226 40% 96%;
-		--accent-foreground: 226 47% 11%;
+		--accent-foreground: 226 24% 28%;
 		--destructive: 0 84% 60%;
 		--destructive-foreground: 226 40% 98%;
 		--border: 226 32% 91%;
@@ -51,19 +53,19 @@
 
 	.dark {
 		--background: 226 47% 11%;
-		--foreground: 226 40% 98%;
+		--foreground: 226 20% 88%;
 		--card: 226 47% 11%;
-		--card-foreground: 226 40% 98%;
+		--card-foreground: 226 20% 88%;
 		--popover: 226 47% 11%;
-		--popover-foreground: 226 40% 98%;
+		--popover-foreground: 226 20% 88%;
 		--primary: 226 80% 65%;
 		--primary-foreground: 226 47% 11%;
-		--secondary: 226 33% 17%;
-		--secondary-foreground: 226 40% 98%;
+		--secondary: 152 40% 35%;
+		--secondary-foreground: 150 40% 98%;
 		--muted: 226 33% 17%;
 		--muted-foreground: 226 20% 65%;
 		--accent: 226 33% 17%;
-		--accent-foreground: 226 40% 98%;
+		--accent-foreground: 226 20% 88%;
 		--destructive: 0 63% 31%;
 		--destructive-foreground: 226 40% 98%;
 		--border: 226 33% 17%;
@@ -87,4 +89,40 @@
 	h6 {
 		font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
 	}
+}
+
+/* Unlayered so it overrides the typography plugin's layered defaults */
+.prose {
+	--tw-prose-body: hsl(var(--foreground));
+	--tw-prose-headings: hsl(var(--foreground));
+	--tw-prose-lead: hsl(var(--muted-foreground));
+	--tw-prose-links: hsl(var(--primary));
+	--tw-prose-bold: hsl(var(--foreground));
+	--tw-prose-counters: hsl(var(--muted-foreground));
+	--tw-prose-bullets: hsl(var(--muted-foreground));
+	--tw-prose-hr: hsl(var(--border));
+	--tw-prose-quotes: hsl(var(--foreground));
+	--tw-prose-quote-borders: hsl(var(--border));
+	--tw-prose-captions: hsl(var(--muted-foreground));
+	--tw-prose-code: hsl(var(--foreground));
+	--tw-prose-pre-code: hsl(var(--foreground));
+	--tw-prose-pre-bg: hsl(var(--muted));
+	--tw-prose-th-borders: hsl(var(--border));
+	--tw-prose-td-borders: hsl(var(--border));
+	--tw-prose-invert-body: hsl(var(--foreground));
+	--tw-prose-invert-headings: hsl(var(--foreground));
+	--tw-prose-invert-lead: hsl(var(--muted-foreground));
+	--tw-prose-invert-links: hsl(var(--primary));
+	--tw-prose-invert-bold: hsl(var(--foreground));
+	--tw-prose-invert-counters: hsl(var(--muted-foreground));
+	--tw-prose-invert-bullets: hsl(var(--muted-foreground));
+	--tw-prose-invert-hr: hsl(var(--border));
+	--tw-prose-invert-quotes: hsl(var(--foreground));
+	--tw-prose-invert-quote-borders: hsl(var(--border));
+	--tw-prose-invert-captions: hsl(var(--muted-foreground));
+	--tw-prose-invert-code: hsl(var(--foreground));
+	--tw-prose-invert-pre-code: hsl(var(--foreground));
+	--tw-prose-invert-pre-bg: hsl(var(--muted));
+	--tw-prose-invert-th-borders: hsl(var(--border));
+	--tw-prose-invert-td-borders: hsl(var(--border));
 }

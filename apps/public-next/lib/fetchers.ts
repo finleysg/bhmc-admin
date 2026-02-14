@@ -1,0 +1,18 @@
+const DJANGO_API_URL = process.env.DJANGO_API_URL || "http://backend:8000/api"
+
+interface FetchDjangoOptions {
+	revalidate?: number | false
+}
+
+export async function fetchDjango<T>(path: string, options?: FetchDjangoOptions): Promise<T> {
+	const url = `${DJANGO_API_URL}${path}`
+	const response = await fetch(url, {
+		next: { revalidate: options?.revalidate ?? 3600 },
+	})
+
+	if (!response.ok) {
+		throw new Error(`Django API error: ${response.status} ${response.statusText} for ${path}`)
+	}
+
+	return response.json() as Promise<T>
+}

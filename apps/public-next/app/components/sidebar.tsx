@@ -18,6 +18,7 @@ import {
 	LogIn,
 	UserPlus,
 	Shield,
+	UserCheck,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
@@ -38,6 +39,7 @@ const publicLinks: NavItem[] = [
 	{ label: "Points", href: "/points", icon: <BarChart3 className="size-4" /> },
 	{ label: "Dam Cup", href: "/dam-cup", icon: <Flag className="size-4" /> },
 	{ label: "Contact Us", href: "/contact", icon: <Mail className="size-4" /> },
+	{ label: "Membership", href: "/membership", icon: <UserCheck className="size-4" /> },
 	{ label: "About Us", href: "/about", icon: <Info className="size-4" /> },
 	{ label: "Gallery", href: "/gallery", icon: <Images className="size-4" /> },
 ]
