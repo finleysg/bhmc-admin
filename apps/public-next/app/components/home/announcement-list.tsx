@@ -2,10 +2,8 @@
 
 import { useAuth } from "@/lib/auth-context"
 import { Markdown } from "@/components/markdown"
-import { resolvePhotoUrl } from "@/lib/photo-utils"
+import { DocumentCard } from "@/components/document-card"
 import type { Announcement } from "@/lib/types"
-import { FileText } from "lucide-react"
-import { format } from "date-fns"
 
 interface AnnouncementListProps {
 	announcements: Announcement[]
@@ -30,21 +28,12 @@ export function AnnouncementList({ announcements }: AnnouncementListProps) {
 					{announcement.documents.length > 0 && (
 						<div className="space-y-1">
 							{announcement.documents.map((doc) => (
-								<a
+								<DocumentCard
 									key={doc.id}
-									href={resolvePhotoUrl(doc.file)}
-									target="_blank"
-									rel="noreferrer"
-									className="flex items-center gap-2 rounded bg-muted p-2 text-sm text-primary hover:bg-accent"
-								>
-									<FileText className="size-4 shrink-0" />
-									<div className="min-w-0">
-										<p className="truncate font-medium">{doc.title}</p>
-										<p className="text-xs text-muted-foreground">
-											Updated: {format(new Date(doc.last_update), "MMMM d, yyyy h:mm aaaa")}
-										</p>
-									</div>
-								</a>
+									title={doc.title}
+									file={doc.file}
+									lastUpdate={doc.last_update}
+								/>
 							))}
 						</div>
 					)}

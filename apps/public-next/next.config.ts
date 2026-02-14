@@ -6,7 +6,13 @@ const nextConfig: NextConfig = {
 		remotePatterns: [
 			{
 				protocol: "https",
-				hostname: "*.s3.amazonaws.com",
+				hostname: "bhmc.s3.amazonaws.com",
+				pathname: "/media/**",
+			},
+			{
+				protocol: "http",
+				hostname: "localhost",
+				port: "8000",
 				pathname: "/media/**",
 			},
 		],

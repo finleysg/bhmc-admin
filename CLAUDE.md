@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CRITICAL Rules
+
+- **NEVER change the password for auth_user id=1.** This is the project owner's account. Do not reset, update, or overwrite this password under any circumstances.
+
+- Never modify user passwords, authentication credentials, or seed data without explicit user approval. Always ask before changing any auth-related data.
+
 ## Project Overview
 
 Golf tournament management system for Bunker Hills Men's Club (BHMC). This monorepo contains the admin API and admin web dashboard. It complements a separate Django backend (data.bhmc.org) that owns the database schema and a React SPA (bhmc.org) for public-facing users.
@@ -76,6 +82,8 @@ NOTE: we have customized Prettier in the following way:
 }
 ```
 
+his project uses tab-based indentation. When editing files, always match the existing tab indentation exactly. Never convert tabs to spaces.
+
 This project uses TypeScript with strict mode. Always handle possibly-undefined array accesses with non-null assertions or proper guards. Use the full markdown editor component (ContentEditor) for any rich text fields, not simplified alternatives.
 
 ## Architecture
@@ -90,6 +98,12 @@ External:  Stripe, AWS S3, Mailgun, Golf Genius
 - The Django backend at data.bhmc.org is the source of truth for data. The NestJS API reads/writes the same MySQL database using Drizzle ORM (schema defined externally — no migrations in this repo).
 - The web admin authenticates users via better-auth (SQLite) then proxies API calls to the Django backend with Django auth tokens.
 - The NestJS API handles Golf Genius integration, Stripe webhooks, and the registration SSE flow.
+
+## Build & Development
+
+When the UI package (`packages/ui` or similar) is modified, it must be rebuilt (check for a build/compile step that outputs to `dist/`) before changes will appear in the consuming app. Always rebuild UI packages after editing them.
+
+For database migrations, prefer `drizzle-kit push` for development. Never run destructive migrations (column renames, drops) without explicit user confirmation. Be aware that `drizzle-kit push` may have interactive prompts that need handling.
 
 ## Deployment
 

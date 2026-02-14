@@ -8,9 +8,23 @@
 			"Bash(npx shadcn@latest add:*)",
 			"Bash(pkill:*)",
 			"Bash(tr:*)",
-			"Bash(node:*)"
+			"Bash(node:*)",
+			"Bash(npx tsc:*)",
+			"Bash(npx @contrast-checker/cli:*)",
+			"WebSearch",
+			"Bash(npx create-next-app@latest:*)",
+			"Bash(npx:*)",
+			"Bash(gh pr comment:*)",
+			"mcp__bhmc-db__query",
+			"mcp__bhmc-db__describe_table",
+			"Bash(gh api:*)",
+			"Bash(docker exec:*)",
+			"mcp__chrome-devtools__fill_form",
+			"mcp__chrome-devtools__wait_for",
+			"Bash(docker-compose:*)"
 		]
 	},
+	"enabledMcpjsonServers": ["bhmc-db"],
 	"hooks": {
 		"PreToolUse": [
 			{
@@ -23,6 +37,5 @@
 				]
 			}
 		]
-	},
-	"enabledMcpjsonServers": ["bhmc-db"]
+	}
 }

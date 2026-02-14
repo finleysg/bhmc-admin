@@ -1,7 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { resolvePhotoUrl } from "@/lib/photo-utils"
-import { FileText } from "lucide-react"
-import { format } from "date-fns"
+import { DocumentCard } from "@/components/document-card"
 import type { StaticDocument } from "@/lib/types"
 
 interface ClubDocumentsCardProps {
@@ -22,22 +20,13 @@ export function ClubDocumentsCard({ documents, title = "Club Documents" }: ClubD
 			<CardContent>
 				<div className="space-y-2">
 					{validDocs.map((doc) => (
-						<a
+						<DocumentCard
 							key={doc.id}
-							href={resolvePhotoUrl(doc.document.file)}
-							target="_blank"
-							rel="noreferrer"
 							title={doc.document.title}
-							className="flex items-center gap-2 rounded bg-muted p-2 text-sm text-primary transition-colors hover:bg-accent"
-						>
-							<FileText className="size-5 shrink-0" />
-							<div className="min-w-0">
-								<p className="truncate font-medium">{doc.document.title}</p>
-								<p className="text-xs text-muted-foreground">
-									Updated: {format(new Date(doc.document.last_update), "MMMM d, yyyy h:mm aaaa")}
-								</p>
-							</div>
-						</a>
+							file={doc.document.file}
+							lastUpdate={doc.document.last_update}
+							variant="primary"
+						/>
 					))}
 				</div>
 			</CardContent>

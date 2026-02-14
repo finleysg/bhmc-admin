@@ -94,3 +94,165 @@ export interface PhotoData {
 	web_url: string
 	image_url: string
 }
+
+export interface Tag {
+	id: number
+	name: string
+}
+
+export interface PhotoTag {
+	id: number
+	document_id: number
+	tag_id: number
+}
+
+export interface FeeType {
+	id: number
+	name: string
+	code: string
+	restriction: string
+}
+
+export interface EventFee {
+	id: number
+	event: number
+	fee_type: FeeType
+	amount: string
+	is_required: boolean
+	display_order: number
+	override_amount: string | null
+	override_restriction: string | null
+}
+
+export interface Hole {
+	id: number
+	course_id: number
+	hole_number: number
+	par: number
+}
+
+export interface Tee {
+	id: number
+	course_id: number
+	name: string
+	gg_id: string | null
+}
+
+export interface Course {
+	id: number
+	name: string
+	number_of_holes: number
+	gg_id: string | null
+	holes: Hole[]
+	tees: Tee[]
+}
+
+export interface ClubEventDetail {
+	id: number
+	name: string
+	rounds: number | null
+	ghin_required: boolean
+	total_groups: number | null
+	status: string
+	minimum_signup_group_size: number | null
+	maximum_signup_group_size: number | null
+	group_size: number | null
+	start_type: string | null
+	can_choose: boolean
+	registration_window: string
+	external_url: string | null
+	season: number
+	tee_time_splits: string | null
+	notes: string | null
+	event_type: string
+	skins_type: string | null
+	season_points: number | null
+	portal_url: string | null
+	priority_signup_start: string | null
+	start_date: string
+	start_time: string | null
+	registration_type: string
+	signup_start: string | null
+	signup_end: string | null
+	signup_waves: number | null
+	payments_end: string | null
+	registration_maximum: number | null
+	courses: Course[]
+	fees: EventFee[]
+	default_tag: string | null
+	starter_time_interval: number
+	team_size: number | null
+	age_restriction: number | null
+	age_restriction_type: string
+}
+
+export interface RegistrationSlot {
+	id: number
+	event: number
+	registration: number | null
+	hole: number | null
+	starting_order: number
+	slot: number
+	status: string
+}
+
+export interface MajorChampion {
+	id: number
+	season: number
+	event: number | null
+	event_name: string
+	flight: string
+	player: PlayerSummary
+	team_id: string | null
+	score: number
+	is_net: boolean
+}
+
+export interface DamCupResult {
+	id: number
+	season: number
+	good_guys: string
+	bad_guys: string
+	site: string
+}
+
+export interface TopPointsEntry {
+	id: number
+	first_name: string
+	last_name: string
+	total_points: number
+}
+
+export interface Document {
+	id: number
+	year: number | null
+	title: string
+	document_type: string
+	file: string
+	event: number | null
+	event_type: string | null
+	created_by: string
+	last_update: string
+}
+
+export interface PaginatedResponse<T> {
+	count: number
+	next: string | null
+	previous: string | null
+	results: T[]
+}
+
+export interface PlayerDetail {
+	id: number
+	first_name: string
+	last_name: string
+	email: string
+	phone_number: string | null
+	ghin: string | null
+	tee: string | null
+	birth_date: string | null
+	save_last_card: boolean
+	profile_picture: PhotoData | null
+	is_member: boolean
+	last_season: number | null
+}
