@@ -19,7 +19,12 @@ export function UserMenu() {
 
 	if (!isAuthenticated || !user) {
 		return (
-			<Button variant="ghost" size="sm" className="text-[hsl(var(--primary-foreground))] hover:bg-white/10" asChild>
+			<Button
+				variant="ghost"
+				size="sm"
+				className="text-[hsl(var(--primary-foreground))] hover:bg-white/10"
+				asChild
+			>
 				<Link href="/sign-in">Login</Link>
 			</Button>
 		)

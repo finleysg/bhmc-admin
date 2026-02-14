@@ -19,7 +19,13 @@ export function ThemeToggle() {
 	}, [dark])
 
 	return (
-		<Button variant="ghost" size="icon" className="text-[hsl(var(--primary-foreground))] hover:bg-white/10" onClick={toggle} aria-label="Toggle theme">
+		<Button
+			variant="ghost"
+			size="icon"
+			className="text-[hsl(var(--primary-foreground))] hover:bg-white/10"
+			onClick={toggle}
+			aria-label="Toggle theme"
+		>
 			{dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
 		</Button>
 	)

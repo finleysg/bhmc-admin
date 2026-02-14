@@ -58,3 +58,4 @@ docker/*.log
 /.cursor/
 .MCP
 .turbo/
+bhmc-database.json

@@ -1,6 +1,15 @@
 {
 	"permissions": {
-		"allow": ["WebFetch", "Bash(curl:*)", "Bash(git commit:*)"]
+		"allow": [
+			"WebFetch",
+			"Bash(curl:*)",
+			"Bash(git commit:*)",
+			"Bash(gh pr create:*)",
+			"Bash(npx shadcn@latest add:*)",
+			"Bash(pkill:*)",
+			"Bash(tr:*)",
+			"Bash(node:*)"
+		]
 	},
 	"hooks": {
 		"PreToolUse": [
@@ -14,5 +23,6 @@
 				]
 			}
 		]
-	}
+	},
+	"enabledMcpjsonServers": ["bhmc-db"]
 }

@@ -40,7 +40,9 @@ export default function SignInPage() {
 
 			<form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
 				{error && (
-					<div className="rounded-md bg-[hsl(var(--destructive))] p-3 text-sm text-white">{error}</div>
+					<div className="rounded-md bg-[hsl(var(--destructive))] p-3 text-sm text-white">
+						{error}
+					</div>
 				)}
 
 				<div className="space-y-2">
