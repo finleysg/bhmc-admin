@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic"
-
 import { notFound } from "next/navigation"
 import { parse, isValid } from "date-fns"
 import { fetchDjango } from "@/lib/fetchers"
@@ -18,11 +16,17 @@ export default async function EventPage({ params }: EventPageProps) {
 	const { eventDate, eventName } = await params
 
 	const startDate = parse(eventDate, "yyyy-MM-dd", new Date())
-	const year = isValid(startDate) ? startDate.getFullYear() : new Date().getFullYear()
+	if (!isValid(startDate)) {
+		notFound()
+	}
 
-	const events = await fetchDjango<ClubEventDetail[]>(`/events/?season=${year}`, {
-		revalidate: 300,
-	})
+	const year = startDate.getFullYear()
+	const month = startDate.getMonth() + 1
+
+	const events = await fetchDjango<ClubEventDetail[]>(
+		`/events/?year=${year}&month=${month}`,
+		{ revalidate: 300 },
+	)
 
 	const event = findEventBySlug(events, eventDate, eventName)
 

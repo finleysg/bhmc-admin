@@ -30,9 +30,7 @@ export function EventDetailCard({ event }: EventDetailCardProps) {
 	const startType = getStartTypeName(event.start_type)
 	const registrationType = getRegistrationTypeName(event.registration_type)
 	const hasSignup =
-		event.registration_type !== RegistrationType.None &&
-		event.signup_start &&
-		event.signup_end
+		event.registration_type !== RegistrationType.None && event.signup_start && event.signup_end
 
 	return (
 		<Card>
@@ -56,9 +54,7 @@ export function EventDetailCard({ event }: EventDetailCardProps) {
 							{event.start_time} {startType}
 						</DetailRow>
 					)}
-					{registrationType && (
-						<DetailRow label=" ">{registrationType}</DetailRow>
-					)}
+					{registrationType && <DetailRow label=" ">{registrationType}</DetailRow>}
 				</div>
 
 				{hasSignup && (
@@ -71,13 +67,9 @@ export function EventDetailCard({ event }: EventDetailCardProps) {
 							<DetailRow label="Open:">
 								{dayDateAndTimeFormat(event.priority_signup_start ?? event.signup_start)}
 							</DetailRow>
-							<DetailRow label="Close:">
-								{dayDateAndTimeFormat(event.signup_end)}
-							</DetailRow>
+							<DetailRow label="Close:">{dayDateAndTimeFormat(event.signup_end)}</DetailRow>
 							{event.payments_end && (
-								<DetailRow label="Changes:">
-									{dayDateAndTimeFormat(event.payments_end)}
-								</DetailRow>
+								<DetailRow label="Changes:">{dayDateAndTimeFormat(event.payments_end)}</DetailRow>
 							)}
 						</div>
 					</>
@@ -100,9 +92,7 @@ export function EventDetailCard({ event }: EventDetailCardProps) {
 
 				{event.notes && (
 					<>
-						<h3 className="font-heading text-lg font-semibold text-secondary">
-							Notes / Format
-						</h3>
+						<h3 className="font-heading text-lg font-semibold text-secondary">Notes / Format</h3>
 						<Markdown content={event.notes} />
 					</>
 				)}

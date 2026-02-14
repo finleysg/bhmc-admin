@@ -11,9 +11,7 @@ interface EventPhotosCardProps {
 export async function EventPhotosCard({ tag }: EventPhotosCardProps) {
 	let photos: PhotoData[] = []
 	try {
-		photos = await fetchDjango<PhotoData[]>(
-			`/photos/random/?take=1&tag=${encodeURIComponent(tag)}`,
-		)
+		photos = await fetchDjango<PhotoData[]>(`/photos/random/?take=1&tag=${encodeURIComponent(tag)}`)
 	} catch {
 		return null
 	}

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 
-const DJANGO_API_URL = process.env.DJANGO_API_URL || "http://backend:8000/api"
+import { fetchPublic } from "@/lib/api-proxy"
 
 export async function GET(request: NextRequest) {
 	const { searchParams } = new URL(request.url)
@@ -12,14 +12,11 @@ export async function GET(request: NextRequest) {
 	if (page) params.set("page", page)
 	if (tags) params.set("tags", tags)
 
-	const url = `${DJANGO_API_URL}/photos/?${params.toString()}`
+	const query = params.toString()
+	const backendPath = query ? `/photos/?${query}` : "/photos/"
 
-	const response = await fetch(url)
-
-	if (!response.ok) {
-		return NextResponse.json({ error: "Failed to fetch photos" }, { status: response.status })
-	}
-
-	const data: unknown = await response.json()
-	return NextResponse.json(data)
+	return fetchPublic({
+		backendPath,
+		apiBaseUrl: process.env.DJANGO_API_URL,
+	})
 }

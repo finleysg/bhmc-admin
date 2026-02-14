@@ -1,7 +1,7 @@
 import { format, parse, isValid } from "date-fns"
 
 import { slugify } from "./slugify"
-import type { ClubEvent, ClubEventDetail } from "./types"
+import type { ClubEvent, ClubEventDetail, RegistrationSlot } from "./types"
 
 export const EventType = {
 	Weeknight: "N",
@@ -166,4 +166,16 @@ export function findEventBySlug(
 		const eventNameSlug = slugify(e.name)
 		return eventDateSlug === dateSlug && eventNameSlug === nameSlug
 	})
+}
+
+export function computeOpenSpots(event: ClubEventDetail, slots: RegistrationSlot[]): number {
+	if (event.can_choose) {
+		const filled = slots.filter((s) => s.status !== "A").length
+		return slots.length - filled
+	}
+	const filled = slots.filter((s) => s.status === "R").length
+	if (event.registration_maximum) {
+		return event.registration_maximum - filled
+	}
+	return -1
 }
