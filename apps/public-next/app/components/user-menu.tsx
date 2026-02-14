@@ -22,7 +22,7 @@ export function UserMenu() {
 			<Button
 				variant="ghost"
 				size="sm"
-				className="text-[hsl(var(--primary-foreground))] hover:bg-white/10"
+				className="text-primary-foreground hover:bg-white/10"
 				asChild
 			>
 				<Link href="/sign-in">Login</Link>
@@ -35,7 +35,11 @@ export function UserMenu() {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-white/10">
+				<Button
+					variant="ghost"
+					aria-label="Account menu"
+					className="relative h-8 w-8 rounded-full hover:bg-white/10"
+				>
 					<Avatar>
 						<AvatarFallback>{initials}</AvatarFallback>
 					</Avatar>

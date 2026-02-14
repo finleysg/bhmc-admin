@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Markdown } from "@/components/markdown"
 import { fetchDjango } from "@/lib/fetchers"
@@ -33,10 +34,11 @@ export default async function AboutPage() {
 				<CardContent className="space-y-4">
 					{photos.map((photo) => (
 						<div key={photo.id}>
-							{/* eslint-disable-next-line @next/no-img-element */}
-							<img
+							<Image
 								src={resolvePhotoUrl(photo.mobile_url)}
 								alt={photo.caption ?? "Club photo"}
+								width={900}
+								height={900}
 								className="w-full rounded"
 							/>
 							<p className="mt-1 text-sm text-muted-foreground">

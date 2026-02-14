@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { resolvePhotoUrl } from "@/lib/photo-utils"
 import type { PhotoData } from "@/lib/types"
 
@@ -10,10 +11,11 @@ export function RandomPhoto({ photo }: RandomPhotoProps) {
 
 	return (
 		<div>
-			{/* eslint-disable-next-line @next/no-img-element */}
-			<img
+			<Image
 				src={resolvePhotoUrl(photo.mobile_url)}
 				alt={photo.caption ?? "Club photo"}
+				width={900}
+				height={900}
 				className="w-full rounded"
 			/>
 			<p className="mt-1 text-sm text-muted-foreground">

@@ -33,17 +33,13 @@ export default function SignInPage() {
 		<div className="mx-auto max-w-sm space-y-6 pt-8">
 			<div className="space-y-2 text-center">
 				<h1 className="text-2xl font-bold">Sign In</h1>
-				<p className="text-sm text-[hsl(var(--muted-foreground))]">
+				<p className="text-sm text-muted-foreground">
 					Enter your credentials to access your account
 				</p>
 			</div>
 
 			<form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-				{error && (
-					<div className="rounded-md bg-[hsl(var(--destructive))] p-3 text-sm text-white">
-						{error}
-					</div>
-				)}
+				{error && <div className="rounded-md bg-destructive p-3 text-sm text-white">{error}</div>}
 
 				<div className="space-y-2">
 					<label htmlFor="email" className="text-sm font-medium">
@@ -52,6 +48,7 @@ export default function SignInPage() {
 					<Input
 						id="email"
 						type="email"
+						autoComplete="username"
 						value={email}
 						onChange={(e) => setEmail(e.target.value)}
 						placeholder="you@example.com"
@@ -66,6 +63,7 @@ export default function SignInPage() {
 					<Input
 						id="password"
 						type="password"
+						autoComplete="current-password"
 						value={password}
 						onChange={(e) => setPassword(e.target.value)}
 						required

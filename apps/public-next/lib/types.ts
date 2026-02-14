@@ -36,7 +36,7 @@ export interface PlayerSummary {
 	first_name: string
 	last_name: string
 	email?: string | null
-	is_member: boolean | number
+	is_member: boolean
 }
 
 export interface BoardMember {

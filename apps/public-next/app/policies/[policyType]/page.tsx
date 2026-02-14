@@ -18,6 +18,10 @@ const policyTabs = [
 	{ slug: "new-member-faqs", code: "N", label: "New Member FAQs" },
 ] as const
 
+export function generateStaticParams() {
+	return policyTabs.map((t) => ({ policyType: t.slug }))
+}
+
 interface PolicyPageProps {
 	params: Promise<{ policyType: string }>
 }

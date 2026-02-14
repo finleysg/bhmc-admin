@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Markdown } from "@/components/markdown"
 import { PlayerLink } from "@/components/player-link"
-import { addDays, format } from "date-fns"
+import { format } from "date-fns"
+import { parseApiDate } from "@/lib/date-utils"
 import type { Ace, PageContent } from "@/lib/types"
 
 interface HoleInOneCardProps {
@@ -24,7 +25,7 @@ export function HoleInOneCard({ content, aces }: HoleInOneCardProps) {
 				) : (
 					<div className="space-y-1">
 						{aces.map((ace) => {
-							const shotDate = addDays(new Date(ace.shot_date), 1)
+							const shotDate = parseApiDate(ace.shot_date)
 							return (
 								<div key={ace.id} className="flex items-center gap-4 text-sm">
 									<span className="shrink-0 text-muted-foreground">

@@ -2,7 +2,7 @@ import Link from "next/link"
 
 export function Footer() {
 	return (
-		<footer className="border-t bg-[hsl(var(--primary))] py-4 text-center text-sm text-[hsl(var(--primary-foreground))]">
+		<footer className="border-t bg-primary py-4 text-center text-sm text-primary-foreground">
 			<div className="flex flex-col items-center gap-2">
 				<div className="flex gap-4">
 					<Link href="/" className="hover:underline">
