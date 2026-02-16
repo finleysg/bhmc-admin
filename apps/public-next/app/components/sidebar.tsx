@@ -51,7 +51,7 @@ const memberLinks: NavItem[] = [
 
 const guestLinks: NavItem[] = [
 	{ label: "Login", href: "/sign-in", icon: <LogIn className="size-4" /> },
-	{ label: "Create Account", href: "/register", icon: <UserPlus className="size-4" /> },
+	{ label: "Create Account", href: "/sign-up", icon: <UserPlus className="size-4" /> },
 ]
 
 function NavLink({ item }: { item: NavItem }) {

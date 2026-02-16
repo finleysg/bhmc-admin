@@ -1,11 +1,22 @@
 import { transformDjangoUser } from "@repo/domain/functions"
 import { DjangoUser, DjangoUserResponse } from "@repo/domain/types"
 
+import type { RegisterData } from "./schemas/auth"
+
 interface LoginError {
 	non_field_errors?: string[]
 	email?: string[]
 	password?: string[]
 }
+
+interface DjangoFieldErrors {
+	[key: string]: string[]
+}
+
+export type AuthResult = { success: true } | { success: false; error: string }
+export type RegisterResult =
+	| { success: true }
+	| { success: false; error: string; fieldErrors?: Record<string, string> }
 
 const DJANGO_URL = process.env.NEXT_PUBLIC_DJANGO_URL || "http://localhost:8000"
 
@@ -84,4 +95,114 @@ export async function getCurrentUser(): Promise<DjangoUser | null> {
 export async function checkAuth(): Promise<boolean> {
 	const user = await getCurrentUser()
 	return user !== null
+}
+
+export async function register(data: RegisterData): Promise<RegisterResult> {
+	try {
+		const response = await fetch(`${DJANGO_URL}/auth/users/`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(data),
+		})
+
+		if (response.status === 201) {
+			return { success: true }
+		}
+
+		const errorData = (await response.json()) as DjangoFieldErrors
+		const isDuplicate = Object.values(errorData)
+			.flat()
+			.some((msg) => msg.toLowerCase().includes("user already exists"))
+
+		if (isDuplicate) {
+			return {
+				success: false,
+				error: "An account with this email already exists.",
+			}
+		}
+
+		const fieldErrors: Record<string, string> = {}
+		for (const [key, messages] of Object.entries(errorData)) {
+			if (messages[0]) {
+				fieldErrors[key] = messages[0]
+			}
+		}
+
+		const firstError = Object.values(fieldErrors)[0] ?? "Registration failed"
+		return { success: false, error: firstError, fieldErrors }
+	} catch (error) {
+		console.error("Registration error:", error)
+		return { success: false, error: "Network error. Please try again." }
+	}
+}
+
+export async function requestPasswordReset(email: string): Promise<AuthResult> {
+	try {
+		await fetch(`${DJANGO_URL}/auth/users/reset_password/`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ email }),
+		})
+
+		// Always return success — Django returns 204 regardless of whether the email exists
+		return { success: true }
+	} catch (error) {
+		console.error("Password reset request error:", error)
+		return { success: false, error: "Network error. Please try again." }
+	}
+}
+
+export async function resetPasswordConfirm(data: {
+	uid: string
+	token: string
+	new_password: string
+	re_new_password: string
+}): Promise<AuthResult> {
+	try {
+		const response = await fetch(`${DJANGO_URL}/auth/users/reset_password_confirm/`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(data),
+		})
+
+		if (response.status === 204) {
+			return { success: true }
+		}
+
+		const errorData = (await response.json()) as DjangoFieldErrors
+		const errorMessage =
+			errorData.token?.[0] ??
+			errorData.non_field_errors?.[0] ??
+			Object.values(errorData).flat()[0] ??
+			"Password reset failed"
+		return { success: false, error: errorMessage }
+	} catch (error) {
+		console.error("Password reset confirm error:", error)
+		return { success: false, error: "Network error. Please try again." }
+	}
+}
+
+export async function activateAccount(uid: string, token: string): Promise<AuthResult> {
+	try {
+		const response = await fetch(`${DJANGO_URL}/auth/users/activation/`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ uid, token }),
+		})
+
+		if (response.status === 204) {
+			return { success: true }
+		}
+
+		const errorData = (await response.json()) as DjangoFieldErrors
+		const errorMessage =
+			errorData.detail?.[0] ??
+			errorData.token?.[0] ??
+			Object.values(errorData).flat()[0] ??
+			"Account activation failed"
+		return { success: false, error: errorMessage }
+	} catch (error) {
+		console.error("Activation error:", error)
+		return { success: false, error: "Network error. Please try again." }
+	}
 }

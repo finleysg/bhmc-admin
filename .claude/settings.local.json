@@ -21,7 +21,12 @@
 			"Bash(docker exec:*)",
 			"mcp__chrome-devtools__fill_form",
 			"mcp__chrome-devtools__wait_for",
-			"Bash(docker-compose:*)"
+			"Bash(docker-compose:*)",
+			"Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && head -20 {} | cat -A | grep \"\"^  [^ ]\"\"')",
+			"Bash(awk:*)",
+			"Bash(/tmp/test-react-types.ts:*)",
+			"Bash(python3:*)",
+			"mcp__chrome-devtools__fill"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],

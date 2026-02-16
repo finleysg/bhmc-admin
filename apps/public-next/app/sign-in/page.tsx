@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -74,6 +75,26 @@ export default function SignInPage() {
 					{loading ? "Signing in..." : "Sign In"}
 				</Button>
 			</form>
+
+			<div className="space-y-2 text-center text-sm text-muted-foreground">
+				<p>
+					<Link
+						href="/reset-password"
+						className="text-primary underline-offset-4 hover:underline"
+					>
+						Forgot your password?
+					</Link>
+				</p>
+				<p>
+					Don&apos;t have an account?{" "}
+					<Link
+						href="/sign-up"
+						className="text-primary underline-offset-4 hover:underline"
+					>
+						Sign up
+					</Link>
+				</p>
+			</div>
 		</div>
 	)
 }
