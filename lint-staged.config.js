@@ -29,6 +29,9 @@ export default {
 	// backend Python files - ruff lint + format
 	"backend/**/*.py": ["ruff check --fix", "ruff format"],
 
+	// e2e tests - just prettier
+	"e2e/**/*.ts": ["prettier --write"],
+
 	// Other files - just prettier
 	"*.{json,md,yml,yaml,css,scss}": ["prettier --write"],
 }

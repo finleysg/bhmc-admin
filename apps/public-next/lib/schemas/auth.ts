@@ -26,10 +26,7 @@ export const RequestPasswordSchema = z.object({
 export const ResetPasswordSchema = z
 	.object({
 		new_password: z.string().trim().min(8, "Your password must be at least 8 characters long."),
-		re_new_password: z
-			.string()
-			.trim()
-			.min(8, "Your password must be at least 8 characters long."),
+		re_new_password: z.string().trim().min(8, "Your password must be at least 8 characters long."),
 	})
 	.superRefine(({ new_password, re_new_password }, ctx) => {
 		if (new_password !== re_new_password) {

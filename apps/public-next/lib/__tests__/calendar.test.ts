@@ -150,9 +150,7 @@ describe("addEventsToCalendar", () => {
 		const event = makeEvent({ start_date: "2024-06-15", rounds: 1 })
 		addEventsToCalendar(cal, [event])
 
-		const june15 = cal.weeks
-			.flatMap((w) => w.days)
-			.find((d) => d.isCurrentMonth && d.day === 15)
+		const june15 = cal.weeks.flatMap((w) => w.days).find((d) => d.isCurrentMonth && d.day === 15)
 		expect(june15).toBeDefined()
 		expect(june15?.events).toHaveLength(1)
 		expect(june15?.events[0].id).toBe(1)
@@ -163,9 +161,7 @@ describe("addEventsToCalendar", () => {
 		const event = makeEvent({ start_date: "2024-06-14", rounds: 3 })
 		addEventsToCalendar(cal, [event])
 
-		const daysWithEvent = cal.weeks
-			.flatMap((w) => w.days)
-			.filter((d) => d.events.length > 0)
+		const daysWithEvent = cal.weeks.flatMap((w) => w.days).filter((d) => d.events.length > 0)
 		expect(daysWithEvent).toHaveLength(3)
 		expect(daysWithEvent.map((d) => d.day)).toEqual([14, 15, 16])
 	})
@@ -175,9 +171,7 @@ describe("addEventsToCalendar", () => {
 		const event = makeEvent({ start_date: "2024-06-15", rounds: null })
 		addEventsToCalendar(cal, [event])
 
-		const daysWithEvent = cal.weeks
-			.flatMap((w) => w.days)
-			.filter((d) => d.events.length > 0)
+		const daysWithEvent = cal.weeks.flatMap((w) => w.days).filter((d) => d.events.length > 0)
 		expect(daysWithEvent).toHaveLength(1)
 	})
 
@@ -186,9 +180,7 @@ describe("addEventsToCalendar", () => {
 		const event = makeEvent({ start_date: "2024-07-15" })
 		addEventsToCalendar(cal, [event])
 
-		const daysWithEvent = cal.weeks
-			.flatMap((w) => w.days)
-			.filter((d) => d.events.length > 0)
+		const daysWithEvent = cal.weeks.flatMap((w) => w.days).filter((d) => d.events.length > 0)
 		expect(daysWithEvent).toHaveLength(0)
 	})
 
@@ -198,9 +190,7 @@ describe("addEventsToCalendar", () => {
 		const event = makeEvent({ start_date: "2024-05-26" })
 		addEventsToCalendar(cal, [event])
 
-		const daysWithEvent = cal.weeks
-			.flatMap((w) => w.days)
-			.filter((d) => d.events.length > 0)
+		const daysWithEvent = cal.weeks.flatMap((w) => w.days).filter((d) => d.events.length > 0)
 		expect(daysWithEvent).toHaveLength(1)
 		expect(daysWithEvent[0].isCurrentMonth).toBe(false)
 	})

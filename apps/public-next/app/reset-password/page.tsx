@@ -45,9 +45,7 @@ export default function ResetPasswordPage() {
 			</div>
 
 			<form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-				{error && (
-					<div className="rounded-md bg-destructive p-3 text-sm text-white">{error}</div>
-				)}
+				{error && <div className="rounded-md bg-destructive p-3 text-sm text-white">{error}</div>}
 
 				<div className="space-y-2">
 					<label htmlFor="email" className="text-sm font-medium">
@@ -73,10 +71,7 @@ export default function ResetPasswordPage() {
 			</form>
 
 			<p className="text-center text-sm text-muted-foreground">
-				<Link
-					href="/sign-in"
-					className="text-primary underline-offset-4 hover:underline"
-				>
+				<Link href="/sign-in" className="text-primary underline-offset-4 hover:underline">
 					Back to sign in
 				</Link>
 			</p>

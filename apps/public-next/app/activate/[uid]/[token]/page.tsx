@@ -43,9 +43,8 @@ export default function ActivateAccountPage({
 				<div className="space-y-4 text-center">
 					<h1 className="text-2xl font-bold">Your Account is Active</h1>
 					<p className="text-sm text-muted-foreground">
-						Thank you! Log in now to sign up for an event or update your profile. If
-						you don&apos;t have a GHIN, you will receive one when you join us for the
-						current golf season.
+						Thank you! Log in now to sign up for an event or update your profile. If you don&apos;t
+						have a GHIN, you will receive one when you join us for the current golf season.
 					</p>
 					<Button asChild className="w-full">
 						<Link href="/sign-in">Sign In</Link>
@@ -57,10 +56,7 @@ export default function ActivateAccountPage({
 				<div className="space-y-4 text-center">
 					<h1 className="text-2xl font-bold">Activation Failed</h1>
 					<div className="rounded-md bg-destructive p-3 text-sm text-white">{error}</div>
-					<Link
-						href="/sign-in"
-						className="text-sm text-primary underline-offset-4 hover:underline"
-					>
+					<Link href="/sign-in" className="text-sm text-primary underline-offset-4 hover:underline">
 						Back to sign in
 					</Link>
 				</div>

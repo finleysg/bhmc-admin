@@ -59,3 +59,8 @@ docker/*.log
 .MCP
 .turbo/
 bhmc-database.json
+
+# Playwright
+playwright/.auth/
+test-results/
+playwright-report/

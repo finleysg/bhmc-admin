@@ -18,15 +18,12 @@ function SentContent() {
 					</p>
 				)}
 				<p className="text-sm text-muted-foreground">
-					If you don&apos;t see the email, check your spam or junk folder for an email
-					from <strong>postmaster@bhmc.org</strong>.
+					If you don&apos;t see the email, check your spam or junk folder for an email from{" "}
+					<strong>postmaster@bhmc.org</strong>.
 				</p>
 				<p className="text-sm text-muted-foreground">
 					If you don&apos;t have an account, you can{" "}
-					<Link
-						href="/sign-up"
-						className="text-primary underline-offset-4 hover:underline"
-					>
+					<Link href="/sign-up" className="text-primary underline-offset-4 hover:underline">
 						create one here
 					</Link>
 					.
@@ -34,10 +31,7 @@ function SentContent() {
 			</div>
 
 			<div className="text-center">
-				<Link
-					href="/sign-in"
-					className="text-sm text-primary underline-offset-4 hover:underline"
-				>
+				<Link href="/sign-in" className="text-sm text-primary underline-offset-4 hover:underline">
 					Back to sign in
 				</Link>
 			</div>

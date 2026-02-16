@@ -72,9 +72,7 @@ export default function SignUpPage() {
 
 			<form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
 				{generalError && (
-					<div className="rounded-md bg-destructive p-3 text-sm text-white">
-						{generalError}
-					</div>
+					<div className="rounded-md bg-destructive p-3 text-sm text-white">{generalError}</div>
 				)}
 
 				<div className="grid grid-cols-2 gap-4">
@@ -88,9 +86,7 @@ export default function SignUpPage() {
 							onChange={(e) => handleChange("first_name", e.target.value)}
 							required
 						/>
-						{errors.first_name && (
-							<p className="text-xs text-destructive">{errors.first_name}</p>
-						)}
+						{errors.first_name && <p className="text-xs text-destructive">{errors.first_name}</p>}
 					</div>
 					<div className="space-y-2">
 						<label htmlFor="last_name" className="text-sm font-medium">
@@ -102,9 +98,7 @@ export default function SignUpPage() {
 							onChange={(e) => handleChange("last_name", e.target.value)}
 							required
 						/>
-						{errors.last_name && (
-							<p className="text-xs text-destructive">{errors.last_name}</p>
-						)}
+						{errors.last_name && <p className="text-xs text-destructive">{errors.last_name}</p>}
 					</div>
 				</div>
 
@@ -126,8 +120,7 @@ export default function SignUpPage() {
 
 				<div className="space-y-2">
 					<label htmlFor="ghin" className="text-sm font-medium">
-						GHIN{" "}
-						<span className="font-normal text-muted-foreground">(optional)</span>
+						GHIN <span className="font-normal text-muted-foreground">(optional)</span>
 					</label>
 					<Input
 						id="ghin"
@@ -149,9 +142,7 @@ export default function SignUpPage() {
 						onChange={(e) => handleChange("password", e.target.value)}
 						required
 					/>
-					{errors.password && (
-						<p className="text-xs text-destructive">{errors.password}</p>
-					)}
+					{errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
 				</div>
 
 				<div className="space-y-2">
@@ -166,9 +157,7 @@ export default function SignUpPage() {
 						onChange={(e) => handleChange("re_password", e.target.value)}
 						required
 					/>
-					{errors.re_password && (
-						<p className="text-xs text-destructive">{errors.re_password}</p>
-					)}
+					{errors.re_password && <p className="text-xs text-destructive">{errors.re_password}</p>}
 				</div>
 
 				<Button type="submit" className="w-full" disabled={loading}>

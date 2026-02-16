@@ -18,17 +18,13 @@ function ConfirmContent() {
 					</p>
 				)}
 				<p className="text-sm text-muted-foreground">
-					Click the link in the email to activate your account. If you don&apos;t see it,
-					check your spam or junk folder for an email from{" "}
-					<strong>postmaster@bhmc.org</strong>.
+					Click the link in the email to activate your account. If you don&apos;t see it, check your
+					spam or junk folder for an email from <strong>postmaster@bhmc.org</strong>.
 				</p>
 			</div>
 
 			<div className="text-center">
-				<Link
-					href="/sign-in"
-					className="text-sm text-primary underline-offset-4 hover:underline"
-				>
+				<Link href="/sign-in" className="text-sm text-primary underline-offset-4 hover:underline">
 					Back to sign in
 				</Link>
 			</div>

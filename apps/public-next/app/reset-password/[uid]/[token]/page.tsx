@@ -66,16 +66,12 @@ export default function ResetPasswordConfirmPage({
 		<div className="mx-auto max-w-sm space-y-6 pt-8">
 			<div className="space-y-2 text-center">
 				<h1 className="text-2xl font-bold">Set New Password</h1>
-				<p className="text-sm text-muted-foreground">
-					Enter your new password below.
-				</p>
+				<p className="text-sm text-muted-foreground">Enter your new password below.</p>
 			</div>
 
 			<form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
 				{generalError && (
-					<div className="rounded-md bg-destructive p-3 text-sm text-white">
-						{generalError}
-					</div>
+					<div className="rounded-md bg-destructive p-3 text-sm text-white">{generalError}</div>
 				)}
 
 				<div className="space-y-2">
@@ -90,9 +86,7 @@ export default function ResetPasswordConfirmPage({
 						onChange={(e) => handleChange("new_password", e.target.value)}
 						required
 					/>
-					{errors.new_password && (
-						<p className="text-xs text-destructive">{errors.new_password}</p>
-					)}
+					{errors.new_password && <p className="text-xs text-destructive">{errors.new_password}</p>}
 				</div>
 
 				<div className="space-y-2">
@@ -118,10 +112,7 @@ export default function ResetPasswordConfirmPage({
 			</form>
 
 			<p className="text-center text-sm text-muted-foreground">
-				<Link
-					href="/sign-in"
-					className="text-primary underline-offset-4 hover:underline"
-				>
+				<Link href="/sign-in" className="text-primary underline-offset-4 hover:underline">
 					Back to sign in
 				</Link>
 			</p>
