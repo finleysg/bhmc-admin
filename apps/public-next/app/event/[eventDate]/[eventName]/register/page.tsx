@@ -169,6 +169,14 @@ function RegisterContent({ event }: { event: ClubEventDetail }) {
 		router.push(eventUrl)
 	}, [eventUrl, router])
 
+	// Complete step — redirect (must be before conditional returns to satisfy Rules of Hooks)
+	useEffect(() => {
+		if (currentStep.name === "complete") {
+			toast.success("Registration complete!")
+			router.push(eventUrl)
+		}
+	}, [currentStep.name, eventUrl, router])
+
 	const handlePriorityCancel = () => {
 		setShowPriorityDialog(false)
 		void cancelRegistration("violation", "new")
@@ -313,14 +321,6 @@ function RegisterContent({ event }: { event: ClubEventDetail }) {
 			</Card>
 		)
 	}
-
-	// Complete step — redirect
-	useEffect(() => {
-		if (currentStep.name === "complete") {
-			toast.success("Registration complete!")
-			router.push(eventUrl)
-		}
-	}, [currentStep.name, eventUrl, router])
 
 	return null
 }

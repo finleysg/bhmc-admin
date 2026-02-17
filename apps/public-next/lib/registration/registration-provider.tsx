@@ -300,20 +300,21 @@ export function RegistrationProvider({
 	)
 
 	const loadRegistration = useCallback(
-		async (playerId: number) => {
+		async (playerId: number, paymentId?: number) => {
 			try {
-				const result = await apiFetch<{ registration: ServerRegistration }>(
+				const result = await apiFetch<ServerRegistration[]>(
 					`/api/registration?event_id=${state.clubEvent?.id}&player_id=${playerId}`,
 				)
-				if (result) {
-					const { registration } = result
-					const fees: ServerRegistrationFee[] = registration.slots.flatMap((slot) => slot.fees)
+				const registration = result?.[0]
+				if (registration) {
+					const fees: ServerRegistrationFee[] =
+						registration.slots?.flatMap((slot) => slot.fees ?? []) ?? []
 					dispatch({
 						type: "load-registration",
 						payload: {
 							registration,
 							payment: {
-								id: 0,
+								id: paymentId ?? 0,
 								eventId: state.clubEvent?.id ?? 0,
 								userId: user?.id ?? 0,
 								paymentCode: "",
@@ -327,7 +328,7 @@ export function RegistrationProvider({
 							existingFees: fees,
 						},
 					})
-					queryClient.setQueryData(["registration", state.clubEvent?.id], result.registration)
+					queryClient.setQueryData(["registration", state.clubEvent?.id], registration)
 					void queryClient.invalidateQueries({
 						queryKey: ["event-registrations", state.clubEvent?.id],
 					})
@@ -379,7 +380,7 @@ export function RegistrationProvider({
 							existingFees: fees,
 						},
 					})
-					queryClient.setQueryData(["registration", state.clubEvent?.id], result.registration)
+					queryClient.setQueryData(["registration", state.clubEvent?.id], registration)
 					void queryClient.invalidateQueries({
 						queryKey: ["event-registrations", state.clubEvent?.id],
 					})

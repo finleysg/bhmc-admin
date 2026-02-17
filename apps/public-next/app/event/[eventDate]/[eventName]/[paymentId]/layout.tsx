@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, type PropsWithChildren } from "react"
+import { useParams } from "next/navigation"
 
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
@@ -35,8 +36,9 @@ export default function PaymentLayout({ children }: PropsWithChildren) {
 
 function PaymentLayoutInner({ children }: PropsWithChildren) {
 	const [stripePromise] = useState(() => loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!))
-	const { stripeClientSession, payment } = useRegistration()
-	const paymentId = payment?.id ?? 0
+	const { stripeClientSession } = useRegistration()
+	const params = useParams<{ paymentId: string }>()
+	const paymentId = Number(params.paymentId) || 0
 	const { data: stripeAmount, status } = useStripeAmount(paymentId)
 
 	if (status === "pending" || !stripeAmount) {

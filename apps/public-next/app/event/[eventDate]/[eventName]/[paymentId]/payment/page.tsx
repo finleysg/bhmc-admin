@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
 
@@ -20,9 +20,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { getEventUrl } from "@/lib/event-utils"
 import { useAuth } from "@/lib/auth-context"
 import { useEventFromParams } from "@/lib/hooks/use-event-from-params"
+import { useMyPlayer } from "@/lib/hooks/use-my-player"
 import { usePaymentTimeout } from "@/lib/hooks/use-payment-timeout"
 import { useRegistration } from "@/lib/registration/registration-context"
-import { ReviewStep } from "@/lib/registration/registration-reducer"
+import {
+	PaymentStep as PaymentStepConst,
+	ReviewStep,
+} from "@/lib/registration/registration-reducer"
 import { formatCurrency } from "@/lib/registration/payment-utils"
 import { RegistrationCountdown } from "../../components/registration-countdown"
 import { useCurrentPaymentAmount } from "../layout"
@@ -31,6 +35,9 @@ export default function PaymentPage() {
 	const router = useRouter()
 	const { user } = useAuth()
 	const { event } = useEventFromParams()
+	const { data: player } = useMyPlayer()
+	const params = useParams<{ paymentId: string }>()
+	const paymentId = Number(params.paymentId) || 0
 	const { amount: stripeAmount } = useCurrentPaymentAmount()
 	const {
 		currentStep,
@@ -40,6 +47,8 @@ export default function PaymentPage() {
 		cancelRegistration,
 		completeRegistration,
 		createPaymentIntent,
+		initiateStripeSession,
+		loadRegistration,
 		setError,
 		updateStep,
 	} = useRegistration()
@@ -54,6 +63,18 @@ export default function PaymentPage() {
 	const buttonRef = useRef<HTMLButtonElement>(null)
 	const abortControllerRef = useRef<AbortController | null>(null)
 	const paymentOperationRef = useRef<{ cancelled: boolean }>({ cancelled: false })
+	const loadedRef = useRef(false)
+
+	// On mount: restore registration state if not already loaded
+	useEffect(() => {
+		if (loadedRef.current || !player?.id || !paymentId || registration) return
+		loadedRef.current = true
+
+		void loadRegistration(player.id, paymentId).then(() => {
+			updateStep(PaymentStepConst)
+			initiateStripeSession()
+		})
+	}, [player?.id, paymentId, registration, loadRegistration, updateStep, initiateStripeSession])
 
 	const eventUrl = event ? getEventUrl(event) : ""
 

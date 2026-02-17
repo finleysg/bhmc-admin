@@ -2,10 +2,10 @@
 	"cookies": [
 		{
 			"name": "access_token",
-			"value": "e00b4d4e76347f9d19d58dd11acbb9da7c4ca5e3",
+			"value": "54f95972368a9b82719a804daeb7354611029415",
 			"domain": "localhost",
 			"path": "/",
-			"expires": 1779038120.263454,
+			"expires": 1779143555.438618,
 			"httpOnly": true,
 			"secure": false,
 			"sameSite": "Lax"

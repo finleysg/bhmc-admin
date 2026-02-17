@@ -18,7 +18,10 @@ export function usePlayerRegistration(eventId: number | undefined, playerId: num
 				if (response.status === 404) return null
 				throw new Error("Failed to fetch registration")
 			}
-			return response.json() as Promise<PlayerRegistrationResponse>
+			const data = (await response.json()) as ServerRegistration[]
+			const registration = data?.[0]
+			if (!registration) return null
+			return { registration } satisfies PlayerRegistrationResponse
 		},
 		enabled: !!eventId && !!playerId,
 	})

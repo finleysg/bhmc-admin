@@ -4,6 +4,7 @@ import { fetchDjango } from "@/lib/fetchers"
 import { findEventBySlug } from "@/lib/event-utils"
 import type { ClubEventDetail } from "@/lib/types"
 import { EventDetailCard } from "./components/event-detail-card"
+import { RegistrationActions } from "./components/registration-actions"
 import { FeesAndPointsCard } from "./components/fees-and-points-card"
 import { EventDocumentsCard } from "./components/event-documents-card"
 import { EventPhotosCard } from "./components/event-photos-card"
@@ -35,8 +36,9 @@ export default async function EventPage({ params }: EventPageProps) {
 
 	return (
 		<div className="grid gap-6 lg:grid-cols-12">
-			<div className="lg:col-span-8">
+			<div className="lg:col-span-8 space-y-4">
 				<EventDetailCard event={event} />
+				<RegistrationActions event={event} />
 			</div>
 			<div className="space-y-6 lg:col-span-4">
 				<FeesAndPointsCard event={event} />

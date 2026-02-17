@@ -60,7 +60,7 @@ function SignUpButton({
 		return null
 	}
 
-	const isOpen = event.registration_window === "current"
+	const isOpen = event.registration_window === "registration"
 	const destination = event.can_choose ? `${eventUrl}/reserve` : `${eventUrl}/register`
 
 	if (startCountdown) {

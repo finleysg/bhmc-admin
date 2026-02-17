@@ -5,11 +5,8 @@ function getAuthToken(request: NextRequest): string | null {
 	return cookie?.value || null
 }
 
-export async function GET(
-	request: NextRequest,
-	{ params }: { params: Promise<{ eventId: string }> },
-) {
-	const { eventId } = await params
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+	const { id: eventId } = await params
 	const token = getAuthToken(request)
 
 	if (!token) {

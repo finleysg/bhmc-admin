@@ -1,0 +1,44 @@
+{
+	"testPlayer": {
+		"id": 159,
+		"userId": 162
+	},
+	"events": {
+		"weeknight_open": {
+			"id": 865,
+			"name": "[E2E] Weeknight Open",
+			"startDate": "2026-02-24",
+			"slug": "e2e-weeknight-open"
+		},
+		"weeknight_priority": {
+			"id": 866,
+			"name": "[E2E] Weeknight Priority",
+			"startDate": "2026-02-24",
+			"slug": "e2e-weeknight-priority"
+		},
+		"weeknight_closed": {
+			"id": 867,
+			"name": "[E2E] Weeknight Closed",
+			"startDate": "2026-02-24",
+			"slug": "e2e-weeknight-closed"
+		},
+		"major_open": {
+			"id": 868,
+			"name": "[E2E] Major Team Open",
+			"startDate": "2026-02-24",
+			"slug": "e2e-major-team-open"
+		},
+		"major_priority": {
+			"id": 869,
+			"name": "[E2E] Major Team Priority",
+			"startDate": "2026-02-24",
+			"slug": "e2e-major-team-priority"
+		},
+		"major_closed": {
+			"id": 870,
+			"name": "[E2E] Major Team Closed",
+			"startDate": "2026-02-24",
+			"slug": "e2e-major-team-closed"
+		}
+	}
+}

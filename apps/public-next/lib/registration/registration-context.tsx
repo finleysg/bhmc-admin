@@ -48,7 +48,7 @@ export interface IRegistrationContext {
 	) => Promise<void>
 	editRegistration: (registrationId: number, playerIds: number[]) => Promise<void>
 	initiateStripeSession: () => void
-	loadRegistration: (playerId: number) => Promise<void>
+	loadRegistration: (playerId: number, paymentId?: number) => Promise<void>
 	removeFee: (slot: ServerRegistrationSlot, eventFee: EventFee) => void
 	removePlayer: (slot: ServerRegistrationSlot) => void
 	savePayment: () => Promise<void>
