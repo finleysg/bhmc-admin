@@ -64,3 +64,4 @@ bhmc-database.json
 playwright/.auth/
 test-results/
 playwright-report/
+.playwright-cli/

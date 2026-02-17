@@ -26,7 +26,10 @@
 			"Bash(awk:*)",
 			"Bash(/tmp/test-react-types.ts:*)",
 			"Bash(python3:*)",
-			"mcp__chrome-devtools__fill"
+			"mcp__chrome-devtools__fill",
+			"Bash(git -C:*)",
+			"Bash(xargs:*)",
+			"Skill(playwright-cli)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],

@@ -45,7 +45,7 @@ const publicLinks: NavItem[] = [
 ]
 
 const memberLinks: NavItem[] = [
-	{ label: "My Pages", href: "/member/my-pages", icon: <UserCircle className="size-4" /> },
+	{ label: "My Pages", href: "/member", icon: <UserCircle className="size-4" /> },
 	{ label: "Directory", href: "/member/directory", icon: <Users className="size-4" /> },
 ]
 
@@ -56,7 +56,7 @@ const guestLinks: NavItem[] = [
 
 function NavLink({ item }: { item: NavItem }) {
 	const pathname = usePathname()
-	const active = pathname === item.href
+	const active = item.href === "/" ? pathname === "/" : pathname === item.href
 
 	return (
 		<Link

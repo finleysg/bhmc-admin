@@ -126,7 +126,7 @@ When a change is made to a next app, rebuild the container.
 
 ### IMPORTANT: UX Feedback
 
-Use the `chrome-devtools` skill to validate your work directly in the browser:
+Use the `playwright cli` skill to validate your work directly:
 
 - Public site: http://localhost:3000
 - Admin next site: http://localhost:3100

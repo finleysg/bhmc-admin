@@ -29,7 +29,7 @@
 
 @layer base {
 	:root {
-		--background: 0 0% 100%;
+		--background: 226 30% 98%;
 		--foreground: 226 24% 28%;
 		--card: 0 0% 100%;
 		--card-foreground: 226 24% 28%;
@@ -52,7 +52,7 @@
 	}
 
 	.dark {
-		--background: 226 47% 11%;
+		--background: 226 40% 14%;
 		--foreground: 226 20% 88%;
 		--card: 226 47% 11%;
 		--card-foreground: 226 20% 88%;
@@ -125,4 +125,74 @@
 	--tw-prose-invert-pre-bg: hsl(var(--muted));
 	--tw-prose-invert-th-borders: hsl(var(--border));
 	--tw-prose-invert-td-borders: hsl(var(--border));
+}
+
+/* Scorecard layout */
+.scorecard .score-row {
+	display: flex;
+}
+
+.scorecard .score-label {
+	flex: 1;
+	min-width: 80px;
+	padding: 2px 4px;
+	font-size: 0.75rem;
+	display: flex;
+	align-items: center;
+}
+
+.scorecard .score-cells {
+	display: flex;
+}
+
+.scorecard .score-cell {
+	width: 28px;
+	padding: 2px 0;
+	font-size: 0.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Score shape notation: circles for under par, squares for over par */
+.scorecard .score-mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	line-height: 1;
+}
+
+/* Birdie: single circle */
+.scorecard .score-mark.birdie {
+	border: 1.5px solid currentColor;
+	border-radius: 50%;
+}
+
+/* Eagle / Double-eagle: double circle */
+.scorecard .score-mark.eagle,
+.scorecard .score-mark.double-eagle {
+	border: 1.5px solid currentColor;
+	border-radius: 50%;
+	outline: 1.5px solid currentColor;
+	outline-offset: 1px;
+}
+
+/* Bogey: single square */
+.scorecard .score-mark.bogey {
+	border: 1.5px solid currentColor;
+}
+
+/* Double-bogey / Other (worse): double square */
+.scorecard .score-mark.double-bogey,
+.scorecard .score-mark.other {
+	border: 1.5px solid currentColor;
+	outline: 1.5px solid currentColor;
+	outline-offset: 1px;
+}
+
+/* Totals */
+.scorecard .below-par {
+	font-weight: 600;
 }

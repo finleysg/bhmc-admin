@@ -256,3 +256,96 @@ export interface PlayerDetail {
 	is_member: boolean
 	last_season: number | null
 }
+
+// Score types
+export interface ScoreCourse {
+	id: number
+	name: string
+	number_of_holes: number
+}
+
+export interface ScoreTee {
+	id: number
+	course: number
+	name: string
+	gg_id: string | null
+}
+
+export interface HoleScoreData {
+	id: number
+	hole: Hole
+	score: number
+	is_net: boolean
+}
+
+export interface PlayerRoundData {
+	id: number
+	event: number
+	player: number
+	course: ScoreCourse
+	tee: ScoreTee
+	handicap_index: string | null
+	course_handicap: number
+	scores: HoleScoreData[]
+}
+
+// Tournament types
+export interface TournamentNested {
+	id: number
+	event: number
+	round: number | null
+	name: string
+	format: string | null
+	is_net: boolean
+	gg_id: string | null
+}
+
+export interface TournamentResultData {
+	id: number
+	tournament: TournamentNested
+	player: number
+	team_id: string | null
+	position: number
+	score: number | null
+	amount: string
+	payout_type: string | null
+	payout_to: string | null
+	payout_status: string | null
+	flight: string | null
+	summary: string | null
+	details: string | null
+}
+
+export interface TournamentPointsData {
+	id: number
+	tournament: TournamentNested
+	player: number
+	position: number
+	score: number | null
+	points: number
+	details: string | null
+	create_date: string
+}
+
+// Aggregation types for Results page
+export interface PayoutLineItem {
+	label: string
+	amount: number
+	payoutType: string
+	payoutStatus: string
+}
+
+export interface EventResultSummary {
+	eventId: number
+	eventName: string
+	eventDate: string
+	grossScore: number | null
+	grossPosition: number | null
+	netScore: number | null
+	netPosition: number | null
+	grossPoints: number | null
+	netPoints: number | null
+	grossPointsDetails: string | null
+	netPointsDetails: string | null
+	payouts: PayoutLineItem[]
+}
