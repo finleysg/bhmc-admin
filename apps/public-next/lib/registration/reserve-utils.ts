@@ -79,9 +79,7 @@ export function calculateTeetime(
 	intervals: number[],
 ): string {
 	const offset =
-		intervals.length === 1
-			? startingOrder * intervals[0]
-			: getOffset(startingOrder, intervals)
+		intervals.length === 1 ? startingOrder * intervals[0] : getOffset(startingOrder, intervals)
 	return format(addMinutes(startingTime, offset), "h:mm a")
 }
 
@@ -162,9 +160,7 @@ function createTeeTimes(event: ClubEventDetail, slots: RegistrationSlot[]): Rese
 		const firstHole = course.holes[0]
 		const groups: ReserveGroup[] = []
 		for (let i = 0; i < event.total_groups!; i++) {
-			const group = slots.filter(
-				(slot) => slot.starting_order === i && slot.hole === firstHole.id,
-			)
+			const group = slots.filter((slot) => slot.starting_order === i && slot.hole === firstHole.id)
 			const teetime = calculateTeetime(startingTime, i, teeTimeSplits)
 			const wave = calculateWave(i, event.total_groups!, event.signup_waves)
 			groups.push(createReserveGroup(course, firstHole, group, teetime, wave))
@@ -179,12 +175,8 @@ function createShotgun(event: ClubEventDetail, slots: RegistrationSlot[]): Reser
 		let groupIndex = 0
 		const totalGroups = course.holes.length * 2
 		course.holes.forEach((hole) => {
-			const aGroup = slots.filter(
-				(slot) => slot.hole === hole.id && slot.starting_order === 0,
-			)
-			const bGroup = slots.filter(
-				(slot) => slot.hole === hole.id && slot.starting_order === 1,
-			)
+			const aGroup = slots.filter((slot) => slot.hole === hole.id && slot.starting_order === 0)
+			const bGroup = slots.filter((slot) => slot.hole === hole.id && slot.starting_order === 1)
 			groups.push(
 				createReserveGroup(
 					course,

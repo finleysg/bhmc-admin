@@ -1,17 +1,10 @@
 // Registration flow types — plain interfaces (no classes)
 
-// --- Step and mode types ---
+// --- Mode type ---
 
 export type RegistrationMode = "new" | "edit" | "idle"
 
-export type RegistrationStep = "pending" | "reserve" | "register" | "review" | "payment" | "complete"
-
-export const PendingStep: RegistrationStep = "pending"
-export const ReserveStep: RegistrationStep = "reserve"
-export const RegisterStep: RegistrationStep = "register"
-export const ReviewStep: RegistrationStep = "review"
-export const PaymentStep: RegistrationStep = "payment"
-export const CompleteStep: RegistrationStep = "complete"
+// Step type and constants are in registration-reducer.ts (RegistrationStep interface)
 
 // --- Code constants ---
 
