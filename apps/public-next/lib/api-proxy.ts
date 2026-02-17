@@ -8,6 +8,8 @@ interface FetchWithAuthOptions {
 	responseType?: "json" | "binary"
 	filename?: string
 	apiBaseUrl?: string
+	/** Header names to forward from the incoming request to the backend */
+	forwardHeaders?: string[]
 }
 
 interface FetchPublicOptions {
@@ -30,6 +32,7 @@ export async function fetchWithAuth({
 	responseType = "json",
 	filename,
 	apiBaseUrl,
+	forwardHeaders,
 }: FetchWithAuthOptions): Promise<NextResponse> {
 	try {
 		const token = getAuthToken(request)
@@ -49,11 +52,20 @@ export async function fetchWithAuth({
 			? `${apiUrl}${backendPath}?${searchParams}`
 			: `${apiUrl}${backendPath}`
 
+		const extraHeaders: Record<string, string> = {}
+		if (forwardHeaders) {
+			for (const name of forwardHeaders) {
+				const value = request.headers.get(name)
+				if (value) extraHeaders[name] = value
+			}
+		}
+
 		const response = await fetch(backendUrl, {
 			method,
 			headers: {
 				Authorization: `Token ${token}`,
 				"Content-Type": "application/json",
+				...extraHeaders,
 			},
 			...(body ? { body: JSON.stringify(body) } : {}),
 		})
