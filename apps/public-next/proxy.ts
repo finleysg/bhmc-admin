@@ -17,6 +17,23 @@ export function proxy(request: NextRequest) {
 		}
 	}
 
+	// Auth guard: require access_token for event registration sub-routes
+	const protectedEventPaths = [
+		"/reserve",
+		"/register",
+		"/review",
+		"/payment",
+		"/manage",
+		"/edit",
+		"/complete",
+	]
+	if (pathname.startsWith("/event/") && protectedEventPaths.some((p) => pathname.includes(p))) {
+		const token = request.cookies.get("access_token")
+		if (!token) {
+			return NextResponse.redirect(new URL("/sign-in", request.url))
+		}
+	}
+
 	return NextResponse.next()
 }
 

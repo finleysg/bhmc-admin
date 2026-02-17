@@ -11,7 +11,7 @@ import { getEventUrl } from "@/lib/event-utils"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
 import { useRegistration } from "@/lib/registration/registration-context"
 import { calculateAmountDue } from "@/lib/registration/payment-utils"
-import { RegisterStep, ReviewStep } from "@/lib/registration/registration-reducer"
+import { PaymentStep, RegisterStep, ReviewStep } from "@/lib/registration/registration-reducer"
 import type { ClubEventDetail, EventFee } from "@/lib/types"
 import { AmountDue } from "../components/amount-due"
 import { CancelButton } from "../components/cancel-button"
@@ -36,6 +36,7 @@ function EditContent({ event }: { event: ClubEventDetail }) {
 		payment,
 		error,
 		loadRegistration,
+		initiateStripeSession,
 		savePayment,
 		setError,
 		updateRegistrationNotes,
@@ -99,7 +100,9 @@ function EditContent({ event }: { event: ClubEventDetail }) {
 			toast.success("Registration updated!")
 			router.push(eventUrl)
 		} else {
-			toast.info("Payment coming soon")
+			initiateStripeSession()
+			updateStep(PaymentStep)
+			router.push(`${eventUrl}/${payment!.id}/payment`)
 		}
 	}
 

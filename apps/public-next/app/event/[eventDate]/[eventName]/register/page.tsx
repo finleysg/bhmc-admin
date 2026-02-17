@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { getEventUrl } from "@/lib/event-utils"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
 import { useRegistration } from "@/lib/registration/registration-context"
-import { RegisterStep, ReviewStep } from "@/lib/registration/registration-reducer"
+import { PaymentStep, RegisterStep, ReviewStep } from "@/lib/registration/registration-reducer"
 import { calculateAmountDue } from "@/lib/registration/payment-utils"
 import type { ServerRegistrationSlot } from "@/lib/registration/types"
 import type { ClubEventDetail, EventFee } from "@/lib/types"
@@ -57,6 +57,7 @@ function RegisterContent({ event }: { event: ClubEventDetail }) {
 		cancelRegistration,
 		completeRegistration,
 		createRegistration,
+		initiateStripeSession,
 		loadRegistration,
 		savePayment,
 		setError,
@@ -152,7 +153,9 @@ function RegisterContent({ event }: { event: ClubEventDetail }) {
 			toast.success("Registration complete!")
 			router.push(eventUrl)
 		} else {
-			toast.info("Payment coming soon")
+			initiateStripeSession()
+			updateStep(PaymentStep)
+			router.push(`${eventUrl}/${payment!.id}/payment`)
 		}
 	}
 

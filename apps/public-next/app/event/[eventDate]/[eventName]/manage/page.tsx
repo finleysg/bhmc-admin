@@ -1,7 +1,6 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -105,10 +104,25 @@ export default function ManagePage() {
 	const startInfo = deriveStartInfo(event, registration)
 
 	const handleAction = (key: string) => {
-		if (key === "updateRegistration") {
-			router.push(`${eventUrl}/edit`)
-		} else {
-			toast.info("Coming soon")
+		switch (key) {
+			case "addPlayers":
+				router.push(`${eventUrl}/manage/add`)
+				break
+			case "dropPlayers":
+				router.push(`${eventUrl}/manage/drop`)
+				break
+			case "moveGroup":
+				router.push(`${eventUrl}/manage/move`)
+				break
+			case "replacePlayer":
+				router.push(`${eventUrl}/manage/replace`)
+				break
+			case "addNotes":
+				router.push(`${eventUrl}/manage/notes`)
+				break
+			case "updateRegistration":
+				router.push(`${eventUrl}/edit`)
+				break
 		}
 	}
 
