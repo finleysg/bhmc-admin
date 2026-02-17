@@ -62,6 +62,8 @@ bhmc-database.json
 
 # Playwright
 playwright/.auth/
+e2e/playwright/.auth/
+e2e/playwright/.test-events.json
 test-results/
 playwright-report/
 .playwright-cli/
