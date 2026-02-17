@@ -40,12 +40,7 @@ export function ReserveRow({
 	}
 
 	return (
-		<div
-			className={cn(
-				"flex items-center gap-2 border-b py-2",
-				!waveAvailable && "opacity-50",
-			)}
-		>
+		<div className={cn("flex items-center gap-2 border-b py-2", !waveAvailable && "opacity-50")}>
 			{/* Group name */}
 			<div className="w-20 shrink-0 text-sm font-medium">{group.name}</div>
 
@@ -69,9 +64,7 @@ export function ReserveRow({
 						size="xs"
 						disabled={!hasOpenings || !waveAvailable}
 						onClick={() => {
-							const available = group.slots.filter(
-								(s) => s.status === RegistrationStatus.Available,
-							)
+							const available = group.slots.filter((s) => s.status === RegistrationStatus.Available)
 							onSelect(available)
 						}}
 					>

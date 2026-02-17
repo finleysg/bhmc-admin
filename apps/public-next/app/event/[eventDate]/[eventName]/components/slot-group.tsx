@@ -27,15 +27,12 @@ export function SlotGroup({ eventFees, onPickPlayer }: SlotGroupProps) {
 		<div className="space-y-3">
 			{registration.slots.map((slot, index) => {
 				const team = getTeamNumber(index)
-				const showTeamHeader =
-					hasTeams && (index === 0 || getTeamNumber(index - 1) !== team)
+				const showTeamHeader = hasTeams && (index === 0 || getTeamNumber(index - 1) !== team)
 
 				return (
 					<div key={slot.id}>
 						{showTeamHeader && (
-							<h4 className="mb-1 text-sm font-semibold text-muted-foreground">
-								Team {team}
-							</h4>
+							<h4 className="mb-1 text-sm font-semibold text-muted-foreground">Team {team}</h4>
 						)}
 						<SlotLineItem
 							slot={slot}

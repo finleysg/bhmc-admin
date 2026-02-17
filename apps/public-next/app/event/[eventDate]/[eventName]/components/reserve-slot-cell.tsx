@@ -53,8 +53,7 @@ function getDisplayText(slot: ReserveSlot): string {
 
 export function ReserveSlotCell({ slot, isAvailable, onSelect }: ReserveSlotCellProps) {
 	const { variant, className } = getSlotVariant(slot)
-	const canSelect =
-		isAvailable && slot.status === RegistrationStatus.Available && !slot.selected
+	const canSelect = isAvailable && slot.status === RegistrationStatus.Available && !slot.selected
 
 	const handleClick = () => {
 		if (isAvailable && (slot.status === RegistrationStatus.Available || slot.selected)) {
@@ -84,4 +83,3 @@ export function ReserveSlotCell({ slot, isAvailable, onSelect }: ReserveSlotCell
 		</Badge>
 	)
 }
-

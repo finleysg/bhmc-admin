@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { useRegistration } from "@/lib/registration/registration-context"
-import { calculateFeeAmount, evaluateRestriction, type FeePlayer } from "@/lib/registration/fee-utils"
+import {
+	calculateFeeAmount,
+	evaluateRestriction,
+	type FeePlayer,
+} from "@/lib/registration/fee-utils"
 import type { ServerRegistrationSlot } from "@/lib/registration/types"
 import type { EventFee } from "@/lib/types"
 
@@ -79,9 +83,7 @@ export function SlotLineItem({ slot, eventFees, team, onPickPlayer }: SlotLineIt
 			{/* Player section */}
 			<div className="mb-2 flex items-center justify-between">
 				<div className="flex items-center gap-2">
-					{team > 0 && (
-						<span className="text-xs text-muted-foreground">Team {team}</span>
-					)}
+					{team > 0 && <span className="text-xs text-muted-foreground">Team {team}</span>}
 					{player ? (
 						<span className="font-medium">
 							{player.firstName} {player.lastName}

@@ -2,10 +2,7 @@ import { NextRequest } from "next/server"
 
 import { fetchWithAuth } from "@/lib/api-proxy"
 
-export async function PUT(
-	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> },
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params
 	const body: unknown = await request.json()
 	return fetchWithAuth({
