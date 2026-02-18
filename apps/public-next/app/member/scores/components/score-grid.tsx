@@ -62,7 +62,12 @@ function HolePars({ holes }: { holes: Hole[] }) {
 function RoundScores({ round, scoreType }: { round: Round; scoreType: string }) {
 	return (
 		<div className="score-row">
-			<div className={cn("score-label", scoreType === "Net" && "italic")}>{round.eventDate}</div>
+			<div
+				className={cn("score-label", scoreType === "Net" && "italic")}
+				style={round.tee.color ? { color: round.tee.color } : undefined}
+			>
+				{round.eventDate}
+			</div>
 			<div className="score-cells">
 				{round.scores.map((score) => (
 					<HoleScoreCell key={score.hole.id} score={score} />

@@ -3,4 +3,5 @@ export interface Tee {
 	courseId: number
 	name: string
 	ggId?: string | null
+	color?: string | null
 }

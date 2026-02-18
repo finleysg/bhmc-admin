@@ -86,8 +86,8 @@ describe("loadRounds", () => {
 		id: 1,
 		event: 10,
 		player: 100,
-		course: { id: 1, name: "East", number_of_holes: 9 },
-		tee: { id: 1, course: 1, name: "White", gg_id: null },
+		course: { id: 1, name: "East", number_of_holes: 9, color: null },
+		tee: { id: 1, course: 1, name: "White", gg_id: null, color: null },
 		handicap_index: "10.0",
 		course_handicap: 12,
 		scores: [
@@ -134,8 +134,8 @@ describe("calculateAverageScores", () => {
 		const holes = [hole1, hole2]
 		const rounds = [
 			{
-				course: { id: 1, name: "East", number_of_holes: 9 },
-				tee: { id: 1, course: 1, name: "White", gg_id: null },
+				course: { id: 1, name: "East", number_of_holes: 9, color: null },
+				tee: { id: 1, course: 1, name: "White", gg_id: null, color: null },
 				eventName: "A",
 				eventDate: "2024-06-01",
 				scores: [
@@ -145,8 +145,8 @@ describe("calculateAverageScores", () => {
 				holes,
 			},
 			{
-				course: { id: 1, name: "East", number_of_holes: 9 },
-				tee: { id: 1, course: 1, name: "White", gg_id: null },
+				course: { id: 1, name: "East", number_of_holes: 9, color: null },
+				tee: { id: 1, course: 1, name: "White", gg_id: null, color: null },
 				eventName: "B",
 				eventDate: "2024-07-01",
 				scores: [
@@ -174,8 +174,8 @@ describe("calculateBestScores", () => {
 		const holes = [hole1, hole2]
 		const rounds = [
 			{
-				course: { id: 1, name: "East", number_of_holes: 9 },
-				tee: { id: 1, course: 1, name: "White", gg_id: null },
+				course: { id: 1, name: "East", number_of_holes: 9, color: null },
+				tee: { id: 1, course: 1, name: "White", gg_id: null, color: null },
 				eventName: "A",
 				eventDate: "2024-06-01",
 				scores: [
@@ -185,8 +185,8 @@ describe("calculateBestScores", () => {
 				holes,
 			},
 			{
-				course: { id: 1, name: "East", number_of_holes: 9 },
-				tee: { id: 1, course: 1, name: "White", gg_id: null },
+				course: { id: 1, name: "East", number_of_holes: 9, color: null },
+				tee: { id: 1, course: 1, name: "White", gg_id: null, color: null },
 				eventName: "B",
 				eventDate: "2024-07-01",
 				scores: [

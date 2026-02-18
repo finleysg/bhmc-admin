@@ -136,6 +136,7 @@ export interface Tee {
 	course_id: number
 	name: string
 	gg_id: string | null
+	color: string | null
 }
 
 export interface Course {
@@ -143,6 +144,7 @@ export interface Course {
 	name: string
 	number_of_holes: number
 	gg_id: string | null
+	color: string | null
 	holes: Hole[]
 	tees: Tee[]
 }
@@ -276,6 +278,7 @@ export interface ScoreCourse {
 	id: number
 	name: string
 	number_of_holes: number
+	color: string | null
 }
 
 export interface ScoreTee {
@@ -283,6 +286,7 @@ export interface ScoreTee {
 	course: number
 	name: string
 	gg_id: string | null
+	color: string | null
 }
 
 export interface HoleScoreData {

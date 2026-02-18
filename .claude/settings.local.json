@@ -1,4 +1,7 @@
 {
+	"env": {
+		"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+	},
 	"permissions": {
 		"allow": [
 			"WebFetch",
@@ -27,13 +30,14 @@
 			"Bash(git -C:*)",
 			"Bash(xargs:*)",
 			"Skill(playwright-cli)",
-			"Bash(playwright-cli:*)"
+			"Bash(playwright-cli:*)",
+			"Bash(uv run python manage.py makemigrations courses)",
+			"Bash(uv run python manage.py migrate courses)",
+			"Bash(uv run python manage.py test)",
+			"Bash(uv run python manage.py migrate)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],
-	"env": {
-		"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-	},
 	"hooks": {
 		"PreToolUse": [
 			{

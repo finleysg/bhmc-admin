@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { calculateAverageScores, calculateBestScores, type Round } from "@/lib/scores"
 import type { Hole, ScoreCourse } from "@/lib/types"
+import { cn } from "@/lib/utils"
 import { ScoreGrid } from "./score-grid"
 
 interface CourseScorecardProps {
@@ -27,9 +28,17 @@ export function CourseScorecard({
 	const bestScores = calculateBestScores(rounds, holes)
 
 	return (
-		<Card>
-			<CardHeader className="bg-primary/10 py-3">
-				<CardTitle className="text-base text-primary">{course.name}</CardTitle>
+		<Card className="pt-0 overflow-hidden">
+			<CardHeader
+				className={cn("py-3", !course.color && "bg-primary/10")}
+				style={course.color ? { backgroundColor: `${course.color}20` } : undefined}
+			>
+				<CardTitle
+					className="text-base"
+					style={course.color ? { color: course.color } : undefined}
+				>
+					{course.name}
+				</CardTitle>
 			</CardHeader>
 			<CardContent className="p-3">
 				<ScoreGrid

@@ -17,6 +17,7 @@ function makeCourse(overrides: Partial<Course> = {}): Course {
 		name: "East",
 		number_of_holes: 9,
 		gg_id: null,
+		color: null,
 		holes: [makeHole()],
 		tees: [],
 		...overrides,

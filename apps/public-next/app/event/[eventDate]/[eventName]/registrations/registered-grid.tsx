@@ -33,7 +33,18 @@ export function RegisteredGrid({ tables }: RegisteredGridProps) {
 				<Tabs value={selectedCourse} onValueChange={setSelectedCourse}>
 					<TabsList>
 						{tables.map((table) => (
-							<TabsTrigger key={table.course.id} value={table.course.name}>
+							<TabsTrigger
+								key={table.course.id}
+								value={table.course.name}
+								style={
+									selectedCourse === table.course.name && table.course.color
+										? {
+												backgroundColor: `${table.course.color}20`,
+												color: table.course.color,
+											}
+										: undefined
+								}
+							>
 								{table.course.name}
 							</TabsTrigger>
 						))}
@@ -59,10 +70,17 @@ export function RegisteredGrid({ tables }: RegisteredGridProps) {
 	)
 }
 
-function SlotCell({ slot }: { slot: ReserveTable["groups"][number]["slots"][number] }) {
+function SlotCell({
+	slot,
+	courseColor,
+}: {
+	slot: ReserveTable["groups"][number]["slots"][number]
+	courseColor?: string
+}) {
 	const isReserved =
 		slot.status === RegistrationStatus.Reserved ||
 		slot.status === RegistrationStatus.Processing
+	const isOpen = slot.status === RegistrationStatus.Available
 	return (
 		<div
 			className={cn(
@@ -73,7 +91,12 @@ function SlotCell({ slot }: { slot: ReserveTable["groups"][number]["slots"][numb
 			{isReserved && slot.playerName ? (
 				<span className="font-medium text-secondary">{slot.playerName}</span>
 			) : (
-				<span className="text-muted-foreground">{slot.statusName}</span>
+				<span
+					className={cn(!isOpen && "text-muted-foreground")}
+					style={isOpen && courseColor ? { color: courseColor } : undefined}
+				>
+					{slot.statusName}
+				</span>
 			)}
 		</div>
 	)
@@ -91,7 +114,7 @@ function GridBody({ table }: { table: ReserveTable }) {
 						</div>
 						<div className="flex flex-1 gap-1">
 							{group.slots.map((slot) => (
-								<SlotCell key={slot.id} slot={slot} />
+								<SlotCell key={slot.id} slot={slot} courseColor={table.course.color ?? undefined} />
 							))}
 						</div>
 					</div>
@@ -107,7 +130,7 @@ function GridBody({ table }: { table: ReserveTable }) {
 						</div>
 						<div className="space-y-1">
 							{group.slots.map((slot) => (
-								<SlotCell key={slot.id} slot={slot} />
+								<SlotCell key={slot.id} slot={slot} courseColor={table.course.color ?? undefined} />
 							))}
 						</div>
 					</div>
