@@ -471,4 +471,112 @@ describe("registrationReducer", () => {
 			expect(result.error).toBeNull()
 		})
 	})
+
+	// --- Edge case tests ---
+
+	describe("add-player edge cases", () => {
+		it("does nothing when slot does not exist in registration", () => {
+			const existingSlot = makeSlot({ id: 10 })
+			const nonExistentSlot = makeSlot({ id: 999 })
+			const state = makeState({
+				clubEvent: makeEvent(),
+				registration: makeRegistration({ slots: [existingSlot] }),
+				payment: makePayment(),
+			})
+			const result = registrationReducer(state, {
+				type: "add-player",
+				payload: {
+					slot: nonExistentSlot,
+					playerId: 42,
+					playerName: "John Doe",
+					player: makeFeePlayer(),
+				},
+			})
+			// Slot 10 should still have no player
+			expect(result.registration?.slots[0].player).toBeNull()
+			// Required fees still auto-added for the referenced slot id (since it's in fees push)
+			// but no slot was actually updated
+		})
+	})
+
+	describe("add-fee edge cases", () => {
+		it("does nothing when payment is null", () => {
+			const state = makeState({ payment: null })
+			const eventFee = makeEventFee({ id: 5, amount: "10.00" })
+			const result = registrationReducer(state, {
+				type: "add-fee",
+				payload: { slotId: 10, eventFee, player: makeFeePlayer() },
+			})
+			expect(result.payment).toBeNull()
+		})
+	})
+
+	describe("remove-fee edge cases", () => {
+		it("does nothing when fee is not found in payment details", () => {
+			const state = makeState({
+				payment: makePayment({
+					details: [
+						{
+							id: 0,
+							paymentId: 0,
+							eventFeeId: 5,
+							registrationSlotId: 10,
+							amount: 10,
+							isPaid: false,
+						},
+					],
+				}),
+			})
+			const result = registrationReducer(state, {
+				type: "remove-fee",
+				payload: { slotId: 10, eventFeeId: 999 },
+			})
+			// Original fee should still be there
+			expect(result.payment?.details).toHaveLength(1)
+			expect(result.payment?.details[0].eventFeeId).toBe(5)
+		})
+	})
+
+	describe("remove-player edge cases", () => {
+		it("does nothing when slot is not found in registration", () => {
+			const slot = makeSlot({
+				id: 10,
+				player: {
+					id: 42,
+					firstName: "John",
+					lastName: "Doe",
+					email: null,
+					ghin: null,
+					birthDate: null,
+					phoneNumber: null,
+					tee: null,
+					isMember: true,
+					lastSeason: null,
+				},
+			})
+			const state = makeState({
+				registration: makeRegistration({ slots: [slot] }),
+				payment: makePayment({
+					details: [
+						{
+							id: 0,
+							paymentId: 0,
+							eventFeeId: 1,
+							registrationSlotId: 10,
+							amount: 5,
+							isPaid: false,
+						},
+					],
+				}),
+			})
+			const result = registrationReducer(state, {
+				type: "remove-player",
+				payload: { slotId: 999 },
+			})
+			// Slot 10 should still have the player
+			expect(result.registration?.slots[0].player?.id).toBe(42)
+			// Fees should still be there
+			expect(result.payment?.details).toHaveLength(1)
+		})
+	})
 })

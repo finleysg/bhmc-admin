@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react"
 
-import type { Course, EventFee } from "../types"
+import type { ClubEventDetail, Course, EventFee } from "../types"
 import type { FeePlayer } from "./fee-utils"
 import type { RegistrationStep } from "./registration-reducer"
 import type {
@@ -13,9 +13,8 @@ import type {
 	ServerRegistrationSlot,
 } from "./types"
 
-export interface IRegistrationContext {
-	// State
-	clubEvent: import("../types").ClubEventDetail | null
+export interface IRegistrationStateContext {
+	clubEvent: ClubEventDetail | null
 	correlationId: string
 	currentStep: RegistrationStep
 	error: string | null
@@ -25,8 +24,9 @@ export interface IRegistrationContext {
 	registration: ServerRegistration | null
 	sseCurrentWave: number | null
 	stripeClientSession?: string
+}
 
-	// Actions
+export interface IRegistrationActionsContext {
 	addFee: (slot: ServerRegistrationSlot, eventFee: EventFee, player: FeePlayer) => void
 	addPlayer: (
 		slot: ServerRegistrationSlot,
@@ -57,13 +57,27 @@ export interface IRegistrationContext {
 	updateStep: (step: RegistrationStep) => void
 }
 
-export const RegistrationContext = createContext<IRegistrationContext | null>(null)
-RegistrationContext.displayName = "RegistrationContext"
+export type IRegistrationContext = IRegistrationStateContext & IRegistrationActionsContext
 
-export function useRegistration() {
-	const context = useContext(RegistrationContext)
-	if (!context) {
+export const RegistrationStateContext = createContext<IRegistrationStateContext | null>(null)
+RegistrationStateContext.displayName = "RegistrationStateContext"
+
+export const RegistrationActionsContext = createContext<IRegistrationActionsContext | null>(null)
+RegistrationActionsContext.displayName = "RegistrationActionsContext"
+
+export function useRegistration(): IRegistrationContext {
+	const state = useContext(RegistrationStateContext)
+	const actions = useContext(RegistrationActionsContext)
+	if (!state || !actions) {
 		throw new Error("useRegistration must be used within a RegistrationProvider")
 	}
-	return context
+	return { ...state, ...actions }
+}
+
+export function useRegistrationActions(): IRegistrationActionsContext {
+	const actions = useContext(RegistrationActionsContext)
+	if (!actions) {
+		throw new Error("useRegistrationActions must be used within a RegistrationProvider")
+	}
+	return actions
 }

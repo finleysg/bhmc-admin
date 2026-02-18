@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 import {
 	Select,
 	SelectContent,
@@ -31,7 +32,7 @@ export default function MoveGroupPage() {
 		event?.id,
 		player?.id,
 	)
-	const movePlayers = useMovePlayers()
+	const movePlayers = useMovePlayers(event?.id)
 
 	const [selectedCourseId, setSelectedCourseId] = useState<number | undefined>(undefined)
 	const [selectedGroup, setSelectedGroup] = useState<AvailableGroup | undefined>(undefined)
@@ -126,7 +127,7 @@ export default function MoveGroupPage() {
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div className="space-y-2">
-					<label className="text-sm font-medium">Select Course</label>
+					<Label>Select Course</Label>
 					<Select
 						value={selectedCourseId ? String(selectedCourseId) : undefined}
 						onValueChange={handleCourseChange}
@@ -146,7 +147,7 @@ export default function MoveGroupPage() {
 
 				{selectedCourseId && (
 					<div className="space-y-2">
-						<label className="text-sm font-medium">Select Starting Spot</label>
+						<Label>Select Starting Spot</Label>
 						{groupsLoading ? (
 							<Skeleton className="h-10 w-full" />
 						) : availableGroups.length === 0 ? (

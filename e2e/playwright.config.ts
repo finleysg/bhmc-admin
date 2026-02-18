@@ -1,4 +1,8 @@
+import dotenv from "dotenv"
+import path from "path"
 import { defineConfig, devices } from "@playwright/test"
+
+dotenv.config({ path: path.resolve(import.meta.dirname, ".env") })
 
 const isCI = !!process.env.CI
 
@@ -46,9 +50,10 @@ export default defineConfig({
 		},
 		{
 			name: "public-next-registration",
-			testMatch: /public-next\/registration.*\.spec\.ts/,
+			testMatch: /public-next\/registration(?!.*guest).*\.spec\.ts/,
 			dependencies: ["public-next-setup"],
 			fullyParallel: false,
+			workers: 1,
 			use: {
 				baseURL: "http://localhost:3200",
 				storageState: "playwright/.auth/user.json",

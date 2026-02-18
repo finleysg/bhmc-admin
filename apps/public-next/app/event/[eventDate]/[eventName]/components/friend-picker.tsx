@@ -90,6 +90,7 @@ function FriendList({
 				<li key={friend.id}>
 					<button
 						type="button"
+						aria-label={`Add ${friend.first_name} ${friend.last_name}`}
 						className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"
 						onClick={() => onSelect(friend)}
 					>

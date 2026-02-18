@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { useAuth } from "../auth-context"
 import { RegistrationType } from "../event-utils"
+import { useRegistrationSSE } from "../hooks/use-registration-sse"
 import type { ClubEventDetail, Course, EventFee } from "../types"
 import { calculateFeeAmount, type FeePlayer } from "./fee-utils"
 import {
@@ -13,9 +14,10 @@ import {
 	registrationReducer,
 	type RegistrationStep,
 } from "./registration-reducer"
-import { RegistrationContext } from "./registration-context"
+import { RegistrationActionsContext, RegistrationStateContext } from "./registration-context"
 import type {
 	RegistrationMode,
+	SSEUpdateEvent,
 	ServerPayment,
 	ServerRegistration,
 	ServerRegistrationFee,
@@ -68,6 +70,34 @@ export function RegistrationProvider({
 			payload: { clubEvent, correlationId },
 		})
 	}, [clubEvent])
+
+	// --- SSE Integration ---
+
+	const isSSEEnabled = useMemo(() => {
+		const now = new Date()
+		const start = clubEvent.priority_signup_start ?? clubEvent.signup_start
+		const end = clubEvent.payments_end
+		if (!start || !end) return false
+		return now >= new Date(start) && now <= new Date(end)
+	}, [clubEvent.priority_signup_start, clubEvent.signup_start, clubEvent.payments_end])
+
+	const handleSSEUpdate = useCallback(
+		(data: SSEUpdateEvent) => {
+			if (data.currentWave != null) {
+				dispatch({ type: "update-sse-wave", payload: { wave: data.currentWave } })
+			}
+			void queryClient.invalidateQueries({
+				queryKey: ["event-registration-slots", clubEvent.id],
+			})
+		},
+		[queryClient, clubEvent.id],
+	)
+
+	useRegistrationSSE({
+		eventId: clubEvent.id,
+		enabled: isSSEEnabled,
+		onUpdate: handleSSEUpdate,
+	})
 
 	// --- Mutations ---
 
@@ -349,7 +379,7 @@ export function RegistrationProvider({
 	const editRegistration = useCallback(
 		async (registrationId: number, playerIds: number[]) => {
 			try {
-				const result = await apiFetch<{ registration: ServerRegistration }>(
+				const registration = await apiFetch<ServerRegistration>(
 					`/api/registration/${registrationId}/add-players`,
 					{
 						method: "PUT",
@@ -358,8 +388,7 @@ export function RegistrationProvider({
 						}),
 					},
 				)
-				if (result) {
-					const { registration } = result
+				if (registration) {
 					const fees: ServerRegistrationFee[] = registration.slots.flatMap((slot) => slot.fees)
 					dispatch({
 						type: "load-registration",
@@ -539,9 +568,10 @@ export function RegistrationProvider({
 		dispatch({ type: "update-error", payload: { error } })
 	}, [])
 
-	const value = useMemo(
+	const stateValue = useMemo(() => state, [state])
+
+	const actionsValue = useMemo(
 		() => ({
-			...state,
 			addFee,
 			addPlayer,
 			cancelRegistration,
@@ -560,7 +590,6 @@ export function RegistrationProvider({
 			updateStep,
 		}),
 		[
-			state,
 			addFee,
 			addPlayer,
 			cancelRegistration,
@@ -580,5 +609,11 @@ export function RegistrationProvider({
 		],
 	)
 
-	return <RegistrationContext.Provider value={value}>{children}</RegistrationContext.Provider>
+	return (
+		<RegistrationStateContext.Provider value={stateValue}>
+			<RegistrationActionsContext.Provider value={actionsValue}>
+				{children}
+			</RegistrationActionsContext.Provider>
+		</RegistrationStateContext.Provider>
+	)
 }

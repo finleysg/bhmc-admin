@@ -4,6 +4,15 @@ export * from "./payment-utils"
 export * from "./fee-utils"
 export * from "./correlation"
 export * from "./registration-reducer"
-export { RegistrationContext, useRegistration } from "./registration-context"
-export type { IRegistrationContext } from "./registration-context"
+export {
+	RegistrationActionsContext,
+	RegistrationStateContext,
+	useRegistration,
+	useRegistrationActions,
+} from "./registration-context"
+export type {
+	IRegistrationActionsContext,
+	IRegistrationContext,
+	IRegistrationStateContext,
+} from "./registration-context"
 export { RegistrationProvider } from "./registration-provider"

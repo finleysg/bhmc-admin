@@ -90,7 +90,9 @@ export default function CompletePage() {
 
 				{intent?.status === "processing" && (
 					<div className="space-y-2">
-						<p className="font-medium text-yellow-600">Your payment is being processed</p>
+						<p className="font-medium text-amber-600 dark:text-amber-400">
+							Your payment is being processed
+						</p>
 						<p className="text-sm text-muted-foreground">
 							Your payment is being processed by your bank. This usually takes a few moments. You
 							will receive a confirmation email once the payment is complete.
@@ -100,7 +102,9 @@ export default function CompletePage() {
 
 				{intent?.status === "requires_action" && (
 					<div className="space-y-2">
-						<p className="font-medium text-yellow-600">Additional verification required</p>
+						<p className="font-medium text-amber-600 dark:text-amber-400">
+							Additional verification required
+						</p>
 						<p className="text-sm text-muted-foreground">
 							Your bank requires additional verification. Please complete the verification process
 							to finalize your payment.

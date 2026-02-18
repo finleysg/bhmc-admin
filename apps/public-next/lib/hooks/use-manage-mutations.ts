@@ -1,8 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-function invalidateRegistrationQueries(queryClient: ReturnType<typeof useQueryClient>) {
-	void queryClient.invalidateQueries({ queryKey: ["event-registrations"] })
-	void queryClient.invalidateQueries({ queryKey: ["event-registration-slots"] })
+function invalidateRegistrationQueries(
+	queryClient: ReturnType<typeof useQueryClient>,
+	eventId?: number,
+) {
+	void queryClient.invalidateQueries({
+		queryKey: eventId ? ["event-registrations", eventId] : ["event-registrations"],
+	})
+	void queryClient.invalidateQueries({
+		queryKey: eventId ? ["event-registration-slots", eventId] : ["event-registration-slots"],
+	})
 	void queryClient.invalidateQueries({ queryKey: ["player-registration"] })
 }
 
@@ -11,7 +18,7 @@ interface DropPlayersArgs {
 	slotIds: number[]
 }
 
-export function useDropPlayers() {
+export function useDropPlayers(eventId?: number) {
 	const queryClient = useQueryClient()
 
 	return useMutation({
@@ -26,7 +33,7 @@ export function useDropPlayers() {
 				throw new Error(body || "Failed to drop players")
 			}
 		},
-		onSuccess: () => invalidateRegistrationQueries(queryClient),
+		onSuccess: () => invalidateRegistrationQueries(queryClient, eventId),
 	})
 }
 
@@ -36,7 +43,7 @@ interface MovePlayersArgs {
 	destinationSlotIds: number[]
 }
 
-export function useMovePlayers() {
+export function useMovePlayers(eventId?: number) {
 	const queryClient = useQueryClient()
 
 	return useMutation({
@@ -54,7 +61,7 @@ export function useMovePlayers() {
 				throw new Error(body || "Failed to move group")
 			}
 		},
-		onSuccess: () => invalidateRegistrationQueries(queryClient),
+		onSuccess: () => invalidateRegistrationQueries(queryClient, eventId),
 	})
 }
 
@@ -63,7 +70,7 @@ interface SwapPlayersArgs {
 	playerId: number
 }
 
-export function useSwapPlayers() {
+export function useSwapPlayers(eventId?: number) {
 	const queryClient = useQueryClient()
 
 	return useMutation({
@@ -78,7 +85,7 @@ export function useSwapPlayers() {
 				throw new Error(body || "Failed to replace player")
 			}
 		},
-		onSuccess: () => invalidateRegistrationQueries(queryClient),
+		onSuccess: () => invalidateRegistrationQueries(queryClient, eventId),
 	})
 }
 
@@ -87,7 +94,7 @@ interface RegistrationNotesArgs {
 	notes: string
 }
 
-export function useRegistrationNotes() {
+export function useRegistrationNotes(eventId?: number) {
 	const queryClient = useQueryClient()
 
 	return useMutation({
@@ -103,7 +110,9 @@ export function useRegistrationNotes() {
 			}
 		},
 		onSuccess: () => {
-			void queryClient.invalidateQueries({ queryKey: ["event-registrations"] })
+			void queryClient.invalidateQueries({
+				queryKey: eventId ? ["event-registrations", eventId] : ["event-registrations"],
+			})
 			void queryClient.invalidateQueries({ queryKey: ["player-registration"] })
 		},
 	})

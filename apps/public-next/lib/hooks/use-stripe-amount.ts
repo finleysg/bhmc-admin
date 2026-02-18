@@ -13,6 +13,6 @@ export function useStripeAmount(paymentId: number) {
 			return response.json() as Promise<StripeAmountResponse>
 		},
 		enabled: paymentId > 0,
-		staleTime: 0,
+		staleTime: Infinity,
 	})
 }

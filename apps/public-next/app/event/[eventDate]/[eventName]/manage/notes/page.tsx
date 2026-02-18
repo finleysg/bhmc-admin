@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { getEventUrl } from "@/lib/event-utils"
@@ -22,7 +23,7 @@ export default function AddNotesPage() {
 		event?.id,
 		player?.id,
 	)
-	const updateNotes = useRegistrationNotes()
+	const updateNotes = useRegistrationNotes(event?.id)
 
 	const registration = registrationData?.registration
 	const initialNotes = registration?.notes ?? ""
@@ -96,9 +97,9 @@ export default function AddNotesPage() {
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div>
-					<label htmlFor="notes" className="mb-1 block text-sm font-medium">
+					<Label htmlFor="notes" className="mb-1 block">
 						Notes / Player Requests
-					</label>
+					</Label>
 					<Textarea
 						id="notes"
 						rows={6}
@@ -106,6 +107,7 @@ export default function AddNotesPage() {
 						onChange={(e) => setNotes(e.target.value)}
 						placeholder="Enter any special requests or notes for your registration..."
 						disabled={isSubmitting}
+						maxLength={500}
 					/>
 				</div>
 

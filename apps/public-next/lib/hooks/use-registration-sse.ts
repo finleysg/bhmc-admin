@@ -25,6 +25,16 @@ export function useRegistrationSSE({
 	const eventSourceRef = useRef<EventSource | null>(null)
 	const retryCountRef = useRef(0)
 	const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const onUpdateRef = useRef(onUpdate)
+	const onErrorRef = useRef(onError)
+
+	// Keep refs in sync with latest callbacks
+	useEffect(() => {
+		onUpdateRef.current = onUpdate
+	}, [onUpdate])
+	useEffect(() => {
+		onErrorRef.current = onError
+	}, [onError])
 
 	const cleanup = useCallback(() => {
 		if (eventSourceRef.current) {
@@ -54,7 +64,7 @@ export function useRegistrationSSE({
 			try {
 				const messageEvent = event as MessageEvent<string>
 				const data = JSON.parse(messageEvent.data) as SSEUpdateEvent
-				onUpdate?.(data)
+				onUpdateRef.current?.(data)
 			} catch (err) {
 				console.error("Failed to parse SSE update:", err)
 			}
@@ -64,7 +74,7 @@ export function useRegistrationSSE({
 			try {
 				const messageEvent = event as MessageEvent<string>
 				const data = JSON.parse(messageEvent.data) as unknown
-				onError?.(data)
+				onErrorRef.current?.(data)
 			} catch {
 				// Generic error, not a parsed error event
 			}
@@ -82,7 +92,7 @@ export function useRegistrationSSE({
 				retryTimeoutRef.current = setTimeout(connect, delay)
 			}
 		}
-	}, [eventId, enabled, cleanup, onUpdate, onError])
+	}, [eventId, enabled, cleanup])
 
 	useEffect(() => {
 		if (enabled && eventId) {

@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { getEventUrl } from "@/lib/event-utils"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
@@ -70,6 +71,14 @@ function EditContent({ event }: { event: ClubEventDetail }) {
 		}
 	}, [error, setError])
 
+	// Complete step — redirect (must be before conditional returns to satisfy Rules of Hooks)
+	useEffect(() => {
+		if (currentStep.name === "complete") {
+			toast.success("Registration updated!")
+			router.push(eventUrl)
+		}
+	}, [currentStep.name, eventUrl, router])
+
 	const feeMap = new Map<number, EventFee>(event.fees.map((f) => [f.id, f]))
 	const amountDue = calculateAmountDue(payment?.details ?? [], feeMap)
 
@@ -131,15 +140,16 @@ function EditContent({ event }: { event: ClubEventDetail }) {
 					<SlotGroup eventFees={event.fees} onPickPlayer={handlePickPlayer} />
 
 					<div>
-						<label htmlFor="notes" className="mb-1 block text-sm font-medium">
+						<Label htmlFor="notes" className="mb-1 block">
 							Notes / Special Requests
-						</label>
+						</Label>
 						<Textarea
 							id="notes"
 							value={notes}
 							onChange={(e) => setNotes(e.target.value)}
 							placeholder="Enter any notes or special requests..."
 							rows={3}
+							maxLength={500}
 						/>
 					</div>
 
@@ -201,14 +211,6 @@ function EditContent({ event }: { event: ClubEventDetail }) {
 			</Card>
 		)
 	}
-
-	// Complete step — redirect
-	useEffect(() => {
-		if (currentStep.name === "complete") {
-			toast.success("Registration updated!")
-			router.push(eventUrl)
-		}
-	}, [currentStep.name, eventUrl, router])
 
 	return null
 }

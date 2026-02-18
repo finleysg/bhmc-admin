@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { getEventUrl } from "@/lib/event-utils"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
@@ -216,15 +217,16 @@ function RegisterContent({ event }: { event: ClubEventDetail }) {
 							)}
 
 							<div>
-								<label htmlFor="notes" className="mb-1 block text-sm font-medium">
+								<Label htmlFor="notes" className="mb-1 block">
 									Notes / Special Requests
-								</label>
+								</Label>
 								<Textarea
 									id="notes"
 									value={notes}
 									onChange={(e) => setNotes(e.target.value)}
 									placeholder="Enter any notes or special requests..."
 									rows={3}
+									maxLength={500}
 								/>
 							</div>
 

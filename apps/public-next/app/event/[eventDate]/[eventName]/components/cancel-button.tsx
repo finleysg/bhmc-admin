@@ -28,6 +28,7 @@ export function CancelButton({ mode, onCanceled }: CancelButtonProps) {
 		mode === "new"
 			? "This will release your reserved spots and return to the event detail page."
 			: "This will discard your changes and return to the event detail page."
+	const confirmLabel = mode === "new" ? "Cancel Registration" : "Discard Changes"
 
 	const handleConfirm = () => {
 		if (onCanceled) {
@@ -49,7 +50,7 @@ export function CancelButton({ mode, onCanceled }: CancelButtonProps) {
 				<AlertDialogFooter>
 					<AlertDialogCancel>Go Back</AlertDialogCancel>
 					<AlertDialogAction variant="destructive" onClick={handleConfirm}>
-						Confirm
+						{confirmLabel}
 					</AlertDialogAction>
 				</AlertDialogFooter>
 			</AlertDialogContent>

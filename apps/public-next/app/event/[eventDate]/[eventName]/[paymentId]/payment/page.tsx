@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 
 import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -123,7 +124,7 @@ export default function PaymentPage() {
 		router.back()
 	}
 
-	const handlePaymentCanceled = useCallback(() => {
+	const resetPaymentUI = useCallback(() => {
 		setPaymentProcessing(false)
 		setPaymentStep("")
 
@@ -135,6 +136,13 @@ export default function PaymentPage() {
 			router.push(eventUrl)
 		}
 	}, [eventUrl, router])
+
+	const handlePaymentCanceled = useCallback(async () => {
+		if (mode !== "idle" && mode !== "edit") {
+			await cancelRegistration("user", mode)
+		}
+		resetPaymentUI()
+	}, [cancelRegistration, mode, resetPaymentUI])
 
 	const handleForceCancel = async () => {
 		try {
@@ -148,9 +156,9 @@ export default function PaymentPage() {
 			}
 
 			await cancelRegistration("user", mode === "idle" ? "new" : mode)
-			handlePaymentCanceled()
+			resetPaymentUI()
 		} catch {
-			handlePaymentCanceled()
+			resetPaymentUI()
 		}
 	}
 
@@ -259,12 +267,14 @@ export default function PaymentPage() {
 				)}
 
 				{error && (
-					<div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-						{error}
-						<button className="ml-2 underline" onClick={() => setError(null)} type="button">
-							Dismiss
-						</button>
-					</div>
+					<Alert variant="destructive">
+						<AlertDescription>
+							{error}
+							<button className="ml-2 underline" onClick={() => setError(null)} type="button">
+								Dismiss
+							</button>
+						</AlertDescription>
+					</Alert>
 				)}
 
 				<div>
@@ -300,7 +310,7 @@ export default function PaymentPage() {
 					<Button
 						variant="destructive"
 						disabled={paymentProcessing}
-						onClick={handlePaymentCanceled}
+						onClick={() => void handlePaymentCanceled()}
 					>
 						Cancel
 					</Button>
@@ -329,7 +339,7 @@ export default function PaymentPage() {
 							variant="destructive"
 							onClick={() => {
 								void cancelRegistration("navigation", mode === "idle" ? "new" : mode)
-								handlePaymentCanceled()
+								resetPaymentUI()
 							}}
 						>
 							Cancel and Leave

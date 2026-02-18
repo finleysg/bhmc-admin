@@ -32,7 +32,7 @@ export default function DropPlayersPage() {
 		event?.id,
 		player?.id,
 	)
-	const dropPlayers = useDropPlayers()
+	const dropPlayers = useDropPlayers(event?.id)
 
 	const [selectedSlotIds, setSelectedSlotIds] = useState<number[]>([])
 	const [showConfirm, setShowConfirm] = useState(false)

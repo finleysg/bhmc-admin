@@ -1,5 +1,3 @@
-"use client"
-
 import type { ServerPaymentDetail, ServerRegistrationSlot } from "@/lib/registration/types"
 import type { EventFee } from "@/lib/types"
 

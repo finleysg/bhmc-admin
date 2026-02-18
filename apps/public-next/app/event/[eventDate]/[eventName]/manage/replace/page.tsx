@@ -33,7 +33,7 @@ function ReplacePlayerContent({ event }: { event: ClubEventDetail }) {
 		event.id,
 		player?.id,
 	)
-	const swapPlayers = useSwapPlayers()
+	const swapPlayers = useSwapPlayers(event.id)
 
 	const [sourceSlotId, setSourceSlotId] = useState<number | undefined>(undefined)
 	const [targetPlayer, setTargetPlayer] = useState<{

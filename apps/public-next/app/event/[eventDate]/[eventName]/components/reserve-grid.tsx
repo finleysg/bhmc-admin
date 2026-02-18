@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -21,17 +21,20 @@ export function ReserveGrid({ tables, mode, onReserve }: ReserveGridProps) {
 	const [selectedSlots, setSelectedSlots] = useState<ReserveSlot[]>([])
 
 	// Clear selection on error
-	if (error) {
-		toast.error(error)
-		setError(null)
-		if (selectedSlots.length > 0) {
-			// Clear selected state on slots
-			selectedSlots.forEach((s) => {
-				s.selected = false
+	useEffect(() => {
+		if (error) {
+			toast.error(error)
+			setError(null)
+			setSelectedSlots((prev) => {
+				if (prev.length > 0) {
+					prev.forEach((s) => {
+						s.selected = false
+					})
+				}
+				return []
 			})
-			setSelectedSlots([])
 		}
-	}
+	}, [error, setError])
 
 	const handleSelect = useCallback(
 		(slots: ReserveSlot[]) => {
