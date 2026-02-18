@@ -103,7 +103,7 @@ export function calculateWave(
 function getStatusName(statusCode: string): string {
 	switch (statusCode) {
 		case RegistrationStatus.Available:
-			return "Available"
+			return "Open"
 		case RegistrationStatus.InProgress:
 			return "In Progress"
 		case RegistrationStatus.Reserved:
@@ -120,8 +120,10 @@ function createReserveSlot(groupId: string, slot: RegistrationSlot): ReserveSlot
 		id: slot.id,
 		groupId,
 		holeId: slot.hole,
-		playerId: null,
-		playerName: undefined,
+		playerId: slot.player?.id ?? null,
+		playerName: slot.player
+			? `${slot.player.first_name} ${slot.player.last_name}`
+			: undefined,
 		position: slot.slot,
 		registrationId: slot.registration,
 		startingOrder: slot.starting_order,

@@ -186,6 +186,19 @@ export interface ClubEventDetail {
 	age_restriction_type: string
 }
 
+export interface RegistrationSlotPlayer {
+	id: number
+	first_name: string
+	last_name: string
+	email: string | null
+	phone_number: string | null
+	ghin: string | null
+	tee: string | null
+	birth_date: string | null
+	is_member: boolean
+	last_season: number | null
+}
+
 export interface RegistrationSlot {
 	id: number
 	event: number
@@ -194,6 +207,7 @@ export interface RegistrationSlot {
 	starting_order: number
 	slot: number
 	status: string
+	player: RegistrationSlotPlayer | null
 }
 
 export interface MajorChampion {

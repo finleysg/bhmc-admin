@@ -74,6 +74,7 @@ function makeSlot(overrides: Partial<RegistrationSlot> = {}): RegistrationSlot {
 		starting_order: 0,
 		slot: 0,
 		status: "A",
+		player: null,
 		...overrides,
 	}
 }

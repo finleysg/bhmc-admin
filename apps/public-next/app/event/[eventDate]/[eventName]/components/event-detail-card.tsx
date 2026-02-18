@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Markdown } from "@/components/markdown"
-import { EventTypeIndicator } from "@/components/event-type-indicator"
 import {
 	EventStatusType,
 	RegistrationType,
@@ -13,6 +12,7 @@ import type { ClubEventDetail } from "@/lib/types"
 
 interface EventDetailCardProps {
 	event: ClubEventDetail
+	actions?: React.ReactNode
 }
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -24,7 +24,7 @@ function DetailRow({ label, children }: { label: string; children: React.ReactNo
 	)
 }
 
-export function EventDetailCard({ event }: EventDetailCardProps) {
+export function EventDetailCard({ event, actions }: EventDetailCardProps) {
 	const startDate = parseApiDate(event.start_date)
 	const isCanceled = event.status === EventStatusType.Canceled
 	const startType = getStartTypeName(event.start_type)
@@ -40,8 +40,10 @@ export function EventDetailCard({ event }: EventDetailCardProps) {
 						Canceled
 					</Badge>
 				)}
-				<CardTitle className="text-2xl">{event.name}</CardTitle>
-				<EventTypeIndicator eventType={event.event_type} className="w-fit" />
+				<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+					<CardTitle className="text-2xl text-primary">{event.name}</CardTitle>
+					{actions}
+				</div>
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<hr className="border-muted-foreground/25" />
@@ -61,7 +63,7 @@ export function EventDetailCard({ event }: EventDetailCardProps) {
 					<>
 						<hr className="border-muted-foreground/25" />
 						<div className="space-y-1 text-sm">
-							<h3 className="mb-2 font-heading text-lg font-semibold text-secondary">
+							<h3 className="mb-2 font-heading text-lg font-semibold text-primary">
 								Signup Times
 							</h3>
 							<DetailRow label="Open:">
@@ -77,22 +79,9 @@ export function EventDetailCard({ event }: EventDetailCardProps) {
 
 				<hr className="border-muted-foreground/25" />
 
-				{event.portal_url && (
-					<div>
-						<a
-							href={event.portal_url}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="text-sm text-primary underline"
-						>
-							Golf Genius Portal
-						</a>
-					</div>
-				)}
-
 				{event.notes && (
 					<>
-						<h3 className="font-heading text-lg font-semibold text-secondary">Notes / Format</h3>
+						<h3 className="font-heading text-lg font-semibold text-primary">Notes / Format</h3>
 						<Markdown content={event.notes} />
 					</>
 				)}

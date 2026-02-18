@@ -8,6 +8,7 @@ import {
 	getEventUrl,
 	findEventBySlug,
 	computeOpenSpots,
+	shouldShowSignUpButton,
 } from "../event-utils"
 import type { ClubEvent, ClubEventDetail, RegistrationSlot } from "../types"
 
@@ -62,6 +63,7 @@ function makeSlot(overrides: Partial<RegistrationSlot> = {}): RegistrationSlot {
 		starting_order: 0,
 		slot: 0,
 		status: "R",
+		player: null,
 		...overrides,
 	}
 }
@@ -244,5 +246,123 @@ describe("computeOpenSpots", () => {
 	it("handles empty slots array", () => {
 		const event = makeEvent({ can_choose: true })
 		expect(computeOpenSpots(event, [])).toBe(0)
+	})
+})
+
+describe("shouldShowSignUpButton", () => {
+	const now = new Date("2024-06-15T12:00:00")
+
+	describe("hidden when", () => {
+		it("registration_type is None", () => {
+			const event = makeEvent({ registration_type: RegistrationType.None })
+			expect(shouldShowSignUpButton(event, now)).toBe(false)
+		})
+
+		it("registration_window is past", () => {
+			const event = makeEvent({ registration_window: "past" })
+			expect(shouldShowSignUpButton(event, now)).toBe(false)
+		})
+
+		it("status is canceled", () => {
+			const event = makeEvent({ status: "C" })
+			expect(shouldShowSignUpButton(event, now)).toBe(false)
+		})
+	})
+
+	describe("can_choose events (tee-time selection)", () => {
+		it("returns false when more than 60 minutes before signup", () => {
+			const event = makeEvent({
+				can_choose: true,
+				signup_start: "2024-06-15T14:01:00",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(false)
+		})
+
+		it("returns false when 61 minutes before signup", () => {
+			const event = makeEvent({
+				can_choose: true,
+				signup_start: "2024-06-15T13:01:00",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(false)
+		})
+
+		it("returns true when exactly 60 minutes before signup", () => {
+			const event = makeEvent({
+				can_choose: true,
+				signup_start: "2024-06-15T13:00:00",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(true)
+		})
+
+		it("returns true when 30 minutes before signup", () => {
+			const event = makeEvent({
+				can_choose: true,
+				signup_start: "2024-06-15T12:30:00",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(true)
+		})
+
+		it("returns true when registration_window is current", () => {
+			const event = makeEvent({
+				can_choose: true,
+				registration_window: "current",
+				signup_start: "2024-06-15T11:00:00",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(true)
+		})
+
+		it("returns true when no signup_start and window is current", () => {
+			const event = makeEvent({
+				can_choose: true,
+				registration_window: "current",
+				signup_start: null,
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(true)
+		})
+
+		it("returns false when no signup_start and window is future", () => {
+			const event = makeEvent({
+				can_choose: true,
+				registration_window: "future",
+				signup_start: null,
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(false)
+		})
+
+		it("uses priority_signup_start over signup_start when both set", () => {
+			const event = makeEvent({
+				can_choose: true,
+				priority_signup_start: "2024-06-15T12:30:00",
+				signup_start: "2024-06-15T15:00:00",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(true)
+		})
+	})
+
+	describe("non can_choose events", () => {
+		it("returns false when registration_window is future", () => {
+			const event = makeEvent({
+				can_choose: false,
+				registration_window: "future",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(false)
+		})
+
+		it("returns true when registration_window is current", () => {
+			const event = makeEvent({
+				can_choose: false,
+				registration_window: "current",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(true)
+		})
+
+		it("ignores time-based logic", () => {
+			const event = makeEvent({
+				can_choose: false,
+				registration_window: "future",
+				signup_start: "2024-06-15T12:30:00",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(false)
+		})
 	})
 })
