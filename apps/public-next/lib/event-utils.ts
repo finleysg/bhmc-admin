@@ -1,4 +1,4 @@
-import { format, parse, isValid } from "date-fns"
+import { differenceInMinutes, format, parse, isValid } from "date-fns"
 
 import { slugify } from "./slugify"
 import type { ClubEvent, ClubEventDetail, RegistrationSlot } from "./types"
@@ -166,6 +166,36 @@ export function findEventBySlug(
 		const eventNameSlug = slugify(e.name)
 		return eventDateSlug === dateSlug && eventNameSlug === nameSlug
 	})
+}
+
+export function shouldShowSignUpButton(
+	event: Pick<
+		ClubEventDetail,
+		| "registration_type"
+		| "registration_window"
+		| "status"
+		| "can_choose"
+		| "priority_signup_start"
+		| "signup_start"
+	>,
+	now: Date,
+): boolean {
+	if (
+		event.registration_type === RegistrationType.None ||
+		event.registration_window === "past" ||
+		event.status === "C"
+	) {
+		return false
+	}
+
+	if (event.can_choose) {
+		const signupStart = event.priority_signup_start ?? event.signup_start
+		if (!signupStart) return event.registration_window === "current"
+		const targetDate = new Date(signupStart)
+		return differenceInMinutes(targetDate, now) <= 60
+	}
+
+	return event.registration_window === "current"
 }
 
 export function computeOpenSpots(event: ClubEventDetail, slots: RegistrationSlot[]): number {

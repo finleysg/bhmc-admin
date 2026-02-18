@@ -7,9 +7,9 @@ function getAuthToken(request: NextRequest): string | null {
 
 export async function GET(
 	request: NextRequest,
-	{ params }: { params: Promise<{ eventId: string }> },
+	{ params }: { params: Promise<{ id: string }> },
 ) {
-	const { eventId } = await params
+	const { id } = await params
 	const token = getAuthToken(request)
 
 	if (!token) {
@@ -27,7 +27,7 @@ export async function GET(
 		})
 	}
 
-	const backendUrl = `${apiUrl}/registration/${eventId}/live`
+	const backendUrl = `${apiUrl}/registration/${id}/live`
 
 	const backendResponse = await fetch(backendUrl, {
 		headers: {

@@ -19,20 +19,21 @@
 			"mcp__bhmc-db__describe_table",
 			"Bash(gh api:*)",
 			"Bash(docker exec:*)",
-			"mcp__chrome-devtools__fill_form",
-			"mcp__chrome-devtools__wait_for",
 			"Bash(docker-compose:*)",
-			"Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && head -20 {} | cat -A | grep \"\"^  [^ ]\"\"')",
+			"Bash(sed:*)",
 			"Bash(awk:*)",
 			"Bash(/tmp/test-react-types.ts:*)",
 			"Bash(python3:*)",
-			"mcp__chrome-devtools__fill",
 			"Bash(git -C:*)",
 			"Bash(xargs:*)",
-			"Skill(playwright-cli)"
+			"Skill(playwright-cli)",
+			"Bash(playwright-cli:*)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],
+	"env": {
+		"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+	},
 	"hooks": {
 		"PreToolUse": [
 			{

@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
-import { differenceInMinutes, isBefore } from "date-fns"
+import { isBefore } from "date-fns"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
-import { getEventUrl, RegistrationType } from "@/lib/event-utils"
+import { getEventUrl, RegistrationType, shouldShowSignUpButton } from "@/lib/event-utils"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
 import { usePlayerRegistration } from "@/lib/hooks/use-player-registration"
 import type { ClubEventDetail } from "@/lib/types"
@@ -25,12 +24,25 @@ export function RegistrationActions({ event }: RegistrationActionsProps) {
 
 	return (
 		<div className="flex gap-2">
+			<PortalButton event={event} />
 			<SignUpButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} />
 			<PlayersButton event={event} eventUrl={eventUrl} />
 			{isAuthenticated && (
 				<ManageButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} />
 			)}
 		</div>
+	)
+}
+
+function PortalButton({ event }: { event: ClubEventDetail }) {
+	if (!event.portal_url) return null
+
+	return (
+		<Button variant="secondary" size="sm" asChild>
+			<a href={event.portal_url} target="_blank" rel="noopener noreferrer">
+				Leaderboard
+			</a>
+		</Button>
 	)
 }
 
@@ -44,74 +56,16 @@ function SignUpButton({
 	eventUrl: string
 }) {
 	const { isAuthenticated } = useAuth()
-	const now = new Date()
-	const signupStart = event.priority_signup_start ?? event.signup_start
-	const targetDate = signupStart ? new Date(signupStart) : now
 
-	const startCountdown = isBefore(now, targetDate) && differenceInMinutes(targetDate, now) < 60
-
-	if (
-		hasSignedUp ||
-		!isAuthenticated ||
-		event.registration_type === RegistrationType.None ||
-		event.registration_window === "past" ||
-		event.status === "C"
-	) {
+	if (hasSignedUp || !isAuthenticated || !shouldShowSignUpButton(event, new Date())) {
 		return null
 	}
 
-	const isOpen = event.registration_window === "current"
 	const destination = event.can_choose ? `${eventUrl}/reserve` : `${eventUrl}/register`
 
-	if (startCountdown) {
-		return <CountdownButton targetDate={targetDate} destination={destination} />
-	}
-
 	return (
-		<Button size="sm" disabled={!isOpen} asChild={isOpen}>
-			{isOpen ? <Link href={destination}>Sign Up</Link> : <span>Sign Up</span>}
-		</Button>
-	)
-}
-
-function CountdownButton({
-	targetDate,
-	destination,
-}: {
-	targetDate: Date
-	destination: string
-}) {
-	const [remaining, setRemaining] = useState(() => {
-		const diff = targetDate.getTime() - Date.now()
-		return Math.max(0, Math.floor(diff / 1000))
-	})
-
-	useEffect(() => {
-		const interval = setInterval(() => {
-			const diff = targetDate.getTime() - Date.now()
-			const secs = Math.max(0, Math.floor(diff / 1000))
-			setRemaining(secs)
-			if (secs <= 0) clearInterval(interval)
-		}, 1000)
-		return () => clearInterval(interval)
-	}, [targetDate])
-
-	const minutes = Math.floor(remaining / 60)
-	const seconds = remaining % 60
-
-	if (remaining <= 0) {
-		return (
-			<Button size="sm" asChild>
-				<Link href={destination}>Sign Up</Link>
-			</Button>
-		)
-	}
-
-	return (
-		<Button size="sm" disabled>
-			<span className="font-bold">
-				{minutes}:{seconds.toString().padStart(2, "0")}
-			</span>
+		<Button variant="accent" size="sm" asChild>
+			<Link href={destination}>Sign Up</Link>
 		</Button>
 	)
 }

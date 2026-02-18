@@ -8,7 +8,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/domain/package.json ./packages/domain/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 COPY packages/domain ./packages/domain
 RUN pnpm --filter @repo/domain build
