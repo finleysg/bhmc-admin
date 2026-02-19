@@ -33,10 +33,7 @@ export function CourseScorecard({
 				className={cn("py-3", !course.color && "bg-primary/10")}
 				style={course.color ? { backgroundColor: `${course.color}20` } : undefined}
 			>
-				<CardTitle
-					className="text-base"
-					style={course.color ? { color: course.color } : undefined}
-				>
+				<CardTitle className="text-base" style={course.color ? { color: course.color } : undefined}>
 					{course.name}
 				</CardTitle>
 			</CardHeader>

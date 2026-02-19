@@ -272,10 +272,7 @@ describe("getAvailabilityMessage", () => {
 
 	it("returns unlock time when currentWave is null (pre-SSE) and unlock times exist", () => {
 		const group = makeGroup({ wave: 2 })
-		const waveUnlockTimes = [
-			new Date(2026, 1, 18, 18, 0),
-			new Date(2026, 1, 18, 18, 15),
-		]
+		const waveUnlockTimes = [new Date(2026, 1, 18, 18, 0), new Date(2026, 1, 18, 18, 15)]
 		const result = getAvailabilityMessage(group, false, null, waveUnlockTimes)
 		expect(result).toBe("Opens at 6:15 PM")
 	})

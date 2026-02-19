@@ -30,12 +30,8 @@ export function ReservePageContent({ event }: ReservePageContentProps) {
 	const registrationStartTime = getRegistrationStartTime(event)
 
 	const handleReserve = (course: Course, selectedSlots: ReserveSlot[]) => {
-		const group = tables
-			.flatMap((t) => t.groups)
-			.find((g) => g.id === selectedSlots[0]?.groupId)
-		const slotIds = selectedSlots
-			.filter((s) => !s.playerId)
-			.map((s) => ({ id: s.id }))
+		const group = tables.flatMap((t) => t.groups).find((g) => g.id === selectedSlots[0]?.groupId)
+		const slotIds = selectedSlots.filter((s) => !s.playerId).map((s) => ({ id: s.id }))
 		const selectedStart = `${event.name}: ${course.name} ${group?.name ?? ""}`
 
 		void createRegistration(course, slotIds, selectedStart).then(

@@ -5,13 +5,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-	Sheet,
-	SheetContent,
-	SheetHeader,
-	SheetTitle,
-	SheetTrigger,
-} from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { RegistrationType } from "@/lib/event-utils"
 import { useMyFriends } from "@/lib/hooks/use-my-friends"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
@@ -31,10 +25,7 @@ export function FriendPicker({ onSelect }: FriendPickerProps) {
 	if (!friends || friends.length === 0) return null
 
 	const handleSelect = (friend: PlayerSummary) => {
-		if (
-			clubEvent?.registration_type === RegistrationType.MembersOnly &&
-			!friend.is_member
-		) {
+		if (clubEvent?.registration_type === RegistrationType.MembersOnly && !friend.is_member) {
 			toast.warning(
 				`${friend.first_name} ${friend.last_name} is not a member and cannot be added to this event.`,
 			)

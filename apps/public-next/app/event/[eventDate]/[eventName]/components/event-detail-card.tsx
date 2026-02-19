@@ -63,9 +63,7 @@ export function EventDetailCard({ event, actions }: EventDetailCardProps) {
 					<>
 						<hr className="border-muted-foreground/25" />
 						<div className="space-y-1 text-sm">
-							<h3 className="mb-2 font-heading text-lg font-semibold text-primary">
-								Signup Times
-							</h3>
+							<h3 className="mb-2 font-heading text-lg font-semibold text-primary">Signup Times</h3>
 							<DetailRow label="Open:">
 								{dayDateAndTimeFormat(event.priority_signup_start ?? event.signup_start)}
 							</DetailRow>

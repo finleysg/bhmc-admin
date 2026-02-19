@@ -78,10 +78,7 @@ export function PlayerPicker({ eventId, onSelect, excludeIds = [] }: PlayerPicke
 	}, [query, doSearch])
 
 	const handleSelect = (player: SearchResult) => {
-		if (
-			clubEvent?.registration_type === RegistrationType.MembersOnly &&
-			!player.is_member
-		) {
+		if (clubEvent?.registration_type === RegistrationType.MembersOnly && !player.is_member) {
 			toast.error(`Not eligible! ${player.first_name} ${player.last_name} is not a member.`)
 			return
 		}
@@ -98,18 +95,12 @@ export function PlayerPicker({ eventId, onSelect, excludeIds = [] }: PlayerPicke
 
 	return (
 		<Command shouldFilter={false} className="rounded-md border">
-			<CommandInput
-				placeholder="Search for player..."
-				value={query}
-				onValueChange={setQuery}
-			/>
+			<CommandInput placeholder="Search for player..." value={query} onValueChange={setQuery} />
 			<CommandList>
 				{query.length >= 3 && results.length === 0 && !isSearching && (
 					<CommandEmpty>No players found.</CommandEmpty>
 				)}
-				{query.length >= 3 && isSearching && (
-					<CommandEmpty>Searching...</CommandEmpty>
-				)}
+				{query.length >= 3 && isSearching && <CommandEmpty>Searching...</CommandEmpty>}
 				{results.length > 0 && (
 					<CommandGroup>
 						{results.map((player) => (
@@ -123,9 +114,7 @@ export function PlayerPicker({ eventId, onSelect, excludeIds = [] }: PlayerPicke
 										{player.first_name} {player.last_name}
 									</span>
 									{player.email && (
-										<span className="text-xs text-muted-foreground">
-											{player.email}
-										</span>
+										<span className="text-xs text-muted-foreground">{player.email}</span>
 									)}
 								</div>
 							</CommandItem>

@@ -10,12 +10,7 @@ interface SlotLineItemReviewProps {
 	team: number
 }
 
-export function SlotLineItemReview({
-	slot,
-	fees,
-	paymentDetails,
-	team,
-}: SlotLineItemReviewProps) {
+export function SlotLineItemReview({ slot, fees, paymentDetails, team }: SlotLineItemReviewProps) {
 	const slotDetails = paymentDetails.filter((d) => d.registrationSlotId === slot.id)
 
 	return (
@@ -24,9 +19,7 @@ export function SlotLineItemReview({
 				<span className="font-medium text-primary">
 					{slot.player?.firstName} {slot.player?.lastName}
 				</span>
-				{team > 0 && (
-					<span className="ml-1 text-muted-foreground">- team {team}</span>
-				)}
+				{team > 0 && <span className="ml-1 text-muted-foreground">- team {team}</span>}
 			</div>
 			<div className="text-right">
 				{slotDetails.map((detail) => {

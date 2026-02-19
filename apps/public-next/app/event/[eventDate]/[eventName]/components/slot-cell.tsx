@@ -14,8 +14,7 @@ interface SlotCellProps {
 
 export function SlotCell({ slot, courseColor, selected, onSelect, label }: SlotCellProps) {
 	const isReserved =
-		slot.status === RegistrationStatus.Reserved ||
-		slot.status === RegistrationStatus.Processing
+		slot.status === RegistrationStatus.Reserved || slot.status === RegistrationStatus.Processing
 	const isOpen = slot.status === RegistrationStatus.Available
 	const canInteract = onSelect && (isOpen || selected)
 

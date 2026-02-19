@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test"
 const isCI = !!process.env.CI
 
 export default defineConfig({
+	globalSetup: "./global-setup.ts",
 	testDir: ".",
 	fullyParallel: true,
 	forbidOnly: isCI,

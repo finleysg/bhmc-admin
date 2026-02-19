@@ -21,17 +21,12 @@ export function TeeSheetBody({
 			{/* Desktop: horizontal rows */}
 			<div className="hidden space-y-1 sm:block">
 				{table.groups.map((group) => (
-					<div
-						key={group.id}
-						className={cn("flex items-center gap-1", groupClassName?.(group))}
-					>
+					<div key={group.id} className={cn("flex items-center gap-1", groupClassName?.(group))}>
 						<div className="flex w-20 shrink-0 items-center font-semibold text-sm text-primary">
 							{group.name}
 						</div>
 						{renderGroupActions?.(group)}
-						<div className="flex flex-1 gap-1">
-							{group.slots.map((slot) => renderSlot(slot))}
-						</div>
+						<div className="flex flex-1 gap-1">{group.slots.map((slot) => renderSlot(slot))}</div>
 					</div>
 				))}
 			</div>
@@ -44,9 +39,7 @@ export function TeeSheetBody({
 							{group.name}
 							{renderGroupActions?.(group)}
 						</div>
-						<div className="space-y-1">
-							{group.slots.map((slot) => renderSlot(slot))}
-						</div>
+						<div className="space-y-1">{group.slots.map((slot) => renderSlot(slot))}</div>
 					</div>
 				))}
 			</div>

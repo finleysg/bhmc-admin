@@ -1,29 +1,36 @@
 import random
 import string
-
 from datetime import timedelta
 
 import djoser.views
 import structlog
+from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from djoser import utils
 from djoser.conf import settings
-
-from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import permission_classes, api_view
+from faker import Faker
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
-from bhmc.settings import DJANGO_ENV
-from damcup.utils import is_points, get_point_rows
+from bhmc.settings import DJANGO_ENV, TEST_USER_PASSWORD
+from core.util import current_season
+from damcup.utils import get_point_rows, is_points
 from documents.models import Document
-from documents.utils import open_xlsx_workbook, open_xls_workbook
+from documents.utils import open_xls_workbook, open_xlsx_workbook
 from events.models import Event
 from register.models import Player
-from scores.utils import get_score_type, get_course
-from .models import BoardMember, MajorChampion, Ace, LowScore, SeasonSettings
-from .serializers import BoardMemberSerializer, AceSerializer, LowScoreSerializer, MajorChampionSerializer, \
-    SeasonSettingsSerializer
+from scores.utils import get_course, get_score_type
+
+from .models import Ace, BoardMember, LowScore, MajorChampion, SeasonSettings
+from .serializers import (
+    AceSerializer,
+    BoardMemberSerializer,
+    LowScoreSerializer,
+    MajorChampionSerializer,
+    SeasonSettingsSerializer,
+)
 from .tasks import debug_task
 
 is_localhost = DJANGO_ENV != "prod"
@@ -126,14 +133,14 @@ class TokenCreateView(djoser.views.TokenCreateView):
         data = token_serializer_class(token).data
 
         response.set_cookie(
-            key = "access_token",
-            path = "/",
-            value = data["auth_token"],
-            max_age = timedelta(days=90),
-            secure = not is_localhost,
-            httponly = True,
-            samesite = "Lax",
-            domain = ".bhmc.org" if not is_localhost else None,
+            key="access_token",
+            path="/",
+            value=data["auth_token"],
+            max_age=timedelta(days=90),
+            secure=not is_localhost,
+            httponly=True,
+            samesite="Lax",
+            domain=".bhmc.org" if not is_localhost else None,
         )
 
         response.data = "Welcome!"
@@ -149,10 +156,10 @@ class TokenDestroyView(djoser.views.TokenDestroyView):
     def post(self, request):
         response = Response()
         response.delete_cookie(
-            key = "access_token",
-            path = "/",
-            samesite = "Lax",
-            domain = ".bhmc.org" if not is_localhost else None,
+            key="access_token",
+            path="/",
+            samesite="Lax",
+            domain=".bhmc.org" if not is_localhost else None,
         )
         response.status_code = status.HTTP_204_NO_CONTENT
         utils.logout_user(request)
@@ -169,7 +176,6 @@ def ping_celery(request):
 @api_view(("POST",))
 @permission_classes((permissions.IsAuthenticated,))
 def import_champions(request):
-
     event_id = request.data.get("event_id", 0)
     document_id = request.data.get("document_id", 0)
 
@@ -179,7 +185,9 @@ def import_champions(request):
 
     players = Player.objects.filter(is_member=True).all()
     player_map = {player.player_name(): player for player in players}
-    existing_champions = {champ.player.id: champ for champ in list(MajorChampion.objects.filter(event=event))}
+    existing_champions = {
+        champ.player.id: champ for champ in list(MajorChampion.objects.filter(event=event))
+    }
 
     document = Document.objects.get(pk=document_id)
     wb = open_xlsx_workbook(document)
@@ -195,7 +203,11 @@ def import_champions(request):
 
         champion = sheet.cell(row=i, column=2).value
         score = sheet.cell(row=i, column=3).value
-        is_net = False if sheet.cell(row=i, column=4).value is None else sheet.cell(row=i, column=4).value
+        is_net = (
+            False
+            if sheet.cell(row=i, column=4).value is None
+            else sheet.cell(row=i, column=4).value
+        )
 
         try:
             players, errors = get_players(champion, player_map)
@@ -203,14 +215,16 @@ def import_champions(request):
             for player in players:
                 existing = existing_champions.get(player.id)
                 if existing is None:
-                    new_champion = MajorChampion.objects.create(season=season,
-                                                                event=event,
-                                                                event_name=event_name,
-                                                                flight=flight,
-                                                                player=player,
-                                                                team_id=team_id,
-                                                                score=score,
-                                                                is_net=is_net)
+                    new_champion = MajorChampion.objects.create(
+                        season=season,
+                        event=event,
+                        event_name=event_name,
+                        flight=flight,
+                        player=player,
+                        team_id=team_id,
+                        score=score,
+                        is_net=is_net,
+                    )
                     new_champion.save()
                 else:
                     existing.flight = flight
@@ -235,7 +249,6 @@ def import_champions(request):
 @api_view(("POST",))
 @permission_classes((permissions.IsAuthenticated,))
 def import_low_scores(request):
-
     event_id = request.data.get("event_id", 0)
     document_id = request.data.get("document_id", 0)
 
@@ -256,16 +269,18 @@ def import_low_scores(request):
                     if this_score < low_score:
                         low_score = this_score
 
-            current_low_score = LowScore.objects.filter(season=event.season,
-                                                        course_name=course_name,
-                                                        is_net=score_type == "net").first()
+            current_low_score = LowScore.objects.filter(
+                season=event.season, course_name=course_name, is_net=score_type == "net"
+            ).first()
 
             logger.info(f"Tonight's low {score_type} score on the {course_name}: {low_score}")
             if current_low_score is None:
                 save_low_score(event, course_name, score_type, low_score, sheet, failures)
             else:
                 if low_score < current_low_score.score:
-                    LowScore.objects.filter(season=event.season, course_name=course_name, is_net=score_type == "net").delete()
+                    LowScore.objects.filter(
+                        season=event.season, course_name=course_name, is_net=score_type == "net"
+                    ).delete()
                     save_low_score(event, course_name, score_type, low_score, sheet, failures)
                 elif low_score == current_low_score.score:
                     save_low_score(event, course_name, score_type, low_score, sheet, failures)
@@ -289,9 +304,16 @@ def save_low_score(event, course_name, score_type, score, sheet, failures):
                     continue
 
                 try:
-                    logger.info(f"Saving low {score_type} score of {score} for {player_name} on the {course_name}")
-                    low_score = LowScore.objects.create(season=event.season, course_name=course_name, player=player,
-                                                        score=score, is_net=score_type == "net")
+                    logger.info(
+                        f"Saving low {score_type} score of {score} for {player_name} on the {course_name}"
+                    )
+                    low_score = LowScore.objects.create(
+                        season=event.season,
+                        course_name=course_name,
+                        player=player,
+                        score=score,
+                        is_net=score_type == "net",
+                    )
                     low_score.save()
                 except Exception as ex:
                     failures.append(str(ex))
@@ -309,3 +331,126 @@ def get_players(champion, player_map):
             players.append(player)
 
     return players, errors
+
+
+fake = Faker()
+
+
+def _generate_test_ghin():
+    """Generate a unique GHIN like 999XXX (999 + 3 random digits)."""
+    while True:
+        ghin = f"999{random.randint(0, 999):03d}"
+        if not Player.objects.filter(ghin=ghin).exists():
+            return ghin
+
+
+def _get_test_users(season):
+    """Build 16 test user definitions with random names and predictable emails."""
+    users = []
+    # 12 members
+    for i in range(1, 13):
+        users.append(
+            {
+                "first_name": fake.first_name_male(),
+                "last_name": fake.last_name(),
+                "email": f"member-{i:02d}@test.bhmc.org",
+                "is_member": True,
+                "last_season": season,
+            }
+        )
+    # 2 returning members (were members last season, not yet this season)
+    for i in range(1, 3):
+        users.append(
+            {
+                "first_name": fake.first_name_male(),
+                "last_name": fake.last_name(),
+                "email": f"returning-{i:02d}@test.bhmc.org",
+                "is_member": False,
+                "last_season": season - 1,
+            }
+        )
+    # 2 non-members
+    for i in range(1, 3):
+        users.append(
+            {
+                "first_name": fake.first_name_male(),
+                "last_name": fake.last_name(),
+                "email": f"nonmember-{i:02d}@test.bhmc.org",
+                "is_member": False,
+                "last_season": None,
+            }
+        )
+    return users
+
+
+@api_view(("POST",))
+@permission_classes((permissions.IsAdminUser,))
+def create_test_users(request):
+    if not is_localhost:
+        return Response({"detail": "Not available in production."}, status=403)
+
+    if not TEST_USER_PASSWORD:
+        return Response({"detail": "TEST_USER_PASSWORD is not configured."}, status=500)
+
+    season = current_season()
+    created, existing = [], []
+
+    for entry in _get_test_users(season):
+        email = entry["email"]
+        if Player.objects.filter(email=email).exists():
+            player = Player.objects.get(email=email)
+            updated = False
+            if player.is_member != entry["is_member"]:
+                player.is_member = entry["is_member"]
+                updated = True
+            if player.last_season != entry["last_season"]:
+                player.last_season = entry["last_season"]
+                updated = True
+            if entry["is_member"] and not player.ghin:
+                player.ghin = _generate_test_ghin()
+                updated = True
+            if updated:
+                player.save()
+            existing.append(
+                {
+                    "email": email,
+                    "player_id": player.id,
+                    "user_id": player.user_id,
+                    "first_name": player.first_name,
+                    "last_name": player.last_name,
+                    "is_member": player.is_member,
+                    "last_season": player.last_season,
+                }
+            )
+            continue
+
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=TEST_USER_PASSWORD,
+            first_name=entry["first_name"],
+            last_name=entry["last_name"],
+            is_active=True,
+        )
+        player = Player.objects.create(
+            user=user,
+            first_name=entry["first_name"],
+            last_name=entry["last_name"],
+            email=email,
+            is_member=entry["is_member"],
+            last_season=entry["last_season"],
+            ghin=_generate_test_ghin() if entry["is_member"] else None,
+        )
+        created.append(
+            {
+                "email": email,
+                "player_id": player.id,
+                "user_id": user.id,
+                "first_name": entry["first_name"],
+                "last_name": entry["last_name"],
+                "is_member": entry["is_member"],
+                "last_season": entry["last_season"],
+            }
+        )
+
+    return Response({"created": created, "existing": existing})

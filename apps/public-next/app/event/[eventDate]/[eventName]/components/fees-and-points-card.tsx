@@ -49,7 +49,10 @@ export async function FeesAndPointsCard({ event }: FeesAndPointsCardProps) {
 						{fees
 							.filter((fee) => fee.override_amount && fee.override_restriction)
 							.map((fee) => (
-								<div key={`${fee.id}-override`} className="flex items-center justify-between text-sm">
+								<div
+									key={`${fee.id}-override`}
+									className="flex items-center justify-between text-sm"
+								>
 									<span>
 										{fee.fee_type.name} ({fee.override_restriction})
 									</span>

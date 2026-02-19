@@ -130,9 +130,7 @@ export function RegisteredList({ reservations, eventName }: RegisteredListProps)
 							{paged.map((r) => (
 								<TableRow key={r.slotId}>
 									<TableCell className="text-secondary font-medium text-sm">{r.sortName}</TableCell>
-									<TableCell>
-										{format(new Date(r.signupDate), "MM/dd/yyyy h:mm aaaa")}
-									</TableCell>
+									<TableCell>{format(new Date(r.signupDate), "MM/dd/yyyy h:mm aaaa")}</TableCell>
 									<TableCell>{r.signedUpBy}</TableCell>
 								</TableRow>
 							))}
@@ -145,18 +143,13 @@ export function RegisteredList({ reservations, eventName }: RegisteredListProps)
 					{paged.map((r, idx) => (
 						<div
 							key={r.slotId}
-							className={cn(
-								"border-b py-2 px-2",
-								idx % 2 !== 0 && "bg-muted/30",
-							)}
+							className={cn("border-b py-2 px-2", idx % 2 !== 0 && "bg-muted/30")}
 						>
 							<div className="font-bold text-secondary text-sm">{r.sortName}</div>
 							<div className="text-muted-foreground text-sm">
 								{format(new Date(r.signupDate), "MM/dd/yyyy h:mm aaaa")}
 							</div>
-							<div className="text-muted-foreground text-sm">
-								Signed up by: {r.signedUpBy}
-							</div>
+							<div className="text-muted-foreground text-sm">Signed up by: {r.signedUpBy}</div>
 						</div>
 					))}
 				</div>

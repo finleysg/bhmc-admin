@@ -1,6 +1,12 @@
 import { addMinutes, format, parse } from "date-fns"
 
-import type { ClubEventDetail, Course, Hole, RegistrationSlot, RegistrationSlotPlayer } from "../types"
+import type {
+	ClubEventDetail,
+	Course,
+	Hole,
+	RegistrationSlot,
+	RegistrationSlotPlayer,
+} from "../types"
 import { RegistrationStatus, StartType } from "./types"
 import type { SSESlotData } from "./types"
 
@@ -202,9 +208,7 @@ function createReserveSlot(groupId: string, slot: RegistrationSlot): ReserveSlot
 		groupId,
 		holeId: slot.hole,
 		playerId: slot.player?.id ?? null,
-		playerName: slot.player
-			? `${slot.player.first_name} ${slot.player.last_name}`
-			: undefined,
+		playerName: slot.player ? `${slot.player.first_name} ${slot.player.last_name}` : undefined,
 		position: slot.slot,
 		registrationId: slot.registration,
 		startingOrder: slot.starting_order,

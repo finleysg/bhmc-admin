@@ -70,13 +70,7 @@ function SignUpButton({
 	)
 }
 
-function PlayersButton({
-	event,
-	eventUrl,
-}: {
-	event: ClubEventDetail
-	eventUrl: string
-}) {
+function PlayersButton({ event, eventUrl }: { event: ClubEventDetail; eventUrl: string }) {
 	const signupStart = event.priority_signup_start ?? event.signup_start
 	if (!signupStart) return null
 
@@ -104,7 +98,9 @@ function ManageButton({
 }) {
 	if (!hasSignedUp || event.registration_window === "past") return null
 
-	const paymentsOpen = event.payments_end ? isBefore(new Date(), new Date(event.payments_end)) : false
+	const paymentsOpen = event.payments_end
+		? isBefore(new Date(), new Date(event.payments_end))
+		: false
 
 	if (!paymentsOpen) return null
 
