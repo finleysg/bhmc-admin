@@ -5,7 +5,8 @@ import { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer } f
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { useAuth } from "../auth-context"
-import { RegistrationType } from "../event-utils"
+import { isPaymentsOpen, RegistrationType } from "../event-utils"
+import { useRegistrationSSE } from "../hooks/use-registration-sse"
 import type { ClubEventDetail, Course, EventFee } from "../types"
 import { calculateFeeAmount, type FeePlayer } from "./fee-utils"
 import {
@@ -14,12 +15,14 @@ import {
 	type RegistrationStep,
 } from "./registration-reducer"
 import { RegistrationContext } from "./registration-context"
+import { transformSSESlots } from "./reserve-utils"
 import type {
 	RegistrationMode,
 	ServerPayment,
 	ServerRegistration,
 	ServerRegistrationFee,
 	ServerRegistrationSlot,
+	SSEUpdateEvent,
 } from "./types"
 import { getCorrelationId } from "./correlation"
 
@@ -68,6 +71,31 @@ export function RegistrationProvider({
 			payload: { clubEvent, correlationId },
 		})
 	}, [clubEvent])
+
+	// --- SSE integration ---
+
+	const isSSEEnabled = useMemo(() => {
+		if (!clubEvent) return false
+		return isPaymentsOpen(clubEvent, new Date())
+	}, [clubEvent])
+
+	const handleSSEUpdate = useCallback(
+		(data: SSEUpdateEvent) => {
+			const transformed = transformSSESlots(data.slots)
+			queryClient.setQueryData(["event-registration-slots", clubEvent.id], transformed)
+			void queryClient.invalidateQueries({
+				queryKey: ["event-registrations", clubEvent.id],
+			})
+			dispatch({ type: "update-sse-wave", payload: { wave: data.currentWave } })
+		},
+		[clubEvent.id, queryClient],
+	)
+
+	useRegistrationSSE({
+		eventId: clubEvent.id,
+		enabled: isSSEEnabled,
+		onUpdate: handleSSEUpdate,
+	})
 
 	// --- Mutations ---
 

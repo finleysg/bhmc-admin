@@ -5,7 +5,7 @@ import { ClubEvent, RegistrationSlotWithPlayerAndWave } from "@repo/domain/types
 
 import { EventsService } from "../../events"
 import { RegistrationDataService } from "./registration-data.service"
-import { getRegistrationWindow, getCurrentWave } from "../wave-calculator"
+import { getCurrentWave } from "../wave-calculator"
 
 export interface RegistrationUpdateEvent {
 	eventId: number
@@ -100,6 +100,7 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 			}
 			const slots = await this.dataService.getSlotsWithWaveInfo(eventId, state.cachedEvent)
 			const currentWave = getCurrentWave(state.cachedEvent)
+			state.lastWave = currentWave
 
 			return {
 				eventId,
@@ -131,15 +132,11 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 	private checkWaveChange(eventId: number, state: EventStreamState): void {
 		if (!state.cachedEvent) return
 
-		const window = getRegistrationWindow(state.cachedEvent)
-
-		if (window === "priority") {
-			const currentWave = getCurrentWave(state.cachedEvent)
-			if (currentWave !== state.lastWave) {
-				state.lastWave = currentWave
-				this.logger.debug(`Wave changed to ${currentWave} for event ${eventId}`)
-				state.trigger$.next()
-			}
+		const currentWave = getCurrentWave(state.cachedEvent)
+		if (currentWave !== state.lastWave) {
+			state.lastWave = currentWave
+			this.logger.debug(`Wave changed to ${currentWave} for event ${eventId}`)
+			state.trigger$.next()
 		}
 	}
 

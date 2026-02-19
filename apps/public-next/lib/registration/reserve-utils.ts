@@ -1,7 +1,8 @@
 import { addMinutes, format, parse } from "date-fns"
 
-import type { ClubEventDetail, Course, Hole, RegistrationSlot } from "../types"
+import type { ClubEventDetail, Course, Hole, RegistrationSlot, RegistrationSlotPlayer } from "../types"
 import { RegistrationStatus, StartType } from "./types"
+import type { SSESlotData } from "./types"
 
 const DEFAULT_SPLIT = 8
 
@@ -96,6 +97,86 @@ export function calculateWave(
 		return Math.floor(groupIndex / (base + 1)) + 1
 	}
 	return remainder + Math.floor((groupIndex - cutoff) / base) + 1
+}
+
+/**
+ * Returns an array of Date objects representing when each wave unlocks during priority registration.
+ * Empty array if wave registration is not configured.
+ */
+export function getWaveUnlockTimes(event: ClubEventDetail): Date[] {
+	if (
+		!event.signup_waves ||
+		event.signup_waves <= 0 ||
+		!event.priority_signup_start ||
+		!event.signup_start
+	) {
+		return []
+	}
+
+	const priorityStart = new Date(event.priority_signup_start)
+	const signupStart = new Date(event.signup_start)
+	const priorityDuration = signupStart.getTime() - priorityStart.getTime()
+	const waveDuration = priorityDuration / event.signup_waves
+
+	const unlockTimes: Date[] = []
+	for (let i = 0; i < event.signup_waves; i++) {
+		unlockTimes.push(new Date(priorityStart.getTime() + i * waveDuration))
+	}
+	return unlockTimes
+}
+
+/**
+ * Transform SSE slot data (NestJS camelCase) to Django snake_case format
+ * for direct React Query cache updates.
+ */
+export function transformSSESlots(sseSlots: SSESlotData[]): RegistrationSlot[] {
+	return sseSlots.map((slot) => ({
+		id: slot.id,
+		event: slot.eventId,
+		registration: slot.registrationId ?? null,
+		hole: slot.holeId ?? null,
+		starting_order: slot.startingOrder,
+		slot: slot.slot,
+		status: slot.status,
+		player: slot.player ? transformPlayer(slot.player) : null,
+	}))
+}
+
+function transformPlayer(player: NonNullable<SSESlotData["player"]>): RegistrationSlotPlayer {
+	return {
+		id: player.id,
+		first_name: player.firstName,
+		last_name: player.lastName,
+		email: player.email ?? null,
+		phone_number: player.phoneNumber ?? null,
+		ghin: player.ghin ?? null,
+		tee: player.tee ?? null,
+		birth_date: player.birthDate ?? null,
+		is_member: typeof player.isMember === "number" ? player.isMember === 1 : player.isMember,
+		last_season: player.lastSeason ?? null,
+	}
+}
+
+/**
+ * Returns a human-readable message like "Opens at 6:15 PM" for wave-locked groups.
+ * Returns undefined if the group is already available.
+ */
+export function getAvailabilityMessage(
+	group: ReserveGroup,
+	waveAvailable: boolean,
+	currentWave: number | null,
+	waveUnlockTimes?: Date[],
+	registrationStartTime?: Date | null,
+): string | undefined {
+	if (waveAvailable) return undefined
+	if (waveUnlockTimes && group.wave > 0 && group.wave <= waveUnlockTimes.length) {
+		const unlockTime = waveUnlockTimes[group.wave - 1]
+		return `Opens at ${format(unlockTime, "h:mm a")}`
+	}
+	if (registrationStartTime) {
+		return `Opens at ${format(registrationStartTime, "h:mm a")}`
+	}
+	return undefined
 }
 
 // --- Helpers ---

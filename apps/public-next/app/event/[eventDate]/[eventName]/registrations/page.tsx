@@ -1,9 +1,6 @@
-import { notFound } from "next/navigation"
-import { parse, isValid } from "date-fns"
-
 import { fetchDjango } from "@/lib/fetchers"
-import { findEventBySlug } from "@/lib/event-utils"
-import type { ClubEventDetail, RegistrationSlot } from "@/lib/types"
+import { resolveEventFromParams } from "@/lib/event-utils"
+import type { RegistrationSlot } from "@/lib/types"
 import { loadReserveTables } from "@/lib/registration/reserve-utils"
 import { RegistrationStatus } from "@/lib/registration/types"
 import { RegisteredGrid } from "./registered-grid"
@@ -78,24 +75,7 @@ interface RegistrationsPageProps {
 
 export default async function RegistrationsPage({ params }: RegistrationsPageProps) {
 	const { eventDate, eventName } = await params
-
-	const startDate = parse(eventDate, "yyyy-MM-dd", new Date())
-	if (!isValid(startDate)) {
-		notFound()
-	}
-
-	const year = startDate.getFullYear()
-	const month = startDate.getMonth() + 1
-
-	const events = await fetchDjango<ClubEventDetail[]>(`/events/?year=${year}&month=${month}`, {
-		revalidate: 300,
-	})
-
-	const event = findEventBySlug(events, eventDate, eventName)
-
-	if (!event) {
-		notFound()
-	}
+	const event = await resolveEventFromParams(eventDate, eventName)
 
 	if (event.can_choose) {
 		const slots = await fetchDjango<RegistrationSlot[]>(

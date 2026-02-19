@@ -2,10 +2,12 @@ import type { ClubEventDetail, Course, Hole, RegistrationSlot } from "../types"
 import {
 	calculateTeetime,
 	calculateWave,
+	getAvailabilityMessage,
 	getGroupStartName,
 	getTeeTimeSplits,
 	loadReserveTables,
 } from "../registration/reserve-utils"
+import type { ReserveGroup } from "../registration/reserve-utils"
 
 function makeHole(overrides: Partial<Hole> = {}): Hole {
 	return { id: 1, course_id: 1, hole_number: 1, par: 4, ...overrides }
@@ -244,5 +246,90 @@ describe("getGroupStartName", () => {
 		const event = makeEvent({ start_type: "SG" })
 		expect(getGroupStartName(event, 5, 0)).toBe("5A")
 		expect(getGroupStartName(event, 5, 1)).toBe("5B")
+	})
+})
+
+function makeGroup(overrides: Partial<ReserveGroup> = {}): ReserveGroup {
+	return {
+		id: "east-3:00 pm",
+		courseId: 1,
+		holeId: 10,
+		holeNumber: 1,
+		slots: [],
+		startingOrder: 0,
+		name: "3:00 PM",
+		wave: 1,
+		...overrides,
+	}
+}
+
+describe("getAvailabilityMessage", () => {
+	it("returns undefined when wave is already available", () => {
+		const group = makeGroup({ wave: 1 })
+		const result = getAvailabilityMessage(group, true, 1)
+		expect(result).toBeUndefined()
+	})
+
+	it("returns unlock time when currentWave is null (pre-SSE) and unlock times exist", () => {
+		const group = makeGroup({ wave: 2 })
+		const waveUnlockTimes = [
+			new Date(2026, 1, 18, 18, 0),
+			new Date(2026, 1, 18, 18, 15),
+		]
+		const result = getAvailabilityMessage(group, false, null, waveUnlockTimes)
+		expect(result).toBe("Opens at 6:15 PM")
+	})
+
+	it("returns undefined when currentWave is null and no times available", () => {
+		const group = makeGroup({ wave: 1 })
+		const result = getAvailabilityMessage(group, false, null)
+		expect(result).toBeUndefined()
+	})
+
+	it("returns formatted unlock time for a wave-locked group", () => {
+		const group = makeGroup({ wave: 2 })
+		const waveUnlockTimes = [
+			new Date(2026, 1, 18, 18, 0), // wave 1: 6:00 PM
+			new Date(2026, 1, 18, 18, 15), // wave 2: 6:15 PM
+		]
+		const result = getAvailabilityMessage(group, false, 1, waveUnlockTimes)
+		expect(result).toBe("Opens at 6:15 PM")
+	})
+
+	it("returns correct time for wave 1 when current wave is 0", () => {
+		const group = makeGroup({ wave: 1 })
+		const waveUnlockTimes = [
+			new Date(2026, 1, 18, 18, 0), // wave 1: 6:00 PM
+			new Date(2026, 1, 18, 18, 15), // wave 2: 6:15 PM
+		]
+		const result = getAvailabilityMessage(group, false, 0, waveUnlockTimes)
+		expect(result).toBe("Opens at 6:00 PM")
+	})
+
+	it("falls back to registrationStartTime when no waveUnlockTimes", () => {
+		const group = makeGroup({ wave: 1 })
+		const registrationStartTime = new Date(2026, 1, 18, 17, 30) // 5:30 PM
+		const result = getAvailabilityMessage(group, false, 0, undefined, registrationStartTime)
+		expect(result).toBe("Opens at 5:30 PM")
+	})
+
+	it("falls back to registrationStartTime when waveUnlockTimes is empty", () => {
+		const group = makeGroup({ wave: 1 })
+		const registrationStartTime = new Date(2026, 1, 18, 17, 30)
+		const result = getAvailabilityMessage(group, false, 0, [], registrationStartTime)
+		expect(result).toBe("Opens at 5:30 PM")
+	})
+
+	it("returns undefined when wave-locked but no times available", () => {
+		const group = makeGroup({ wave: 1 })
+		const result = getAvailabilityMessage(group, false, 0)
+		expect(result).toBeUndefined()
+	})
+
+	it("returns undefined for wave 0 groups (no wave assignment)", () => {
+		const group = makeGroup({ wave: 0 })
+		const waveUnlockTimes = [new Date(2026, 1, 18, 18, 0)]
+		const result = getAvailabilityMessage(group, false, 0, waveUnlockTimes)
+		expect(result).toBeUndefined()
 	})
 })

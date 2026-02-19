@@ -1,5 +1,7 @@
 import { differenceInMinutes, format, parse, isValid } from "date-fns"
+import { notFound } from "next/navigation"
 
+import { fetchDjango } from "./fetchers"
 import { slugify } from "./slugify"
 import type { ClubEvent, ClubEventDetail, RegistrationSlot } from "./types"
 
@@ -196,6 +198,43 @@ export function shouldShowSignUpButton(
 	}
 
 	return event.registration_window === "current"
+}
+
+export function getRegistrationStartTime(
+	event: Pick<ClubEventDetail, "priority_signup_start" | "signup_start">,
+): Date | null {
+	const dateStr = event.priority_signup_start ?? event.signup_start
+	if (!dateStr) return null
+	return new Date(dateStr)
+}
+
+export function isPaymentsOpen(
+	event: Pick<
+		ClubEventDetail,
+		"priority_signup_start" | "signup_start" | "signup_end" | "payments_end"
+	>,
+	now: Date,
+): boolean {
+	const startStr = event.priority_signup_start ?? event.signup_start
+	const endStr = event.payments_end ?? event.signup_end
+	if (!startStr || !endStr) return false
+	return now >= new Date(startStr) && now < new Date(endStr)
+}
+
+export async function resolveEventFromParams(
+	eventDate: string,
+	eventName: string,
+): Promise<ClubEventDetail> {
+	const startDate = parse(eventDate, "yyyy-MM-dd", new Date())
+	if (!isValid(startDate)) notFound()
+	const year = startDate.getFullYear()
+	const month = startDate.getMonth() + 1
+	const events = await fetchDjango<ClubEventDetail[]>(`/events/?year=${year}&month=${month}`, {
+		revalidate: 300,
+	})
+	const event = findEventBySlug(events, eventDate, eventName)
+	if (!event) notFound()
+	return event
 }
 
 export function computeOpenSpots(event: ClubEventDetail, slots: RegistrationSlot[]): number {

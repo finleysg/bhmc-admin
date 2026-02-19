@@ -1,7 +1,7 @@
-import { Controller, Inject, Logger, Param, ParseIntPipe, Req, Res, Sse } from "@nestjs/common"
+import { Controller, Header, Inject, Logger, Param, ParseIntPipe, Req, Sse } from "@nestjs/common"
 import { Observable, interval, merge, of } from "rxjs"
 import { catchError, map, takeUntil } from "rxjs/operators"
-import type { Request, Response } from "express"
+import type { Request } from "express"
 
 import {
 	RegistrationBroadcastService,
@@ -23,16 +23,13 @@ export class RegistrationLiveController {
 	) {}
 
 	@Sse(":eventId/live")
+	@Header("Cache-Control", "no-cache")
+	@Header("X-Accel-Buffering", "no")
 	liveUpdates(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Req() req: Request,
-		@Res() res: Response,
 	): Observable<SseMessage> {
 		this.logger.log(`SSE connection opened for event ${eventId}`)
-
-		// Set headers for long-lived connection
-		res.setHeader("Cache-Control", "no-cache")
-		res.setHeader("X-Accel-Buffering", "no") // Disable nginx buffering
 
 		const updates$ = this.broadcast.subscribe(eventId).pipe(
 			map(

@@ -5,6 +5,7 @@ test.describe("Member Account", () => {
 		await page.goto("/member/account")
 
 		await expect(page.getByText("My Account")).toBeVisible()
+		await page.getByText("Player Profile").waitFor()
 		await expect(page.getByText("Player Profile")).toBeVisible()
 		await expect(page.getByText("Password", { exact: true })).toBeVisible()
 	})
@@ -34,6 +35,7 @@ test.describe("Member Account", () => {
 	test("password section renders with change button", async ({ page }) => {
 		await page.goto("/member/account")
 
+		await page.getByText("Password", { exact: true }).waitFor()
 		await expect(page.getByText("Password", { exact: true })).toBeVisible()
 		await expect(page.getByRole("button", { name: /change/i })).toBeVisible()
 	})

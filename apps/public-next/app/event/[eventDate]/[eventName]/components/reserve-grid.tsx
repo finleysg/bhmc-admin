@@ -3,20 +3,34 @@
 import { useCallback, useState } from "react"
 import { toast } from "sonner"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
 import { useRegistration } from "@/lib/registration/registration-context"
-import type { ReserveSlot, ReserveTable } from "@/lib/registration/reserve-utils"
+import { RegistrationStatus } from "@/lib/registration/types"
+import {
+	getAvailabilityMessage,
+	type ReserveGroup,
+	type ReserveSlot,
+	type ReserveTable,
+} from "@/lib/registration/reserve-utils"
 import type { Course } from "@/lib/types"
-import { ReserveRow } from "./reserve-row"
+import { SlotCell } from "./slot-cell"
+import { TeeSheetTabs } from "./tee-sheet-tabs"
 
 interface ReserveGridProps {
 	tables: ReserveTable[]
 	mode: "view" | "edit"
 	onReserve: (course: Course, slots: ReserveSlot[]) => void
+	waveUnlockTimes?: Date[]
+	registrationStartTime?: Date | null
 }
 
-export function ReserveGrid({ tables, mode, onReserve }: ReserveGridProps) {
+export function ReserveGrid({
+	tables,
+	mode,
+	onReserve,
+	waveUnlockTimes,
+	registrationStartTime,
+}: ReserveGridProps) {
 	const { sseCurrentWave, error, setError } = useRegistration()
 	const [selectedSlots, setSelectedSlots] = useState<ReserveSlot[]>([])
 
@@ -25,7 +39,6 @@ export function ReserveGrid({ tables, mode, onReserve }: ReserveGridProps) {
 		toast.error(error)
 		setError(null)
 		if (selectedSlots.length > 0) {
-			// Clear selected state on slots
 			selectedSlots.forEach((s) => {
 				s.selected = false
 			})
@@ -78,53 +91,78 @@ export function ReserveGrid({ tables, mode, onReserve }: ReserveGridProps) {
 
 	if (tables.length === 0) return null
 
-	if (tables.length === 1) {
-		const table = tables[0]
+	const renderGroupActions = (group: ReserveGroup, table: ReserveTable) => {
+		const waveAvailable = sseCurrentWave !== null && sseCurrentWave >= group.wave
+		const hasOpenings = group.slots.some((s) => s.status === RegistrationStatus.Available)
+		const hasSelectedSlots = group.slots.some((s) => s.selected)
 		return (
-			<Card className="mt-4">
-				<CardContent>
-					{table.groups.map((group) => (
-						<ReserveRow
-							key={group.id}
-							group={group}
-							mode={mode}
-							currentWave={sseCurrentWave}
-							onSelect={handleSelect}
-							onReserve={() => handleReserve(table)}
-						/>
-					))}
-				</CardContent>
-			</Card>
+			<>
+				{mode === "edit" && (
+					<div className="flex shrink-0 gap-2">
+						<Button
+							variant="default"
+							size="xs"
+							disabled={!hasOpenings || !waveAvailable}
+							onClick={() => {
+								const available = group.slots.filter(
+									(s) => s.status === RegistrationStatus.Available,
+								)
+								handleSelect(available)
+							}}
+						>
+							Select
+						</Button>
+						<Button
+							variant="secondary"
+							size="xs"
+							disabled={!hasSelectedSlots || !waveAvailable}
+							onClick={() => handleReserve(table)}
+						>
+							Register
+						</Button>
+					</div>
+				)}
+			</>
 		)
 	}
 
+	const groupClassName = (group: ReserveGroup) => {
+		const waveAvailable = sseCurrentWave !== null && sseCurrentWave >= group.wave
+		return !waveAvailable ? "opacity-50" : ""
+	}
+
 	return (
-		<Tabs defaultValue={tables[0].course.name} className="mt-4">
-			<TabsList>
-				{tables.map((table) => (
-					<TabsTrigger key={table.course.id} value={table.course.name}>
-						{table.course.name}
-					</TabsTrigger>
-				))}
-			</TabsList>
-			{tables.map((table) => (
-				<TabsContent key={table.course.id} value={table.course.name}>
-					<Card>
-						<CardContent>
-							{table.groups.map((group) => (
-								<ReserveRow
-									key={group.id}
-									group={group}
-									mode={mode}
-									currentWave={sseCurrentWave}
-									onSelect={handleSelect}
-									onReserve={() => handleReserve(table)}
-								/>
-							))}
-						</CardContent>
-					</Card>
-				</TabsContent>
-			))}
-		</Tabs>
+		<TeeSheetTabs
+			tables={tables}
+			className="mt-4"
+			renderSlot={(slot, table) => {
+				const group = table.groups.find((g) => g.id === slot.groupId)
+				const wave = group?.wave ?? 0
+				const waveAvailable = sseCurrentWave !== null && sseCurrentWave >= wave
+				const canSelect = waveAvailable && mode === "edit"
+				const label =
+					!waveAvailable && group
+						? getAvailabilityMessage(
+								group,
+								false,
+								sseCurrentWave,
+								waveUnlockTimes,
+								registrationStartTime,
+							)
+						: undefined
+				return (
+					<SlotCell
+						key={slot.id}
+						slot={slot}
+						courseColor={table.course.color ?? undefined}
+						selected={slot.selected}
+						onSelect={canSelect ? (s) => handleSelect([s]) : undefined}
+						label={label}
+					/>
+				)
+			}}
+			renderGroupActions={renderGroupActions}
+			groupClassName={groupClassName}
+		/>
 	)
 }

@@ -34,7 +34,12 @@
 			"Bash(uv run python manage.py makemigrations courses)",
 			"Bash(uv run python manage.py migrate courses)",
 			"Bash(uv run python manage.py test)",
-			"Bash(uv run python manage.py migrate)"
+			"Bash(uv run python manage.py migrate)",
+			"Bash(echo \"EXIT CODE: $?\")",
+			"Bash(echo $TZ)",
+			"Bash(/tmp/check-sse.js:*)",
+			"Bash(/tmp/check-sse2.js:*)",
+			"Bash(/tmp/check-open.js:*)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],
