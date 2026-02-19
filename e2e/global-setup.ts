@@ -1,5 +1,8 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
+import { fileURLToPath } from "node:url"
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const DJANGO_URL = process.env.DJANGO_URL ?? "http://localhost:8000"
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "finleysg@gmail.com"

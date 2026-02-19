@@ -185,6 +185,42 @@ export function getAvailabilityMessage(
 	return undefined
 }
 
+/**
+ * Updates slot selection state. Returns the new selectedSlots array.
+ * Side effect: mutates `slot.selected` booleans on both old and new selections.
+ */
+export function updateSlotSelection(
+	currentSelection: ReserveSlot[],
+	incoming: ReserveSlot[],
+): ReserveSlot[] {
+	if (incoming.length === 1) {
+		const slot = incoming[0]
+		// Clear previous selections in other groups
+		const sameGroup = currentSelection.filter((ss) => ss.groupId === slot.groupId)
+		currentSelection.forEach((s) => {
+			if (s.groupId !== slot.groupId) s.selected = false
+		})
+
+		slot.selected = !slot.selected
+		if (slot.selected) {
+			return [...sameGroup, slot]
+		} else {
+			return sameGroup.filter((s) => s.id !== slot.id)
+		}
+	} else {
+		// Multi-select: clear all, then select available
+		currentSelection.forEach((s) => {
+			s.selected = false
+		})
+		const newSelected: ReserveSlot[] = []
+		incoming.forEach((slot) => {
+			slot.selected = true
+			newSelected.push(slot)
+		})
+		return newSelected
+	}
+}
+
 // --- Helpers ---
 
 function getStatusName(statusCode: string): string {

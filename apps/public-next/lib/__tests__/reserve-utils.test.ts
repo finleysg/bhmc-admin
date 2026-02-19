@@ -6,8 +6,10 @@ import {
 	getGroupStartName,
 	getTeeTimeSplits,
 	loadReserveTables,
+	transformSSESlots,
 } from "../registration/reserve-utils"
 import type { ReserveGroup } from "../registration/reserve-utils"
+import type { SSESlotData } from "../registration/types"
 
 function makeHole(overrides: Partial<Hole> = {}): Hole {
 	return { id: 1, course_id: 1, hole_number: 1, par: 4, ...overrides }
@@ -328,5 +330,169 @@ describe("getAvailabilityMessage", () => {
 		const waveUnlockTimes = [new Date(2026, 1, 18, 18, 0)]
 		const result = getAvailabilityMessage(group, false, 0, waveUnlockTimes)
 		expect(result).toBeUndefined()
+	})
+})
+
+function makeSSESlot(overrides: Partial<SSESlotData> = {}): SSESlotData {
+	return {
+		id: 1,
+		eventId: 42,
+		registrationId: null,
+		holeId: null,
+		player: null,
+		startingOrder: 0,
+		slot: 0,
+		status: "A",
+		fees: [],
+		...overrides,
+	}
+}
+
+describe("transformSSESlots", () => {
+	it("transforms basic slot fields to snake_case", () => {
+		const result = transformSSESlots([
+			makeSSESlot({ id: 5, eventId: 42, registrationId: 10, holeId: 7, startingOrder: 3 }),
+		])
+
+		expect(result).toHaveLength(1)
+		expect(result[0]).toMatchObject({
+			id: 5,
+			event: 42,
+			registration: 10,
+			hole: 7,
+			starting_order: 3,
+			slot: 0,
+			status: "A",
+			player: null,
+		})
+	})
+
+	it("handles player: null", () => {
+		const result = transformSSESlots([makeSSESlot({ player: null })])
+		expect(result[0].player).toBeNull()
+	})
+
+	it("transforms player fields correctly", () => {
+		const result = transformSSESlots([
+			makeSSESlot({
+				player: {
+					id: 99,
+					firstName: "John",
+					lastName: "Doe",
+					email: "john@example.com",
+					phoneNumber: "612-555-1234",
+					ghin: "1234567",
+					tee: "White",
+					birthDate: "1980-06-15",
+					isMember: true,
+					lastSeason: 2025,
+				},
+			}),
+		])
+
+		expect(result[0].player).toEqual({
+			id: 99,
+			first_name: "John",
+			last_name: "Doe",
+			email: "john@example.com",
+			phone_number: "612-555-1234",
+			ghin: "1234567",
+			tee: "White",
+			birth_date: "1980-06-15",
+			is_member: true,
+			last_season: 2025,
+		})
+	})
+
+	it("handles isMember as number (1 → true, 0 → false)", () => {
+		const memberResult = transformSSESlots([
+			makeSSESlot({
+				player: {
+					id: 1,
+					firstName: "A",
+					lastName: "B",
+					email: null,
+					phoneNumber: null,
+					ghin: null,
+					tee: null,
+					birthDate: null,
+					isMember: 1,
+					lastSeason: null,
+				},
+			}),
+		])
+		expect(memberResult[0].player!.is_member).toBe(true)
+
+		const nonMemberResult = transformSSESlots([
+			makeSSESlot({
+				player: {
+					id: 2,
+					firstName: "C",
+					lastName: "D",
+					email: null,
+					phoneNumber: null,
+					ghin: null,
+					tee: null,
+					birthDate: null,
+					isMember: 0,
+					lastSeason: null,
+				},
+			}),
+		])
+		expect(nonMemberResult[0].player!.is_member).toBe(false)
+	})
+
+	it("handles isMember as boolean", () => {
+		const result = transformSSESlots([
+			makeSSESlot({
+				player: {
+					id: 1,
+					firstName: "A",
+					lastName: "B",
+					email: null,
+					phoneNumber: null,
+					ghin: null,
+					tee: null,
+					birthDate: null,
+					isMember: false,
+					lastSeason: null,
+				},
+			}),
+		])
+		expect(result[0].player!.is_member).toBe(false)
+	})
+
+	it("null-coalesces optional player fields", () => {
+		const result = transformSSESlots([
+			makeSSESlot({
+				player: {
+					id: 1,
+					firstName: "A",
+					lastName: "B",
+					email: null,
+					phoneNumber: null,
+					ghin: null,
+					tee: null,
+					birthDate: null,
+					isMember: true,
+					lastSeason: null,
+				},
+			}),
+		])
+
+		const player = result[0].player!
+		expect(player.email).toBeNull()
+		expect(player.phone_number).toBeNull()
+		expect(player.ghin).toBeNull()
+		expect(player.tee).toBeNull()
+		expect(player.birth_date).toBeNull()
+		expect(player.last_season).toBeNull()
+	})
+
+	it("null-coalesces optional slot fields", () => {
+		const result = transformSSESlots([makeSSESlot({ registrationId: null, holeId: null })])
+
+		expect(result[0].registration).toBeNull()
+		expect(result[0].hole).toBeNull()
 	})
 })

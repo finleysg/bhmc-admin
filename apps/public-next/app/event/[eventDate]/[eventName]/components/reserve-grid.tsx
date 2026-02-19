@@ -11,6 +11,7 @@ import {
 	type ReserveGroup,
 	type ReserveSlot,
 	type ReserveTable,
+	updateSlotSelection,
 } from "@/lib/registration/reserve-utils"
 import type { Course } from "@/lib/types"
 import { SlotCell } from "./slot-cell"
@@ -49,33 +50,7 @@ export function ReserveGrid({
 	const handleSelect = useCallback(
 		(slots: ReserveSlot[]) => {
 			if (mode === "view") return
-
-			if (slots.length === 1) {
-				const slot = slots[0]
-				// Clear previous selections in other groups
-				const sameGroup = selectedSlots.filter((ss) => ss.groupId === slot.groupId)
-				selectedSlots.forEach((s) => {
-					if (s.groupId !== slot.groupId) s.selected = false
-				})
-
-				slot.selected = !slot.selected
-				if (slot.selected) {
-					setSelectedSlots([...sameGroup, slot])
-				} else {
-					setSelectedSlots(sameGroup.filter((s) => s.id !== slot.id))
-				}
-			} else {
-				// Multi-select: clear all, then select available
-				selectedSlots.forEach((s) => {
-					s.selected = false
-				})
-				const newSelected: ReserveSlot[] = []
-				slots.forEach((slot) => {
-					slot.selected = true
-					newSelected.push(slot)
-				})
-				setSelectedSlots(newSelected)
-			}
+			setSelectedSlots(updateSlotSelection(selectedSlots, slots))
 		},
 		[mode, selectedSlots],
 	)

@@ -425,6 +425,33 @@ describe("registrationReducer", () => {
 			})
 			expect(result.sseCurrentWave).toBe(2)
 		})
+
+		it("sets wave from null to a number", () => {
+			const state = makeState({ sseCurrentWave: null })
+			const result = registrationReducer(state, {
+				type: "update-sse-wave",
+				payload: { wave: 1 },
+			})
+			expect(result.sseCurrentWave).toBe(1)
+		})
+
+		it("updates wave from one value to another", () => {
+			const state = makeState({ sseCurrentWave: 1 })
+			const result = registrationReducer(state, {
+				type: "update-sse-wave",
+				payload: { wave: 3 },
+			})
+			expect(result.sseCurrentWave).toBe(3)
+		})
+
+		it("sets wave to 0 (all waves locked)", () => {
+			const state = makeState({ sseCurrentWave: 2 })
+			const result = registrationReducer(state, {
+				type: "update-sse-wave",
+				payload: { wave: 0 },
+			})
+			expect(result.sseCurrentWave).toBe(0)
+		})
 	})
 
 	describe("update-step", () => {

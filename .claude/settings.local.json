@@ -41,7 +41,9 @@
 			"Bash(/tmp/check-sse2.js:*)",
 			"Bash(/tmp/check-open.js:*)",
 			"Bash(DJANGO_ENV=local uv run python:*)",
-			"Bash(uv run python:*)"
+			"Bash(uv run python:*)",
+			"Bash(# Check if it''s a Docker process or a local process lsof -i :3200 -P)",
+			"Bash(echo:*)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],
