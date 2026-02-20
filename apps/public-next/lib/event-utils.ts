@@ -231,6 +231,7 @@ export async function resolveEventFromParams(
 	const month = startDate.getMonth() + 1
 	const events = await fetchDjango<ClubEventDetail[]>(`/events/?year=${year}&month=${month}`, {
 		revalidate: 300,
+		tags: ["events"],
 	})
 	const event = findEventBySlug(events, eventDate, eventName)
 	if (!event) notFound()

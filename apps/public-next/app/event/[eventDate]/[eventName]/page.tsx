@@ -26,6 +26,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
 	const events = await fetchDjango<ClubEventDetail[]>(`/events/?year=${year}&month=${month}`, {
 		revalidate: 300,
+		tags: ["events"],
 	})
 
 	const event = findEventBySlug(events, eventDate, eventName)

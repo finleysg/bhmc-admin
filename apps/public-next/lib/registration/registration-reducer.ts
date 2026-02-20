@@ -58,6 +58,7 @@ export interface RegistrationState {
 	stripeClientSession?: string
 	correlationId: string
 	sseCurrentWave: number | null
+	sseConnected: boolean
 }
 
 export type RegistrationAction =
@@ -102,6 +103,7 @@ export type RegistrationAction =
 	| { type: "remove-fee"; payload: { slotId: number; eventFeeId: number } }
 	| { type: "initiate-stripe-session"; payload: { clientSessionKey: string } }
 	| { type: "update-sse-wave"; payload: { wave: number } }
+	| { type: "update-sse-connected"; payload: { connected: boolean } }
 
 export const defaultRegistrationState: RegistrationState = {
 	mode: "idle",
@@ -114,6 +116,7 @@ export const defaultRegistrationState: RegistrationState = {
 	stripeClientSession: undefined,
 	correlationId: "",
 	sseCurrentWave: null,
+	sseConnected: false,
 }
 
 export const registrationReducer = produce(
@@ -271,6 +274,10 @@ export const registrationReducer = produce(
 			}
 			case "update-sse-wave": {
 				draft.sseCurrentWave = action.payload.wave
+				return
+			}
+			case "update-sse-connected": {
+				draft.sseConnected = action.payload.connected
 				return
 			}
 			case "reset-registration": {

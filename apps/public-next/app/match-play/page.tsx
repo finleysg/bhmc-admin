@@ -9,6 +9,7 @@ import type { ClubEventDetail } from "@/lib/types"
 export default async function MatchPlayPage() {
 	const events = await fetchDjango<ClubEventDetail[]>(`/events/?season=${currentSeason}`, {
 		revalidate: 300,
+		tags: ["events"],
 	})
 
 	const matchPlayEvent = events.find((e) => e.event_type === EventType.MatchPlay)

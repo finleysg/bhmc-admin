@@ -23,6 +23,7 @@ export default async function CalendarPage({ params }: CalendarPageProps) {
 
 	const events = await fetchDjango<ClubEventDetail[]>(`/events/?season=${year}`, {
 		revalidate: 300,
+		tags: ["events"],
 	})
 
 	const calendar = buildCalendar(year, monthParam)

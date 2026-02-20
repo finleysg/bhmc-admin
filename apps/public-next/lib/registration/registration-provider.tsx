@@ -1,6 +1,6 @@
 "use client"
 
-import { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer } from "react"
+import { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from "react"
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
@@ -15,7 +15,7 @@ import {
 	type RegistrationStep,
 } from "./registration-reducer"
 import { RegistrationContext } from "./registration-context"
-import { transformSSESlots } from "./reserve-utils"
+import { getWaveUnlockTimes, transformSSESlots } from "./reserve-utils"
 import type {
 	RegistrationMode,
 	ServerPayment,
@@ -91,11 +91,73 @@ export function RegistrationProvider({
 		[clubEvent.id, queryClient],
 	)
 
-	useRegistrationSSE({
+	const { connected: sseConnected } = useRegistrationSSE({
 		eventId: clubEvent.id,
 		enabled: isSSEEnabled,
 		onUpdate: handleSSEUpdate,
 	})
+
+	// Sync SSE connected state into reducer
+	useEffect(() => {
+		dispatch({ type: "update-sse-connected", payload: { connected: sseConnected } })
+	}, [sseConnected])
+
+	// --- Client-side wave fallback when SSE is unavailable ---
+	const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const waveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+	useEffect(() => {
+		// Clear any existing timers on every re-run
+		if (graceTimerRef.current) {
+			clearTimeout(graceTimerRef.current)
+			graceTimerRef.current = null
+		}
+		if (waveTimerRef.current) {
+			clearTimeout(waveTimerRef.current)
+			waveTimerRef.current = null
+		}
+
+		// Only activate fallback when SSE is enabled but not connected
+		if (!isSSEEnabled || sseConnected) return
+
+		const computeAndSchedule = () => {
+			const unlockTimes = getWaveUnlockTimes(clubEvent)
+			const now = Date.now()
+
+			if (unlockTimes.length === 0) {
+				// No waves configured — unlock everything
+				dispatch({ type: "update-sse-wave", payload: { wave: 0 } })
+				return
+			}
+
+			// Determine current wave: count how many unlock times have passed
+			let currentWave = 0
+			let nextUnlockMs: number | null = null
+			for (const [i, unlockTime] of unlockTimes.entries()) {
+				if (now >= unlockTime.getTime()) {
+					currentWave = i + 1
+				} else {
+					nextUnlockMs = unlockTime.getTime() - now
+					break
+				}
+			}
+
+			dispatch({ type: "update-sse-wave", payload: { wave: currentWave } })
+
+			// Schedule re-computation at the next wave boundary
+			if (nextUnlockMs !== null) {
+				waveTimerRef.current = setTimeout(computeAndSchedule, nextUnlockMs + 100)
+			}
+		}
+
+		// 3-second grace period before activating fallback
+		graceTimerRef.current = setTimeout(computeAndSchedule, 3000)
+
+		return () => {
+			if (graceTimerRef.current) clearTimeout(graceTimerRef.current)
+			if (waveTimerRef.current) clearTimeout(waveTimerRef.current)
+		}
+	}, [isSSEEnabled, sseConnected, clubEvent])
 
 	// --- Mutations ---
 

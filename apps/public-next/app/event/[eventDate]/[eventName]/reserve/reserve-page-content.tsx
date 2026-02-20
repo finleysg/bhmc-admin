@@ -22,8 +22,10 @@ interface ReservePageContentProps {
 
 export function ReservePageContent({ event }: ReservePageContentProps) {
 	const router = useRouter()
-	const { createRegistration } = useRegistration()
-	const { data: slots = [] } = useRegistrationSlots(event.id)
+	const { createRegistration, sseConnected } = useRegistration()
+	const { data: slots = [] } = useRegistrationSlots(event.id, {
+		refetchInterval: sseConnected ? false : 15_000,
+	})
 
 	const tables = useMemo(() => loadReserveTables(event, slots), [event, slots])
 	const waveUnlockTimes = useMemo(() => getWaveUnlockTimes(event), [event])

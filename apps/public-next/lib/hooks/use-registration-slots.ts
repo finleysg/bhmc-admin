@@ -2,7 +2,14 @@ import { useQuery } from "@tanstack/react-query"
 
 import type { RegistrationSlot } from "../types"
 
-export function useRegistrationSlots(eventId: number | undefined) {
+interface UseRegistrationSlotsOptions {
+	refetchInterval?: number | false
+}
+
+export function useRegistrationSlots(
+	eventId: number | undefined,
+	options?: UseRegistrationSlotsOptions,
+) {
 	return useQuery({
 		queryKey: ["event-registration-slots", eventId],
 		queryFn: async () => {
@@ -11,5 +18,6 @@ export function useRegistrationSlots(eventId: number | undefined) {
 			return response.json() as Promise<RegistrationSlot[]>
 		},
 		enabled: !!eventId,
+		refetchInterval: options?.refetchInterval,
 	})
 }

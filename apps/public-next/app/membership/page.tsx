@@ -11,7 +11,7 @@ import { MembershipContent } from "./membership-content"
 export default async function MembershipPage() {
 	const [contentArr, events] = await Promise.all([
 		fetchDjango<PageContent[]>("/page-content/?key=membership"),
-		fetchDjango<ClubEvent[]>(`/events/?season=${currentSeason}`),
+		fetchDjango<ClubEvent[]>(`/events/?season=${currentSeason}`, { tags: ["events"] }),
 	])
 
 	const content = contentArr[0]

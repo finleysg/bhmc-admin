@@ -2,12 +2,13 @@ const DJANGO_API_URL = process.env.DJANGO_API_URL || "http://backend:8000/api"
 
 interface FetchDjangoOptions {
 	revalidate?: number | false
+	tags?: string[]
 }
 
 export async function fetchDjango<T>(path: string, options?: FetchDjangoOptions): Promise<T> {
 	const url = `${DJANGO_API_URL}${path}`
 	const response = await fetch(url, {
-		next: { revalidate: options?.revalidate ?? 3600 },
+		next: { revalidate: options?.revalidate ?? 3600, tags: options?.tags },
 	})
 
 	if (!response.ok) {

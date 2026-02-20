@@ -164,6 +164,25 @@ function transformPlayer(player: NonNullable<SSESlotData["player"]>): Registrati
 }
 
 /**
+ * Returns the minimum number of selected slots needed to enable the Register button.
+ * During priority registration (between priority_signup_start and signup_start),
+ * the event's minimum_signup_group_size is enforced. After priority, any 1+ slot suffices.
+ */
+export function getMinimumSelectedSlots(
+	event: Pick<ClubEventDetail, "priority_signup_start" | "signup_start" | "minimum_signup_group_size">,
+	now: Date = new Date(),
+): number {
+	if (event.priority_signup_start && event.signup_start) {
+		const priorityStart = new Date(event.priority_signup_start)
+		const signupStart = new Date(event.signup_start)
+		if (now >= priorityStart && now < signupStart) {
+			return event.minimum_signup_group_size ?? 1
+		}
+	}
+	return 1
+}
+
+/**
  * Returns a human-readable message like "Opens at 6:15 PM" for wave-locked groups.
  * Returns undefined if the group is already available.
  */

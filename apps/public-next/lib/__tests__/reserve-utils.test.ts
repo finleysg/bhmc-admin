@@ -4,6 +4,7 @@ import {
 	calculateWave,
 	getAvailabilityMessage,
 	getGroupStartName,
+	getMinimumSelectedSlots,
 	getTeeTimeSplits,
 	loadReserveTables,
 	transformSSESlots,
@@ -330,6 +331,85 @@ describe("getAvailabilityMessage", () => {
 		const waveUnlockTimes = [new Date(2026, 1, 18, 18, 0)]
 		const result = getAvailabilityMessage(group, false, 0, waveUnlockTimes)
 		expect(result).toBeUndefined()
+	})
+})
+
+describe("getMinimumSelectedSlots", () => {
+	it("returns minimum_signup_group_size during priority window", () => {
+		const now = new Date("2026-02-18T17:30:00Z")
+		const event = makeEvent({
+			priority_signup_start: "2026-02-18T17:00:00Z",
+			signup_start: "2026-02-18T18:00:00Z",
+			minimum_signup_group_size: 4,
+		})
+		expect(getMinimumSelectedSlots(event, now)).toBe(4)
+	})
+
+	it("returns 1 after priority window ends", () => {
+		const now = new Date("2026-02-18T18:30:00Z")
+		const event = makeEvent({
+			priority_signup_start: "2026-02-18T17:00:00Z",
+			signup_start: "2026-02-18T18:00:00Z",
+			minimum_signup_group_size: 4,
+		})
+		expect(getMinimumSelectedSlots(event, now)).toBe(1)
+	})
+
+	it("returns 1 when no priority window configured", () => {
+		const now = new Date("2026-02-18T17:30:00Z")
+		const event = makeEvent({
+			priority_signup_start: null,
+			signup_start: null,
+			minimum_signup_group_size: 4,
+		})
+		expect(getMinimumSelectedSlots(event, now)).toBe(1)
+	})
+
+	it("defaults to 1 when minimum_signup_group_size is null during priority", () => {
+		const now = new Date("2026-02-18T17:30:00Z")
+		const event = makeEvent({
+			priority_signup_start: "2026-02-18T17:00:00Z",
+			signup_start: "2026-02-18T18:00:00Z",
+			minimum_signup_group_size: null,
+		})
+		expect(getMinimumSelectedSlots(event, now)).toBe(1)
+	})
+
+	it("returns 1 before priority window opens", () => {
+		const now = new Date("2026-02-18T16:30:00Z")
+		const event = makeEvent({
+			priority_signup_start: "2026-02-18T17:00:00Z",
+			signup_start: "2026-02-18T18:00:00Z",
+			minimum_signup_group_size: 4,
+		})
+		expect(getMinimumSelectedSlots(event, now)).toBe(1)
+	})
+})
+
+describe("Register button enablement", () => {
+	const priorityEvent = makeEvent({
+		priority_signup_start: "2026-02-18T17:00:00Z",
+		signup_start: "2026-02-18T18:00:00Z",
+		minimum_signup_group_size: 4,
+	})
+	const duringPriority = new Date("2026-02-18T17:30:00Z")
+	const afterPriority = new Date("2026-02-18T18:30:00Z")
+
+	it("disabled during priority when fewer than minimum_signup_group_size selected", () => {
+		const minRequired = getMinimumSelectedSlots(priorityEvent, duringPriority)
+		expect(1 >= minRequired).toBe(false)
+		expect(2 >= minRequired).toBe(false)
+		expect(3 >= minRequired).toBe(false)
+	})
+
+	it("enabled during priority when exactly minimum_signup_group_size selected", () => {
+		const minRequired = getMinimumSelectedSlots(priorityEvent, duringPriority)
+		expect(4 >= minRequired).toBe(true)
+	})
+
+	it("enabled after priority with a single selected slot", () => {
+		const minRequired = getMinimumSelectedSlots(priorityEvent, afterPriority)
+		expect(1 >= minRequired).toBe(true)
 	})
 })
 

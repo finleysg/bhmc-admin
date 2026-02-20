@@ -3,11 +3,14 @@
 import { useCallback, useState } from "react"
 import { toast } from "sonner"
 
+import { WifiOff } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { useRegistration } from "@/lib/registration/registration-context"
 import { RegistrationStatus } from "@/lib/registration/types"
 import {
 	getAvailabilityMessage,
+	getMinimumSelectedSlots,
 	type ReserveGroup,
 	type ReserveSlot,
 	type ReserveTable,
@@ -32,7 +35,7 @@ export function ReserveGrid({
 	waveUnlockTimes,
 	registrationStartTime,
 }: ReserveGridProps) {
-	const { sseCurrentWave, error, setError } = useRegistration()
+	const { sseConnected, sseCurrentWave, error, setError, clubEvent } = useRegistration()
 	const [selectedSlots, setSelectedSlots] = useState<ReserveSlot[]>([])
 
 	// Clear selection on error
@@ -66,10 +69,13 @@ export function ReserveGrid({
 
 	if (tables.length === 0) return null
 
+	const minRequired = clubEvent ? getMinimumSelectedSlots(clubEvent) : 1
+
 	const renderGroupActions = (group: ReserveGroup, table: ReserveTable) => {
 		const waveAvailable = sseCurrentWave !== null && sseCurrentWave >= group.wave
 		const hasOpenings = group.slots.some((s) => s.status === RegistrationStatus.Available)
-		const hasSelectedSlots = group.slots.some((s) => s.selected)
+		const selectedCount = group.slots.filter((s) => s.selected).length
+		const hasEnoughSlots = selectedCount >= minRequired
 		return (
 			<>
 				{mode === "edit" && (
@@ -90,7 +96,7 @@ export function ReserveGrid({
 						<Button
 							variant="secondary"
 							size="xs"
-							disabled={!hasSelectedSlots || !waveAvailable}
+							disabled={!hasEnoughSlots || !waveAvailable}
 							onClick={() => handleReserve(table)}
 						>
 							Register
@@ -107,7 +113,14 @@ export function ReserveGrid({
 	}
 
 	return (
-		<TeeSheetTabs
+		<>
+			{!sseConnected && sseCurrentWave !== null && (
+				<div className="mt-4 flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+					<WifiOff className="h-4 w-4 shrink-0" />
+					Live updates unavailable — refreshing automatically
+				</div>
+			)}
+			<TeeSheetTabs
 			tables={tables}
 			className="mt-4"
 			renderSlot={(slot, table) => {
@@ -139,5 +152,6 @@ export function ReserveGrid({
 			renderGroupActions={renderGroupActions}
 			groupClassName={groupClassName}
 		/>
+		</>
 	)
 }

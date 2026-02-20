@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import type { SSEUpdateEvent } from "../registration/types"
 
@@ -21,10 +21,11 @@ export function useRegistrationSSE({
 	enabled,
 	onUpdate,
 	onError,
-}: UseRegistrationSSEOptions): void {
+}: UseRegistrationSSEOptions): { connected: boolean } {
 	const eventSourceRef = useRef<EventSource | null>(null)
 	const retryCountRef = useRef(0)
 	const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const [connected, setConnected] = useState(false)
 
 	const cleanup = useCallback(() => {
 		if (eventSourceRef.current) {
@@ -35,6 +36,7 @@ export function useRegistrationSSE({
 			clearTimeout(retryTimeoutRef.current)
 			retryTimeoutRef.current = null
 		}
+		setConnected(false)
 	}, [])
 
 	const connect = useCallback(() => {
@@ -43,17 +45,21 @@ export function useRegistrationSSE({
 		cleanup()
 
 		const url = `/api/registration/${eventId}/live`
+		console.log("[SSE] connecting to", url)
 		const es = new EventSource(url)
 		eventSourceRef.current = es
 
 		es.onopen = () => {
+			console.log("[SSE] connection opened")
 			retryCountRef.current = 0
+			setConnected(true)
 		}
 
 		es.addEventListener("update", (event: Event) => {
 			try {
 				const messageEvent = event as MessageEvent<string>
 				const data = JSON.parse(messageEvent.data) as SSEUpdateEvent
+				console.log("[SSE] update received, currentWave:", data.currentWave)
 				onUpdate?.(data)
 			} catch (err) {
 				console.error("Failed to parse SSE update:", err)
@@ -71,6 +77,7 @@ export function useRegistrationSSE({
 		})
 
 		es.onerror = () => {
+			setConnected(false)
 			cleanup()
 
 			if (retryCountRef.current < MAX_RETRIES && enabled) {
@@ -93,4 +100,6 @@ export function useRegistrationSSE({
 
 		return cleanup
 	}, [enabled, eventId, connect, cleanup])
+
+	return { connected }
 }

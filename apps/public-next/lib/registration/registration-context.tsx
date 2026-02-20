@@ -23,6 +23,7 @@ export interface IRegistrationContext {
 	mode: RegistrationMode
 	payment: ServerPayment | null
 	registration: ServerRegistration | null
+	sseConnected: boolean
 	sseCurrentWave: number | null
 	stripeClientSession?: string
 

@@ -1,15 +1,15 @@
 {
-	"cookies": [
-		{
-			"name": "access_token",
-			"value": "e00b4d4e76347f9d19d58dd11acbb9da7c4ca5e3",
-			"domain": "localhost",
-			"path": "/",
-			"expires": 1779038120.263454,
-			"httpOnly": true,
-			"secure": false,
-			"sameSite": "Lax"
-		}
-	],
-	"origins": []
+  "cookies": [
+    {
+      "name": "access_token",
+      "value": "acaee8c25675cbb1f93c3d04d5025d9cda6d145f",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1779253445.106044,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
 }

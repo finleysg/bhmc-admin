@@ -7,6 +7,7 @@ export type TestEvent = {
 	name: string
 	startDate: string
 	slug: string
+	eventUrl: string
 	reserveUrl: string
 }
 
@@ -105,12 +106,14 @@ export async function createTestEvent(
 	}
 
 	const slug = slugify(name)
+	const eventUrl = `/event/${date}/${slug}`
 	return {
 		id: newId,
 		name,
 		startDate: date,
 		slug,
-		reserveUrl: `/event/${date}/${slug}/reserve`,
+		eventUrl,
+		reserveUrl: `${eventUrl}/reserve`,
 	}
 }
 
