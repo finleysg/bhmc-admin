@@ -30,11 +30,20 @@ export function monthNameFormat(dt: number | Date) {
 	return "--"
 }
 
+const centralTimeFormatter = new Intl.DateTimeFormat("en-US", {
+	timeZone: "America/Chicago",
+	weekday: "long",
+	month: "short",
+	day: "numeric",
+	hour: "numeric",
+	minute: "2-digit",
+})
+
 export function dayDateAndTimeFormat(dt: Date | string | null | undefined) {
 	if (!dt) return ""
 	const date = typeof dt === "string" ? parseISO(dt) : dt
 	if (isDate(date) && isValid(date)) {
-		return format(date, "iiii, MMM d h:mm aaaa")
+		return centralTimeFormatter.format(date)
 	}
 	return ""
 }

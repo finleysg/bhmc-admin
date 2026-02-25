@@ -13,13 +13,11 @@ test.describe("Member Results", () => {
 	test("results page shows content or no results message", async ({ page }) => {
 		await page.goto("/member/results")
 
-		// Wait for loading to finish
-		await page.waitForTimeout(2000)
-
-		// Either we see result cards or the no results message
-		const hasResults = await page.locator("[class*=card]").count()
-		const hasNoResultsMessage = await page.getByText(/no results/i).isVisible()
-
-		expect(hasResults > 0 || hasNoResultsMessage).toBeTruthy()
+		// Wait for either result cards or the no results message to appear
+		await expect(async () => {
+			const hasResults = await page.locator("[data-slot='card']").count()
+			const hasNoResultsMessage = await page.getByText(/no results/i).isVisible()
+			expect(hasResults > 0 || hasNoResultsMessage).toBeTruthy()
+		}).toPass({ timeout: 10_000 })
 	})
 })

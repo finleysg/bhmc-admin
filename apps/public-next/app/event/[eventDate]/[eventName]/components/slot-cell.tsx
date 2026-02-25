@@ -10,9 +10,10 @@ interface SlotCellProps {
 	selected?: boolean
 	onSelect?: (slot: ReserveSlot) => void
 	label?: string
+	pulse?: boolean
 }
 
-export function SlotCell({ slot, courseColor, selected, onSelect, label }: SlotCellProps) {
+export function SlotCell({ slot, courseColor, selected, onSelect, label, pulse }: SlotCellProps) {
 	const isReserved =
 		slot.status === RegistrationStatus.Reserved || slot.status === RegistrationStatus.Processing
 	const isOpen = slot.status === RegistrationStatus.Available
@@ -31,6 +32,7 @@ export function SlotCell({ slot, courseColor, selected, onSelect, label }: SlotC
 				!isReserved && !selected && "bg-muted/30",
 				selected && "border-primary bg-primary text-primary-foreground",
 				canInteract && !selected && "cursor-pointer hover:border-primary/40",
+				pulse && label && "animate-wave-pulse-bg",
 			)}
 			role={onSelect ? "button" : undefined}
 			tabIndex={canInteract ? 0 : undefined}
@@ -52,7 +54,10 @@ export function SlotCell({ slot, courseColor, selected, onSelect, label }: SlotC
 				<span className="font-medium">Selected</span>
 			) : (
 				<span
-					className={cn((!isOpen || label) && "text-muted-foreground")}
+					className={cn(
+						(!isOpen || label) && "text-muted-foreground",
+						pulse && label && "animate-wave-pulse-text",
+					)}
 					style={isOpen && !label && courseColor ? { color: courseColor } : undefined}
 				>
 					{isOpen && label ? label : slot.statusName}

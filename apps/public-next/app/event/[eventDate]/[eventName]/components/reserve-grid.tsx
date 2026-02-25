@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { WifiOff } from "lucide-react"
@@ -37,6 +37,41 @@ export function ReserveGrid({
 }: ReserveGridProps) {
 	const { sseConnected, sseCurrentWave, error, setError, clubEvent } = useRegistration()
 	const [selectedSlots, setSelectedSlots] = useState<ReserveSlot[]>([])
+	const [waveImminent, setWaveImminent] = useState(false)
+
+	// Pulse "Opens at" labels 15 seconds before the next wave unlocks
+	useEffect(() => {
+		if (!waveUnlockTimes?.length || sseCurrentWave === null) {
+			setWaveImminent(false)
+			return
+		}
+
+		const nextWaveIndex = sseCurrentWave // unlock times are 0-indexed, waves are 1-indexed
+		if (nextWaveIndex >= waveUnlockTimes.length) {
+			setWaveImminent(false)
+			return
+		}
+
+		const LEAD_TIME = 15_000
+		const scheduleCheck = () => {
+			const msUntilUnlock = waveUnlockTimes[nextWaveIndex].getTime() - Date.now()
+			if (msUntilUnlock <= 0) {
+				setWaveImminent(false)
+				return undefined
+			}
+			if (msUntilUnlock <= LEAD_TIME) {
+				setWaveImminent(true)
+				return undefined
+			}
+			setWaveImminent(false)
+			return setTimeout(() => setWaveImminent(true), msUntilUnlock - LEAD_TIME)
+		}
+
+		const timerId = scheduleCheck()
+		return () => {
+			if (timerId) clearTimeout(timerId)
+		}
+	}, [waveUnlockTimes, sseCurrentWave])
 
 	// Clear selection on error
 	if (error) {
@@ -138,6 +173,8 @@ export function ReserveGrid({
 									registrationStartTime,
 								)
 							: undefined
+					const nextWave = sseCurrentWave !== null ? sseCurrentWave + 1 : null
+					const pulse = waveImminent && nextWave !== null && wave === nextWave
 					return (
 						<SlotCell
 							key={slot.id}
@@ -146,6 +183,7 @@ export function ReserveGrid({
 							selected={slot.selected}
 							onSelect={canSelect ? (s) => handleSelect([s]) : undefined}
 							label={label}
+							pulse={pulse}
 						/>
 					)
 				}}

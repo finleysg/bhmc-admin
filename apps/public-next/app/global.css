@@ -134,6 +134,37 @@
 	--tw-prose-invert-td-borders: hsl(var(--border));
 }
 
+/* Wave unlock pulse animation */
+@keyframes wave-pulse-text {
+	0%,
+	100% {
+		color: hsl(var(--muted-foreground));
+		font-weight: 400;
+	}
+	50% {
+		color: hsl(var(--primary));
+		font-weight: 600;
+	}
+}
+
+@keyframes wave-pulse-bg {
+	0%,
+	100% {
+		background-color: transparent;
+	}
+	50% {
+		background-color: hsl(var(--primary) / 0.08);
+	}
+}
+
+.animate-wave-pulse-text {
+	animation: wave-pulse-text 1.5s ease-in-out infinite;
+}
+
+.animate-wave-pulse-bg {
+	animation: wave-pulse-bg 1.5s ease-in-out infinite;
+}
+
 /* Scorecard layout */
 .scorecard .score-row {
 	display: flex;

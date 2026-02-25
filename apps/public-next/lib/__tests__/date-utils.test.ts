@@ -60,17 +60,16 @@ describe("monthNameFormat", () => {
 })
 
 describe("dayDateAndTimeFormat", () => {
-	it("formats a Date object with day, date and time", () => {
-		const date = new Date(2024, 5, 15, 14, 30) // June 15, 2024 2:30 PM
+	it("formats a Date object with day, date and time in Central Time", () => {
+		// Use a UTC date to verify timezone conversion
+		const date = new Date("2024-06-15T19:30:00Z") // 7:30 PM UTC = 2:30 PM CDT
 		const result = dayDateAndTimeFormat(date)
-		expect(result).toContain("Saturday")
-		expect(result).toContain("Jun 15")
-		expect(result).toContain("2:30")
+		expect(result).toBe("Saturday, Jun 15, 2:30 PM")
 	})
 
-	it("parses an ISO string input", () => {
-		const result = dayDateAndTimeFormat("2024-06-15T14:30:00")
-		expect(result).toContain("Jun 15")
+	it("parses an ISO string input in Central Time", () => {
+		const result = dayDateAndTimeFormat("2024-06-15T19:30:00Z") // 7:30 PM UTC = 2:30 PM CDT
+		expect(result).toBe("Saturday, Jun 15, 2:30 PM")
 	})
 
 	it("returns empty string for null", () => {

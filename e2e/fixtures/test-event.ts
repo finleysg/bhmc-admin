@@ -48,6 +48,7 @@ export async function createTestEvent(
 	token: string,
 	templateId = 914,
 	startDate?: string,
+	patchOverrides?: Record<string, string>,
 ): Promise<TestEvent> {
 	const date = startDate ?? tomorrow()
 
@@ -86,18 +87,21 @@ export async function createTestEvent(
 	const twentyFourHours = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 	const fortyEightHours = new Date(now.getTime() + 48 * 60 * 60 * 1000)
 
+	const patchBody = {
+		priority_signup_start: oneHourAgo.toISOString(),
+		signup_start: thirtyMinAgo.toISOString(),
+		signup_end: twentyFourHours.toISOString(),
+		payments_end: fortyEightHours.toISOString(),
+		...patchOverrides,
+	}
+
 	const patchRes = await fetch(`${DJANGO_URL}/api/events/${newId}/`, {
 		method: "PATCH",
 		headers: {
 			"Content-Type": "application/json",
 			Authorization: `Token ${token}`,
 		},
-		body: JSON.stringify({
-			priority_signup_start: oneHourAgo.toISOString(),
-			signup_start: thirtyMinAgo.toISOString(),
-			signup_end: twentyFourHours.toISOString(),
-			payments_end: fortyEightHours.toISOString(),
-		}),
+		body: JSON.stringify(patchBody),
 	})
 	if (!patchRes.ok) {
 		throw new Error(
