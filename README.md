@@ -1,9 +1,6 @@
 # BHMC Admin
 
-![CodeRabbit PRs](https://img.shields.io/coderabbit/prs/github/finleysg/bhmc-admin)
-
-Administrative interface for golf tournament management, designed to complement the [BHMC React frontend](https://github.com/finleysg/bhmc) and [Django backend](https://github.com/finleysg/bhmc-api). This monorepo
-implements the admin service and admins service in the following diagram:
+Administrative interface for golf tournament management, designed to complement the [BHMC React frontend](https://github.com/finleysg/bhmc) and [Django backend](https://github.com/finleysg/bhmc-api). This monorepo implements the admin service and admins service in the following diagram:
 
 ```mermaid
 architecture-beta

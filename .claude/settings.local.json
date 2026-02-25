@@ -43,7 +43,11 @@
 			"Bash(DJANGO_ENV=local uv run python:*)",
 			"Bash(uv run python:*)",
 			"Bash(# Check if it''s a Docker process or a local process lsof -i :3200 -P)",
-			"Bash(echo:*)"
+			"Bash(echo:*)",
+			"Bash(head:*)",
+			"mcp__bhmc-db__list_tables",
+			"mcp__bhmc-db__list_databases",
+			"Bash(tail:*)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],
@@ -54,7 +58,7 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "corepack enable pnpm 2>/dev/null || true"
+						"command": "$CLAUDE_PROJECT_DIR/.claude/hooks/check-screenshot-path.sh"
 					}
 				]
 			}

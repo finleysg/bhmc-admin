@@ -169,7 +169,10 @@ function transformPlayer(player: NonNullable<SSESlotData["player"]>): Registrati
  * the event's minimum_signup_group_size is enforced. After priority, any 1+ slot suffices.
  */
 export function getMinimumSelectedSlots(
-	event: Pick<ClubEventDetail, "priority_signup_start" | "signup_start" | "minimum_signup_group_size">,
+	event: Pick<
+		ClubEventDetail,
+		"priority_signup_start" | "signup_start" | "minimum_signup_group_size"
+	>,
 	now: Date = new Date(),
 ): number {
 	if (event.priority_signup_start && event.signup_start) {

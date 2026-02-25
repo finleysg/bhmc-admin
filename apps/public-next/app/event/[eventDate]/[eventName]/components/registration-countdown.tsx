@@ -7,15 +7,21 @@ interface RegistrationCountdownProps {
 	onExpired: () => void
 }
 
+function parseUtc(timestamp: string): number {
+	// Django may omit the Z suffix — ensure it's parsed as UTC
+	const utc = timestamp.endsWith("Z") || timestamp.includes("+") ? timestamp : `${timestamp}Z`
+	return new Date(utc).getTime()
+}
+
 export function RegistrationCountdown({ expires, onExpired }: RegistrationCountdownProps) {
 	const [remaining, setRemaining] = useState(() => {
-		const diff = new Date(expires).getTime() - Date.now()
+		const diff = parseUtc(expires) - Date.now()
 		return Math.max(0, Math.floor(diff / 1000))
 	})
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			const diff = new Date(expires).getTime() - Date.now()
+			const diff = parseUtc(expires) - Date.now()
 			const secs = Math.max(0, Math.floor(diff / 1000))
 			setRemaining(secs)
 			if (secs <= 0) {

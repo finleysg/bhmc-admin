@@ -47,7 +47,10 @@ export default async function HomePage() {
 	] = await Promise.all([
 		fetchDjango<Announcement[]>("/news/"),
 		fetchDjango<PhotoData[]>("/photos/random/?take=1"),
-		fetchDjango<ClubEvent[]>(`/events/?season=${currentSeason}`, { revalidate: 300, tags: ["events"] }),
+		fetchDjango<ClubEvent[]>(`/events/?season=${currentSeason}`, {
+			revalidate: 300,
+			tags: ["events"],
+		}),
 		fetchDjango<PageContent[]>("/page-content/?key=hole-in-one"),
 		fetchDjango<Ace[]>(`/aces/?season=${currentSeason}`),
 		fetchDjango<LowScore[]>(`/low-scores/?season=${currentSeason}`),

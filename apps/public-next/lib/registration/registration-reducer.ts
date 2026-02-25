@@ -55,6 +55,7 @@ export interface RegistrationState {
 	existingFees: Map<string, ServerRegistrationFee> | null
 	error: string | null
 	currentStep: RegistrationStep
+	selectedStart: string | null
 	stripeClientSession?: string
 	correlationId: string
 	sseCurrentWave: number | null
@@ -76,7 +77,7 @@ export type RegistrationAction =
 	  }
 	| {
 			type: "create-registration"
-			payload: { registration: ServerRegistration; payment: ServerPayment }
+			payload: { registration: ServerRegistration; payment: ServerPayment; selectedStart?: string }
 	  }
 	| { type: "update-registration"; payload: { registration: ServerRegistration } }
 	| { type: "update-registration-notes"; payload: { notes: string } }
@@ -113,6 +114,7 @@ export const defaultRegistrationState: RegistrationState = {
 	existingFees: null,
 	error: null,
 	currentStep: PendingStep,
+	selectedStart: null,
 	stripeClientSession: undefined,
 	correlationId: "",
 	sseCurrentWave: null,
@@ -154,6 +156,7 @@ export const registrationReducer = produce(
 				draft.mode = "new"
 				draft.registration = action.payload.registration
 				draft.payment = action.payload.payment
+				draft.selectedStart = action.payload.selectedStart ?? null
 				draft.currentStep = RegisterStep
 				return
 			}
@@ -173,6 +176,7 @@ export const registrationReducer = produce(
 				draft.payment = null
 				draft.existingFees = null
 				draft.error = null
+				draft.selectedStart = null
 				draft.mode = "idle"
 				draft.currentStep = PendingStep
 				return
@@ -182,6 +186,7 @@ export const registrationReducer = produce(
 				draft.payment = null
 				draft.existingFees = null
 				draft.error = null
+				draft.selectedStart = null
 				draft.mode = "idle"
 				draft.currentStep = CompleteStep
 				return
@@ -286,6 +291,7 @@ export const registrationReducer = produce(
 				draft.payment = null
 				draft.existingFees = null
 				draft.error = null
+				draft.selectedStart = null
 				draft.mode = "idle"
 				draft.currentStep = PendingStep
 				return

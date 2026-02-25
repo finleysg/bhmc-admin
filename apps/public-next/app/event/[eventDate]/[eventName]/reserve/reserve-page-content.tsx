@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { getRegistrationStartTime } from "@/lib/event-utils"
+import { getEventUrl, getRegistrationStartTime } from "@/lib/event-utils"
 import { useRegistrationSlots } from "@/lib/hooks/use-registration-slots"
 import { useRegistration } from "@/lib/registration/registration-context"
 import {
@@ -37,7 +37,7 @@ export function ReservePageContent({ event }: ReservePageContentProps) {
 		const selectedStart = `${event.name}: ${course.name} ${group?.name ?? ""}`
 
 		void createRegistration(course, slotIds, selectedStart).then(
-			() => router.replace("../register"),
+			() => router.replace(`${getEventUrl(event)}/register`),
 			() => {
 				// Error is handled by the registration provider
 			},

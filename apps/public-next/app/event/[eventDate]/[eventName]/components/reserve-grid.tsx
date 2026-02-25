@@ -121,37 +121,37 @@ export function ReserveGrid({
 				</div>
 			)}
 			<TeeSheetTabs
-			tables={tables}
-			className="mt-4"
-			renderSlot={(slot, table) => {
-				const group = table.groups.find((g) => g.id === slot.groupId)
-				const wave = group?.wave ?? 0
-				const waveAvailable = sseCurrentWave !== null && sseCurrentWave >= wave
-				const canSelect = waveAvailable && mode === "edit"
-				const label =
-					!waveAvailable && group
-						? getAvailabilityMessage(
-								group,
-								false,
-								sseCurrentWave,
-								waveUnlockTimes,
-								registrationStartTime,
-							)
-						: undefined
-				return (
-					<SlotCell
-						key={slot.id}
-						slot={slot}
-						courseColor={table.course.color ?? undefined}
-						selected={slot.selected}
-						onSelect={canSelect ? (s) => handleSelect([s]) : undefined}
-						label={label}
-					/>
-				)
-			}}
-			renderGroupActions={renderGroupActions}
-			groupClassName={groupClassName}
-		/>
+				tables={tables}
+				className="mt-4"
+				renderSlot={(slot, table) => {
+					const group = table.groups.find((g) => g.id === slot.groupId)
+					const wave = group?.wave ?? 0
+					const waveAvailable = sseCurrentWave !== null && sseCurrentWave >= wave
+					const canSelect = waveAvailable && mode === "edit"
+					const label =
+						!waveAvailable && group
+							? getAvailabilityMessage(
+									group,
+									false,
+									sseCurrentWave,
+									waveUnlockTimes,
+									registrationStartTime,
+								)
+							: undefined
+					return (
+						<SlotCell
+							key={slot.id}
+							slot={slot}
+							courseColor={table.course.color ?? undefined}
+							selected={slot.selected}
+							onSelect={canSelect ? (s) => handleSelect([s]) : undefined}
+							label={label}
+						/>
+					)
+				}}
+				renderGroupActions={renderGroupActions}
+				groupClassName={groupClassName}
+			/>
 		</>
 	)
 }

@@ -19,9 +19,16 @@ interface SlotLineItemProps {
 	eventFees: EventFee[]
 	team: number
 	onPickPlayer: (slot: ServerRegistrationSlot) => void
+	layout?: "horizontal" | "vertical"
 }
 
-export function SlotLineItem({ slot, eventFees, team, onPickPlayer }: SlotLineItemProps) {
+export function SlotLineItem({
+	slot,
+	eventFees,
+	team,
+	onPickPlayer,
+	layout = "vertical",
+}: SlotLineItemProps) {
 	const { payment, existingFees, addFee, removeFee, removePlayer } = useRegistration()
 
 	const player = slot.player
@@ -76,6 +83,81 @@ export function SlotLineItem({ slot, eventFees, team, onPickPlayer }: SlotLineIt
 		if (!feePlayer || !eventFee.fee_type.restriction) return true
 		if (eventFee.fee_type.restriction === "None") return true
 		return evaluateRestriction(eventFee.fee_type.restriction, feePlayer)
+	}
+
+	const playerContent = player ? (
+		<>
+			<span className="truncate text-sm font-medium text-emerald-600 dark:text-emerald-400">
+				{player.firstName} {player.lastName}
+			</span>
+			{slot.slot !== 0 && (
+				<Button
+					variant="ghost"
+					size="icon-xs"
+					className="shrink-0"
+					onClick={() => removePlayer(slot)}
+					aria-label="Remove player"
+				>
+					<X className="size-3.5" />
+				</Button>
+			)}
+		</>
+	) : (
+		<button
+			type="button"
+			className="text-sm text-muted-foreground hover:text-primary"
+			onClick={() => onPickPlayer(slot)}
+		>
+			Add a player
+		</button>
+	)
+
+	if (layout === "horizontal") {
+		return (
+			<div
+				className="space-y-1 rounded-md border bg-muted/30 px-3 py-2"
+				data-testid="registration-slot"
+			>
+				{/* Mobile: player name on its own line */}
+				<div className="flex items-center gap-1.5 overflow-hidden md:hidden">{playerContent}</div>
+
+				{/* Checkbox grid */}
+				<div
+					className="grid items-center gap-x-2"
+					style={{
+						gridTemplateColumns: `1fr repeat(${eventFees.length}, 3rem) 4.5rem`,
+					}}
+				>
+					{/* Desktop: player name in grid / Mobile: empty spacer */}
+					<div className="hidden items-center gap-1.5 overflow-hidden md:flex">{playerContent}</div>
+
+					{/* Fee checkboxes */}
+					{eventFees.map((eventFee) => {
+						const existing = isExistingFee(eventFee)
+						const selected = hasPaymentDetail(eventFee) || existing
+						const disabled = !player || existing || eventFee.is_required
+						const applicable = isFeeApplicable(eventFee)
+						const id = `fee-${slot.id}-${eventFee.id}`
+
+						return (
+							<div key={id} className="flex justify-center">
+								<Checkbox
+									id={id}
+									checked={selected}
+									disabled={disabled || (!applicable && !selected)}
+									onCheckedChange={() => handleToggleFee(eventFee)}
+								/>
+							</div>
+						)
+					})}
+
+					{/* Subtotal */}
+					<div className="text-right text-sm font-medium" data-testid={`subtotal-${slot.slot}`}>
+						${slotTotal().toFixed(2)}
+					</div>
+				</div>
+			</div>
+		)
 	}
 
 	return (

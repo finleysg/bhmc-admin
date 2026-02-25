@@ -102,23 +102,16 @@ export function RegistrationProvider({
 		dispatch({ type: "update-sse-connected", payload: { connected: sseConnected } })
 	}, [sseConnected])
 
-	// --- Client-side wave fallback when SSE is unavailable ---
-	const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	// --- Client-side wave computation (immediate, SSE overrides when available) ---
 	const waveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
 	useEffect(() => {
-		// Clear any existing timers on every re-run
-		if (graceTimerRef.current) {
-			clearTimeout(graceTimerRef.current)
-			graceTimerRef.current = null
-		}
 		if (waveTimerRef.current) {
 			clearTimeout(waveTimerRef.current)
 			waveTimerRef.current = null
 		}
 
-		// Only activate fallback when SSE is enabled but not connected
-		if (!isSSEEnabled || sseConnected) return
+		if (!isSSEEnabled) return
 
 		const computeAndSchedule = () => {
 			const unlockTimes = getWaveUnlockTimes(clubEvent)
@@ -150,14 +143,13 @@ export function RegistrationProvider({
 			}
 		}
 
-		// 3-second grace period before activating fallback
-		graceTimerRef.current = setTimeout(computeAndSchedule, 3000)
+		// Compute immediately — SSE updates will override via handleSSEUpdate
+		computeAndSchedule()
 
 		return () => {
-			if (graceTimerRef.current) clearTimeout(graceTimerRef.current)
 			if (waveTimerRef.current) clearTimeout(waveTimerRef.current)
 		}
-	}, [isSSEEnabled, sseConnected, clubEvent])
+	}, [isSSEEnabled, clubEvent])
 
 	// --- Mutations ---
 
@@ -293,15 +285,19 @@ export function RegistrationProvider({
 		},
 	})
 
+	const selectedStartRef = useRef<string | undefined>(undefined)
+
 	const { mutateAsync: createRegistrationMutation } = useMutation({
 		mutationFn: ({
 			course,
 			slots,
+			selectedStart,
 		}: {
 			course?: Course
 			slots?: { id: number }[]
 			selectedStart?: string
 		}) => {
+			selectedStartRef.current = selectedStart
 			return apiFetch<ServerRegistration>("/api/registration", {
 				method: "POST",
 				body: JSON.stringify({
@@ -316,7 +312,7 @@ export function RegistrationProvider({
 			const payment = createInitialPaymentRecord(data)
 			dispatch({
 				type: "create-registration",
-				payload: { registration: data, payment },
+				payload: { registration: data, payment, selectedStart: selectedStartRef.current },
 			})
 			queryClient.setQueryData(["registration", state.clubEvent?.id], data)
 		},

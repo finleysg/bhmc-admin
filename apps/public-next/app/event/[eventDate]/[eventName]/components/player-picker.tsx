@@ -93,35 +93,37 @@ export function PlayerPicker({ eventId, onSelect, excludeIds = [] }: PlayerPicke
 		setResults([])
 	}
 
+	const showDropdown = query.length >= 3
+
 	return (
-		<Command shouldFilter={false} className="rounded-md border">
+		<Command shouldFilter={false} className="relative overflow-visible rounded-md border">
 			<CommandInput placeholder="Search for player..." value={query} onValueChange={setQuery} />
-			<CommandList>
-				{query.length >= 3 && results.length === 0 && !isSearching && (
-					<CommandEmpty>No players found.</CommandEmpty>
-				)}
-				{query.length >= 3 && isSearching && <CommandEmpty>Searching...</CommandEmpty>}
-				{results.length > 0 && (
-					<CommandGroup>
-						{results.map((player) => (
-							<CommandItem
-								key={player.id}
-								value={String(player.id)}
-								onSelect={() => handleSelect(player)}
-							>
-								<div className="flex flex-col">
-									<span>
-										{player.first_name} {player.last_name}
-									</span>
-									{player.email && (
-										<span className="text-xs text-muted-foreground">{player.email}</span>
-									)}
-								</div>
-							</CommandItem>
-						))}
-					</CommandGroup>
-				)}
-			</CommandList>
+			{showDropdown && (
+				<CommandList className="absolute top-full left-0 z-50 mt-1 w-full rounded-md border bg-popover shadow-md">
+					{results.length === 0 && !isSearching && <CommandEmpty>No players found.</CommandEmpty>}
+					{isSearching && <CommandEmpty>Searching...</CommandEmpty>}
+					{results.length > 0 && (
+						<CommandGroup>
+							{results.map((player) => (
+								<CommandItem
+									key={player.id}
+									value={String(player.id)}
+									onSelect={() => handleSelect(player)}
+								>
+									<div className="flex flex-col">
+										<span>
+											{player.first_name} {player.last_name}
+										</span>
+										{player.email && (
+											<span className="text-xs text-muted-foreground">{player.email}</span>
+										)}
+									</div>
+								</CommandItem>
+							))}
+						</CommandGroup>
+					)}
+				</CommandList>
+			)}
 		</Command>
 	)
 }
