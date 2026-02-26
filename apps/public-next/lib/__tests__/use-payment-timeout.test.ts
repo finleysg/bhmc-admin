@@ -30,3 +30,21 @@ test("fires onTimeout after specified duration when processing", () => {
 
 	expect(onTimeout).toHaveBeenCalledTimes(1)
 })
+
+test("does not fire onTimeout when not processing", () => {
+	const onTimeout = jest.fn()
+
+	renderHook(() =>
+		usePaymentTimeout({
+			isProcessing: false,
+			onTimeout,
+			timeoutDuration: 5000,
+		}),
+	)
+
+	act(() => {
+		jest.advanceTimersByTime(10000)
+	})
+
+	expect(onTimeout).not.toHaveBeenCalled()
+})
