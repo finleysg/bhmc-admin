@@ -32,6 +32,7 @@ export function ScoreFilters({
 		<div className="mb-4 flex flex-wrap items-center gap-2">
 			<select
 				className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+				aria-label="Course filter"
 				value={selectedCourseId ?? ""}
 				onChange={(e) => onCourseChange(e.target.value ? Number(e.target.value) : null)}
 			>
@@ -45,6 +46,7 @@ export function ScoreFilters({
 
 			<select
 				className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+				aria-label="Score type filter"
 				value={scoreType}
 				onChange={(e) => onScoreTypeChange(e.target.value as ScoreType)}
 			>

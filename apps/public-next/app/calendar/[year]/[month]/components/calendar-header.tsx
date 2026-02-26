@@ -13,7 +13,7 @@ export function CalendarHeader({ monthName, year, prev, next }: CalendarHeaderPr
 	return (
 		<div className="mb-4 flex items-center justify-between">
 			<Button variant="ghost" size="icon" asChild>
-				<Link href={`/calendar/${prev.year}/${prev.month}`}>
+				<Link href={`/calendar/${prev.year}/${prev.month}`} aria-label="Previous month">
 					<ChevronLeft className="size-5" />
 				</Link>
 			</Button>
@@ -21,7 +21,7 @@ export function CalendarHeader({ monthName, year, prev, next }: CalendarHeaderPr
 				{monthName} {year}
 			</h2>
 			<Button variant="ghost" size="icon" asChild>
-				<Link href={`/calendar/${next.year}/${next.month}`}>
+				<Link href={`/calendar/${next.year}/${next.month}`} aria-label="Next month">
 					<ChevronRight className="size-5" />
 				</Link>
 			</Button>

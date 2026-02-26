@@ -22,10 +22,7 @@ test.describe("Calendar Page", () => {
 		await expect(page.getByRole("heading", { name: /February 2026/ })).toBeVisible()
 
 		// Navigate to next month
-		await page
-			.getByRole("link", { name: /next|march/i })
-			.or(page.locator('a[href="/calendar/2026/march"]'))
-			.click()
+		await page.getByRole("link", { name: "Next month" }).click()
 
 		await expect(page).toHaveURL(/\/calendar\/2026\/march/)
 		await expect(page.getByRole("heading", { name: /March 2026/ })).toBeVisible()

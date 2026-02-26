@@ -53,6 +53,7 @@ export interface IRegistrationContext {
 	loadRegistration: (playerId: number) => Promise<void>
 	removeFee: (slot: ServerRegistrationSlot, eventFee: EventFee) => void
 	removePlayer: (slot: ServerRegistrationSlot) => void
+	requestNavigation: (href: string) => void
 	savePayment: () => Promise<void>
 	setError: (error: string | null) => void
 	updateRegistrationNotes: (notes: string) => Promise<void>

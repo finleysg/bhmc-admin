@@ -1,9 +1,28 @@
 "use client"
 
-import { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from "react"
+import {
+	type PropsWithChildren,
+	useCallback,
+	useEffect,
+	useMemo,
+	useReducer,
+	useRef,
+	useState,
+} from "react"
+import { useRouter } from "next/navigation"
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useAuth } from "../auth-context"
 import { isPaymentsOpen, RegistrationType } from "../event-utils"
 import { useRegistrationSSE } from "../hooks/use-registration-sse"
@@ -25,6 +44,7 @@ import type {
 	SSEUpdateEvent,
 } from "./types"
 import { getCorrelationId } from "./correlation"
+import { BACK_NAVIGATION, useRegistrationGuard } from "./use-registration-guard"
 
 interface RegistrationProviderProps {
 	clubEvent: ClubEventDetail
@@ -60,8 +80,14 @@ export function RegistrationProvider({
 	children,
 }: PropsWithChildren<RegistrationProviderProps>) {
 	const queryClient = useQueryClient()
+	const router = useRouter()
 	const [state, dispatch] = useReducer(registrationReducer, defaultRegistrationState)
 	const { user } = useAuth()
+
+	// --- Navigation guard ---
+	const guardActive = state.mode === "new" && state.registration !== null
+	const { pendingNavigation, requestNavigation, cancelNavigation, confirmNavigation } =
+		useRegistrationGuard({ active: guardActive })
 
 	// Load event into state on mount or event change
 	useEffect(() => {
@@ -74,9 +100,32 @@ export function RegistrationProvider({
 
 	// --- SSE integration ---
 
-	const isSSEEnabled = useMemo(() => {
+	const [isSSEEnabled, setIsSSEEnabled] = useState(() => {
 		if (!clubEvent) return false
 		return isPaymentsOpen(clubEvent, new Date())
+	})
+
+	useEffect(() => {
+		if (!clubEvent) return
+
+		if (isPaymentsOpen(clubEvent, new Date())) {
+			setIsSSEEnabled(true)
+			return
+		}
+
+		// Registration hasn't started yet — schedule re-evaluation at the open time
+		const startStr = clubEvent.priority_signup_start ?? clubEvent.signup_start
+		if (!startStr) return
+
+		const startTime = new Date(startStr)
+		const msUntilOpen = startTime.getTime() - Date.now()
+		if (msUntilOpen <= 0) {
+			setIsSSEEnabled(true)
+			return
+		}
+
+		const timer = setTimeout(() => setIsSSEEnabled(true), msUntilOpen)
+		return () => clearTimeout(timer)
 	}, [clubEvent])
 
 	const handleSSEUpdate = useCallback(
@@ -111,7 +160,10 @@ export function RegistrationProvider({
 			waveTimerRef.current = null
 		}
 
-		if (!isSSEEnabled) return
+		// Start wave timer whenever the event has wave config, regardless of SSE state.
+		// This ensures sseCurrentWave is set to 0 before registration opens, enabling
+		// the 15-second pulse animation and automatic transition when registration starts.
+		if (!clubEvent.priority_signup_start || !clubEvent.signup_start) return
 
 		const computeAndSchedule = () => {
 			const unlockTimes = getWaveUnlockTimes(clubEvent)
@@ -149,7 +201,7 @@ export function RegistrationProvider({
 		return () => {
 			if (waveTimerRef.current) clearTimeout(waveTimerRef.current)
 		}
-	}, [isSSEEnabled, clubEvent])
+	}, [clubEvent])
 
 	// --- Mutations ---
 
@@ -624,6 +676,22 @@ export function RegistrationProvider({
 		dispatch({ type: "update-error", payload: { error } })
 	}, [])
 
+	const handleGuardConfirm = useCallback(() => {
+		const href = confirmNavigation()
+		if (href) {
+			if (href === BACK_NAVIGATION) {
+				// For back button: go back in history, then cancel registration
+				void cancelRegistration("navigation", state.mode)
+				history.back()
+			} else {
+				// Navigate first, then cancel in background to avoid race with
+				// the register page's useEffect that redirects when registration becomes null
+				router.replace(href)
+				void cancelRegistration("navigation", state.mode)
+			}
+		}
+	}, [confirmNavigation, cancelRegistration, state.mode, router])
+
 	const value = useMemo(
 		() => ({
 			...state,
@@ -639,6 +707,7 @@ export function RegistrationProvider({
 			loadRegistration,
 			removeFee,
 			removePlayer,
+			requestNavigation,
 			savePayment,
 			setError,
 			updateRegistrationNotes,
@@ -658,6 +727,7 @@ export function RegistrationProvider({
 			loadRegistration,
 			removeFee,
 			removePlayer,
+			requestNavigation,
 			savePayment,
 			setError,
 			updateRegistrationNotes,
@@ -665,5 +735,26 @@ export function RegistrationProvider({
 		],
 	)
 
-	return <RegistrationContext.Provider value={value}>{children}</RegistrationContext.Provider>
+	return (
+		<RegistrationContext.Provider value={value}>
+			{children}
+			<AlertDialog open={pendingNavigation !== null} onOpenChange={() => cancelNavigation()}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Leave Registration?</AlertDialogTitle>
+						<AlertDialogDescription>
+							You have an in-progress registration. Leaving this page will cancel your registration
+							and release your reserved spots.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Stay</AlertDialogCancel>
+						<AlertDialogAction variant="destructive" onClick={handleGuardConfirm}>
+							Leave
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</RegistrationContext.Provider>
+	)
 }

@@ -94,7 +94,7 @@ export function SlotLineItem({
 				<Button
 					variant="ghost"
 					size="icon-xs"
-					className="shrink-0"
+					className="shrink-0 text-destructive hover:text-destructive"
 					onClick={() => removePlayer(slot)}
 					aria-label="Remove player"
 				>
@@ -114,19 +114,14 @@ export function SlotLineItem({
 
 	if (layout === "horizontal") {
 		return (
-			<div
-				className="space-y-1 rounded-md border bg-muted/30 px-3 py-2"
-				data-testid="registration-slot"
-			>
+			<div className="space-y-1 rounded-md bg-muted/30 py-2" data-testid="registration-slot">
 				{/* Mobile: player name on its own line */}
 				<div className="flex items-center gap-1.5 overflow-hidden md:hidden">{playerContent}</div>
 
 				{/* Checkbox grid */}
 				<div
-					className="grid items-center gap-x-2"
-					style={{
-						gridTemplateColumns: `1fr repeat(${eventFees.length}, 3rem) 4.5rem`,
-					}}
+					className="grid items-center gap-x-2 [grid-template-columns:repeat(var(--fee-count),1fr)_4.5rem] md:[grid-template-columns:1fr_repeat(var(--fee-count),3rem)_4.5rem]"
+					style={{ "--fee-count": eventFees.length } as React.CSSProperties}
 				>
 					{/* Desktop: player name in grid / Mobile: empty spacer */}
 					<div className="hidden items-center gap-1.5 overflow-hidden md:flex">{playerContent}</div>

@@ -24,9 +24,11 @@ Without it, parallel workers each run `beforeAll` independently and will conflic
 
 ## Authentication
 
-The config defines two test projects, split by filename regex:
+The config defines three test projects, split by filename regex:
 
-**`public-next-authed`** — matches `public-next/*.spec.ts` except filenames containing `guest`, `sign-in`, `sign-up`, or `password-reset`. These tests receive pre-authenticated cookies from `auth.setup.ts` (stored in `playwright/.auth/user.json`). **Do not sign in manually** — the session is already active via `testUser`.
+**`public-next-authed`** — matches `public-next/*.spec.ts` except filenames containing `guest`, `sign-in`, `sign-up`, `password-reset`, `reserve`, or `registration-guard`. These tests receive pre-authenticated cookies from `auth.setup.ts` (stored in `playwright/.auth/user.json`). **Do not sign in manually** — the session is already active via `testUser`.
+
+**`public-next-self-auth`** — matches `reserve.spec.ts` and `registration-guard.spec.ts`. No stored auth state injected. Tests sign in manually using `getMember()` accounts. Use this project for any test that creates registrations or needs to control which user is authenticated.
 
 **`public-next-guest`** — matches filenames with `guest`, `sign-in`, `sign-up`, or `password-reset`. No auth state injected.
 
@@ -55,47 +57,93 @@ test("multi-user test", async ({ browser }) => {
 })
 ```
 
+## Test Users
+
+**CRITICAL: NEVER use `testUser` (finleysg@zoho.com) for tests that create registrations.** `testUser` is the project owner's account and is reserved exclusively for `auth.setup.ts` stored auth state.
+
+**Always use `getMember(1-12)`** for tests that register players. The database enforces a `unique_player_registration` constraint on `(event_id, player_id)`, so each serial test in a file must use a **different member** to avoid duplicate-entry errors.
+
+```ts
+// Good: different member per test in a serial file
+test("test 1", async ({ page }) => {
+	const member = getMember(1)!
+	// ... sign in and register as member 1
+})
+
+test("test 2", async ({ page }) => {
+	const member = getMember(2)!
+	// ... sign in and register as member 2
+})
+```
+
+**Member allocation across specs:**
+
+- `registration-guard.spec.ts` uses members 1–4
+- `reserve.spec.ts` uses members 5–8
+- Members 9–12 are available for new specs
+
+When adding a new spec that creates registrations, pick a non-overlapping range to avoid cross-spec conflicts.
+
 ## Fixtures
 
 All fixtures are in `e2e/fixtures/`.
 
 | Export                               | Source             | Description                                                                                      |
 | ------------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------ |
-| `testUser`                           | `test-accounts.ts` | Primary auth user (`finleysg@zoho.com`) — used by `auth.setup.ts`                                |
+| `testUser`                           | `test-accounts.ts` | Primary auth user (`finleysg@zoho.com`) — **only** for `auth.setup.ts` stored auth               |
 | `testPassword`                       | `test-accounts.ts` | Shared password for all test/member accounts                                                     |
 | `getMember(1–12)`                    | `test-accounts.ts` | Numbered test members (`member-01@test.bhmc.org` etc.), seeded by `global-setup.ts`              |
 | `getTestUser(email)`                 | `test-accounts.ts` | Look up any test user by email                                                                   |
 | `getAdminToken()`                    | `test-event.ts`    | Get admin auth token for API calls                                                               |
 | `createTestEvent(token, templateId)` | `test-event.ts`    | Copy a template event with open registration. Always pair with `deleteTestEvent()` in `afterAll` |
 | `deleteTestEvent(token, id)`         | `test-event.ts`    | Clean up test event (swallows errors)                                                            |
+| `warmCacheAndVerify(url, name)`      | `test-helpers.ts`  | Revalidate Next.js cache and poll until event appears. **Throws** on failure.                    |
 
 **Template event IDs:** 914 (Individual LG/LN), 915 (2 Man Best Ball), 916 (One Man Scramble)
 
-**After creating an event**, invalidate the Next.js cache and warm it:
+**After creating an event**, use the shared `warmCacheAndVerify` helper:
 
 ```ts
+import { warmCacheAndVerify } from "../fixtures/test-helpers"
+
 test.beforeAll(async () => {
 	token = await getAdminToken()
 	testEvent = await createTestEvent(token, 914)
-
-	await fetch(`${PUBLIC_NEXT_URL}/api/revalidate`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ tag: "events" }),
-	})
-
-	for (let attempt = 0; attempt < 5; attempt++) {
-		const res = await fetch(`${PUBLIC_NEXT_URL}${testEvent.eventUrl}`)
-		const html = await res.text()
-		if (html.includes(testEvent.name)) break
-		await new Promise((resolve) => setTimeout(resolve, 1000))
-	}
+	await warmCacheAndVerify(testEvent.eventUrl, testEvent.name)
 })
 
 test.afterAll(async () => {
 	await deleteTestEvent(token, testEvent.id)
 })
 ```
+
+## Selectors
+
+**Prefer accessible selectors** — use `getByRole`, `getByLabel`, `getByText` over CSS selectors.
+
+**Add `aria-label` to icon-only buttons and unlabeled form controls** so tests can target them reliably:
+
+```tsx
+// Component
+;<Link href={prevUrl} aria-label="Previous month">
+	<ChevronLeft />
+</Link>
+
+// Test
+await page.getByRole("link", { name: "Previous month" }).click()
+```
+
+**Scope selectors when multiple elements match** — e.g., a "Home" link in the header, sidebar, and footer:
+
+```ts
+// Bad: matches 3 elements, strict mode fails
+await page.getByRole("link", { name: "Home" }).click()
+
+// Good: scoped to header
+await page.locator("header").getByRole("link", { name: "Home" }).click()
+```
+
+**Use `data-slot` attributes over `[class*=...]` selectors** — CSS class names are unreliable with Tailwind; prefer `[data-slot='card']` or role-based selectors.
 
 ## Assertions
 
@@ -110,7 +158,7 @@ await expect(async () => {
 
 **For navigation**: `await page.waitForURL("**/register", { timeout: 10_000 })`
 
-**For element readiness**: `await expect(button).toBeEnabled({ timeout: 15_000 })`
+**For element readiness**: `await expect(button).toBeEnabled({ timeout: 30_000 })`
 
 **For SSE debugging**, capture console logs:
 
@@ -126,8 +174,12 @@ page.on("console", (msg) => {
 
 - **Never use `waitForTimeout()`** — use `waitFor()`, `waitForURL()`, `toBeEnabled({ timeout })`, or `expect().toPass({ timeout })` instead
 - **Never sign in manually in authed tests** — the stored auth state from `auth.setup.ts` is already injected
+- **Never use `testUser` for registration tests** — use `getMember()` with a different member per serial test
 - **Always use `test.describe.configure({ mode: "serial" })` when tests share `beforeAll` state** — `fullyParallel: true` will otherwise run each test in its own worker with its own `beforeAll`
 - **Always clean up test events** — call `deleteTestEvent()` in `afterAll`
 - **Always close custom browser contexts** — use a `try`/`finally` block
-- **Always invalidate + warm the Next.js cache** after creating a test event (see Fixtures section)
-- **Use `data-slot` attributes over `[class*=...]` selectors** — CSS class names are unreliable with Tailwind; prefer `[data-slot='card']` or role-based selectors
+- **Always use `warmCacheAndVerify()`** after creating a test event — it throws on failure instead of silently proceeding
+- **Use 30s timeouts for SSE readiness** — SSE connections can take time to establish, especially under load
+- **Add `aria-label` to icon-only links/buttons** — avoid brittle `.or()` fallback selectors
+
+**CRITICAL:** All tests must pass without flakiness when run from `pnpm test:e2e`. It is not good enough for a test to run and pass in isolation.

@@ -5,8 +5,7 @@ test.describe("Member Scores", () => {
 		await page.goto("/member/scores")
 
 		await expect(page.getByText("My Scores")).toBeVisible()
-		// Course and score type are <select> elements — check they exist
-		const courseSelect = page.locator("select").first()
+		const courseSelect = page.getByRole("combobox", { name: "Course filter" })
 		await expect(courseSelect).toBeVisible()
 		await expect(courseSelect).toHaveValue("")
 		await expect(page.getByText("Export")).toBeVisible()
@@ -15,7 +14,7 @@ test.describe("Member Scores", () => {
 	test("score type dropdown has options", async ({ page }) => {
 		await page.goto("/member/scores")
 
-		const scoreTypeSelect = page.locator("select").nth(1)
+		const scoreTypeSelect = page.getByRole("combobox", { name: "Score type filter" })
 		await expect(scoreTypeSelect).toBeVisible()
 
 		const options = scoreTypeSelect.locator("option")

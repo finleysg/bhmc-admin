@@ -47,7 +47,8 @@
 			"Bash(head:*)",
 			"mcp__bhmc-db__list_tables",
 			"mcp__bhmc-db__list_databases",
-			"Bash(tail:*)"
+			"Bash(tail:*)",
+			"Bash(echo Current UTC time::*)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],

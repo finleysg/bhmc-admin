@@ -31,7 +31,8 @@ Use the following tools / commands as feedback on your work.
 `pnpm format`
 `pnpm lint` (fix warnings and errors, even if pre-existing)
 `pnpm test` (fix failures, even if pre-existing)
-`pnpm build`
+`pnpm typecheck` (fix failures, even if pre-existing)
+`pnpm build` (fix failures -- ALWAYS)
 
 When a change is made to a next app, rebuild the container.
 
