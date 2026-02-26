@@ -48,3 +48,33 @@ test("does not fire onTimeout when not processing", () => {
 
 	expect(onTimeout).not.toHaveBeenCalled()
 })
+
+test("clears timeout when processing stops", () => {
+	const onTimeout = jest.fn()
+
+	const { rerender } = renderHook(
+		({ isProcessing }) =>
+			usePaymentTimeout({
+				isProcessing,
+				onTimeout,
+				timeoutDuration: 5000,
+			}),
+		{ initialProps: { isProcessing: true } },
+	)
+
+	// Advance part way through the timeout
+	act(() => {
+		jest.advanceTimersByTime(2500)
+	})
+
+	// Stop processing - this should clear the timeout
+	rerender({ isProcessing: false })
+
+	// Advance past when the timeout would have fired
+	act(() => {
+		jest.advanceTimersByTime(5000)
+	})
+
+	// onTimeout should never have been called since we stopped processing
+	expect(onTimeout).not.toHaveBeenCalled()
+})

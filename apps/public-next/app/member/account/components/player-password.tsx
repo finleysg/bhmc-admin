@@ -23,7 +23,8 @@ export function PlayerPassword() {
 		formState: { errors },
 		reset,
 	} = useForm<ChangePasswordData>({
-		resolver: zodResolver(ChangePasswordSchema),
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		resolver: zodResolver(ChangePasswordSchema as any),
 	})
 
 	const onSubmit = (data: ChangePasswordData) => {

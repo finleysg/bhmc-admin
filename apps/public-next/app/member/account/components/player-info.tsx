@@ -48,7 +48,8 @@ export function PlayerInfo({ player }: PlayerInfoProps) {
 		formState: { errors },
 		reset,
 	} = useForm<PlayerUpdateData>({
-		resolver: zodResolver(PlayerUpdateSchema),
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		resolver: zodResolver(PlayerUpdateSchema as any),
 		defaultValues: {
 			first_name: player.first_name,
 			last_name: player.last_name,

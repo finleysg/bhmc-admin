@@ -1,9 +1,7 @@
-import { createRequire } from "node:module"
 import { dirname, join } from "node:path"
 import type { Config } from "jest"
 import nextJest from "next/jest.js"
 
-const require = createRequire(import.meta.url)
 const reactDomDir = dirname(require.resolve("react-dom"))
 
 const createJestConfig = nextJest({
