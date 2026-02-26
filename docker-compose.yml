@@ -19,7 +19,8 @@ services:
     image: stripe/stripe-cli:v1.34.0
     environment:
       STRIPE_DEVICE_NAME: docker
-    command: listen --forward-to api:3333/stripe/webhook/clover/
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+    command: listen --api-key ${STRIPE_API_KEY} --forward-to api:3333/stripe/webhook/clover/
     restart: unless-stopped
     depends_on:
       - api
