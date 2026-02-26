@@ -78,3 +78,27 @@ test("clears timeout when processing stops", () => {
 	// onTimeout should never have been called since we stopped processing
 	expect(onTimeout).not.toHaveBeenCalled()
 })
+
+test("uses default 120s timeout", () => {
+	const onTimeout = jest.fn()
+
+	renderHook(() =>
+		usePaymentTimeout({
+			isProcessing: true,
+			onTimeout,
+			// No timeoutDuration specified - should use default of 120000ms
+		}),
+	)
+
+	// Advance to just before 120s - should not have fired yet
+	act(() => {
+		jest.advanceTimersByTime(119000)
+	})
+	expect(onTimeout).not.toHaveBeenCalled()
+
+	// Advance to 120s - should fire now
+	act(() => {
+		jest.advanceTimersByTime(1000)
+	})
+	expect(onTimeout).toHaveBeenCalledTimes(1)
+})
