@@ -141,6 +141,7 @@ const createRegistrationRow = (overrides: Partial<RegistrationRow> = {}): Regist
 
 const createMockPaymentsRepository = () => ({
 	findPaymentById: jest.fn(),
+	findPaymentsForRegistration: jest.fn(),
 	createPayment: jest.fn(),
 	updatePayment: jest.fn(),
 	updatePaymentIntent: jest.fn(),
@@ -150,6 +151,7 @@ const createMockPaymentsRepository = () => ({
 	findPaymentWithDetailsById: jest.fn(),
 	deletePayment: jest.fn(),
 	updatePaymentDetailStatus: jest.fn(),
+	findByPaymentCode: jest.fn(),
 })
 
 const createMockRegistrationRepository = () => ({
@@ -830,6 +832,80 @@ describe("PaymentsService", () => {
 			await service.paymentProcessing(1)
 
 			expect(registrationRepo.updateRegistration).toHaveBeenCalledWith(1, { expires: null })
+		})
+	})
+
+	describe("deletePaymentsForRegistration", () => {
+		it("deletes all payments and fees for a registration", async () => {
+			const { service, paymentsRepo } = createService()
+
+			const payments = [createPaymentRow({ id: 10 }), createPaymentRow({ id: 20 })]
+			paymentsRepo.findPaymentsForRegistration.mockResolvedValue(payments)
+			paymentsRepo.deletePaymentDetailsByPayment.mockResolvedValue(undefined)
+			paymentsRepo.deletePayment.mockResolvedValue(undefined)
+
+			await service.deletePaymentsForRegistration(42)
+
+			expect(paymentsRepo.findPaymentsForRegistration).toHaveBeenCalledWith(42)
+			expect(paymentsRepo.deletePaymentDetailsByPayment).toHaveBeenCalledWith(10)
+			expect(paymentsRepo.deletePaymentDetailsByPayment).toHaveBeenCalledWith(20)
+			expect(paymentsRepo.deletePayment).toHaveBeenCalledWith(10)
+			expect(paymentsRepo.deletePayment).toHaveBeenCalledWith(20)
+		})
+
+		it("does nothing when no payments exist", async () => {
+			const { service, paymentsRepo } = createService()
+
+			paymentsRepo.findPaymentsForRegistration.mockResolvedValue([])
+
+			await service.deletePaymentsForRegistration(42)
+
+			expect(paymentsRepo.deletePaymentDetailsByPayment).not.toHaveBeenCalled()
+			expect(paymentsRepo.deletePayment).not.toHaveBeenCalled()
+		})
+
+		it("skips confirmed payments", async () => {
+			const { service, paymentsRepo } = createService()
+
+			paymentsRepo.findPaymentsForRegistration.mockResolvedValue([
+				createPaymentRow({ id: 10, confirmed: 1 }),
+			])
+
+			await service.deletePaymentsForRegistration(42)
+
+			expect(paymentsRepo.deletePaymentDetailsByPayment).not.toHaveBeenCalled()
+			expect(paymentsRepo.deletePayment).not.toHaveBeenCalled()
+		})
+
+		it("skips payments with active Stripe intent", async () => {
+			const { service, paymentsRepo } = createService()
+
+			paymentsRepo.findPaymentsForRegistration.mockResolvedValue([
+				createPaymentRow({ id: 10, paymentCode: "pi_abc123", confirmed: 0 }),
+			])
+
+			await service.deletePaymentsForRegistration(42)
+
+			expect(paymentsRepo.deletePaymentDetailsByPayment).not.toHaveBeenCalled()
+			expect(paymentsRepo.deletePayment).not.toHaveBeenCalled()
+		})
+
+		it("deletes unconfirmed pending payments but skips confirmed ones", async () => {
+			const { service, paymentsRepo } = createService()
+
+			paymentsRepo.findPaymentsForRegistration.mockResolvedValue([
+				createPaymentRow({ id: 10, paymentCode: "pending", confirmed: 0 }),
+				createPaymentRow({ id: 20, confirmed: 1 }),
+			])
+			paymentsRepo.deletePaymentDetailsByPayment.mockResolvedValue(undefined)
+			paymentsRepo.deletePayment.mockResolvedValue(undefined)
+
+			await service.deletePaymentsForRegistration(42)
+
+			expect(paymentsRepo.deletePaymentDetailsByPayment).toHaveBeenCalledWith(10)
+			expect(paymentsRepo.deletePayment).toHaveBeenCalledWith(10)
+			expect(paymentsRepo.deletePaymentDetailsByPayment).not.toHaveBeenCalledWith(20)
+			expect(paymentsRepo.deletePayment).not.toHaveBeenCalledWith(20)
 		})
 	})
 

@@ -155,6 +155,24 @@ export class PaymentsService {
 	}
 
 	/**
+	 * Delete all payments and their fees for a registration.
+	 * Used when cleaning up stale registrations.
+	 */
+	async deletePaymentsForRegistration(registrationId: number): Promise<void> {
+		const payments = await this.paymentRepository.findPaymentsForRegistration(registrationId)
+		for (const p of payments) {
+			if (p.confirmed || p.paymentCode !== "pending") {
+				this.logger.warn(
+					`Skipping deletion of payment ${p.id} for registration ${registrationId}: ` +
+						`confirmed=${p.confirmed}, paymentCode=${p.paymentCode}`,
+				)
+				continue
+			}
+			await this.deletePaymentAndFees(p.id)
+		}
+	}
+
+	/**
 	 * Get the Stripe amount (in cents) for a payment including fees.
 	 */
 	async getStripeAmount(paymentId: number): Promise<{ amountCents: number; amountDue: AmountDue }> {

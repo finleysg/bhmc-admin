@@ -306,7 +306,7 @@ export class RegistrationService {
 
 		const existing = await this.repository.findRegistrationByUserAndEvent(userId, event.id)
 		if (existing) {
-			// Check if already has reserved slots
+			// Check if already has reserved or in-progress slots
 			const reservedSlots = existing.slots.filter(
 				(s) =>
 					s.status === RegistrationStatusChoices.AWAITING_PAYMENT ||
@@ -315,6 +315,10 @@ export class RegistrationService {
 			if (reservedSlots.length > 0) {
 				throw new AlreadyRegisteredError(playerId, event.id)
 			}
+
+			// Only PENDING slots remain — clean up the stale registration
+			this.logger.log(`Cleaning up stale choosable registration ${existing.id} for user ${userId}`)
+			await this.cleanupStaleRegistration(existing.id, true)
 		}
 
 		// Optimistic concurrency control to reserve slots
@@ -332,27 +336,16 @@ export class RegistrationService {
 				}
 			}
 
-			// Create or update registration
-			if (existing) {
-				registrationId = existing.id
-				await tx
-					.update(registration)
-					.set({
-						courseId,
-						expires: toDbString(expires),
-					})
-					.where(eq(registration.id, registrationId))
-			} else {
-				const [result] = await tx.insert(registration).values({
-					eventId: event.id,
-					userId,
-					courseId,
-					signedUpBy,
-					expires: toDbString(expires),
-					createdDate: toDbString(new Date()),
-				})
-				registrationId = Number(result.insertId)
-			}
+			// Always create a fresh registration
+			const [result] = await tx.insert(registration).values({
+				eventId: event.id,
+				userId,
+				courseId,
+				signedUpBy,
+				expires: toDbString(expires),
+				createdDate: toDbString(new Date()),
+			})
+			registrationId = Number(result.insertId)
 
 			// Assign requesting player to lowest numbered slot
 			for (const slot of slots) {
@@ -425,16 +418,12 @@ export class RegistrationService {
 				if (reservedSlots.length > 0) {
 					throw new AlreadyRegisteredError(playerId, event.id)
 				}
-			}
 
-			// We will let the system cleanup process deal with a stale registration
-			// and create a new one for this user.
-			if (existing) {
-				await tx.update(registration).set({ userId: null }).where(eq(registration.id, existing.id))
-				await tx
-					.update(registrationSlot)
-					.set({ playerId: null })
-					.where(eq(registrationSlot.registrationId, existing.id))
+				// Only PENDING slots remain — fully clean up the stale registration
+				this.logger.log(
+					`Cleaning up stale non-choosable registration ${existing.id} for user ${userId}`,
+				)
+				await this.cleanupStaleRegistration(existing.id, false)
 			}
 
 			const [result] = await tx.insert(registration).values({
@@ -463,5 +452,14 @@ export class RegistrationService {
 
 			return registrationId
 		})
+	}
+
+	private async cleanupStaleRegistration(
+		registrationId: number,
+		canChoose: boolean,
+	): Promise<void> {
+		await this.payments.deletePaymentsForRegistration(registrationId)
+		await this.slotCleanup.releaseSlotsByRegistration(registrationId, canChoose)
+		await this.repository.deleteRegistration(registrationId)
 	}
 }
