@@ -45,8 +45,10 @@ jest.mock("next/navigation", () => ({
 }))
 
 // Mock @stripe/react-stripe-js
-const mockUseStripe = jest.fn(() => ({}))
-const mockUseElements = jest.fn(() => ({}))
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockUseStripe = jest.fn(() => ({}) as any)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockUseElements = jest.fn(() => ({}) as any)
 jest.mock("@stripe/react-stripe-js", () => ({
 	useStripe: () => mockUseStripe(),
 	useElements: () => mockUseElements(),
@@ -142,4 +144,18 @@ test("back button navigates to review", async () => {
 
 	expect(mockUpdateStep).toHaveBeenCalled()
 	expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("/review"))
+})
+
+test("submit button disabled when stripe/elements not loaded", async () => {
+	mockUseStripe.mockReturnValue(null)
+	mockUseElements.mockReturnValue(null)
+
+	const { default: PaymentPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
+	)
+
+	render(<PaymentPage />)
+
+	const button = screen.getByRole("button", { name: /submit payment/i })
+	expect((button as HTMLButtonElement).disabled).toBe(true)
 })

@@ -323,7 +323,7 @@
 				"RED: Add test with null stripe mock",
 				"GREEN: Add disabled condition on button — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.4g",
