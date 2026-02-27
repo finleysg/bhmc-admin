@@ -269,7 +269,7 @@
 				"RED: Add test with mock submit/intent/confirm chain",
 				"GREEN: Implement handleSubmit with three-phase flow — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.4d",

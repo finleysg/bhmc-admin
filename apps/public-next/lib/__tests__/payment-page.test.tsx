@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import React from "react"
 
 // Mock useCurrentPaymentAmount (from the payment layout)
@@ -82,4 +82,30 @@ test("displays the amount due", async () => {
 	render(<PaymentPage />)
 
 	expect(screen.getByText(/\$26\.05/)).toBeTruthy()
+})
+
+test("executes full submit flow on button click", async () => {
+	const mockSubmit = jest.fn().mockResolvedValue({})
+	const mockConfirmPayment = jest.fn().mockResolvedValue({})
+
+	mockUseStripe.mockReturnValue({ confirmPayment: mockConfirmPayment })
+	mockUseElements.mockReturnValue({ submit: mockSubmit })
+	mockCreatePaymentIntent.mockResolvedValue({ client_secret: "pi_test_secret" })
+
+	const { default: PaymentPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
+	)
+
+	render(<PaymentPage />)
+
+	fireEvent.click(screen.getByRole("button", { name: /submit payment/i }))
+
+	await waitFor(() => {
+		expect(mockConfirmPayment).toHaveBeenCalled()
+	})
+
+	const callArgs = mockConfirmPayment.mock.calls[0]![0]
+	expect(callArgs.clientSecret).toBe("pi_test_secret")
+	expect(callArgs.elements).toBeTruthy()
+	expect(callArgs.confirmParams.return_url).toBeDefined()
 })
