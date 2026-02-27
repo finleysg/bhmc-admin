@@ -443,7 +443,7 @@
 				}
 			],
 			"stepsToVerify": ["RED: Add test", "GREEN: Handle error branch in useEffect — passes"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.5g",

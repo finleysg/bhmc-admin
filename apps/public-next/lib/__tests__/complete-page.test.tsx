@@ -135,3 +135,19 @@ test("shows payment failed with retry link", async () => {
 	expect(retryLink).toBeTruthy()
 	expect(retryLink.getAttribute("href")).toContain("payment")
 })
+
+test("shows error when retrievePaymentIntent fails", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		error: { message: "Something went wrong" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/something went wrong/i)).toBeTruthy()
+	})
+})
