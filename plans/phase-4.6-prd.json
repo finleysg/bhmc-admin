@@ -1,0 +1,504 @@
+{
+	"name": "Phase 4.6: Stripe Payment Flow",
+	"planReference": "plans/phase-4.6-stripe-payment-flow.md",
+	"description": "Add Stripe payment UI to the public-next registration flow: payment layout (Elements wrapper), payment form page, and post-redirect completion page. Also fix Stripe CLI Docker auth.",
+	"items": [
+		{
+			"id": "4.6.0",
+			"category": "prerequisites",
+			"description": "Install @stripe/stripe-js and @stripe/react-stripe-js in public-next. Fix Stripe CLI Docker container to use --api-key flag instead of interactive login.",
+			"planSection": "Prerequisites + Docker Compose: Fix Stripe CLI Auth",
+			"tests": [
+				"@stripe/stripe-js is listed in apps/public-next/package.json dependencies",
+				"@stripe/react-stripe-js is listed in apps/public-next/package.json dependencies",
+				"docker-compose.yml stripe service command includes --api-key flag",
+				"docker-compose.yml stripe service environment includes STRIPE_API_KEY"
+			],
+			"stepsToVerify": [
+				"Run: pnpm --filter public-next add @stripe/stripe-js @stripe/react-stripe-js",
+				"Verify packages appear in apps/public-next/package.json",
+				"Update docker-compose.yml stripe service with --api-key ${STRIPE_API_KEY}",
+				"Run: docker compose up stripe -d — verify container starts without interactive login"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.6.1a",
+			"category": "use-payment-timeout",
+			"description": "Tracer bullet: hook fires onTimeout callback after specified duration when isProcessing is true.",
+			"planSection": "Step 1: use-payment-timeout hook",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/use-payment-timeout.test.ts",
+					"test": "fires onTimeout after specified duration when processing",
+					"behavior": "Given isProcessing=true and timeoutDuration=5000, after 5000ms the onTimeout callback is called exactly once"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Write test, run pnpm --filter public-next test -- use-payment-timeout — test fails (module not found)",
+				"GREEN: Create lib/hooks/use-payment-timeout.ts (port from apps/public/src/hooks/use-payment-timeout.ts), run test — passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.6.1b",
+			"category": "use-payment-timeout",
+			"description": "Hook does NOT fire when isProcessing is false.",
+			"planSection": "Step 1: use-payment-timeout hook",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/use-payment-timeout.test.ts",
+					"test": "does not fire onTimeout when not processing",
+					"behavior": "Given isProcessing=false, after any amount of time the onTimeout callback is never called"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test, run — should fail if implementation is wrong (or pass immediately if tracer bullet covered it)",
+				"GREEN: Verify existing implementation handles this — test passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.6.1c",
+			"category": "use-payment-timeout",
+			"description": "Hook clears timeout when isProcessing transitions from true to false.",
+			"planSection": "Step 1: use-payment-timeout hook",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/use-payment-timeout.test.ts",
+					"test": "clears timeout when processing stops",
+					"behavior": "Start with isProcessing=true, rerender with isProcessing=false, advance timer past duration — onTimeout is never called"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test — should fail if cleanup is missing",
+				"GREEN: Verify implementation clears on isProcessing change — passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.6.1d",
+			"category": "use-payment-timeout",
+			"description": "Hook defaults to 120000ms (2 minutes) when no duration specified.",
+			"planSection": "Step 1: use-payment-timeout hook",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/use-payment-timeout.test.ts",
+					"test": "uses default 120s timeout",
+					"behavior": "Given isProcessing=true with no timeoutDuration, onTimeout is NOT called at 119s but IS called at 120s"
+				}
+			],
+			"stepsToVerify": ["RED: Add test", "GREEN: Verify default parameter value — passes"],
+			"passes": true
+		},
+		{
+			"id": "4.6.2a",
+			"category": "use-stripe-amount",
+			"description": "Tracer bullet: hook fetches stripe amount for a given payment ID and returns the data.",
+			"planSection": "Step 2: use-stripe-amount hook",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/use-stripe-amount.test.ts",
+					"test": "fetches stripe amount for a given payment ID",
+					"behavior": "Given paymentId=42, the hook calls GET /api/payments/42/stripe-amount and returns { amountDue: { subtotal, transactionFee, total }, amountCents } on success"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Write test with mocked fetch and QueryClientProvider wrapper — fails (module not found)",
+				"GREEN: Create lib/hooks/use-stripe-amount.ts with useQuery fetching the endpoint — test passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.6.2b",
+			"category": "use-stripe-amount",
+			"description": "Hook is disabled (does not fetch) when paymentId is 0 or falsy.",
+			"planSection": "Step 2: use-stripe-amount hook",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/use-stripe-amount.test.ts",
+					"test": "does not fetch when paymentId is 0",
+					"behavior": "Given paymentId=0, fetch is never called and the hook stays in idle/pending state"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test",
+				"GREEN: Ensure enabled: paymentId > 0 in useQuery options — passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.6.2c",
+			"category": "use-stripe-amount",
+			"description": "Hook returns error state when the API call fails.",
+			"planSection": "Step 2: use-stripe-amount hook",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/use-stripe-amount.test.ts",
+					"test": "returns error state on fetch failure",
+					"behavior": "Given a 500 response from the API, the hook's isError is true"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test with mocked 500 response",
+				"GREEN: Ensure fetch function throws on non-ok response — passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.6.3a",
+			"category": "payment-layout",
+			"description": "Tracer bullet: layout renders Stripe Elements provider with correct options when stripe amount loads successfully.",
+			"planSection": "Step 3: Payment Layout",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/payment-layout.test.tsx",
+					"test": "renders Elements provider when stripe amount loads",
+					"behavior": "When useStripeAmount returns data with amountCents=2605, the layout renders an Elements provider wrapping its children. Children are visible in the DOM."
+				}
+			],
+			"stepsToVerify": [
+				"RED: Write test mocking useStripeAmount, @stripe/react-stripe-js (Elements), useRegistration, next/navigation — fails (module not found)",
+				"GREEN: Create [paymentId]/layout.tsx as 'use client' component with Elements wrapper and PaymentAmountContext — test passes"
+			],
+			"passes": true
+		},
+		{
+			"id": "4.6.3b",
+			"category": "payment-layout",
+			"description": "Layout calls initiateStripeSession() on mount to create a customer session for saved payment methods.",
+			"planSection": "Step 3: Payment Layout",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/payment-layout.test.tsx",
+					"test": "calls initiateStripeSession on mount",
+					"behavior": "When the layout mounts, useRegistration().initiateStripeSession is called"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test with mock initiateStripeSession spy",
+				"GREEN: Add useEffect calling initiateStripeSession — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.3c",
+			"category": "payment-layout",
+			"description": "Layout shows nothing (returns null) while stripe amount is still loading.",
+			"planSection": "Step 3: Payment Layout",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/payment-layout.test.tsx",
+					"test": "shows nothing while stripe amount is pending",
+					"behavior": "When useStripeAmount returns isPending=true, the Elements provider is NOT in the DOM and children are NOT rendered"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test with isPending mock",
+				"GREEN: Add early return null when isPending — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.3d",
+			"category": "payment-layout",
+			"description": "Layout provides stripe amount data to children via PaymentAmountContext (useCurrentPaymentAmount hook).",
+			"planSection": "Step 3: Payment Layout",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/payment-layout.test.tsx",
+					"test": "provides amount data via useCurrentPaymentAmount",
+					"behavior": "A child component can call useCurrentPaymentAmount() and receive { amount: { subtotal, transactionFee, total } } matching the API response"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test with a child component that uses useCurrentPaymentAmount",
+				"GREEN: Wrap children in PaymentAmountContext.Provider with the fetched amount — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.4a",
+			"category": "payment-page",
+			"description": "Tracer bullet: payment page renders the Stripe PaymentElement and a submit button.",
+			"planSection": "Step 4: Payment Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/payment-page.test.tsx",
+					"test": "renders PaymentElement and submit button",
+					"behavior": "The page renders a PaymentElement (mocked as a test div) and a button with text 'Submit Payment'"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Write test mocking @stripe/react-stripe-js, registration context, auth context, useCurrentPaymentAmount, next/navigation — fails (module not found)",
+				"GREEN: Create [paymentId]/payment/page.tsx with PaymentElement and submit button — test passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.4b",
+			"category": "payment-page",
+			"description": "Payment page displays the formatted amount due from the payment layout context.",
+			"planSection": "Step 4: Payment Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/payment-page.test.tsx",
+					"test": "displays the amount due",
+					"behavior": "When useCurrentPaymentAmount returns total=26.05, the page shows '$26.05' in the amount due text"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test checking for formatted amount text",
+				"GREEN: Add amount display using formatCurrency — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.4c",
+			"category": "payment-page",
+			"description": "Successful submit flow: elements.submit() validates, createPaymentIntent() creates intent, stripe.confirmPayment() confirms with return_url pointing to ../complete.",
+			"planSection": "Step 4: Payment Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/payment-page.test.tsx",
+					"test": "executes full submit flow on button click",
+					"behavior": "Click submit → elements.submit() called → createPaymentIntent() called → stripe.confirmPayment() called with clientSecret from intent and return_url containing '/complete'"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test with mock submit/intent/confirm chain",
+				"GREEN: Implement handleSubmit with three-phase flow — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.4d",
+			"category": "payment-page",
+			"description": "When elements.submit() returns an error, the flow stops — createPaymentIntent is NOT called.",
+			"planSection": "Step 4: Payment Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/payment-page.test.tsx",
+					"test": "stops flow when elements validation fails",
+					"behavior": "When elements.submit() resolves with { error: { message: 'Card declined' } }, createPaymentIntent is never called and the error message is displayed"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test with failing elements.submit mock",
+				"GREEN: Add early return after submit error — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.4e",
+			"category": "payment-page",
+			"description": "Back button navigates to the review page and updates the registration step to ReviewStep.",
+			"planSection": "Step 4: Payment Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/payment-page.test.tsx",
+					"test": "back button navigates to review",
+					"behavior": "Click back button → updateStep(ReviewStep) is called and router.replace is called with a path ending in '/review'"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test",
+				"GREEN: Add handleBack with updateStep and router.replace — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.4f",
+			"category": "payment-page",
+			"description": "Submit button is disabled when Stripe is not loaded, elements not ready, payment is processing, or payment was already submitted.",
+			"planSection": "Step 4: Payment Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/payment-page.test.tsx",
+					"test": "submit button disabled when stripe/elements not loaded",
+					"behavior": "When useStripe() returns null, the submit button has disabled attribute"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test with null stripe mock",
+				"GREEN: Add disabled condition on button — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.4g",
+			"category": "payment-page",
+			"description": "Payment page adds window.onbeforeunload handler during payment processing to warn about leaving.",
+			"planSection": "Step 4: Payment Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/payment-page.test.tsx",
+					"test": "adds beforeunload handler during processing",
+					"behavior": "When paymentProcessing is true, window has a beforeunload listener. When false, the listener is removed."
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test spying on window.addEventListener",
+				"GREEN: Add useEffect that manages beforeunload based on processing state — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.5a",
+			"category": "complete-page",
+			"description": "Tracer bullet: complete page shows 'Payment Complete' title and formatted amount when payment intent status is 'succeeded'.",
+			"planSection": "Step 5: Complete Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/complete-page.test.tsx",
+					"test": "shows success message when payment succeeded",
+					"behavior": "When stripe.retrievePaymentIntent resolves with status='succeeded', the page shows 'Payment Complete' heading and the formatted total amount"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Write test mocking useStripe (retrievePaymentIntent), useSearchParams (with client_secret), registration context, auth context, useCurrentPaymentAmount — fails (module not found)",
+				"GREEN: Create [paymentId]/complete/page.tsx with useEffect fetching intent status and conditional rendering — test passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.5b",
+			"category": "complete-page",
+			"description": "Complete page shows the user's email in the confirmation message (for email receipt notification).",
+			"planSection": "Step 5: Complete Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/complete-page.test.tsx",
+					"test": "shows user email in confirmation on success",
+					"behavior": "When payment succeeded, the page shows text containing the authenticated user's email address"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test checking for user email in output",
+				"GREEN: Include user.email in the success message — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.5c",
+			"category": "complete-page",
+			"description": "Complete page shows processing message when payment intent status is 'processing'.",
+			"planSection": "Step 5: Complete Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/complete-page.test.tsx",
+					"test": "shows processing message",
+					"behavior": "When retrievePaymentIntent returns status='processing', the page shows text about the payment being processed by the bank"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test with processing status mock",
+				"GREEN: Add conditional branch for processing — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.5d",
+			"category": "complete-page",
+			"description": "Complete page shows verification required message when payment intent status is 'requires_action'.",
+			"planSection": "Step 5: Complete Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/complete-page.test.tsx",
+					"test": "shows verification required for requires_action",
+					"behavior": "When retrievePaymentIntent returns status='requires_action', the page shows 'Additional verification required' or similar"
+				}
+			],
+			"stepsToVerify": ["RED: Add test", "GREEN: Add conditional branch — passes"],
+			"passes": false
+		},
+		{
+			"id": "4.6.5e",
+			"category": "complete-page",
+			"description": "Complete page shows failure message with a 'Try Again' link back to the payment page when status is 'requires_payment_method'.",
+			"planSection": "Step 5: Complete Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/complete-page.test.tsx",
+					"test": "shows payment failed with retry link",
+					"behavior": "When retrievePaymentIntent returns status='requires_payment_method', the page shows 'Payment failed' text and a link pointing to '../payment'"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test checking for failure text and retry link href",
+				"GREEN: Add conditional branch with Link to ../payment — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.5f",
+			"category": "complete-page",
+			"description": "Complete page shows error when retrievePaymentIntent itself returns an error.",
+			"planSection": "Step 5: Complete Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/complete-page.test.tsx",
+					"test": "shows error when retrievePaymentIntent fails",
+					"behavior": "When stripe.retrievePaymentIntent resolves with { error: { message: 'Something went wrong' } }, the page shows 'Payment Failed' title and the error message"
+				}
+			],
+			"stepsToVerify": ["RED: Add test", "GREEN: Handle error branch in useEffect — passes"],
+			"passes": false
+		},
+		{
+			"id": "4.6.5g",
+			"category": "complete-page",
+			"description": "Complete page shows error when payment_intent_client_secret is missing from URL search params.",
+			"planSection": "Step 5: Complete Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/complete-page.test.tsx",
+					"test": "shows error when client secret is missing",
+					"behavior": "When useSearchParams returns no payment_intent_client_secret param, the page shows an error about the missing secret"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test with empty search params",
+				"GREEN: Add early check for missing clientSecret — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.5h",
+			"category": "complete-page",
+			"description": "Complete page renders navigation links: 'See All Players' (to event registrations) and 'Home' (to /home).",
+			"planSection": "Step 5: Complete Page",
+			"tests": [
+				{
+					"file": "apps/public-next/lib/__tests__/complete-page.test.tsx",
+					"test": "renders navigation links to registrations and home",
+					"behavior": "The page renders a link with text 'See All Players' pointing to the event's registrations URL, and a link with text 'Home' pointing to '/home'"
+				}
+			],
+			"stepsToVerify": [
+				"RED: Add test checking for both links and their hrefs",
+				"GREEN: Add Link components in the footer — passes"
+			],
+			"passes": false
+		},
+		{
+			"id": "4.6.6",
+			"category": "integration",
+			"description": "All new and existing tests pass, typecheck succeeds, lint is clean, and build completes.",
+			"planSection": "Verification",
+			"tests": [
+				"pnpm --filter public-next test passes with 0 failures",
+				"pnpm --filter public-next typecheck passes with 0 errors",
+				"pnpm --filter public-next lint passes with 0 warnings or errors",
+				"pnpm --filter public-next build completes successfully"
+			],
+			"stepsToVerify": [
+				"Run: pnpm --filter public-next test",
+				"Run: pnpm --filter public-next typecheck",
+				"Run: pnpm --filter public-next lint",
+				"Run: pnpm --filter public-next build"
+			],
+			"passes": false
+		}
+	]
+}
