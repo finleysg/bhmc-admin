@@ -197,7 +197,7 @@
 				"RED: Add test with isPending mock",
 				"GREEN: Add early return null when isPending — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.3d",

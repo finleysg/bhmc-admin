@@ -90,3 +90,21 @@ test("calls initiateStripeSession on mount", async () => {
 
 	expect(mockInitiateStripeSession).toHaveBeenCalled()
 })
+
+test("shows nothing while stripe amount is pending", async () => {
+	mockUseStripeAmount.mockReturnValue({
+		data: undefined,
+		isPending: true,
+		isError: false,
+	})
+
+	const { default: PaymentLayout } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
+	)
+
+	const { container } = render(<PaymentLayout><div>child content</div></PaymentLayout>)
+
+	expect(screen.queryByTestId("stripe-elements")).toBeNull()
+	expect(screen.queryByText("child content")).toBeNull()
+	expect(container.innerHTML).toBe("")
+})
