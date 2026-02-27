@@ -461,7 +461,7 @@
 				"RED: Add test with empty search params",
 				"GREEN: Add early check for missing clientSecret — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.5h",

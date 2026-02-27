@@ -27,7 +27,7 @@ jest.mock("../auth-context", () => ({
 }))
 
 // Mock next/navigation
-const mockSearchParams = new URLSearchParams("payment_intent_client_secret=pi_secret_test")
+let mockSearchParams = new URLSearchParams("payment_intent_client_secret=pi_secret_test")
 jest.mock("next/navigation", () => ({
 	useRouter: () => ({ replace: jest.fn() }),
 	useSearchParams: () => mockSearchParams,
@@ -42,6 +42,7 @@ jest.mock("@stripe/react-stripe-js", () => ({
 }))
 
 beforeEach(() => {
+	mockSearchParams = new URLSearchParams("payment_intent_client_secret=pi_secret_test")
 	mockRetrievePaymentIntent.mockReset()
 	mockUseStripe.mockReturnValue({ retrievePaymentIntent: mockRetrievePaymentIntent })
 })
@@ -149,5 +150,19 @@ test("shows error when retrievePaymentIntent fails", async () => {
 
 	await waitFor(() => {
 		expect(screen.getByText(/something went wrong/i)).toBeTruthy()
+	})
+})
+
+test("shows error when client secret is missing", async () => {
+	mockSearchParams = new URLSearchParams("")
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/missing payment intent client secret/i)).toBeTruthy()
 	})
 })
