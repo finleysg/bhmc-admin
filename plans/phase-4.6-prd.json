@@ -305,7 +305,7 @@
 				"RED: Add test",
 				"GREEN: Add handleBack with updateStep and router.replace — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.4f",

@@ -130,3 +130,16 @@ test("stops flow when elements validation fails", async () => {
 
 	expect(mockCreatePaymentIntent).not.toHaveBeenCalled()
 })
+
+test("back button navigates to review", async () => {
+	const { default: PaymentPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
+	)
+
+	render(<PaymentPage />)
+
+	fireEvent.click(screen.getByRole("button", { name: /back/i }))
+
+	expect(mockUpdateStep).toHaveBeenCalled()
+	expect(mockReplace).toHaveBeenCalledWith(expect.stringContaining("/review"))
+})
