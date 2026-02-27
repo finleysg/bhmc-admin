@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 
 import { useStripe } from "@stripe/react-stripe-js"
@@ -96,6 +97,21 @@ export default function CompletePage() {
 							Your bank requires additional verification. Please complete the
 							verification process to finalize your payment.
 						</p>
+					</>
+				)}
+				{intent?.status === "requires_payment_method" && (
+					<>
+						<p className="text-sm font-medium text-destructive">Payment failed</p>
+						<p className="text-sm text-muted-foreground">
+							Your payment method was declined. Please return to the payment page
+							and try a different payment method.
+						</p>
+						<Link
+							href="../payment"
+							className="text-sm font-medium text-primary underline"
+						>
+							Try Again
+						</Link>
 					</>
 				)}
 				{error && (

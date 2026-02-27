@@ -115,3 +115,23 @@ test("shows verification required for requires_action", async () => {
 
 	expect(screen.getByText(/your bank requires additional verification/i)).toBeTruthy()
 })
+
+test("shows payment failed with retry link", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		paymentIntent: { status: "requires_payment_method" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/payment method was declined/i)).toBeTruthy()
+	})
+
+	const retryLink = screen.getByRole("link", { name: /try again/i })
+	expect(retryLink).toBeTruthy()
+	expect(retryLink.getAttribute("href")).toContain("payment")
+})

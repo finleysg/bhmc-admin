@@ -428,7 +428,7 @@
 				"RED: Add test checking for failure text and retry link href",
 				"GREEN: Add conditional branch with Link to ../payment — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.5f",
