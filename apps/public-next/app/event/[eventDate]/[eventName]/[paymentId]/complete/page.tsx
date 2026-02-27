@@ -87,6 +87,17 @@ export default function CompletePage() {
 						</p>
 					</>
 				)}
+				{intent?.status === "requires_action" && (
+					<>
+						<p className="text-sm font-medium text-warning">
+							Additional verification required
+						</p>
+						<p className="text-sm text-muted-foreground">
+							Your bank requires additional verification. Please complete the
+							verification process to finalize your payment.
+						</p>
+					</>
+				)}
 				{error && (
 					<p className="text-sm text-destructive">{error}</p>
 				)}

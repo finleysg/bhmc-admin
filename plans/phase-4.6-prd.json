@@ -410,7 +410,7 @@
 				}
 			],
 			"stepsToVerify": ["RED: Add test", "GREEN: Add conditional branch — passes"],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.5e",

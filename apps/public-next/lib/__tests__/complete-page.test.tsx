@@ -97,3 +97,21 @@ test("shows processing message", async () => {
 
 	expect(screen.getByText(/being processed by your bank/i)).toBeTruthy()
 })
+
+test("shows verification required for requires_action", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		paymentIntent: { status: "requires_action" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/action required/i)).toBeTruthy()
+	})
+
+	expect(screen.getByText(/your bank requires additional verification/i)).toBeTruthy()
+})
