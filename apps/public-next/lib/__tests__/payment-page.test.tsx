@@ -109,3 +109,24 @@ test("executes full submit flow on button click", async () => {
 	expect(callArgs.elements).toBeTruthy()
 	expect(callArgs.confirmParams.return_url).toBeDefined()
 })
+
+test("stops flow when elements validation fails", async () => {
+	const mockSubmit = jest.fn().mockResolvedValue({ error: { message: "Card declined" } })
+
+	mockUseStripe.mockReturnValue({ confirmPayment: jest.fn() })
+	mockUseElements.mockReturnValue({ submit: mockSubmit })
+
+	const { default: PaymentPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
+	)
+
+	render(<PaymentPage />)
+
+	fireEvent.click(screen.getByRole("button", { name: /submit payment/i }))
+
+	await waitFor(() => {
+		expect(mockSubmit).toHaveBeenCalled()
+	})
+
+	expect(mockCreatePaymentIntent).not.toHaveBeenCalled()
+})
