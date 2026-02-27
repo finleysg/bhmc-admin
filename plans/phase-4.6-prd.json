@@ -359,7 +359,7 @@
 				"RED: Write test mocking useStripe (retrievePaymentIntent), useSearchParams (with client_secret), registration context, auth context, useCurrentPaymentAmount — fails (module not found)",
 				"GREEN: Create [paymentId]/complete/page.tsx with useEffect fetching intent status and conditional rendering — test passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.5b",
