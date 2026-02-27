@@ -27,7 +27,7 @@ test("fetches stripe amount for a given payment ID", async () => {
 
 	global.fetch = jest.fn().mockResolvedValue({
 		ok: true,
-		json: async () => mockData,
+		json: () => Promise.resolve(mockData),
 	})
 
 	const { result } = renderHook(() => useStripeAmount(42), {
@@ -40,7 +40,7 @@ test("fetches stripe amount for a given payment ID", async () => {
 	expect(result.current.data).toEqual(mockData)
 })
 
-test("does not fetch when paymentId is 0", async () => {
+test("does not fetch when paymentId is 0", () => {
 	global.fetch = jest.fn()
 
 	const { result } = renderHook(() => useStripeAmount(0), {

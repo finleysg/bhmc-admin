@@ -7,6 +7,7 @@ import React from "react"
 // Mock useStripeAmount
 const mockUseStripeAmount = jest.fn()
 jest.mock("../hooks/use-stripe-amount", () => ({
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 	useStripeAmount: (...args: unknown[]) => mockUseStripeAmount(...args),
 }))
 
@@ -135,7 +136,7 @@ test("provides amount data via useCurrentPaymentAmount", async () => {
 	)
 
 	const amountEl = screen.getByTestId("amount")
-	expect(JSON.parse(amountEl.textContent!)).toEqual({
+	expect(JSON.parse(amountEl.textContent ?? "")).toEqual({
 		subtotal: 25.0,
 		transactionFee: 1.05,
 		total: 26.05,

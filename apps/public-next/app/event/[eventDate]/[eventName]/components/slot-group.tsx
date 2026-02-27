@@ -29,7 +29,7 @@ export function SlotGroup({ eventFees, onPickPlayer, layout = "vertical" }: Slot
 			<div className="space-y-1">
 				{/* Fee header row */}
 				<div
-					className="grid items-center gap-x-2 text-xs font-medium text-muted-foreground [grid-template-columns:repeat(var(--fee-count),1fr)_4.5rem] md:[grid-template-columns:1fr_repeat(var(--fee-count),3rem)_4.5rem]"
+					className="grid items-center gap-x-2 text-xs font-medium text-muted-foreground grid-cols-[repeat(var(--fee-count),1fr)_4.5rem] md:grid-cols-[1fr_repeat(var(--fee-count),3rem)_4.5rem]"
 					style={{ "--fee-count": eventFees.length } as React.CSSProperties}
 				>
 					<div className="hidden md:block" />

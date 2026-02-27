@@ -120,7 +120,7 @@ export function SlotLineItem({
 
 				{/* Checkbox grid */}
 				<div
-					className="grid items-center gap-x-2 [grid-template-columns:repeat(var(--fee-count),1fr)_4.5rem] md:[grid-template-columns:1fr_repeat(var(--fee-count),3rem)_4.5rem]"
+					className="grid items-center gap-x-2 grid-cols-[repeat(var(--fee-count),1fr)_4.5rem] md:grid-cols-[1fr_repeat(var(--fee-count),3rem)_4.5rem]"
 					style={{ "--fee-count": eventFees.length } as React.CSSProperties}
 				>
 					{/* Desktop: player name in grid / Mobile: empty spacer */}

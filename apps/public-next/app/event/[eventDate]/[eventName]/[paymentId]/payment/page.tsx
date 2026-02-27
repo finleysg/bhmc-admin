@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
@@ -20,18 +20,7 @@ export default function PaymentPage() {
 	const elements = useElements()
 	const { user } = useAuth()
 	const { amount } = useCurrentPaymentAmount()
-	const {
-		currentStep,
-		clubEvent,
-		registration,
-		payment,
-		mode,
-		error,
-		setError,
-		createPaymentIntent,
-		updateStep,
-		completeRegistration,
-	} = useRegistration()
+	const { currentStep, clubEvent, setError, createPaymentIntent, updateStep } = useRegistration()
 
 	const [paymentProcessing, setPaymentProcessing] = useState(false)
 	const [paymentSubmitted, setPaymentSubmitted] = useState(false)
@@ -119,7 +108,7 @@ export default function PaymentPage() {
 						Back
 					</Button>
 					<Button
-						onClick={handleSubmit}
+						onClick={() => void handleSubmit()}
 						disabled={!stripe || !elements || paymentProcessing || paymentSubmitted}
 					>
 						{paymentProcessing ? "Processing..." : "Submit Payment"}

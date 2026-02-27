@@ -45,12 +45,14 @@ jest.mock("next/navigation", () => ({
 }))
 
 // Mock @stripe/react-stripe-js
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
 const mockUseStripe = jest.fn(() => ({}) as any)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
 const mockUseElements = jest.fn(() => ({}) as any)
 jest.mock("@stripe/react-stripe-js", () => ({
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 	useStripe: () => mockUseStripe(),
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 	useElements: () => mockUseElements(),
 	PaymentElement: (props: Record<string, unknown>) => (
 		<div data-testid="payment-element" data-options={JSON.stringify(props.options)} />
@@ -106,9 +108,13 @@ test("executes full submit flow on button click", async () => {
 		expect(mockConfirmPayment).toHaveBeenCalled()
 	})
 
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 	const callArgs = mockConfirmPayment.mock.calls[0]![0]
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 	expect(callArgs.clientSecret).toBe("pi_test_secret")
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 	expect(callArgs.elements).toBeTruthy()
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 	expect(callArgs.confirmParams.return_url).toBeDefined()
 })
 

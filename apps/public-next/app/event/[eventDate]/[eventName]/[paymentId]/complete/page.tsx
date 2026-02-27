@@ -18,7 +18,7 @@ export default function CompletePage() {
 	const searchParams = useSearchParams()
 	const stripe = useStripe()
 	const { user } = useAuth()
-	const { clubEvent, completeRegistration } = useRegistration()
+	const { clubEvent } = useRegistration()
 	const { amount } = useCurrentPaymentAmount()
 
 	const [intent, setIntent] = useState<PaymentIntent | null>(null)

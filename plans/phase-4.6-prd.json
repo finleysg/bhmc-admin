@@ -498,7 +498,7 @@
 				"Run: pnpm --filter public-next lint",
 				"Run: pnpm --filter public-next build"
 			],
-			"passes": false
+			"passes": true
 		}
 	]
 }

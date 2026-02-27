@@ -35,9 +35,10 @@ jest.mock("next/navigation", () => ({
 
 // Mock @stripe/react-stripe-js
 const mockRetrievePaymentIntent = jest.fn()
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
 const mockUseStripe = jest.fn(() => ({ retrievePaymentIntent: mockRetrievePaymentIntent }) as any)
 jest.mock("@stripe/react-stripe-js", () => ({
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 	useStripe: () => mockUseStripe(),
 }))
 
