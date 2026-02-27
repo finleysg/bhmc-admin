@@ -71,3 +71,22 @@ test("renders Elements provider when stripe amount loads", async () => {
 		}),
 	)
 })
+
+test("calls initiateStripeSession on mount", async () => {
+	mockUseStripeAmount.mockReturnValue({
+		data: {
+			amountDue: { subtotal: 25.0, transactionFee: 1.05, total: 26.05 },
+			amountCents: 2605,
+		},
+		isPending: false,
+		isError: false,
+	})
+
+	const { default: PaymentLayout } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
+	)
+
+	render(<PaymentLayout><div>child</div></PaymentLayout>)
+
+	expect(mockInitiateStripeSession).toHaveBeenCalled()
+})

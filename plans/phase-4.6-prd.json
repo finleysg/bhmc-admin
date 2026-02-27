@@ -179,7 +179,7 @@
 				"RED: Add test with mock initiateStripeSession spy",
 				"GREEN: Add useEffect calling initiateStripeSession — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.3c",
