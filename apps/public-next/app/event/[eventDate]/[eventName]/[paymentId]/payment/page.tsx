@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useRegistration } from "@/lib/registration/registration-context"
 import { ReviewStep } from "@/lib/registration/registration-reducer"
 import { getEventUrl } from "@/lib/event-utils"
+import { formatCurrency } from "@/lib/registration/payment-utils"
 import { useCurrentPaymentAmount } from "../layout"
 
 export default function PaymentPage() {
@@ -80,6 +81,9 @@ export default function PaymentPage() {
 				<CardTitle className="text-lg">{currentStep.title}</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
+				<p className="text-sm font-medium text-primary">
+					Amount due: {formatCurrency(amount.total)}
+				</p>
 				<PaymentElement
 					options={{
 						business: { name: "BHMC" },

@@ -251,7 +251,7 @@
 				"RED: Add test checking for formatted amount text",
 				"GREEN: Add amount display using formatCurrency — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.4c",

@@ -73,3 +73,13 @@ test("renders PaymentElement and submit button", async () => {
 	expect(screen.getByTestId("payment-element")).toBeTruthy()
 	expect(screen.getByRole("button", { name: /submit payment/i })).toBeTruthy()
 })
+
+test("displays the amount due", async () => {
+	const { default: PaymentPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
+	)
+
+	render(<PaymentPage />)
+
+	expect(screen.getByText(/\$26\.05/)).toBeTruthy()
+})
