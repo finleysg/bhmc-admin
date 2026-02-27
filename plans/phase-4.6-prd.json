@@ -215,7 +215,7 @@
 				"RED: Add test with a child component that uses useCurrentPaymentAmount",
 				"GREEN: Wrap children in PaymentAmountContext.Provider with the fetched amount — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.4a",

@@ -108,3 +108,36 @@ test("shows nothing while stripe amount is pending", async () => {
 	expect(screen.queryByText("child content")).toBeNull()
 	expect(container.innerHTML).toBe("")
 })
+
+test("provides amount data via useCurrentPaymentAmount", async () => {
+	mockUseStripeAmount.mockReturnValue({
+		data: {
+			amountDue: { subtotal: 25.0, transactionFee: 1.05, total: 26.05 },
+			amountCents: 2605,
+		},
+		isPending: false,
+		isError: false,
+	})
+
+	const { default: PaymentLayout, useCurrentPaymentAmount } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
+	)
+
+	function ChildComponent() {
+		const { amount } = useCurrentPaymentAmount()
+		return <div data-testid="amount">{JSON.stringify(amount)}</div>
+	}
+
+	render(
+		<PaymentLayout>
+			<ChildComponent />
+		</PaymentLayout>,
+	)
+
+	const amountEl = screen.getByTestId("amount")
+	expect(JSON.parse(amountEl.textContent!)).toEqual({
+		subtotal: 25.0,
+		transactionFee: 1.05,
+		total: 26.05,
+	})
+})
