@@ -1,12 +1,23 @@
+import { Observable } from "rxjs"
+
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { inArray } from "drizzle-orm"
 
-import { Refund, RefundRequest } from "@repo/domain/types"
+import {
+	BulkRefundPaymentPreview,
+	BulkRefundPreview,
+	BulkRefundProgressEvent,
+	BulkRefundResponse,
+	BulkRefundResult,
+	Refund,
+	RefundRequest,
+} from "@repo/domain/types"
 
 import { DrizzleService, refund, registrationFee, toDbString } from "../../database"
 import { StripeService } from "../../stripe/stripe.service"
 import { PaymentsRepository } from "../repositories/payments.repository"
 import { toRefund } from "../mappers"
+import { BulkRefundProgressTracker } from "./bulk-refund-progress-tracker"
 
 @Injectable()
 export class RefundService {
@@ -16,6 +27,7 @@ export class RefundService {
 		@Inject(DrizzleService) private readonly drizzle: DrizzleService,
 		@Inject(PaymentsRepository) private readonly paymentsRepository: PaymentsRepository,
 		@Inject(StripeService) private readonly stripeService: StripeService,
+		@Inject(BulkRefundProgressTracker) private readonly progressTracker: BulkRefundProgressTracker,
 	) {}
 
 	/** Process Stripe refunds for payments. */
@@ -129,5 +141,100 @@ export class RefundService {
 			return
 		}
 		await this.paymentsRepository.confirmRefund(row.id)
+	}
+
+	/** Get bulk refund preview for an event. */
+	async getBulkRefundPreview(eventId: number): Promise<BulkRefundPreview> {
+		const confirmedPayments =
+			await this.paymentsRepository.findConfirmedPaymentsByEventWithDetails(eventId)
+
+		const payments: BulkRefundPaymentPreview[] = []
+		let skippedCount = 0
+
+		for (const p of confirmedPayments) {
+			const paidFees = p.fees.filter((f) => f.isPaid === 1)
+			if (paidFees.length === 0) {
+				skippedCount++
+				continue
+			}
+
+			const refundAmount = paidFees.reduce((sum, f) => sum + parseFloat(f.amount), 0)
+			payments.push({
+				paymentId: p.paymentId,
+				playerName: p.playerName,
+				feeCount: paidFees.length,
+				refundAmount,
+				registrationFeeIds: paidFees.map((f) => f.registrationFeeId),
+			})
+		}
+
+		const totalRefundAmount = payments.reduce((sum, p) => sum + p.refundAmount, 0)
+
+		return {
+			eventId,
+			payments,
+			totalRefundAmount,
+			skippedCount,
+		}
+	}
+
+	/** Process bulk refunds for an event with streaming progress. */
+	processBulkRefundsStream(eventId: number, issuerId: number): Observable<BulkRefundProgressEvent> {
+		// Return existing observable if operation is already running
+		const existing = this.progressTracker.getProgressObservable(eventId)
+		if (existing) {
+			return existing
+		}
+
+		const subject = this.progressTracker.startTracking(eventId)
+
+		// Spawn async background operation
+		void (async () => {
+			try {
+				const preview = await this.getBulkRefundPreview(eventId)
+				const total = preview.payments.length
+				const results: BulkRefundResult[] = []
+				let refundedCount = 0
+				let failedCount = 0
+				let totalRefundAmount = 0
+
+				for (let i = 0; i < preview.payments.length; i++) {
+					const payment = preview.payments[i]
+					this.progressTracker.emitProgress(eventId, i + 1, total, payment.playerName)
+
+					try {
+						await this.processRefunds(
+							[{ paymentId: payment.paymentId, registrationFeeIds: payment.registrationFeeIds }],
+							issuerId,
+						)
+						results.push({ paymentId: payment.paymentId, success: true })
+						refundedCount++
+						totalRefundAmount += payment.refundAmount
+					} catch (err) {
+						const errorMessage = err instanceof Error ? err.message : "Unknown error"
+						this.logger.error(
+							`Bulk refund failed for payment ${payment.paymentId}: ${errorMessage}`,
+						)
+						results.push({ paymentId: payment.paymentId, success: false, error: errorMessage })
+						failedCount++
+					}
+				}
+
+				const response: BulkRefundResponse = {
+					refundedCount,
+					failedCount,
+					skippedCount: preview.skippedCount,
+					totalRefundAmount,
+					results,
+				}
+				this.progressTracker.completeOperation(eventId, response)
+			} catch (err) {
+				const errorMessage = err instanceof Error ? err.message : "Unknown error"
+				this.logger.error(`Bulk refund operation failed for event ${eventId}: ${errorMessage}`)
+				this.progressTracker.errorOperation(eventId, errorMessage)
+			}
+		})()
+
+		return subject.asObservable()
 	}
 }

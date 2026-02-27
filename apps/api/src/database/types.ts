@@ -223,6 +223,18 @@ export type PaymentRowWithDetails = WithCompositions<
 	{ paymentDetails: RegistrationFeeRow[] }
 >
 
+export type PaymentWithPlayerDetails = {
+	paymentId: number
+	paymentCode: string
+	paymentAmount: string
+	playerName: string
+	fees: {
+		registrationFeeId: number
+		amount: string
+		isPaid: number
+	}[]
+}
+
 // =============================================================================
 // Common Composition Patterns - Scores
 // =============================================================================
