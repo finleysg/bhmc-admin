@@ -341,7 +341,7 @@
 				"RED: Add test spying on window.addEventListener",
 				"GREEN: Add useEffect that manages beforeunload based on processing state — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.5a",

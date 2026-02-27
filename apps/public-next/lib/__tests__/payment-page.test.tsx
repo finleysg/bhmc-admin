@@ -159,3 +159,28 @@ test("submit button disabled when stripe/elements not loaded", async () => {
 	const button = screen.getByRole("button", { name: /submit payment/i })
 	expect((button as HTMLButtonElement).disabled).toBe(true)
 })
+
+test("adds beforeunload handler during processing", async () => {
+	const addSpy = jest.spyOn(window, "addEventListener")
+	const removeSpy = jest.spyOn(window, "removeEventListener")
+
+	// Make submit hang so processing stays true
+	const mockSubmit = jest.fn().mockReturnValue(new Promise(() => {}))
+	mockUseStripe.mockReturnValue({ confirmPayment: jest.fn() })
+	mockUseElements.mockReturnValue({ submit: mockSubmit })
+
+	const { default: PaymentPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
+	)
+
+	render(<PaymentPage />)
+
+	fireEvent.click(screen.getByRole("button", { name: /submit payment/i }))
+
+	await waitFor(() => {
+		expect(addSpy).toHaveBeenCalledWith("beforeunload", expect.any(Function))
+	})
+
+	addSpy.mockRestore()
+	removeSpy.mockRestore()
+})

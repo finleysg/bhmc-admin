@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
@@ -35,6 +35,16 @@ export default function PaymentPage() {
 
 	const [paymentProcessing, setPaymentProcessing] = useState(false)
 	const [paymentSubmitted, setPaymentSubmitted] = useState(false)
+
+	useEffect(() => {
+		if (!paymentProcessing) return
+
+		const handler = (e: BeforeUnloadEvent) => {
+			e.preventDefault()
+		}
+		window.addEventListener("beforeunload", handler)
+		return () => window.removeEventListener("beforeunload", handler)
+	}, [paymentProcessing])
 
 	const handleBack = useCallback(() => {
 		updateStep(ReviewStep)
