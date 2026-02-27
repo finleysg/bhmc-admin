@@ -75,6 +75,18 @@ export default function CompletePage() {
 						</p>
 					</>
 				)}
+				{intent?.status === "processing" && (
+					<>
+						<p className="text-sm font-medium text-warning">
+							Your payment is being processed
+						</p>
+						<p className="text-sm text-muted-foreground">
+							Your payment is being processed by your bank. This usually takes a few
+							moments. You will receive a confirmation email once the payment is
+							complete.
+						</p>
+					</>
+				)}
 				{error && (
 					<p className="text-sm text-destructive">{error}</p>
 				)}
