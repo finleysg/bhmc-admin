@@ -11,6 +11,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { useAuth } from "@/lib/auth-context"
 import { useRegistration } from "@/lib/registration/registration-context"
 import { formatCurrency } from "@/lib/registration/payment-utils"
+import { getEventUrl } from "@/lib/event-utils"
 import { useCurrentPaymentAmount } from "../layout"
 
 export default function CompletePage() {
@@ -118,7 +119,17 @@ export default function CompletePage() {
 					<p className="text-sm text-destructive">{error}</p>
 				)}
 			</CardContent>
-			<CardFooter />
+			<CardFooter className="flex gap-4">
+				<Link
+					href={`${getEventUrl(clubEvent!)}/registrations`}
+					className="text-sm font-medium text-primary underline"
+				>
+					See All Players
+				</Link>
+				<Link href="/home" className="text-sm font-medium text-primary underline">
+					Home
+				</Link>
+			</CardFooter>
 		</Card>
 	)
 }

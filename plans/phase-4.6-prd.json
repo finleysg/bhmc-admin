@@ -479,7 +479,7 @@
 				"RED: Add test checking for both links and their hrefs",
 				"GREEN: Add Link components in the footer — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.6",

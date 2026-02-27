@@ -166,3 +166,27 @@ test("shows error when client secret is missing", async () => {
 		expect(screen.getByText(/missing payment intent client secret/i)).toBeTruthy()
 	})
 })
+
+test("renders navigation links to registrations and home", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		paymentIntent: { status: "succeeded" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/payment complete/i)).toBeTruthy()
+	})
+
+	const playersLink = screen.getByRole("link", { name: /see all players/i })
+	expect(playersLink).toBeTruthy()
+	expect(playersLink.getAttribute("href")).toContain("/registrations")
+
+	const homeLink = screen.getByRole("link", { name: /home/i })
+	expect(homeLink).toBeTruthy()
+	expect(homeLink.getAttribute("href")).toBe("/home")
+})
