@@ -377,7 +377,7 @@
 				"RED: Add test checking for user email in output",
 				"GREEN: Include user.email in the success message — passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.5c",

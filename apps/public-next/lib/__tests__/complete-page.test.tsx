@@ -63,3 +63,19 @@ test("shows success message when payment succeeded", async () => {
 
 	expect(screen.getByText(/\$26\.05/)).toBeTruthy()
 })
+
+test("shows user email in confirmation on success", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		paymentIntent: { status: "succeeded" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/test@example\.com/)).toBeTruthy()
+	})
+})
