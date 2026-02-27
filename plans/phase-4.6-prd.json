@@ -233,7 +233,7 @@
 				"RED: Write test mocking @stripe/react-stripe-js, registration context, auth context, useCurrentPaymentAmount, next/navigation — fails (module not found)",
 				"GREEN: Create [paymentId]/payment/page.tsx with PaymentElement and submit button — test passes"
 			],
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "4.6.4b",
