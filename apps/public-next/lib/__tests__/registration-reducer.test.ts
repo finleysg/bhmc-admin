@@ -284,6 +284,63 @@ describe("registrationReducer", () => {
 			expect(result.payment?.details[0].eventFeeId).toBe(1)
 			expect(result.payment?.details[0].amount).toBe(5)
 		})
+
+		it("uses senior override amount when player qualifies", () => {
+			const slot = makeSlot({ id: 10 })
+			const seniorBirthYear = new Date().getFullYear() - 70
+			const greensFee = makeEventFee({
+				id: 3,
+				is_required: true,
+				amount: "28.00",
+				override_amount: "21.00",
+				override_restriction: "Seniors",
+			})
+			const event = makeEvent({ fees: [greensFee] })
+			const state = makeState({
+				clubEvent: event,
+				registration: makeRegistration({ slots: [slot] }),
+				payment: makePayment(),
+			})
+			const result = registrationReducer(state, {
+				type: "add-player",
+				payload: {
+					slot,
+					playerId: 42,
+					playerName: "Roger Schlins",
+					player: makeFeePlayer({ birthDate: `${seniorBirthYear}-01-15` }),
+				},
+			})
+			expect(result.payment?.details).toHaveLength(1)
+			expect(result.payment?.details[0].amount).toBe(21)
+		})
+
+		it("uses base amount when player birthDate is null (friend picker without birth data)", () => {
+			const slot = makeSlot({ id: 10 })
+			const greensFee = makeEventFee({
+				id: 3,
+				is_required: true,
+				amount: "28.00",
+				override_amount: "21.00",
+				override_restriction: "Seniors",
+			})
+			const event = makeEvent({ fees: [greensFee] })
+			const state = makeState({
+				clubEvent: event,
+				registration: makeRegistration({ slots: [slot] }),
+				payment: makePayment(),
+			})
+			const result = registrationReducer(state, {
+				type: "add-player",
+				payload: {
+					slot,
+					playerId: 42,
+					playerName: "Dennis Melland",
+					player: makeFeePlayer({ birthDate: null }),
+				},
+			})
+			expect(result.payment?.details).toHaveLength(1)
+			expect(result.payment?.details[0].amount).toBe(28)
+		})
 	})
 
 	describe("remove-player", () => {

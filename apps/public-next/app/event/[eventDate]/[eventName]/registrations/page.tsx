@@ -77,10 +77,12 @@ export default async function RegistrationsPage({ params }: RegistrationsPagePro
 	const { eventDate, eventName } = await params
 	const event = await resolveEventFromParams(eventDate, eventName)
 
+	const tag = `event-registrations-${event.id}`
+
 	if (event.can_choose) {
 		const slots = await fetchDjango<RegistrationSlot[]>(
 			`/registration-slots/?event_id=${event.id}`,
-			{ revalidate: 60 },
+			{ revalidate: 60, tags: [tag] },
 		)
 		const tables = loadReserveTables(event, slots)
 		return <RegisteredGrid tables={tables} />
@@ -88,7 +90,7 @@ export default async function RegistrationsPage({ params }: RegistrationsPagePro
 
 	const registrations = await fetchDjango<DjangoRegistration[]>(
 		`/registration/?event_id=${event.id}`,
-		{ revalidate: 60 },
+		{ revalidate: 60, tags: [tag] },
 	)
 	const reservations = convertRegistrationsToReservations(registrations)
 	return <RegisteredList reservations={reservations} eventName={event.name} />

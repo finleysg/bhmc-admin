@@ -23,6 +23,7 @@ export default function CompletePage() {
 
 	const [intent, setIntent] = useState<PaymentIntent | null>(null)
 	const [error, setError] = useState<string | null>(null)
+	const [revalidated, setRevalidated] = useState(false)
 
 	useEffect(() => {
 		if (!stripe) return
@@ -46,6 +47,23 @@ export default function CompletePage() {
 				setError("Failed to retrieve payment status")
 			})
 	}, [stripe, searchParams])
+
+	useEffect(() => {
+		if (intent?.status === "succeeded" && clubEvent?.id) {
+			const tag = `event-registrations-${clubEvent.id}`
+			// Brief delay to allow the Stripe webhook to update slot statuses
+			const timer = setTimeout(() => {
+				fetch("/api/revalidate", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ tag }),
+				})
+					.then(() => setRevalidated(true))
+					.catch(() => setRevalidated(true))
+			}, 1500)
+			return () => clearTimeout(timer)
+		}
+	}, [intent?.status, clubEvent?.id])
 
 	const title = error
 		? "Payment Failed"
@@ -119,17 +137,19 @@ export default function CompletePage() {
 					<p className="text-sm text-destructive">{error}</p>
 				)}
 			</CardContent>
-			<CardFooter className="flex gap-4">
-				<Link
-					href={`${getEventUrl(clubEvent!)}/registrations`}
-					className="text-sm font-medium text-primary underline"
-				>
-					See All Players
-				</Link>
-				<Link href="/home" className="text-sm font-medium text-primary underline">
-					Home
-				</Link>
-			</CardFooter>
+			{(revalidated || intent?.status !== "succeeded") && (
+				<CardFooter className="flex gap-4">
+					<Link
+						href={`${getEventUrl(clubEvent!)}/registrations`}
+						className="text-sm font-medium text-primary underline"
+					>
+						See All Players
+					</Link>
+					<Link href="/home" className="text-sm font-medium text-primary underline">
+						Home
+					</Link>
+				</CardFooter>
+			)}
 		</Card>
 	)
 }

@@ -6,6 +6,6 @@ export async function POST(request: NextRequest) {
 	if (!tag || typeof tag !== "string") {
 		return NextResponse.json({ error: "tag is required" }, { status: 400 })
 	}
-	revalidateTag(tag, "max")
+	revalidateTag(tag, { expire: 0 })
 	return NextResponse.json({ revalidated: true, tag })
 }

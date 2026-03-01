@@ -90,13 +90,30 @@ test("full payment flow completes without beforeunload dialog", async ({ page })
 	// Verify Payment Complete text visible
 	await expect(page.getByText("Payment Complete")).toBeVisible({ timeout: 15_000 })
 
-	// Poll Mailpit for confirmation email
+	// Wait for the "See All Players" link (appears after revalidation completes),
+	// then click it and verify the registered member appears on the registrations page.
+	// This event uses can_choose=true so names render as "First Last" in the tee sheet grid.
+	const seeAllLink = page.getByRole("link", { name: "See All Players" })
+	await expect(seeAllLink).toBeVisible({ timeout: 10_000 })
+	await seeAllLink.click()
+	await page.waitForURL("**/registrations", { timeout: 10_000 })
+	const playerName = `${member.first_name} ${member.last_name}`
+	await expect(page.getByText(playerName).first()).toBeVisible({ timeout: 10_000 })
+
+	// Poll Mailpit for confirmation email and validate total amount
 	const memberEmail = member.email
+	let emailId = ""
 	await expect(async () => {
 		const res = await fetch(
-			`${MAILPIT_API}/search?query=${encodeURIComponent(`to:${memberEmail}`)}`,
+			`${MAILPIT_API}/search?query=${encodeURIComponent(`to:${memberEmail} subject:Registration Confirmation`)}`,
 		)
-		const data = (await res.json()) as { messages_count: number }
+		const data = (await res.json()) as { messages_count: number; messages: { ID: string }[] }
 		expect(data.messages_count).toBeGreaterThan(0)
+		emailId = data.messages[0]!.ID
 	}).toPass({ timeout: 30_000, intervals: [2_000, 3_000, 5_000] })
+
+	// Verify the email total includes the transaction fee ($5.00 + $0.45 = $5.45)
+	const emailRes = await fetch(`${MAILPIT_API}/message/${emailId}`)
+	const emailData = (await emailRes.json()) as { Text: string }
+	expect(emailData.Text).toContain("Total Event Cost: $5.45")
 })

@@ -37,6 +37,8 @@ export interface PlayerSummary {
 	last_name: string
 	email?: string | null
 	is_member: boolean
+	birth_date?: string | null
+	last_season?: number | null
 }
 
 export interface BoardMember {

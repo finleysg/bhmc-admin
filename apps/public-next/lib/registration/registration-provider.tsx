@@ -569,6 +569,13 @@ export function RegistrationProvider({
 		void queryClient.invalidateQueries({
 			queryKey: ["event-registration-slots", state.clubEvent?.id],
 		})
+		if (state.clubEvent?.id) {
+			void fetch("/api/revalidate", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ tag: `event-registrations-${state.clubEvent.id}` }),
+			})
+		}
 		dispatch({ type: "complete-registration" })
 	}, [queryClient, state.clubEvent?.id])
 

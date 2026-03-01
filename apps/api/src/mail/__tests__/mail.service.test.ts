@@ -1,9 +1,13 @@
 import { ConfigService } from "@nestjs/config"
 import {
 	ClubEvent,
+	CompletePayment,
 	CompleteRegistration,
 	CompleteRegistrationSlot,
+	DjangoUser,
 	EventTypeChoices,
+	FeeRestrictionChoices,
+	PayoutTypeChoices,
 	RegistrationStatusChoices,
 } from "@repo/domain/types"
 
@@ -229,7 +233,7 @@ describe("MailService", () => {
 			})
 		})
 
-		describe("Non-SEASON_REGISTRATION events", () => {
+		describe("non-SEASON_REGISTRATION events", () => {
 			const weeknightEvent = createClubEvent({
 				eventType: EventTypeChoices.WEEKNIGHT,
 			})
@@ -278,6 +282,93 @@ describe("MailService", () => {
 
 				expect(sendEmailSpy).toHaveBeenCalledTimes(2)
 			})
+		})
+	})
+
+	describe("sendRegistrationConfirmation", () => {
+		let service: MailService
+		let mockConfigService: ReturnType<typeof createMockConfigService>
+		let sendEmailSpy: jest.SpyInstance
+
+		beforeEach(() => {
+			mockConfigService = createMockConfigService()
+			service = new MailService(mockConfigService as unknown as ConfigService)
+			sendEmailSpy = jest.spyOn(service, "sendEmail").mockResolvedValue(undefined)
+		})
+
+		afterEach(() => {
+			jest.restoreAllMocks()
+		})
+
+		it("includes transaction fee in total event cost", async () => {
+			const user: DjangoUser = {
+				id: 10,
+				email: "john@example.com",
+				firstName: "John",
+				lastName: "Doe",
+				isActive: true,
+				isStaff: false,
+				isSuperuser: false,
+				ghin: null,
+				birthDate: null,
+				playerId: 1,
+			}
+
+			const event = createClubEvent()
+			const registration = createRegistration()
+
+			const payment: CompletePayment = {
+				id: 1,
+				paymentCode: "pi_test",
+				confirmed: true,
+				eventId: 100,
+				userId: 10,
+				paymentAmount: 5.0,
+				transactionFee: 0.45,
+				paymentDate: "2025-01-01",
+				details: [
+					{
+						id: 1,
+						registrationSlotId: 1,
+						paymentId: 1,
+						amount: 5.0,
+						isPaid: true,
+						eventFeeId: 1,
+						eventFee: {
+							id: 1,
+							eventId: 100,
+							amount: 5.0,
+							isRequired: true,
+							displayOrder: 1,
+							feeTypeId: 1,
+							feeType: {
+								id: 1,
+								name: "Event Fee",
+								code: "EF",
+								payout: PayoutTypeChoices.CASH,
+								restriction: FeeRestrictionChoices.NONE,
+							},
+						},
+					},
+				],
+			}
+
+			await service.sendRegistrationConfirmation(user, event, registration, payment)
+
+			expect(sendEmailSpy).toHaveBeenCalledTimes(1)
+			expect(sendEmailSpy).toHaveBeenCalledWith(
+				expect.objectContaining({
+					subject: "Registration Confirmation: Test Event",
+				}),
+			)
+			// Verify the template was called with the correct totalFees.
+			// sendEmail receives { template: RegistrationConfirmationEmail({...props}) }.
+			// Walk the React element tree to find the "$5.45" total in children.
+			const template = sendEmailSpy.mock.calls[0][0].template
+			const json = JSON.stringify(template)
+			expect(json).toContain("$5.45")
+			expect(json).toContain("$5.00")
+			expect(json).toContain("$0.45")
 		})
 	})
 })

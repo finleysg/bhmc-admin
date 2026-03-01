@@ -249,7 +249,7 @@ export class MailService {
 			requiredFees: formatCurrency(getRequiredFees(payment)),
 			optionalFees: formatCurrency(getOptionalFees(payment)),
 			transactionFees: formatCurrency(payment.transactionFee),
-			totalFees: formatCurrency(payment.paymentAmount),
+			totalFees: formatCurrency(payment.paymentAmount + payment.transactionFee),
 			players,
 		}
 

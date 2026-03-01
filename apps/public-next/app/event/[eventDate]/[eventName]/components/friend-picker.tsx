@@ -33,9 +33,9 @@ export function FriendPicker({ onSelect }: FriendPickerProps) {
 		}
 		const playerName = `${friend.first_name} ${friend.last_name}`
 		const feePlayer: FeePlayer = {
-			birthDate: null,
+			birthDate: friend.birth_date ?? null,
 			isMember: friend.is_member,
-			lastSeason: null,
+			lastSeason: friend.last_season ?? null,
 		}
 		onSelect(friend.id, playerName, feePlayer)
 	}
