@@ -28,7 +28,7 @@ export default defineConfig({
 		{
 			name: "public-next-authed",
 			testMatch:
-				/public-next\/(?!.*(?:guest|sign-in|sign-up|password-reset|reserve|registration-guard|registration-payment)).*\.spec\.ts/,
+				/public-next\/(?!.*(?:guest|sign-in|sign-up|password-reset|reserve|registration-guard|registration-payment|registration-duplicate)).*\.spec\.ts/,
 			dependencies: ["public-next-setup"],
 			use: {
 				baseURL: "http://localhost:3200",
@@ -38,7 +38,8 @@ export default defineConfig({
 		},
 		{
 			name: "public-next-self-auth",
-			testMatch: /public-next\/(?:reserve|registration-guard|registration-payment)\.spec\.ts/,
+			testMatch:
+				/public-next\/(?:reserve|registration-guard|registration-payment|registration-duplicate)\.spec\.ts/,
 			use: {
 				baseURL: "http://localhost:3200",
 				...devices["Desktop Chrome"],

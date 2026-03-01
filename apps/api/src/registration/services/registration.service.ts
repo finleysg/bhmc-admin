@@ -26,9 +26,11 @@ import {
 	EventFullError,
 	EventRegistrationNotOpenError,
 	EventRegistrationWaveError,
+	PlayerConflictError,
 	SlotConflictError,
 	SlotOverflowError,
 } from "../errors/registration.errors"
+import { isDuplicateEntryError } from "../../database/database-exception.filter"
 import { toRegistrationSlot, toRegistrationWithSlots } from "../mappers"
 import { RegistrationRepository } from "../repositories/registration.repository"
 import { getCurrentWave, getRegistrationWindow, getStartingWave } from "../wave-calculator"
@@ -138,8 +140,15 @@ export class RegistrationService {
 	 * Update a slot's player assignment.
 	 */
 	async updateSlotPlayer(slotId: number, playerId: number | null): Promise<RegistrationSlot> {
-		const row = await this.repository.updateRegistrationSlot(slotId, { playerId })
-		return toRegistrationSlot(row)
+		try {
+			const row = await this.repository.updateRegistrationSlot(slotId, { playerId })
+			return toRegistrationSlot(row)
+		} catch (error) {
+			if (isDuplicateEntryError(error)) {
+				throw new PlayerConflictError()
+			}
+			throw error
+		}
 	}
 
 	/**

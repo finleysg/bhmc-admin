@@ -14,6 +14,7 @@ import {
 import { RegistrationType } from "@/lib/event-utils"
 import type { FeePlayer } from "@/lib/registration/fee-utils"
 import { useRegistration } from "@/lib/registration/registration-context"
+import { cn } from "@/lib/utils"
 
 interface SearchResult {
 	id: number
@@ -98,32 +99,39 @@ export function PlayerPicker({ eventId, onSelect, excludeIds = [] }: PlayerPicke
 	return (
 		<Command shouldFilter={false} className="relative overflow-visible rounded-md border">
 			<CommandInput placeholder="Search for player..." value={query} onValueChange={setQuery} />
-			{showDropdown && (
-				<CommandList className="absolute top-full left-0 z-50 mt-1 w-full rounded-md border bg-popover shadow-md">
-					{results.length === 0 && !isSearching && <CommandEmpty>No players found.</CommandEmpty>}
-					{isSearching && <CommandEmpty>Searching...</CommandEmpty>}
-					{results.length > 0 && (
-						<CommandGroup>
-							{results.map((player) => (
-								<CommandItem
-									key={player.id}
-									value={String(player.id)}
-									onSelect={() => handleSelect(player)}
-								>
-									<div className="flex flex-col">
-										<span>
-											{player.first_name} {player.last_name}
-										</span>
-										{player.email && (
-											<span className="text-xs text-muted-foreground">{player.email}</span>
-										)}
-									</div>
-								</CommandItem>
-							))}
-						</CommandGroup>
-					)}
-				</CommandList>
-			)}
+			<CommandList
+				className={cn(
+					"absolute top-full left-0 z-50 mt-1 w-full rounded-md border bg-popover shadow-md",
+					!showDropdown && "hidden",
+				)}
+			>
+				{showDropdown && (
+					<>
+						{results.length === 0 && !isSearching && <CommandEmpty>No players found.</CommandEmpty>}
+						{isSearching && <CommandEmpty>Searching...</CommandEmpty>}
+						{results.length > 0 && (
+							<CommandGroup>
+								{results.map((player) => (
+									<CommandItem
+										key={player.id}
+										value={String(player.id)}
+										onSelect={() => handleSelect(player)}
+									>
+										<div className="flex flex-col">
+											<span>
+												{player.first_name} {player.last_name}
+											</span>
+											{player.email && (
+												<span className="text-xs text-muted-foreground">{player.email}</span>
+											)}
+										</div>
+									</CommandItem>
+								))}
+							</CommandGroup>
+						)}
+					</>
+				)}
+			</CommandList>
 		</Command>
 	)
 }

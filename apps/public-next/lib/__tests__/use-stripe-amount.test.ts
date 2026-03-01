@@ -21,7 +21,7 @@ function makeWrapper() {
 
 test("fetches stripe amount for a given payment ID", async () => {
 	const mockData = {
-		amountDue: { subtotal: 25.00, transactionFee: 1.05, total: 26.05 },
+		amountDue: { subtotal: 25.0, transactionFee: 1.05, total: 26.05 },
 		amountCents: 2605,
 	}
 

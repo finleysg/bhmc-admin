@@ -192,7 +192,7 @@ export default function RegisterPage() {
 							)}
 							{showPickers && (
 								<div className="md:hidden">
-									<FriendPicker onSelect={handleAddPlayer} />
+									<FriendPicker onSelect={handleAddPlayer} excludeIds={excludeIds} />
 								</div>
 							)}
 						</div>
@@ -244,7 +244,7 @@ export default function RegisterPage() {
 				{/* Sidebar: Friend picker (desktop only) */}
 				{showPickers && (
 					<div className="hidden md:block">
-						<FriendPicker onSelect={handleAddPlayer} />
+						<FriendPicker onSelect={handleAddPlayer} excludeIds={excludeIds} />
 					</div>
 				)}
 			</div>

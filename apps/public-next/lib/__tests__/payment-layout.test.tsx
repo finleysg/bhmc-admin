@@ -60,7 +60,11 @@ test("renders Elements provider when stripe amount loads", async () => {
 		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
 	)
 
-	render(<PaymentLayout><div>child content</div></PaymentLayout>)
+	render(
+		<PaymentLayout>
+			<div>child content</div>
+		</PaymentLayout>,
+	)
 
 	expect(screen.getByTestId("stripe-elements")).toBeTruthy()
 	expect(screen.getByText("child content")).toBeTruthy()
@@ -87,7 +91,11 @@ test("calls initiateStripeSession on mount", async () => {
 		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
 	)
 
-	render(<PaymentLayout><div>child</div></PaymentLayout>)
+	render(
+		<PaymentLayout>
+			<div>child</div>
+		</PaymentLayout>,
+	)
 
 	expect(mockInitiateStripeSession).toHaveBeenCalled()
 })
@@ -103,7 +111,11 @@ test("shows nothing while stripe amount is pending", async () => {
 		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
 	)
 
-	const { container } = render(<PaymentLayout><div>child content</div></PaymentLayout>)
+	const { container } = render(
+		<PaymentLayout>
+			<div>child content</div>
+		</PaymentLayout>,
+	)
 
 	expect(screen.queryByTestId("stripe-elements")).toBeNull()
 	expect(screen.queryByText("child content")).toBeNull()

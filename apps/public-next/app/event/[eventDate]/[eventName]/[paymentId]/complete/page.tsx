@@ -89,32 +89,26 @@ export default function CompletePage() {
 							Your payment for {formatCurrency(amount.total)} has been processed.
 						</p>
 						<p className="text-sm text-muted-foreground">
-							A confirmation email will be sent to {user?.email} and anyone you signed
-							up unless this is just an update. A payment receipt will also be sent from
-							Stripe.
+							A confirmation email will be sent to {user?.email} and anyone you signed up unless
+							this is just an update. A payment receipt will also be sent from Stripe.
 						</p>
 					</>
 				)}
 				{intent?.status === "processing" && (
 					<>
-						<p className="text-sm font-medium text-warning">
-							Your payment is being processed
-						</p>
+						<p className="text-sm font-medium text-warning">Your payment is being processed</p>
 						<p className="text-sm text-muted-foreground">
-							Your payment is being processed by your bank. This usually takes a few
-							moments. You will receive a confirmation email once the payment is
-							complete.
+							Your payment is being processed by your bank. This usually takes a few moments. You
+							will receive a confirmation email once the payment is complete.
 						</p>
 					</>
 				)}
 				{intent?.status === "requires_action" && (
 					<>
-						<p className="text-sm font-medium text-warning">
-							Additional verification required
-						</p>
+						<p className="text-sm font-medium text-warning">Additional verification required</p>
 						<p className="text-sm text-muted-foreground">
-							Your bank requires additional verification. Please complete the
-							verification process to finalize your payment.
+							Your bank requires additional verification. Please complete the verification process
+							to finalize your payment.
 						</p>
 					</>
 				)}
@@ -122,20 +116,15 @@ export default function CompletePage() {
 					<>
 						<p className="text-sm font-medium text-destructive">Payment failed</p>
 						<p className="text-sm text-muted-foreground">
-							Your payment method was declined. Please return to the payment page
-							and try a different payment method.
+							Your payment method was declined. Please return to the payment page and try a
+							different payment method.
 						</p>
-						<Link
-							href="../payment"
-							className="text-sm font-medium text-primary underline"
-						>
+						<Link href="../payment" className="text-sm font-medium text-primary underline">
 							Try Again
 						</Link>
 					</>
 				)}
-				{error && (
-					<p className="text-sm text-destructive">{error}</p>
-				)}
+				{error && <p className="text-sm text-destructive">{error}</p>}
 			</CardContent>
 			{(revalidated || intent?.status !== "succeeded") && (
 				<CardFooter className="flex gap-4">

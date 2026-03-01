@@ -65,7 +65,8 @@ async function apiFetch<T = unknown>(
 		let message: string
 		try {
 			const parsed = JSON.parse(body) as Record<string, unknown>
-			message = (parsed.detail as string) ?? (parsed.error as string) ?? body
+			message =
+				(parsed.detail as string) ?? (parsed.message as string) ?? (parsed.error as string) ?? body
 		} catch {
 			message = body
 		}

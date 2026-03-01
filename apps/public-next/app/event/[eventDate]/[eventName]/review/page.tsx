@@ -12,11 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { getEventUrl } from "@/lib/event-utils"
 import { calculateAmountDue } from "@/lib/registration/payment-utils"
 import { useRegistration } from "@/lib/registration/registration-context"
-import {
-	CompleteStep,
-	PaymentStep,
-	RegisterStep,
-} from "@/lib/registration/registration-reducer"
+import { CompleteStep, PaymentStep, RegisterStep } from "@/lib/registration/registration-reducer"
 import { AmountDue } from "../components/amount-due"
 import { CancelButton } from "../components/cancel-button"
 import { RegistrationCountdown } from "../components/registration-countdown"
@@ -123,8 +119,7 @@ export default function ReviewPage() {
 				{/* Player / fee line items */}
 				<div>
 					{slotsWithPlayers.map((slot) => {
-						const team =
-							teamSize > 1 ? Math.floor(slot.slot / teamSize) + 1 : 0
+						const team = teamSize > 1 ? Math.floor(slot.slot / teamSize) + 1 : 0
 						return (
 							<ReviewSlotLineItem
 								key={slot.id}

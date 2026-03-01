@@ -20,8 +20,14 @@ export default function PaymentPage() {
 	const elements = useElements()
 	const { user } = useAuth()
 	const { amount } = useCurrentPaymentAmount()
-	const { currentStep, clubEvent, setError, createPaymentIntent, updateStep, suppressBeforeUnload } =
-		useRegistration()
+	const {
+		currentStep,
+		clubEvent,
+		setError,
+		createPaymentIntent,
+		updateStep,
+		suppressBeforeUnload,
+	} = useRegistration()
 
 	const [paymentProcessing, setPaymentProcessing] = useState(false)
 	const [paymentSubmitted, setPaymentSubmitted] = useState(false)

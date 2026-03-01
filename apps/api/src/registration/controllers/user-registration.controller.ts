@@ -10,6 +10,7 @@ import {
 	Patch,
 	Post,
 	Put,
+	Query,
 	Req,
 } from "@nestjs/common"
 
@@ -18,18 +19,23 @@ import { RegistrationWithSlots } from "@repo/domain/types"
 import type {
 	AddPlayersRequest,
 	CancelRegistrationRequest,
+	Player,
 	ReserveRequest,
 	UpdateNotesRequest,
 	UpdateSlotPlayerRequest,
 } from "@repo/domain/types"
 import { RegistrationService } from "../services/registration.service"
+import { PlayerService } from "../services/player.service"
 import type { AuthenticatedRequest } from "../../auth"
 
 @Controller("registration")
 export class UserRegistrationController {
 	private readonly logger = new Logger(UserRegistrationController.name)
 
-	constructor(@Inject(RegistrationService) private readonly flowService: RegistrationService) {}
+	constructor(
+		@Inject(RegistrationService) private readonly flowService: RegistrationService,
+		@Inject(PlayerService) private readonly playerService: PlayerService,
+	) {}
 
 	/**
 	 * Create a registration and reserve slots.
@@ -45,6 +51,18 @@ export class UserRegistrationController {
 		this.logger.log(`Creating registration for user ${user.id} event ${dto.eventId}`)
 
 		return this.flowService.createAndReserve(user, dto)
+	}
+
+	/**
+	 * Search players by name, email, or GHIN.
+	 * GET /registration/players/search?pattern=xyz
+	 */
+	@Get("players/search")
+	async searchPlayers(@Query("pattern") pattern?: string): Promise<Player[]> {
+		if (!pattern || pattern.length < 3) {
+			return []
+		}
+		return this.playerService.searchPlayers({ searchText: pattern })
 	}
 
 	/**

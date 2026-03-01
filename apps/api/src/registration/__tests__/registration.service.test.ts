@@ -11,6 +11,7 @@ import {
 	CourseRequiredError,
 	EventFullError,
 	EventRegistrationNotOpenError,
+	PlayerConflictError,
 	SlotConflictError,
 	SlotOverflowError,
 } from "../errors/registration.errors"
@@ -572,6 +573,42 @@ describe("RegistrationService", () => {
 
 				await expect(service.createAndReserve(user, request)).rejects.toThrow(BadRequestException)
 			})
+		})
+	})
+
+	describe("updateSlotPlayer", () => {
+		it("throws PlayerConflictError on duplicate entry", async () => {
+			// GIVEN: Repository throws a Drizzle-wrapped duplicate entry error
+			const { service, repository } = createService()
+			const drizzleError = new Error("Failed query: update ...")
+			;(drizzleError as any).cause = { errno: 1062, code: "ER_DUP_ENTRY" }
+			repository.updateRegistrationSlot.mockRejectedValue(drizzleError)
+
+			// WHEN: Updating slot player
+			// THEN: PlayerConflictError (409) is thrown
+			await expect(service.updateSlotPlayer(1, 237)).rejects.toThrow(PlayerConflictError)
+		})
+
+		it("rethrows non-duplicate errors", async () => {
+			// GIVEN: Repository throws a generic error
+			const { service, repository } = createService()
+			repository.updateRegistrationSlot.mockRejectedValue(new Error("Connection lost"))
+
+			// WHEN/THEN: Original error propagates
+			await expect(service.updateSlotPlayer(1, 237)).rejects.toThrow("Connection lost")
+		})
+
+		it("returns slot on success", async () => {
+			// GIVEN: Repository succeeds
+			const { service, repository } = createService()
+			repository.updateRegistrationSlot.mockResolvedValue(createRegistrationSlotRow())
+
+			// WHEN: Updating slot player
+			const result = await service.updateSlotPlayer(1, 237)
+
+			// THEN: Mapped slot returned
+			expect(result).toBeDefined()
+			expect(result.id).toBe(1)
 		})
 	})
 

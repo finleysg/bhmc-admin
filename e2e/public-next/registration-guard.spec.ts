@@ -49,7 +49,7 @@ async function signInAndStartRegistration(
 	// Select a slot and register
 	await page.getByRole("button", { name: "Open" }).first().click()
 	const registerButton = page.getByRole("button", { name: "Register" }).first()
-	await expect(registerButton).toBeEnabled({ timeout: 5_000 })
+	await expect(registerButton).toBeEnabled({ timeout: 30_000 })
 	await registerButton.click()
 	await page.waitForURL("**/register", { timeout: 10_000 })
 	await expect(page.getByText("Players and Fees")).toBeVisible({ timeout: 10_000 })

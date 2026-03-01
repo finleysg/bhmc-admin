@@ -40,14 +40,18 @@ describe("useRegistrationGuard", () => {
 		it("does not add beforeunload listener when active is false", () => {
 			renderHook(() => useRegistrationGuard({ active: false }))
 
-			const beforeunloadCalls = addSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "beforeunload")
+			const beforeunloadCalls = addSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "beforeunload",
+			)
 			expect(beforeunloadCalls).toHaveLength(0)
 		})
 
 		it("adds beforeunload listener when active is true", () => {
 			renderHook(() => useRegistrationGuard({ active: true }))
 
-			const beforeunloadCalls = addSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "beforeunload")
+			const beforeunloadCalls = addSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "beforeunload",
+			)
 			expect(beforeunloadCalls).toHaveLength(1)
 		})
 
@@ -71,7 +75,9 @@ describe("useRegistrationGuard", () => {
 
 			rerender({ active: false })
 
-			const removeCalls = removeSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "beforeunload")
+			const removeCalls = removeSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "beforeunload",
+			)
 			expect(removeCalls).toHaveLength(1)
 		})
 
@@ -80,7 +86,9 @@ describe("useRegistrationGuard", () => {
 
 			unmount()
 
-			const removeCalls = removeSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "beforeunload")
+			const removeCalls = removeSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "beforeunload",
+			)
 			expect(removeCalls).toHaveLength(1)
 		})
 
@@ -91,7 +99,9 @@ describe("useRegistrationGuard", () => {
 				result.current.suppressBeforeUnload()
 			})
 
-			const removeCalls = removeSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "beforeunload")
+			const removeCalls = removeSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "beforeunload",
+			)
 			expect(removeCalls).toHaveLength(1)
 		})
 
@@ -102,7 +112,9 @@ describe("useRegistrationGuard", () => {
 				result.current.suppressBeforeUnload()
 			})
 
-			const removeCalls = removeSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "beforeunload")
+			const removeCalls = removeSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "beforeunload",
+			)
 			expect(removeCalls).toHaveLength(0)
 		})
 
@@ -120,7 +132,9 @@ describe("useRegistrationGuard", () => {
 
 			// The handler should have been removed — calling it directly still works
 			// but the important thing is removeEventListener was called
-			const removeCalls = removeSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "beforeunload")
+			const removeCalls = removeSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "beforeunload",
+			)
 			expect(removeCalls).toHaveLength(1)
 			// The removed handler should be the same reference as the added one
 			expect(removeCalls[0][1]).toBe(handler)
@@ -193,7 +207,9 @@ describe("useRegistrationGuard", () => {
 		it("adds popstate listener and pushes history entry when active on registration flow URL", () => {
 			renderHook(() => useRegistrationGuard({ active: true }))
 
-			const popstateCalls = addSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "popstate")
+			const popstateCalls = addSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "popstate",
+			)
 			expect(popstateCalls).toHaveLength(1)
 			expect(pushStateSpy).toHaveBeenCalledWith(null, "", location.href)
 		})
@@ -201,7 +217,9 @@ describe("useRegistrationGuard", () => {
 		it("does not add popstate listener when inactive", () => {
 			renderHook(() => useRegistrationGuard({ active: false }))
 
-			const popstateCalls = addSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "popstate")
+			const popstateCalls = addSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "popstate",
+			)
 			expect(popstateCalls).toHaveLength(0)
 		})
 
@@ -209,7 +227,9 @@ describe("useRegistrationGuard", () => {
 			mockPathname.mockReturnValue("/calendar")
 			renderHook(() => useRegistrationGuard({ active: true }))
 
-			const popstateCalls = addSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "popstate")
+			const popstateCalls = addSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "popstate",
+			)
 			expect(popstateCalls).toHaveLength(0)
 		})
 
@@ -218,7 +238,9 @@ describe("useRegistrationGuard", () => {
 
 			unmount()
 
-			const removeCalls = removeSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "popstate")
+			const removeCalls = removeSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "popstate",
+			)
 			expect(removeCalls).toHaveLength(1)
 		})
 
@@ -253,10 +275,9 @@ describe("useRegistrationGuard", () => {
 		})
 
 		it("navigatingRef resets when guard deactivates so a new registration works", () => {
-			const { result, rerender } = renderHook(
-				({ active }) => useRegistrationGuard({ active }),
-				{ initialProps: { active: true } },
-			)
+			const { result, rerender } = renderHook(({ active }) => useRegistrationGuard({ active }), {
+				initialProps: { active: true },
+			})
 
 			const call = addSpy.mock.calls.find((c: [string, ...unknown[]]) => c[0] === "popstate")
 			const handler = call[1]
@@ -310,7 +331,9 @@ describe("useRegistrationGuard", () => {
 		it("adds capture-phase click listener on document when active", () => {
 			renderHook(() => useRegistrationGuard({ active: true }))
 
-			const clickCalls = docAddSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "click")
+			const clickCalls = docAddSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "click",
+			)
 			expect(clickCalls).toHaveLength(1)
 			expect(clickCalls[0][2]).toBe(true)
 		})
@@ -318,7 +341,9 @@ describe("useRegistrationGuard", () => {
 		it("does not add click listener when inactive", () => {
 			renderHook(() => useRegistrationGuard({ active: false }))
 
-			const clickCalls = docAddSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "click")
+			const clickCalls = docAddSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "click",
+			)
 			expect(clickCalls).toHaveLength(0)
 		})
 
@@ -327,7 +352,9 @@ describe("useRegistrationGuard", () => {
 
 			unmount()
 
-			const removeCalls = docRemoveSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "click")
+			const removeCalls = docRemoveSpy.mock.calls.filter(
+				(call: [string, ...unknown[]]) => call[0] === "click",
+			)
 			expect(removeCalls).toHaveLength(1)
 		})
 

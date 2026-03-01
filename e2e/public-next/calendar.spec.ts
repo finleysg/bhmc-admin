@@ -11,9 +11,9 @@ test.describe("Calendar Page", () => {
 		await page.goto("/calendar")
 
 		await expect(page.getByRole("heading", { level: 2 })).toBeVisible()
-		await expect(page.getByText("Sun", { exact: true })).toBeVisible()
-		await expect(page.getByText("Mon", { exact: true })).toBeVisible()
-		await expect(page.getByText("Tue", { exact: true })).toBeVisible()
+		await expect(page.getByText("Sun", { exact: true }).first()).toBeVisible()
+		await expect(page.getByText("Mon", { exact: true }).first()).toBeVisible()
+		await expect(page.getByText("Tue", { exact: true }).first()).toBeVisible()
 	})
 
 	test("month navigation works", async ({ page }) => {
