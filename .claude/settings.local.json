@@ -54,7 +54,8 @@
 			"mcp__chrome-devtools__fill_form",
 			"mcp__chrome-devtools__wait_for",
 			"mcp__chrome-devtools__fill",
-			"mcp__chrome-devtools__type_text"
+			"mcp__chrome-devtools__type_text",
+			"Bash(tree:*)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],
