@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen, waitFor } from "@testing-library/react"
+import { act, render, screen, waitFor } from "@testing-library/react"
 import React from "react"
 
 // Mock useCurrentPaymentAmount (from the payment layout)
@@ -43,10 +43,15 @@ jest.mock("@stripe/react-stripe-js", () => ({
 }))
 
 beforeEach(() => {
+	jest.useFakeTimers()
 	mockSearchParams = new URLSearchParams("payment_intent_client_secret=pi_secret_test")
 	mockRetrievePaymentIntent.mockReset()
 	mockUseStripe.mockReturnValue({ retrievePaymentIntent: mockRetrievePaymentIntent })
 	globalThis.fetch = jest.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) })
+})
+
+afterEach(() => {
+	jest.useRealTimers()
 })
 
 test("shows success message when payment succeeded", async () => {
@@ -170,8 +175,6 @@ test("shows error when client secret is missing", async () => {
 })
 
 test("renders navigation links to registrations and home", async () => {
-	jest.useFakeTimers()
-
 	mockRetrievePaymentIntent.mockResolvedValue({
 		paymentIntent: { status: "succeeded" },
 	})
@@ -187,7 +190,7 @@ test("renders navigation links to registrations and home", async () => {
 	})
 
 	// Advance past the revalidation delay and flush the fetch promise
-	await jest.advanceTimersByTimeAsync(1500)
+	await act(() => jest.advanceTimersByTimeAsync(1500))
 
 	// Links appear after the revalidation fetch completes
 	const playersLink = await screen.findByRole("link", { name: /see all players/i })
@@ -197,6 +200,4 @@ test("renders navigation links to registrations and home", async () => {
 	const homeLink = screen.getByRole("link", { name: /home/i })
 	expect(homeLink).toBeTruthy()
 	expect(homeLink.getAttribute("href")).toBe("/home")
-
-	jest.useRealTimers()
 })

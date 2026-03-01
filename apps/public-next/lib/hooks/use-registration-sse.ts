@@ -45,12 +45,10 @@ export function useRegistrationSSE({
 		cleanup()
 
 		const url = `/api/registration/${eventId}/live`
-		console.log("[SSE] connecting to", url)
 		const es = new EventSource(url)
 		eventSourceRef.current = es
 
 		es.onopen = () => {
-			console.log("[SSE] connection opened")
 			retryCountRef.current = 0
 			setConnected(true)
 		}
@@ -59,7 +57,6 @@ export function useRegistrationSSE({
 			try {
 				const messageEvent = event as MessageEvent<string>
 				const data = JSON.parse(messageEvent.data) as SSEUpdateEvent
-				console.log("[SSE] update received, currentWave:", data.currentWave)
 				onUpdate?.(data)
 			} catch (err) {
 				console.error("Failed to parse SSE update:", err)
