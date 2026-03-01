@@ -130,6 +130,39 @@ test("requires minimum group size during priority registration", async ({ page }
 	}
 })
 
+test("redirects to event detail page when registration is closed", async ({ page }) => {
+	test.setTimeout(60_000)
+
+	// Create an event with registration windows in the past
+	const startDate = new Date()
+	startDate.setDate(startDate.getDate() + 4)
+	const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+	const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+	const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+
+	const closedEvent = await createTestEvent(token, 914, startDate.toISOString().slice(0, 10), {
+		priority_signup_start: threeHoursAgo,
+		signup_start: twoHoursAgo,
+		signup_end: oneHourAgo,
+		payments_end: oneHourAgo,
+	})
+
+	try {
+		await warmCacheAndVerify(closedEvent.eventUrl, closedEvent.name)
+
+		// Navigate directly to the reserve page
+		await page.goto(`${PUBLIC_NEXT_URL}${closedEvent.reserveUrl}`)
+
+		// Should redirect to the event detail page
+		await expect(page).toHaveURL(`${PUBLIC_NEXT_URL}${closedEvent.eventUrl}`, { timeout: 10_000 })
+
+		// Verify the event detail page rendered
+		await expect(page.getByText(closedEvent.name)).toBeVisible()
+	} finally {
+		await deleteTestEvent(token, closedEvent.id)
+	}
+})
+
 test("shows real-time updates when another user registers", async ({ browser }) => {
 	test.setTimeout(90_000)
 

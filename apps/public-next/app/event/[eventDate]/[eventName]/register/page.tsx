@@ -167,7 +167,7 @@ export default function RegisterPage() {
 
 	return (
 		<>
-			<div className="grid gap-6 md:max-w-[60%] md:grid-cols-[1fr_16rem]">
+			<div className="grid gap-6 md:grid-cols-[560px_16rem]">
 				{/* Main card */}
 				<Card>
 					<CardHeader>

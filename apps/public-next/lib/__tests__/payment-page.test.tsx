@@ -14,6 +14,7 @@ jest.mock("../../app/event/[eventDate]/[eventName]/[paymentId]/layout", () => ({
 // Mock useRegistration
 const mockCreatePaymentIntent = jest.fn()
 const mockUpdateStep = jest.fn()
+const mockSuppressBeforeUnload = jest.fn()
 jest.mock("../registration/registration-context", () => ({
 	useRegistration: () => ({
 		currentStep: { name: "payment", order: 4, title: "Submit Payment" },
@@ -27,6 +28,7 @@ jest.mock("../registration/registration-context", () => ({
 		updateStep: mockUpdateStep,
 		cancelRegistration: jest.fn(),
 		completeRegistration: jest.fn(),
+		suppressBeforeUnload: mockSuppressBeforeUnload,
 	}),
 }))
 
@@ -63,6 +65,7 @@ beforeEach(() => {
 	mockCreatePaymentIntent.mockReset()
 	mockUpdateStep.mockReset()
 	mockReplace.mockReset()
+	mockSuppressBeforeUnload.mockReset()
 	mockUseStripe.mockReturnValue({})
 	mockUseElements.mockReturnValue({})
 })
@@ -189,4 +192,78 @@ test("adds beforeunload handler during processing", async () => {
 
 	addSpy.mockRestore()
 	removeSpy.mockRestore()
+})
+
+test("calls suppressBeforeUnload before confirmPayment", async () => {
+	const callOrder: string[] = []
+	const mockSubmit = jest.fn().mockResolvedValue({})
+	const mockConfirmPayment = jest.fn().mockImplementation(() => {
+		callOrder.push("confirmPayment")
+		return Promise.resolve({})
+	})
+	mockSuppressBeforeUnload.mockImplementation(() => {
+		callOrder.push("suppressBeforeUnload")
+	})
+
+	mockUseStripe.mockReturnValue({ confirmPayment: mockConfirmPayment })
+	mockUseElements.mockReturnValue({ submit: mockSubmit })
+	mockCreatePaymentIntent.mockResolvedValue({ client_secret: "pi_test_secret" })
+
+	const { default: PaymentPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
+	)
+
+	render(<PaymentPage />)
+
+	fireEvent.click(screen.getByRole("button", { name: /submit payment/i }))
+
+	await waitFor(() => {
+		expect(mockConfirmPayment).toHaveBeenCalled()
+	})
+
+	expect(mockSuppressBeforeUnload).toHaveBeenCalled()
+	expect(callOrder.indexOf("suppressBeforeUnload")).toBeLessThan(
+		callOrder.indexOf("confirmPayment"),
+	)
+})
+
+test("beforeunload handler does not preventDefault after payment submitted", async () => {
+	const addSpy = jest.spyOn(window, "addEventListener")
+
+	// Make confirmPayment hang to keep the component in "submitted" state
+	const mockSubmit = jest.fn().mockResolvedValue({})
+	const mockConfirmPayment = jest.fn().mockReturnValue(new Promise(() => {}))
+
+	mockUseStripe.mockReturnValue({ confirmPayment: mockConfirmPayment })
+	mockUseElements.mockReturnValue({ submit: mockSubmit })
+	mockCreatePaymentIntent.mockResolvedValue({ client_secret: "pi_test_secret" })
+
+	const { default: PaymentPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
+	)
+
+	render(<PaymentPage />)
+
+	fireEvent.click(screen.getByRole("button", { name: /submit payment/i }))
+
+	await waitFor(() => {
+		expect(mockConfirmPayment).toHaveBeenCalled()
+	})
+
+	// Find the beforeunload handler added by the payment page
+	const beforeunloadCall = addSpy.mock.calls.find(
+		(c: [string, ...unknown[]]) => c[0] === "beforeunload",
+	)
+	expect(beforeunloadCall).toBeDefined()
+
+	const handler = beforeunloadCall![1] as (e: BeforeUnloadEvent) => void
+	const event = new Event("beforeunload") as BeforeUnloadEvent
+	const preventDefaultSpy = jest.spyOn(event, "preventDefault")
+
+	handler(event)
+
+	// redirectingRef.current is true, so preventDefault should NOT be called
+	expect(preventDefaultSpy).not.toHaveBeenCalled()
+
+	addSpy.mockRestore()
 })

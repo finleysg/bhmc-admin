@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
@@ -20,15 +20,18 @@ export default function PaymentPage() {
 	const elements = useElements()
 	const { user } = useAuth()
 	const { amount } = useCurrentPaymentAmount()
-	const { currentStep, clubEvent, setError, createPaymentIntent, updateStep } = useRegistration()
+	const { currentStep, clubEvent, setError, createPaymentIntent, updateStep, suppressBeforeUnload } =
+		useRegistration()
 
 	const [paymentProcessing, setPaymentProcessing] = useState(false)
 	const [paymentSubmitted, setPaymentSubmitted] = useState(false)
+	const redirectingRef = useRef(false)
 
 	useEffect(() => {
 		if (!paymentProcessing) return
 
 		const handler = (e: BeforeUnloadEvent) => {
+			if (redirectingRef.current) return
 			e.preventDefault()
 		}
 		window.addEventListener("beforeunload", handler)
@@ -56,8 +59,10 @@ export default function PaymentPage() {
 		// 2. Create the payment intent
 		const intent = await createPaymentIntent()
 
-		// 3. Confirm the payment
+		// 3. Confirm the payment — suppress beforeunload handlers before the redirect
 		setPaymentSubmitted(true)
+		redirectingRef.current = true
+		suppressBeforeUnload()
 		await stripe.confirmPayment({
 			elements,
 			clientSecret: intent.client_secret,
@@ -72,10 +77,10 @@ export default function PaymentPage() {
 				return_url: `${window.location.origin}${window.location.pathname.replace("/payment", "/complete")}`,
 			},
 		})
-	}, [stripe, elements, createPaymentIntent, setError, user])
+	}, [stripe, elements, createPaymentIntent, setError, suppressBeforeUnload, user])
 
 	return (
-		<Card className="md:max-w-[60%]">
+		<Card className="md:max-w-[560px]">
 			<CardHeader>
 				<CardTitle className="text-lg">{currentStep.title}</CardTitle>
 			</CardHeader>

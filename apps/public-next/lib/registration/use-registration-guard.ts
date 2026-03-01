@@ -14,6 +14,7 @@ interface UseRegistrationGuardReturn {
 	requestNavigation: (href: string) => void
 	cancelNavigation: () => void
 	confirmNavigation: () => string | null
+	suppressBeforeUnload: () => void
 }
 
 export function useRegistrationGuard({
@@ -24,6 +25,7 @@ export function useRegistrationGuard({
 	const activeRef = useRef(active)
 	activeRef.current = active
 	const navigatingRef = useRef(false)
+	const beforeUnloadHandlerRef = useRef<((e: BeforeUnloadEvent) => void) | null>(null)
 	const pathname = usePathname()
 
 	// --- beforeunload ---
@@ -35,11 +37,21 @@ export function useRegistrationGuard({
 			e.returnValue = ""
 		}
 
+		beforeUnloadHandlerRef.current = handler
 		window.addEventListener("beforeunload", handler)
 		return () => {
 			window.removeEventListener("beforeunload", handler)
+			beforeUnloadHandlerRef.current = null
 		}
 	}, [active])
+
+	const suppressBeforeUnload = useCallback(() => {
+		const handler = beforeUnloadHandlerRef.current
+		if (handler) {
+			window.removeEventListener("beforeunload", handler)
+			beforeUnloadHandlerRef.current = null
+		}
+	}, [])
 
 	// --- Document-level click interception for in-app links ---
 	useEffect(() => {
@@ -128,6 +140,7 @@ export function useRegistrationGuard({
 		requestNavigation,
 		cancelNavigation,
 		confirmNavigation,
+		suppressBeforeUnload,
 	}
 }
 

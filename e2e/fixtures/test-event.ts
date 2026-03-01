@@ -52,14 +52,29 @@ export async function createTestEvent(
 ): Promise<TestEvent> {
 	const date = startDate ?? tomorrow()
 
-	// 1. Copy the template event
-	const copyRes = await fetch(
-		`${DJANGO_URL}/api/events/${templateId}/copy_event/?start_dt=${date}`,
-		{
+	// 1. Copy the template event (handle 409 from orphaned events on the same date)
+	const headers = { Authorization: `Token ${token}` }
+	let copyRes = await fetch(`${DJANGO_URL}/api/events/${templateId}/copy_event/?start_dt=${date}`, {
+		method: "POST",
+		headers,
+	})
+	if (copyRes.status === 409) {
+		// Orphaned event exists on this date — find and force-delete, then retry
+		const listRes = await fetch(
+			`${DJANGO_URL}/api/events/?year=${date.slice(0, 4)}&month=${parseInt(date.slice(5, 7))}`,
+			{ headers },
+		)
+		if (listRes.ok) {
+			const events = (await listRes.json()) as { id: number; start_date: string }[]
+			for (const evt of events.filter((e) => e.start_date.startsWith(date))) {
+				await deleteTestEvent(token, evt.id)
+			}
+		}
+		copyRes = await fetch(`${DJANGO_URL}/api/events/${templateId}/copy_event/?start_dt=${date}`, {
 			method: "POST",
-			headers: { Authorization: `Token ${token}` },
-		},
-	)
+			headers,
+		})
+	}
 	if (!copyRes.ok) {
 		throw new Error(
 			`Failed to copy event ${templateId} (${copyRes.status}): ${await copyRes.text()}`,
@@ -123,7 +138,7 @@ export async function createTestEvent(
 
 export async function deleteTestEvent(token: string, eventId: number): Promise<void> {
 	try {
-		await fetch(`${DJANGO_URL}/api/events/${eventId}/`, {
+		await fetch(`${DJANGO_URL}/api/events/${eventId}/force_delete/`, {
 			method: "DELETE",
 			headers: { Authorization: `Token ${token}` },
 		})

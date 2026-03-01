@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils import timezone
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -284,6 +284,19 @@ class EventViewSet(viewsets.ModelViewSet):
         )
 
         return Response(result)
+
+    @action(detail=True, methods=["delete"], permission_classes=[IsAdminUser])
+    def force_delete(self, request, pk):
+        """Dev-only: delete an event and all its dependencies (including payments)."""
+        from bhmc.settings import DJANGO_ENV
+
+        if DJANGO_ENV == "prod":
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        event = Event.objects.get(pk=pk)
+        event.payments.all().delete()
+        event.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class FeeTypeViewSet(viewsets.ModelViewSet):

@@ -150,9 +150,8 @@ export function ReserveGrid({
 	return (
 		<>
 			{!sseConnected && sseCurrentWave !== null && (
-				<div className="mt-4 flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+				<div className="text-sm text-muted-foreground">
 					<WifiOff className="h-4 w-4 shrink-0" />
-					Live updates unavailable — refreshing automatically
 				</div>
 			)}
 			<TeeSheetTabs

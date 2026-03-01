@@ -83,6 +83,48 @@ describe("useRegistrationGuard", () => {
 			const removeCalls = removeSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "beforeunload")
 			expect(removeCalls).toHaveLength(1)
 		})
+
+		it("suppressBeforeUnload removes the listener", () => {
+			const { result } = renderHook(() => useRegistrationGuard({ active: true }))
+
+			act(() => {
+				result.current.suppressBeforeUnload()
+			})
+
+			const removeCalls = removeSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "beforeunload")
+			expect(removeCalls).toHaveLength(1)
+		})
+
+		it("suppressBeforeUnload is a no-op when guard is inactive", () => {
+			const { result } = renderHook(() => useRegistrationGuard({ active: false }))
+
+			act(() => {
+				result.current.suppressBeforeUnload()
+			})
+
+			const removeCalls = removeSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "beforeunload")
+			expect(removeCalls).toHaveLength(0)
+		})
+
+		it("suppressBeforeUnload prevents beforeunload from firing", () => {
+			const { result } = renderHook(() => useRegistrationGuard({ active: true }))
+
+			// Get the handler that was registered
+			const call = addSpy.mock.calls.find((c: [string, ...unknown[]]) => c[0] === "beforeunload")
+			const handler = call[1] as (e: BeforeUnloadEvent) => void
+
+			// Suppress the handler
+			act(() => {
+				result.current.suppressBeforeUnload()
+			})
+
+			// The handler should have been removed — calling it directly still works
+			// but the important thing is removeEventListener was called
+			const removeCalls = removeSpy.mock.calls.filter((call: [string, ...unknown[]]) => call[0] === "beforeunload")
+			expect(removeCalls).toHaveLength(1)
+			// The removed handler should be the same reference as the added one
+			expect(removeCalls[0][1]).toBe(handler)
+		})
 	})
 
 	describe("in-app navigation", () => {

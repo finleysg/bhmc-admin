@@ -60,7 +60,7 @@ export default function CompletePage() {
 						: "Payment Status"
 
 	return (
-		<Card className="md:max-w-[60%]">
+		<Card className="md:max-w-[560px]">
 			<CardHeader>
 				<CardTitle className="text-lg">{title}</CardTitle>
 			</CardHeader>

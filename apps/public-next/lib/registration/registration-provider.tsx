@@ -86,8 +86,13 @@ export function RegistrationProvider({
 
 	// --- Navigation guard ---
 	const guardActive = state.mode === "new" && state.registration !== null
-	const { pendingNavigation, requestNavigation, cancelNavigation, confirmNavigation } =
-		useRegistrationGuard({ active: guardActive })
+	const {
+		pendingNavigation,
+		requestNavigation,
+		cancelNavigation,
+		confirmNavigation,
+		suppressBeforeUnload,
+	} = useRegistrationGuard({ active: guardActive })
 
 	// Load event into state on mount or event change
 	useEffect(() => {
@@ -710,6 +715,7 @@ export function RegistrationProvider({
 			requestNavigation,
 			savePayment,
 			setError,
+			suppressBeforeUnload,
 			updateRegistrationNotes,
 			updateStep,
 		}),
@@ -730,6 +736,7 @@ export function RegistrationProvider({
 			requestNavigation,
 			savePayment,
 			setError,
+			suppressBeforeUnload,
 			updateRegistrationNotes,
 			updateStep,
 		],

@@ -102,7 +102,7 @@ export default function ReviewPage() {
 	const fees = clubEvent.fees
 
 	return (
-		<Card className="md:max-w-[60%]">
+		<Card className="md:max-w-[560px]">
 			<CardHeader>
 				<CardTitle className="text-lg">{currentStep.title}</CardTitle>
 			</CardHeader>

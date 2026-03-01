@@ -55,6 +55,7 @@ export interface IRegistrationContext {
 	removePlayer: (slot: ServerRegistrationSlot) => void
 	requestNavigation: (href: string) => void
 	savePayment: () => Promise<void>
+	suppressBeforeUnload: () => void
 	setError: (error: string | null) => void
 	updateRegistrationNotes: (notes: string) => Promise<void>
 	updateStep: (step: RegistrationStep) => void
