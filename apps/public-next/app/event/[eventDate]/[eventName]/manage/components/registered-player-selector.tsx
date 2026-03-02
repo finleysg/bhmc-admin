@@ -52,11 +52,7 @@ export function RegisteredPlayerSelector({
 		<div className="space-y-2">
 			{!isSingleSelect && (
 				<div className="flex items-center gap-2 pb-1">
-					<Checkbox
-						id="select-all"
-						checked={isAllSelected}
-						onCheckedChange={handleSelectAll}
-					/>
+					<Checkbox id="select-all" checked={isAllSelected} onCheckedChange={handleSelectAll} />
 					<Label htmlFor="select-all" className="font-semibold">
 						Select All
 					</Label>

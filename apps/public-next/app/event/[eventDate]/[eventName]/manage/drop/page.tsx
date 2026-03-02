@@ -98,20 +98,13 @@ export default function ManageDropPage() {
 				<CardContent>
 					<div className="space-y-2">
 						<Label className="font-semibold">Select players to drop</Label>
-						<RegisteredPlayerSelector
-							registration={registration}
-							onChange={setSelectedPlayerIds}
-						/>
+						<RegisteredPlayerSelector registration={registration} onChange={setSelectedPlayerIds} />
 					</div>
 				</CardContent>
 				<CardFooter className="flex-col items-stretch gap-4">
 					<Separator />
 					<div className="flex justify-end gap-2">
-						<Button
-							variant="ghost"
-							onClick={() => router.push(manageUrl)}
-							disabled={isSubmitting}
-						>
+						<Button variant="ghost" onClick={() => router.push(manageUrl)} disabled={isSubmitting}>
 							Back
 						</Button>
 						<Button
@@ -130,15 +123,13 @@ export default function ManageDropPage() {
 					<AlertDialogHeader>
 						<AlertDialogTitle>Drop Players</AlertDialogTitle>
 						<AlertDialogDescription>
-							Are you sure you want to remove {selectedPlayerIds.length} player(s) from
-							your group? Any paid fees will be automatically refunded.
+							Are you sure you want to remove {selectedPlayerIds.length} player(s) from your group?
+							Any paid fees will be automatically refunded.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction onClick={() => void handleDrop()}>
-							Confirm
-						</AlertDialogAction>
+						<AlertDialogAction onClick={() => void handleDrop()}>Confirm</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>

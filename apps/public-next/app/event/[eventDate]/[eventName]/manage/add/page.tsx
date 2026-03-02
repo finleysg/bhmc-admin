@@ -50,9 +50,7 @@ export default function ManageAddPage() {
 		: (clubEvent.maximum_signup_group_size ?? 0) -
 			registration.slots.filter((s) => s.player !== null).length
 
-	const registeredPlayerIds = allSlots
-		.filter((s) => s.player !== null)
-		.map((s) => s.player!.id)
+	const registeredPlayerIds = allSlots.filter((s) => s.player !== null).map((s) => s.player!.id)
 
 	const excludeIds = [...registeredPlayerIds, ...selectedPlayers.map((p) => p.id)]
 
@@ -93,9 +91,7 @@ export default function ManageAddPage() {
 						<CardTitle className="text-lg">Add Players</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<p className="text-muted-foreground text-sm">
-							No available slots to add players.
-						</p>
+						<p className="text-muted-foreground text-sm">No available slots to add players.</p>
 					</CardContent>
 					<CardFooter className="flex-col items-stretch gap-4">
 						<Separator />
@@ -122,9 +118,8 @@ export default function ManageAddPage() {
 					<div className="space-y-4">
 						<div className="space-y-2">
 							<Label className="font-semibold">
-								Search for players to add ({availableSlots - selectedPlayers.length}{" "}
-								slot{availableSlots - selectedPlayers.length !== 1 ? "s" : ""}{" "}
-								available)
+								Search for players to add ({availableSlots - selectedPlayers.length} slot
+								{availableSlots - selectedPlayers.length !== 1 ? "s" : ""} available)
 							</Label>
 							<PlayerPicker
 								eventId={clubEvent.id}
@@ -160,17 +155,10 @@ export default function ManageAddPage() {
 				<CardFooter className="flex-col items-stretch gap-4">
 					<Separator />
 					<div className="flex justify-end gap-2">
-						<Button
-							variant="ghost"
-							onClick={() => router.push(manageUrl)}
-							disabled={isSubmitting}
-						>
+						<Button variant="ghost" onClick={() => router.push(manageUrl)} disabled={isSubmitting}>
 							Back
 						</Button>
-						<Button
-							onClick={() => void handleContinue()}
-							disabled={!canContinue || isSubmitting}
-						>
+						<Button onClick={() => void handleContinue()} disabled={!canContinue || isSubmitting}>
 							{isSubmitting ? "Adding..." : "Continue"}
 						</Button>
 					</div>

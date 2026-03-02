@@ -166,9 +166,7 @@ beforeEach(() => {
 })
 
 test("renders drop players page with player list and disabled Drop button", async () => {
-	const { default: DropPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/drop/page"
-	)
+	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
 
 	render(<DropPage />)
 
@@ -181,9 +179,7 @@ test("renders drop players page with player list and disabled Drop button", asyn
 })
 
 test("Drop button enabled after selecting a player", async () => {
-	const { default: DropPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/drop/page"
-	)
+	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
 
 	render(<DropPage />)
 
@@ -194,9 +190,7 @@ test("Drop button enabled after selecting a player", async () => {
 })
 
 test("clicking Drop shows confirmation dialog with refund notice", async () => {
-	const { default: DropPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/drop/page"
-	)
+	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
 
 	render(<DropPage />)
 
@@ -216,9 +210,7 @@ test("confirming drop calls POST API with slot IDs and navigates to manage", asy
 		json: () => Promise.resolve({ droppedCount: 1 }),
 	})
 
-	const { default: DropPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/drop/page"
-	)
+	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
 
 	render(<DropPage />)
 
@@ -254,9 +246,7 @@ test("dropping self navigates to event detail page", async () => {
 		json: () => Promise.resolve({ droppedCount: 1 }),
 	})
 
-	const { default: DropPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/drop/page"
-	)
+	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
 
 	render(<DropPage />)
 
@@ -281,9 +271,7 @@ test("dropping self navigates to event detail page", async () => {
 test("shows error toast on API failure", async () => {
 	;(global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 500 })
 
-	const { default: DropPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/drop/page"
-	)
+	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
 
 	render(<DropPage />)
 

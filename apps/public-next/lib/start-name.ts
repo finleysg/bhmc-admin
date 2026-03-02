@@ -23,9 +23,7 @@ function getOffset(startingOrder: number, intervals: number[]): number {
 
 function calculateTeetime(startingTime: Date, startingOrder: number, intervals: number[]): string {
 	const offset =
-		intervals.length === 1
-			? startingOrder * intervals[0]
-			: getOffset(startingOrder, intervals)
+		intervals.length === 1 ? startingOrder * intervals[0] : getOffset(startingOrder, intervals)
 	return format(addMinutes(startingTime, offset), "h:mm a")
 }
 

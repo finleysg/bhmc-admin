@@ -203,4 +203,74 @@ describe("AdminRegistrationController", () => {
 			expect(registrationService.findRegistrationById).toHaveBeenCalledWith(42, 5)
 		})
 	})
+
+	describe("movePlayers", () => {
+		const moveRequest = {
+			sourceSlotIds: [101, 102],
+			destinationStartingHoleId: 200,
+			destinationStartingOrder: 1,
+		}
+
+		it("non-admin user: validates ownership then moves players", async () => {
+			const { controller, playerService, registrationService } = createController()
+			const user = createUser()
+			const req = { user } as any
+
+			registrationService.findSlotById.mockResolvedValue({ registrationId: 42 })
+			registrationService.findRegistrationById.mockResolvedValue({ id: 42 })
+			playerService.movePlayers.mockResolvedValue({ movedCount: 2 })
+
+			const result = await controller.movePlayers(100, moveRequest, req)
+
+			expect(registrationService.findSlotById).toHaveBeenCalledWith(101)
+			expect(registrationService.findRegistrationById).toHaveBeenCalledWith(42, 1)
+			expect(playerService.movePlayers).toHaveBeenCalledWith(100, moveRequest)
+			expect(result).toEqual({ movedCount: 2 })
+		})
+
+		it("admin user: skips ownership check and moves players", async () => {
+			const { controller, playerService, registrationService } = createController()
+			const user = createUser({ isStaff: true })
+			const req = { user } as any
+
+			playerService.movePlayers.mockResolvedValue({ movedCount: 2 })
+
+			const result = await controller.movePlayers(100, moveRequest, req)
+
+			expect(registrationService.findSlotById).not.toHaveBeenCalled()
+			expect(registrationService.findRegistrationById).not.toHaveBeenCalled()
+			expect(playerService.movePlayers).toHaveBeenCalledWith(100, moveRequest)
+			expect(result).toEqual({ movedCount: 2 })
+		})
+
+		it("non-admin ownership failure: throws ForbiddenException", async () => {
+			const { controller, registrationService } = createController()
+			const user = createUser({ playerId: 5 })
+			const req = { user } as any
+
+			registrationService.findSlotById.mockResolvedValue({ registrationId: 42 })
+			registrationService.findRegistrationById.mockRejectedValue(
+				new ForbiddenException("Not authorized"),
+			)
+
+			await expect(controller.movePlayers(100, moveRequest, req)).rejects.toThrow(
+				ForbiddenException,
+			)
+
+			expect(registrationService.findSlotById).toHaveBeenCalledWith(101)
+			expect(registrationService.findRegistrationById).toHaveBeenCalledWith(42, 5)
+		})
+
+		it("non-admin with slot not in registration: throws ForbiddenException", async () => {
+			const { controller, registrationService } = createController()
+			const user = createUser()
+			const req = { user } as any
+
+			registrationService.findSlotById.mockResolvedValue({ registrationId: null })
+
+			await expect(controller.movePlayers(100, moveRequest, req)).rejects.toThrow(
+				ForbiddenException,
+			)
+		})
+	})
 })

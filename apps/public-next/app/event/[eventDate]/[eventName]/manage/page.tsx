@@ -105,9 +105,7 @@ export default function ManagePage() {
 								>
 									{opt.title}
 								</Link>
-								<p className="text-muted-foreground mt-1 text-sm italic">
-									{opt.description}
-								</p>
+								<p className="text-muted-foreground mt-1 text-sm italic">{opt.description}</p>
 							</li>
 						))}
 					</ul>

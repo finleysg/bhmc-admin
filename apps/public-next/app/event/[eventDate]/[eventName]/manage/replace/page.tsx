@@ -113,9 +113,7 @@ export default function ManageReplacePage() {
 								excludeIds={registeredPlayerIds}
 							/>
 							{targetPlayerName && (
-								<p className="text-sm text-muted-foreground">
-									Selected: {targetPlayerName}
-								</p>
+								<p className="text-sm text-muted-foreground">Selected: {targetPlayerName}</p>
 							)}
 						</div>
 					</div>
@@ -123,17 +121,10 @@ export default function ManageReplacePage() {
 				<CardFooter className="flex-col items-stretch gap-4">
 					<Separator />
 					<div className="flex justify-end gap-2">
-						<Button
-							variant="ghost"
-							onClick={() => router.push(manageUrl)}
-							disabled={isSubmitting}
-						>
+						<Button variant="ghost" onClick={() => router.push(manageUrl)} disabled={isSubmitting}>
 							Back
 						</Button>
-						<Button
-							onClick={() => void handleReplace()}
-							disabled={!canReplace || isSubmitting}
-						>
+						<Button onClick={() => void handleReplace()} disabled={!canReplace || isSubmitting}>
 							{isSubmitting ? "Replacing..." : "Replace"}
 						</Button>
 					</div>

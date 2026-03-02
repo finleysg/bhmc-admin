@@ -121,9 +121,7 @@ beforeEach(() => {
 })
 
 test("renders all 6 menu options when can_choose is true", async () => {
-	const { default: ManagePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/page"
-	)
+	const { default: ManagePage } = await import("@/app/event/[eventDate]/[eventName]/manage/page")
 
 	render(<ManagePage />)
 
@@ -138,9 +136,7 @@ test("renders all 6 menu options when can_choose is true", async () => {
 test("hides Move Group when can_choose is false", async () => {
 	mockClubEvent.mockImplementation(() => makeClubEvent({ can_choose: false }))
 
-	const { default: ManagePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/page"
-	)
+	const { default: ManagePage } = await import("@/app/event/[eventDate]/[eventName]/manage/page")
 
 	render(<ManagePage />)
 
@@ -153,9 +149,7 @@ test("hides Move Group when can_choose is false", async () => {
 })
 
 test("all links point to correct URLs", async () => {
-	const { default: ManagePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/page"
-	)
+	const { default: ManagePage } = await import("@/app/event/[eventDate]/[eventName]/manage/page")
 
 	render(<ManagePage />)
 
@@ -171,22 +165,16 @@ test("all links point to correct URLs", async () => {
 })
 
 test("back button links to event detail page", async () => {
-	const { default: ManagePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/page"
-	)
+	const { default: ManagePage } = await import("@/app/event/[eventDate]/[eventName]/manage/page")
 
 	render(<ManagePage />)
 
 	const backLink = screen.getByRole("link", { name: /back/i })
-	expect((backLink as HTMLAnchorElement).getAttribute("href")).toBe(
-		"/event/2026-03-01/weeknight",
-	)
+	expect((backLink as HTMLAnchorElement).getAttribute("href")).toBe("/event/2026-03-01/weeknight")
 })
 
 test("displays location text in header", async () => {
-	const { default: ManagePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/page"
-	)
+	const { default: ManagePage } = await import("@/app/event/[eventDate]/[eventName]/manage/page")
 
 	render(<ManagePage />)
 

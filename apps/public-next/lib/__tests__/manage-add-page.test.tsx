@@ -183,10 +183,7 @@ jest.mock("../../app/event/[eventDate]/[eventName]/components/player-picker", ()
 	}) => {
 		lastExcludeIds = props.excludeIds ?? []
 		return (
-			<button
-				data-testid="player-picker"
-				onClick={() => props.onSelect(3, "Charlie Brown")}
-			>
+			<button data-testid="player-picker" onClick={() => props.onSelect(3, "Charlie Brown")}>
 				Select Charlie
 			</button>
 		)
@@ -208,9 +205,7 @@ beforeEach(() => {
 })
 
 test("renders add players page with player picker and Continue button disabled", async () => {
-	const { default: AddPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/add/page"
-	)
+	const { default: AddPage } = await import("@/app/event/[eventDate]/[eventName]/manage/add/page")
 
 	render(<AddPage />)
 
@@ -225,9 +220,7 @@ test("shows no available slots message when group is full", async () => {
 	// max group size = 2, and registration has 2 players → 0 available
 	mockClubEvent.mockImplementation(() => makeClubEvent({ maximum_signup_group_size: 2 }))
 
-	const { default: AddPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/add/page"
-	)
+	const { default: AddPage } = await import("@/app/event/[eventDate]/[eventName]/manage/add/page")
 
 	render(<AddPage />)
 
@@ -238,9 +231,7 @@ test("shows no available slots message when group is full", async () => {
 })
 
 test("Continue button enables after selecting a player", async () => {
-	const { default: AddPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/add/page"
-	)
+	const { default: AddPage } = await import("@/app/event/[eventDate]/[eventName]/manage/add/page")
 
 	render(<AddPage />)
 
@@ -261,9 +252,7 @@ test("excludes registered and already-selected players from picker", async () =>
 		{ id: 102, player: { id: 2 } },
 	])
 
-	const { default: AddPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/add/page"
-	)
+	const { default: AddPage } = await import("@/app/event/[eventDate]/[eventName]/manage/add/page")
 
 	render(<AddPage />)
 
@@ -277,9 +266,7 @@ test("excludes registered and already-selected players from picker", async () =>
 })
 
 test("clicking Continue calls editRegistration and navigates to edit flow", async () => {
-	const { default: AddPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/add/page"
-	)
+	const { default: AddPage } = await import("@/app/event/[eventDate]/[eventName]/manage/add/page")
 
 	render(<AddPage />)
 
@@ -300,9 +287,7 @@ test("clicking Continue calls editRegistration and navigates to edit flow", asyn
 test("shows error toast when editRegistration fails", async () => {
 	mockEditRegistration.mockRejectedValue(new Error("Server error"))
 
-	const { default: AddPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/add/page"
-	)
+	const { default: AddPage } = await import("@/app/event/[eventDate]/[eventName]/manage/add/page")
 
 	render(<AddPage />)
 
@@ -315,9 +300,7 @@ test("shows error toast when editRegistration fails", async () => {
 })
 
 test("can remove a selected player before submitting", async () => {
-	const { default: AddPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/add/page"
-	)
+	const { default: AddPage } = await import("@/app/event/[eventDate]/[eventName]/manage/add/page")
 
 	render(<AddPage />)
 
@@ -337,9 +320,7 @@ test("can remove a selected player before submitting", async () => {
 })
 
 test("Back button navigates to manage page", async () => {
-	const { default: AddPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/add/page"
-	)
+	const { default: AddPage } = await import("@/app/event/[eventDate]/[eventName]/manage/add/page")
 
 	render(<AddPage />)
 
@@ -358,9 +339,7 @@ test("canChoose event uses open slots count for available slots", async () => {
 		{ id: 202, status: "A" },
 	])
 
-	const { default: AddPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/add/page"
-	)
+	const { default: AddPage } = await import("@/app/event/[eventDate]/[eventName]/manage/add/page")
 
 	render(<AddPage />)
 
@@ -376,9 +355,7 @@ test("excludes players from other groups in the event", async () => {
 		{ id: 201, player: { id: 99 } }, // player in another group
 	])
 
-	const { default: AddPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/add/page"
-	)
+	const { default: AddPage } = await import("@/app/event/[eventDate]/[eventName]/manage/add/page")
 
 	render(<AddPage />)
 

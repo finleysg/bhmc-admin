@@ -130,6 +130,7 @@ export class AdminRegistrationController {
 	}
 
 	@Get(":eventId/available-slots")
+	@Roles()
 	async getAvailableSlots(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Query("courseId", ParseIntPipe) courseId: number,
@@ -217,13 +218,25 @@ export class AdminRegistrationController {
 	}
 
 	@Post(":eventId/move-players")
+	@Roles()
 	async movePlayers(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Body() request: MovePlayersRequest,
+		@Req() req: AuthenticatedRequest,
 	): Promise<MovePlayersResponse> {
 		this.logger.log(
 			`Moving ${request.sourceSlotIds.length} players to hole ${request.destinationStartingHoleId} order ${request.destinationStartingOrder} for event ${eventId}`,
 		)
+
+		// Non-admin users must be a member of the registration group
+		if (!req.user.isStaff && !req.user.isSuperuser) {
+			const slot = await this.registrationService.findSlotById(request.sourceSlotIds[0])
+			if (!slot.registrationId) {
+				throw new ForbiddenException("Slot is not part of a registration")
+			}
+			await this.registrationService.findRegistrationById(slot.registrationId, req.user.playerId)
+		}
+
 		return this.adminRegisterService.movePlayers(eventId, request)
 	}
 
