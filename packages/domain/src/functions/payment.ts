@@ -143,13 +143,14 @@ export function getOptionalFees(payment: CompletePayment): number {
  * Derive notification type from event, player, and payment context.
  * - Season registration ("R"): "R" if returning member (last_season == current - 1), else "N"
  * - Match play ("S"): "M"
- * - Other events: "C" if has required fees, "U" otherwise
+ * - Other events: "U" if isUpdate, "C" if has required fees, "U" otherwise
  */
 export function deriveNotificationType(
 	eventType: EventTypeValue,
 	playerLastSeason: number | null,
 	hasRequiredFees: boolean,
 	now: Date = new Date(),
+	isUpdate: boolean = false,
 ): NotificationTypeValue {
 	if (eventType === EventTypeChoices.SEASON_REGISTRATION) {
 		const currentSeason = now.getFullYear()
@@ -161,6 +162,10 @@ export function deriveNotificationType(
 
 	if (eventType === EventTypeChoices.MATCH_PLAY) {
 		return NotificationTypeChoices.MATCH_PLAY
+	}
+
+	if (isUpdate) {
+		return NotificationTypeChoices.UPDATED_REGISTRATION
 	}
 
 	if (hasRequiredFees) {

@@ -55,20 +55,22 @@ export default function ManageDropPage() {
 
 		setIsSubmitting(true)
 		try {
-			const response = await fetch(`/api/registration/${registration.id}/drop`, {
-				method: "DELETE",
+			const response = await fetch(`/api/events/${clubEvent.id}/drop-players`, {
+				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ source_slots: slotIds }),
+				body: JSON.stringify({ registrationId: registration.id, slotIds }),
 			})
 			if (!response.ok) {
 				throw new Error("Failed to drop players")
 			}
 
+			const { droppedCount } = (await response.json()) as { droppedCount: number }
+
 			await queryClient.invalidateQueries({
 				queryKey: ["player-registration", clubEvent.id, player?.id],
 			})
 
-			toast.success(`${slotIds.length} player(s) dropped`)
+			toast.success(`${droppedCount} player(s) dropped`)
 
 			const totalPlayers = registration.slots.filter((s) => s.player !== null).length
 			const remainingPlayers = totalPlayers - selectedPlayerIds.length
@@ -129,7 +131,7 @@ export default function ManageDropPage() {
 						<AlertDialogTitle>Drop Players</AlertDialogTitle>
 						<AlertDialogDescription>
 							Are you sure you want to remove {selectedPlayerIds.length} player(s) from
-							your group?
+							your group? Any paid fees will be automatically refunded.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>

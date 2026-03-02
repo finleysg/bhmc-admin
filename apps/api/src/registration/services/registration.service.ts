@@ -16,7 +16,7 @@ import {
 	ReserveRequest,
 } from "@repo/domain/types"
 
-import { registration, registrationSlot, toDbString, DrizzleService } from "../../database"
+import { player, registration, registrationSlot, toDbString, DrizzleService } from "../../database"
 import { and, eq, inArray } from "drizzle-orm"
 import { EventsService } from "../../events"
 
@@ -172,18 +172,17 @@ export class RegistrationService {
 		playerId: number,
 	): Promise<RegistrationWithSlots> {
 		const regWithSlots = await this.findRegistrationById(registrationId, playerId)
-
-		// Get empty slots sorted by slot number
-		const emptySlots = regWithSlots.slots
-			.filter((s) => s.playerId === undefined)
-			.sort((a, b) => a.slot - b.slot)
-
-		if (playerIds.length > emptySlots.length) {
-			throw new SlotOverflowError(registrationId, playerIds.length)
-		}
+		const event = await this.events.getEventById(regWithSlots.eventId)
 
 		// Atomic duplicate check + slot assignment with row locks
 		await this.drizzle.db.transaction(async (tx) => {
+			// Look up player names for error messages
+			const players = await tx
+				.select({ id: player.id, firstName: player.firstName, lastName: player.lastName })
+				.from(player)
+				.where(inArray(player.id, playerIds))
+			const playerNameMap = new Map(players.map((p) => [p.id, `${p.firstName} ${p.lastName}`]))
+
 			// Check no players are already registered for this event (with row lock)
 			for (const pid of playerIds) {
 				const existingReg = await this.repository.findRegistrationIdByEventAndPlayer(
@@ -192,17 +191,59 @@ export class RegistrationService {
 					tx,
 				)
 				if (existingReg) {
-					throw new AlreadyRegisteredError(pid, regWithSlots.eventId)
+					throw new AlreadyRegisteredError(playerNameMap.get(pid) ?? `Player ${pid}`)
 				}
 			}
 
-			// Assign players to empty slots
-			for (let i = 0; i < playerIds.length; i++) {
-				await this.repository.updateRegistrationSlot(
-					emptySlots[i].id,
-					{ playerId: playerIds[i] },
-					tx,
-				)
+			if (event.canChoose) {
+				// For canChoose events, find available slots on the same hole/starting_order
+				const existingSlot = regWithSlots.slots[0]
+				const availableSlots = await tx
+					.select()
+					.from(registrationSlot)
+					.where(
+						and(
+							eq(registrationSlot.eventId, regWithSlots.eventId),
+							eq(registrationSlot.holeId, existingSlot.holeId!),
+							eq(registrationSlot.startingOrder, existingSlot.startingOrder),
+							eq(registrationSlot.status, RegistrationStatusChoices.AVAILABLE),
+						),
+					)
+					.orderBy(registrationSlot.slot)
+					.for("update")
+
+				if (playerIds.length > availableSlots.length) {
+					throw new SlotOverflowError(registrationId, playerIds.length)
+				}
+
+				// Claim available slots: assign to this registration with player and PENDING status
+				for (let i = 0; i < playerIds.length; i++) {
+					await tx
+						.update(registrationSlot)
+						.set({
+							playerId: playerIds[i],
+							registrationId,
+							status: RegistrationStatusChoices.PENDING,
+						})
+						.where(eq(registrationSlot.id, availableSlots[i].id))
+				}
+			} else {
+				// For non-canChoose events, assign players to existing empty slots
+				const emptySlots = regWithSlots.slots
+					.filter((s) => s.playerId === undefined)
+					.sort((a, b) => a.slot - b.slot)
+
+				if (playerIds.length > emptySlots.length) {
+					throw new SlotOverflowError(registrationId, playerIds.length)
+				}
+
+				for (let i = 0; i < playerIds.length; i++) {
+					await this.repository.updateRegistrationSlot(
+						emptySlots[i].id,
+						{ playerId: playerIds[i] },
+						tx,
+					)
+				}
 			}
 		})
 
@@ -322,7 +363,7 @@ export class RegistrationService {
 					s.status === RegistrationStatusChoices.RESERVED,
 			)
 			if (reservedSlots.length > 0) {
-				throw new AlreadyRegisteredError(playerId, event.id)
+				throw new AlreadyRegisteredError(signedUpBy)
 			}
 
 			// Only PENDING slots remain — clean up the stale registration
@@ -425,7 +466,7 @@ export class RegistrationService {
 						),
 					)
 				if (reservedSlots.length > 0) {
-					throw new AlreadyRegisteredError(playerId, event.id)
+					throw new AlreadyRegisteredError(signedUpBy)
 				}
 
 				// Only PENDING slots remain — fully clean up the stale registration

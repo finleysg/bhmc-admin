@@ -62,10 +62,14 @@ export default function ManageReplacePage() {
 
 		setIsSubmitting(true)
 		try {
-			const response = await fetch(`/api/registration/slots/${slot.id}`, {
-				method: "PATCH",
+			const response = await fetch(`/api/events/${clubEvent.id}/replace-player`, {
+				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ player: targetPlayerId }),
+				body: JSON.stringify({
+					slotId: slot.id,
+					originalPlayerId: sourcePlayerId,
+					replacementPlayerId: targetPlayerId,
+				}),
 			})
 			if (!response.ok) {
 				throw new Error("Failed to replace player")

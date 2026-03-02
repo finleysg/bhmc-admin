@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { getEventUrl } from "@/lib/event-utils"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
+import { useOpenSlots } from "@/lib/hooks/use-open-slots"
 import { usePlayerRegistration } from "@/lib/hooks/use-player-registration"
+import { useRegistrationSlots } from "@/lib/hooks/use-registration-slots"
 import { useRegistration } from "@/lib/registration/registration-context"
 
 import { PlayerPicker } from "../../components/player-picker"
@@ -25,8 +27,15 @@ export default function ManageAddPage() {
 	const { clubEvent, editRegistration, initiateStripeSession } = useRegistration()
 	const { data: player } = useMyPlayer()
 	const { data: registrationData } = usePlayerRegistration(clubEvent?.id, player?.id)
+	const { data: allSlots = [] } = useRegistrationSlots(clubEvent?.id)
 
 	const registration = registrationData?.registration
+
+	const { data: openSlots = [] } = useOpenSlots(
+		clubEvent?.id ?? 0,
+		registration?.slots[0]?.holeId ?? 0,
+		registration?.slots[0]?.startingOrder ?? 0,
+	)
 
 	const [selectedPlayers, setSelectedPlayers] = useState<SelectedPlayer[]>([])
 	const [isSubmitting, setIsSubmitting] = useState(false)
@@ -36,10 +45,12 @@ export default function ManageAddPage() {
 	const eventUrl = getEventUrl(clubEvent)
 	const manageUrl = `${eventUrl}/manage`
 
-	const currentPlayerCount = registration.slots.filter((s) => s.player !== null).length
-	const availableSlots = (clubEvent.maximum_signup_group_size ?? 0) - currentPlayerCount
+	const availableSlots = clubEvent.can_choose
+		? openSlots.length
+		: (clubEvent.maximum_signup_group_size ?? 0) -
+			registration.slots.filter((s) => s.player !== null).length
 
-	const registeredPlayerIds = registration.slots
+	const registeredPlayerIds = allSlots
 		.filter((s) => s.player !== null)
 		.map((s) => s.player!.id)
 
@@ -67,7 +78,7 @@ export default function ManageAddPage() {
 				selectedPlayers.map((p) => p.id),
 			)
 			initiateStripeSession()
-			router.push(`${eventUrl}/register/edit`)
+			router.push(`${eventUrl}/register`)
 		} catch (error: unknown) {
 			toast.error(error instanceof Error ? error.message : "Failed to add players")
 			setIsSubmitting(false)

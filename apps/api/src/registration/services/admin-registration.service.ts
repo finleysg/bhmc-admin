@@ -204,10 +204,12 @@ export class AdminRegistrationService {
 			throw new NotFoundException(`Payment ${paymentId} not found`)
 		}
 
-		const allFees = completeRegistration.slots.flatMap((slot) => slot.fees)
+		const paymentFees = completeRegistration.slots
+			.flatMap((slot) => slot.fees)
+			.filter((fee) => fee.paymentId === paymentId)
 		const completePayment: CompletePayment = {
 			...toPayment(paymentRow),
-			details: allFees,
+			details: paymentFees,
 		}
 
 		return {

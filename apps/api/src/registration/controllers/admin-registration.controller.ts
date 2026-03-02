@@ -1,6 +1,7 @@
 import {
 	Body,
 	Controller,
+	ForbiddenException,
 	Get,
 	Inject,
 	Logger,
@@ -8,6 +9,7 @@ import {
 	ParseIntPipe,
 	Post,
 	Query,
+	Req,
 } from "@nestjs/common"
 import type {
 	AdminRegistration,
@@ -23,13 +25,32 @@ import type {
 	SwapPlayersRequest,
 	SwapPlayersResponse,
 	UpdateNotesRequest,
+	DropPlayersRequest,
+	DropPlayersResponse,
 } from "@repo/domain/types"
 
-import { Admin } from "../../auth"
+import { Admin, type AuthenticatedRequest, Roles } from "../../auth"
 import { AdminRegistrationService } from "../services/admin-registration.service"
+import { PaymentsService } from "../services/payments.service"
 import { PlayerService } from "../services/player.service"
 import { RefundService } from "../services/refund.service"
 import { RegistrationService } from "../services/registration.service"
+
+function buildRefundRequests(paidFees: { id: number; paymentId: number }[]): RefundRequest[] {
+	const grouped = new Map<number, number[]>()
+	for (const fee of paidFees) {
+		const existing = grouped.get(fee.paymentId)
+		if (existing) {
+			existing.push(fee.id)
+		} else {
+			grouped.set(fee.paymentId, [fee.id])
+		}
+	}
+	return Array.from(grouped.entries()).map(([paymentId, registrationFeeIds]) => ({
+		paymentId,
+		registrationFeeIds,
+	}))
+}
 
 @Controller("registration")
 @Admin()
@@ -40,6 +61,7 @@ export class AdminRegistrationController {
 		@Inject(AdminRegistrationService)
 		private readonly adminRegistrationService: AdminRegistrationService,
 		@Inject(PlayerService) private readonly adminRegisterService: PlayerService,
+		@Inject(PaymentsService) private readonly paymentsService: PaymentsService,
 		@Inject(RefundService) private readonly refundService: RefundService,
 		@Inject(RegistrationService) private readonly registrationService: RegistrationService,
 	) {}
@@ -131,23 +153,66 @@ export class AdminRegistrationController {
 		return this.adminRegisterService.reserveSlots(eventId, slotIds)
 	}
 
-	@Post(":registrationId/drop-players")
+	@Post(":eventId/drop-players")
+	@Roles()
 	async dropPlayers(
-		@Param("registrationId", ParseIntPipe) registrationId: number,
-		@Body() slotIds: number[],
-	) {
-		const droppedCount = await this.adminRegisterService.dropPlayers(registrationId, slotIds)
+		@Param("eventId", ParseIntPipe) _eventId: number,
+		@Body() request: DropPlayersRequest,
+		@Req() req: AuthenticatedRequest,
+	): Promise<DropPlayersResponse> {
+		const isAdmin = req.user.isStaff || req.user.isSuperuser
+
+		// Non-admin users must be a member of the registration group
+		if (!isAdmin) {
+			await this.registrationService.findRegistrationById(request.registrationId, req.user.playerId)
+		}
+
+		// Collect paid fees BEFORE the drop (drop detaches fees from slots)
+		const paidFees = isAdmin
+			? []
+			: await this.paymentsService.findPaidFeesBySlotIds(request.slotIds)
+
+		const droppedCount = await this.adminRegisterService.dropPlayers(
+			request.registrationId,
+			request.slotIds,
+		)
+
+		// Auto-refund for non-admin users
+		if (!isAdmin && paidFees.length > 0) {
+			try {
+				const refundRequests = buildRefundRequests(paidFees)
+				await this.refundService.processRefunds(refundRequests, req.user.id)
+			} catch (error) {
+				this.logger.error(
+					`Failed to process automatic refund for registration ${request.registrationId}`,
+					error,
+				)
+			}
+		}
+
 		return { droppedCount }
 	}
 
 	@Post(":eventId/replace-player")
+	@Roles()
 	async replacePlayer(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Body() request: ReplacePlayerRequest,
+		@Req() req: AuthenticatedRequest,
 	): Promise<ReplacePlayerResponse> {
 		this.logger.log(
 			`Replacing player ${request.originalPlayerId} with ${request.replacementPlayerId} in slot ${request.slotId} for event ${eventId}`,
 		)
+
+		// Non-admin users must be a member of the registration group
+		if (!req.user.isStaff && !req.user.isSuperuser) {
+			const slot = await this.registrationService.findSlotById(request.slotId)
+			if (!slot.registrationId) {
+				throw new ForbiddenException("Slot is not part of a registration")
+			}
+			await this.registrationService.findRegistrationById(slot.registrationId, req.user.playerId)
+		}
+
 		return this.adminRegisterService.replacePlayer(eventId, request)
 	}
 

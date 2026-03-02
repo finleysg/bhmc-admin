@@ -259,7 +259,10 @@ test("confirming replace calls PATCH API and navigates to manage", async () => {
 					},
 				]),
 		})
-		.mockResolvedValueOnce({ ok: true })
+		.mockResolvedValueOnce({
+			ok: true,
+			json: () => Promise.resolve({ slotId: 102, greenFeeDifference: undefined }),
+		})
 
 	const { default: ReplacePage } = await import(
 		"@/app/event/[eventDate]/[eventName]/manage/replace/page"
@@ -289,10 +292,14 @@ test("confirming replace calls PATCH API and navigates to manage", async () => {
 	fireEvent.click(screen.getByRole("button", { name: /^replace$/i }))
 
 	await waitFor(() => {
-		expect(global.fetch).toHaveBeenLastCalledWith("/api/registration/slots/102", {
-			method: "PATCH",
+		expect(global.fetch).toHaveBeenLastCalledWith("/api/events/1/replace-player", {
+			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ player: 3 }),
+			body: JSON.stringify({
+				slotId: 102,
+				originalPlayerId: 2,
+				replacementPlayerId: 3,
+			}),
 		})
 	})
 

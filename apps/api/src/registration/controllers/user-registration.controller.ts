@@ -160,6 +160,6 @@ export class UserRegistrationController {
 		const playerIds = dto.players.map((p) => p.id)
 		this.logger.log(`Adding ${playerIds.length} players to registration ${registrationId}`)
 
-		return this.flowService.addPlayersToRegistration(registrationId, playerIds, req.user.id)
+		return this.flowService.addPlayersToRegistration(registrationId, playerIds, req.user.playerId)
 	}
 }

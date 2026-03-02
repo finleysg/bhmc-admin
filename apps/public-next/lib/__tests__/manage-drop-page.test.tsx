@@ -193,7 +193,7 @@ test("Drop button enabled after selecting a player", async () => {
 	expect((dropButton as HTMLButtonElement).disabled).toBe(false)
 })
 
-test("clicking Drop shows confirmation dialog", async () => {
+test("clicking Drop shows confirmation dialog with refund notice", async () => {
 	const { default: DropPage } = await import(
 		"@/app/event/[eventDate]/[eventName]/manage/drop/page"
 	)
@@ -204,12 +204,17 @@ test("clicking Drop shows confirmation dialog", async () => {
 	fireEvent.click(screen.getByRole("button", { name: /^drop$/i }))
 
 	await waitFor(() => {
-		expect(screen.getByText(/Are you sure you want to remove 1 player\(s\)/)).toBeTruthy()
+		const description = screen.getByText(/Are you sure you want to remove 1 player\(s\)/)
+		expect(description).toBeTruthy()
+		expect(description.textContent).toContain("Any paid fees will be automatically refunded")
 	})
 })
 
-test("confirming drop calls DELETE API with slot IDs and navigates to manage", async () => {
-	;(global.fetch as jest.Mock).mockResolvedValue({ ok: true })
+test("confirming drop calls POST API with slot IDs and navigates to manage", async () => {
+	;(global.fetch as jest.Mock).mockResolvedValue({
+		ok: true,
+		json: () => Promise.resolve({ droppedCount: 1 }),
+	})
 
 	const { default: DropPage } = await import(
 		"@/app/event/[eventDate]/[eventName]/manage/drop/page"
@@ -228,10 +233,10 @@ test("confirming drop calls DELETE API with slot IDs and navigates to manage", a
 	fireEvent.click(screen.getByRole("button", { name: /confirm/i }))
 
 	await waitFor(() => {
-		expect(global.fetch).toHaveBeenCalledWith("/api/registration/42/drop", {
-			method: "DELETE",
+		expect(global.fetch).toHaveBeenCalledWith("/api/events/1/drop-players", {
+			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ source_slots: [102] }),
+			body: JSON.stringify({ registrationId: 42, slotIds: [102] }),
 		})
 	})
 
@@ -244,7 +249,10 @@ test("confirming drop calls DELETE API with slot IDs and navigates to manage", a
 })
 
 test("dropping self navigates to event detail page", async () => {
-	;(global.fetch as jest.Mock).mockResolvedValue({ ok: true })
+	;(global.fetch as jest.Mock).mockResolvedValue({
+		ok: true,
+		json: () => Promise.resolve({ droppedCount: 1 }),
+	})
 
 	const { default: DropPage } = await import(
 		"@/app/event/[eventDate]/[eventName]/manage/drop/page"

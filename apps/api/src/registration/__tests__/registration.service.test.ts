@@ -613,8 +613,8 @@ describe("RegistrationService", () => {
 	})
 
 	describe("addPlayersToRegistration", () => {
-		it("throws SlotOverflowError when more players than empty slots", async () => {
-			const { service, repository } = createService()
+		it("throws SlotOverflowError when more players than empty slots (non-canChoose)", async () => {
+			const { service, repository, eventsService } = createService()
 
 			// Mapper converts playerId: null → undefined
 			// So emptySlots will be empty, triggering SlotOverflowError
@@ -626,6 +626,7 @@ describe("RegistrationService", () => {
 			})
 
 			repository.findRegistrationFullById.mockResolvedValue(regFull)
+			eventsService.getEventById.mockResolvedValue({ canChoose: false })
 
 			await expect(service.addPlayersToRegistration(1, [2, 3, 4], 1)).rejects.toThrow(
 				SlotOverflowError,

@@ -443,6 +443,17 @@ describe("deriveNotificationType", () => {
 			expect(result).toBe(NotificationTypeChoices.UPDATED_REGISTRATION)
 		})
 
+		it("returns UPDATED_REGISTRATION when isUpdate is true even with required fees", () => {
+			const result = deriveNotificationType(
+				EventTypeChoices.WEEKNIGHT,
+				null,
+				true,
+				new Date(),
+				true,
+			)
+			expect(result).toBe(NotificationTypeChoices.UPDATED_REGISTRATION)
+		})
+
 		it("works for weekend major events", () => {
 			expect(deriveNotificationType(EventTypeChoices.WEEKEND_MAJOR, null, true)).toBe(
 				NotificationTypeChoices.SIGNUP_CONFIRMATION,

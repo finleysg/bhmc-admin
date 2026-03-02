@@ -9,10 +9,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 	const body: unknown = await request.json()
 	return fetchWithAuth({
 		request,
-		backendPath: `/registration-slots/${id}/`,
+		backendPath: `/registration/slots/${id}`,
 		method: "PATCH",
 		body,
-		apiBaseUrl: process.env.DJANGO_API_URL,
 		forwardHeaders: CORRELATION_HEADERS,
 	})
 }

@@ -63,15 +63,12 @@ export default function DropPlayerPage() {
 					.filter((slot) => selectedPlayers.some((p) => p.id === slot.player.id))
 					.map((slot) => slot.id)
 
-				const dropResponse = await fetch(
-					`/api/registration/drop-players?registrationId=${state.selectedGroup?.id}`,
-					{
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify(slotIds),
-						signal: controller.signal,
-					},
-				)
+				const dropResponse = await fetch(`/api/registration/drop-players?eventId=${eventId}`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ registrationId: state.selectedGroup?.id, slotIds }),
+					signal: controller.signal,
+				})
 
 				if (!dropResponse.ok) {
 					const errorBody = await dropResponse.text()

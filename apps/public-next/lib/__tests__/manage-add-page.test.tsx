@@ -136,6 +136,16 @@ jest.mock("../hooks/use-player-registration", () => ({
 	usePlayerRegistration: () => ({ data: { registration: mockRegistration() } }),
 }))
 
+const mockOpenSlots = jest.fn<unknown[], []>(() => [])
+jest.mock("../hooks/use-open-slots", () => ({
+	useOpenSlots: () => ({ data: mockOpenSlots() }),
+}))
+
+const mockAllSlots = jest.fn<unknown[], []>(() => [])
+jest.mock("../hooks/use-registration-slots", () => ({
+	useRegistrationSlots: () => ({ data: mockAllSlots() }),
+}))
+
 jest.mock("../event-utils", () => ({
 	getEventUrl: () => "/event/2026-03-01/weeknight",
 	RegistrationType: { MembersOnly: "M", ReturningMembersOnly: "R" },
@@ -192,6 +202,8 @@ beforeEach(() => {
 	mockInitiateStripeSession.mockReset()
 	mockToastSuccess.mockReset()
 	mockToastError.mockReset()
+	mockOpenSlots.mockReset().mockImplementation(() => [])
+	mockAllSlots.mockReset().mockImplementation(() => [])
 	lastExcludeIds = []
 })
 
@@ -244,6 +256,11 @@ test("Continue button enables after selecting a player", async () => {
 })
 
 test("excludes registered and already-selected players from picker", async () => {
+	mockAllSlots.mockImplementation(() => [
+		{ id: 101, player: { id: 1 } },
+		{ id: 102, player: { id: 2 } },
+	])
+
 	const { default: AddPage } = await import(
 		"@/app/event/[eventDate]/[eventName]/manage/add/page"
 	)
@@ -277,7 +294,7 @@ test("clicking Continue calls editRegistration and navigates to edit flow", asyn
 		expect(mockInitiateStripeSession).toHaveBeenCalled()
 	})
 
-	expect(mockPush).toHaveBeenCalledWith("/event/2026-03-01/weeknight/register/edit")
+	expect(mockPush).toHaveBeenCalledWith("/event/2026-03-01/weeknight/register")
 })
 
 test("shows error toast when editRegistration fails", async () => {
@@ -329,4 +346,42 @@ test("Back button navigates to manage page", async () => {
 	fireEvent.click(screen.getByRole("button", { name: /back/i }))
 
 	expect(mockPush).toHaveBeenCalledWith("/event/2026-03-01/weeknight/manage")
+})
+
+test("canChoose event uses open slots count for available slots", async () => {
+	mockClubEvent.mockImplementation(() =>
+		makeClubEvent({ can_choose: true, maximum_signup_group_size: 5 }),
+	)
+	// 2 open slots on the same hole/starting_order
+	mockOpenSlots.mockImplementation(() => [
+		{ id: 201, status: "A" },
+		{ id: 202, status: "A" },
+	])
+
+	const { default: AddPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/manage/add/page"
+	)
+
+	render(<AddPage />)
+
+	// Should show 2 slots available (from open slots), not 3 (from max - current)
+	expect(screen.getByText(/2 slots available/)).toBeTruthy()
+})
+
+test("excludes players from other groups in the event", async () => {
+	// All slots in the event: group players + a player in another group
+	mockAllSlots.mockImplementation(() => [
+		{ id: 101, player: { id: 1 } },
+		{ id: 102, player: { id: 2 } },
+		{ id: 201, player: { id: 99 } }, // player in another group
+	])
+
+	const { default: AddPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/manage/add/page"
+	)
+
+	render(<AddPage />)
+
+	// Player 99 from another group should be excluded
+	expect(lastExcludeIds).toEqual([1, 2, 99])
 })

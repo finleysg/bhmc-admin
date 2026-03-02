@@ -39,6 +39,13 @@ export class PaymentsService {
 	) {}
 
 	/**
+	 * Find paid registration fees linked to the given slot IDs.
+	 */
+	async findPaidFeesBySlotIds(slotIds: number[]): Promise<{ id: number; paymentId: number }[]> {
+		return this.paymentRepository.findPaidFeesBySlotIds(slotIds)
+	}
+
+	/**
 	 * Get a payment by ID.
 	 */
 	async findPaymentById(paymentId: number): Promise<Payment | null> {
@@ -64,6 +71,8 @@ export class PaymentsService {
 			data.eventType,
 			player?.lastSeason ?? null,
 			hasRequiredFees,
+			new Date(),
+			data.isUpdate,
 		)
 		this.logger.log(
 			`Derived a notification type of ${notificationType} for event type ${data.eventType}`,

@@ -226,13 +226,21 @@ export class MailService {
 			: undefined
 		const eventHoleOrStart = startValue === "N/A" ? undefined : startValue
 
-		const players = registration.slots.map((slot) => ({
+		// Build a set of slot IDs that have fees in this payment
+		const paymentSlotIds = new Set(payment.details.map((d) => d.registrationSlotId))
+
+		// Only include slots with fees in this payment
+		const relevantSlots = registration.slots.filter((slot) => paymentSlotIds.has(slot.id))
+
+		const players = relevantSlots.map((slot) => ({
 			name: `${slot.player.firstName} ${slot.player.lastName}`,
 			email: slot.player.email,
-			fees: slot.fees.map((fee) => ({
-				description: fee.eventFee.feeType.name,
-				amount: formatCurrency(fee.amount),
-			})),
+			fees: slot.fees
+				.filter((fee) => fee.paymentId === payment.id)
+				.map((fee) => ({
+					description: fee.eventFee.feeType.name,
+					amount: formatCurrency(fee.amount),
+				})),
 		}))
 
 		const emailProps = {
@@ -253,7 +261,7 @@ export class MailService {
 			players,
 		}
 
-		const otherRecipients = registration.slots
+		const otherRecipients = relevantSlots
 			.map((slot) => slot.player.email)
 			.filter((email) => email !== user.email)
 

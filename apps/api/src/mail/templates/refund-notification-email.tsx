@@ -6,7 +6,6 @@ import {
 	labelCell,
 	link,
 	paragraph,
-	paymentCell,
 	subheading,
 	tableRow,
 	valueCell,
@@ -52,7 +51,9 @@ export function RefundNotificationEmail({
 			</Row>
 			<Row style={tableRow}>
 				<Column style={labelCell}>Refund amount:</Column>
-				<Column style={paymentCell}>{totalRefund}</Column>
+				<Column style={valueCell}>
+					<strong>{totalRefund}</strong>
+				</Column>
 			</Row>
 
 			<Text style={paragraph}>&nbsp;</Text>

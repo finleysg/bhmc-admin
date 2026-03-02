@@ -224,6 +224,7 @@ export function RegistrationProvider({
 						registrationSlotId: f.registrationSlotId,
 						amount: f.amount,
 					})),
+					isUpdate: state.mode === "edit",
 				}),
 				correlationId: state.correlationId,
 			})
@@ -492,7 +493,7 @@ export function RegistrationProvider({
 	const editRegistration = useCallback(
 		async (registrationId: number, playerIds: number[]) => {
 			try {
-				const result = await apiFetch<{ registration: ServerRegistration }>(
+				const registration = await apiFetch<ServerRegistration>(
 					`/api/registration/${registrationId}/add-players`,
 					{
 						method: "PUT",
@@ -501,9 +502,29 @@ export function RegistrationProvider({
 						}),
 					},
 				)
-				if (result) {
-					const { registration } = result
+				if (registration) {
 					const fees: ServerRegistrationFee[] = registration.slots.flatMap((slot) => slot.fees)
+					const playerIdSet = new Set(playerIds)
+					const requiredFeeDetails = registration.slots
+						.filter((slot) => slot.player && playerIdSet.has(slot.player.id))
+						.flatMap((slot) => {
+							const player = slot.player!
+							const feePlayer: FeePlayer = {
+								birthDate: player.birthDate,
+								isMember: Boolean(player.isMember),
+								lastSeason: player.lastSeason,
+							}
+							return (state.clubEvent?.fees ?? [])
+								.filter((f) => f.is_required)
+								.map((fee) => ({
+									id: 0,
+									paymentId: 0,
+									eventFeeId: fee.id,
+									registrationSlotId: slot.id,
+									amount: calculateFeeAmount(fee, feePlayer),
+									isPaid: false,
+								}))
+						})
 					dispatch({
 						type: "load-registration",
 						payload: {
@@ -518,12 +539,12 @@ export function RegistrationProvider({
 								transactionFee: null,
 								notificationType: null,
 								confirmed: false,
-								details: [],
+								details: requiredFeeDetails,
 							},
 							existingFees: fees,
 						},
 					})
-					queryClient.setQueryData(["registration", state.clubEvent?.id], result.registration)
+					queryClient.setQueryData(["registration", state.clubEvent?.id], registration)
 					void queryClient.invalidateQueries({
 						queryKey: ["event-registrations", state.clubEvent?.id],
 					})
@@ -536,6 +557,7 @@ export function RegistrationProvider({
 					type: "update-error",
 					payload: { error: (error as Error).message },
 				})
+				throw error
 			}
 		},
 		[state.clubEvent?.id, queryClient, user?.id],

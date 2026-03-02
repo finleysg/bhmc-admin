@@ -645,9 +645,8 @@ describe("AdminRegistrationService", () => {
 	})
 
 	describe("getCompleteRegistrationAndPayment", () => {
-		it("returns hydrated registration and payment data", async () => {
-			const { service, repository, paymentsRepository } = createService()
-			const regRow = {
+		const createCompleteRegRow = (slots: any[] = []) =>
+			({
 				id: 1,
 				eventId: 100,
 				userId: 10,
@@ -664,17 +663,77 @@ describe("AdminRegistrationService", () => {
 					holes: [],
 					tees: [],
 				},
-				slots: [],
-			}
+				slots,
+			}) as any
+
+		it("returns hydrated registration and payment data", async () => {
+			const { service, repository, paymentsRepository } = createService()
+			const regRow = createCompleteRegRow()
 			const paymentRow = createPaymentRow()
 
-			repository.findCompleteRegistrationById.mockResolvedValue(regRow as any)
+			repository.findCompleteRegistrationById.mockResolvedValue(regRow)
 			paymentsRepository.findPaymentById.mockResolvedValue(paymentRow)
 
 			const result = await service.getCompleteRegistrationAndPayment(1, 1)
 
 			expect(result.registration).toBeDefined()
 			expect(result.payment).toBeDefined()
+		})
+
+		it("filters payment details to only fees belonging to the requested payment", async () => {
+			const { service, repository, paymentsRepository } = createService()
+
+			const makeFee = (id: number, paymentId: number) => ({
+				fee: {
+					id,
+					isPaid: 1,
+					eventFeeId: 1,
+					paymentId,
+					registrationSlotId: 1,
+					amount: "25.00",
+				},
+				eventFee: {
+					id: 1,
+					eventId: 100,
+					amount: "25.00",
+					isRequired: 1,
+					displayOrder: 1,
+					feeTypeId: 1,
+					overrideAmount: null,
+					overrideRestriction: null,
+				},
+				feeType: {
+					id: 1,
+					name: "Event Fee",
+					code: "EF",
+					payout: "C",
+					restriction: "None",
+				},
+			})
+
+			const regRow = createCompleteRegRow([
+				{
+					...createRegistrationSlotRow({ id: 1, playerId: 1 }),
+					player: createPlayerRow({ id: 1 }),
+					hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
+					fees: [makeFee(1, 1), makeFee(2, 2)],
+				},
+				{
+					...createRegistrationSlotRow({ id: 2, playerId: 2 }),
+					player: createPlayerRow({ id: 2, firstName: "Jane" }),
+					hole: { id: 1, courseId: 1, holeNumber: 1, par: 4 },
+					fees: [makeFee(3, 2)],
+				},
+			])
+
+			repository.findCompleteRegistrationById.mockResolvedValue(regRow)
+			paymentsRepository.findPaymentById.mockResolvedValue(createPaymentRow({ id: 2 }))
+
+			const result = await service.getCompleteRegistrationAndPayment(1, 2)
+
+			// Only fees with paymentId=2 should be in the payment details
+			expect(result.payment.details).toHaveLength(2)
+			expect(result.payment.details.every((d) => d.paymentId === 2)).toBe(true)
 		})
 
 		it("throws NotFoundException for missing registration", async () => {
@@ -689,27 +748,9 @@ describe("AdminRegistrationService", () => {
 
 		it("throws NotFoundException for missing payment", async () => {
 			const { service, repository, paymentsRepository } = createService()
-			const regRow = {
-				id: 1,
-				eventId: 100,
-				userId: 10,
-				courseId: 1,
-				signedUpBy: "Admin",
-				notes: null,
-				expires: new Date().toISOString(),
-				createdDate: new Date().toISOString(),
-				ggId: null,
-				course: {
-					id: 1,
-					name: "Test Course",
-					numberOfHoles: 18,
-					holes: [],
-					tees: [],
-				},
-				slots: [],
-			}
+			const regRow = createCompleteRegRow()
 
-			repository.findCompleteRegistrationById.mockResolvedValue(regRow as any)
+			repository.findCompleteRegistrationById.mockResolvedValue(regRow)
 			paymentsRepository.findPaymentById.mockResolvedValue(null)
 
 			await expect(service.getCompleteRegistrationAndPayment(1, 999)).rejects.toThrow(
