@@ -97,7 +97,7 @@ export default function ManageMovePage() {
 	const canMove = selectedGroup !== undefined
 
 	return (
-		<div className="mx-auto max-w-[560px]">
+		<div className="max-w-[560px]">
 			<Card>
 				<CardHeader>
 					<CardTitle className="text-lg">Move Group</CardTitle>

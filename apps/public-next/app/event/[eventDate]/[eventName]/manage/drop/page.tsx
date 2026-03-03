@@ -90,7 +90,7 @@ export default function ManageDropPage() {
 	const canDrop = selectedPlayerIds.length > 0
 
 	return (
-		<div className="mx-auto max-w-[560px]">
+		<div className="max-w-[560px]">
 			<Card>
 				<CardHeader>
 					<CardTitle className="text-lg">Drop Players</CardTitle>

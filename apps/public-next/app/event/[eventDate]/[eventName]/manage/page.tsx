@@ -83,7 +83,7 @@ export default function ManagePage() {
 	]
 
 	return (
-		<div className="mx-auto max-w-[560px]">
+		<div className="max-w-[560px]">
 			<Card>
 				<CardHeader>
 					<CardTitle className="text-lg">

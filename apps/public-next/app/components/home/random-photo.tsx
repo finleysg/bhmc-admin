@@ -16,9 +16,9 @@ export function RandomPhoto({ photo }: RandomPhotoProps) {
 				alt={photo.caption ?? "Club photo"}
 				width={900}
 				height={900}
-				className="w-full rounded"
+				className="w-full max-h-[450px] rounded object-contain"
 			/>
-			<p className="mt-1 text-sm text-muted-foreground">
+			<p className="mt-1 text-center text-sm text-muted-foreground">
 				{photo.caption} (<strong>{photo.year}</strong>)
 			</p>
 		</div>

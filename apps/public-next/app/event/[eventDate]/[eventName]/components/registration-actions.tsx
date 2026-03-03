@@ -25,8 +25,8 @@ export function RegistrationActions({ event }: RegistrationActionsProps) {
 	return (
 		<div className="flex gap-2">
 			<PortalButton event={event} />
-			<SignUpButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} />
 			<PlayersButton event={event} eventUrl={eventUrl} />
+			<SignUpButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} />
 			{isAuthenticated && (
 				<ManageButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} />
 			)}
@@ -105,7 +105,7 @@ function ManageButton({
 	if (!paymentsOpen) return null
 
 	return (
-		<Button variant="outline" size="sm" asChild>
+		<Button variant="accent" size="sm" asChild>
 			<Link href={`${eventUrl}/manage`}>Manage</Link>
 		</Button>
 	)

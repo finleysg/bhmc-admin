@@ -52,8 +52,8 @@
 		--input: 226 32% 91%;
 		--ring: 226 52% 27%;
 		--radius: 0.5rem;
-		--accent-cta: 45 93% 47%;
-		--accent-cta-foreground: 45 20% 10%;
+		--accent-cta: 23 93% 52%;
+		--accent-cta-foreground: 23 20% 98%;
 	}
 
 	.dark {
@@ -76,8 +76,8 @@
 		--border: 226 33% 17%;
 		--input: 226 33% 17%;
 		--ring: 226 80% 65%;
-		--accent-cta: 40 90% 40%;
-		--accent-cta-foreground: 45 93% 95%;
+		--accent-cta: 23 93% 46%;
+		--accent-cta-foreground: 23 20% 98%;
 	}
 }
 

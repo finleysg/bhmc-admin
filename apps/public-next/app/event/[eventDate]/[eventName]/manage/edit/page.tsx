@@ -29,7 +29,6 @@ export default function EditRegistrationPage() {
 		error,
 		startEditRegistration,
 		initiateStripeSession,
-		cancelRegistration,
 		savePayment,
 		setError,
 		updateRegistrationNotes,
@@ -70,7 +69,7 @@ export default function EditRegistrationPage() {
 		if (contextRegistration?.notes && !notes) {
 			setNotes(contextRegistration.notes)
 		}
-	}, [contextRegistration?.notes]) // eslint-disable-line react-hooks/exhaustive-deps
+	}, [contextRegistration?.notes, notes])
 
 	// Auto-dismiss error after 5 seconds
 	const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -119,7 +118,7 @@ export default function EditRegistrationPage() {
 	// Show loading state until context registration is populated
 	if (!contextRegistration || !clubEvent) {
 		return (
-			<div className="mx-auto max-w-[560px]">
+			<div className="max-w-[560px]">
 				<Card>
 					<CardHeader>
 						<CardTitle className="text-lg">Edit Registration</CardTitle>
@@ -133,7 +132,7 @@ export default function EditRegistrationPage() {
 	}
 
 	return (
-		<div className="mx-auto max-w-[560px]">
+		<div className="max-w-[560px]">
 			<Card>
 				<CardHeader>
 					<CardTitle className="text-lg">Edit Registration</CardTitle>

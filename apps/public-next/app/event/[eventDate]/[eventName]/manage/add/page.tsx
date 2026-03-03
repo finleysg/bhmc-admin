@@ -85,7 +85,7 @@ export default function ManageAddPage() {
 
 	if (availableSlots <= 0) {
 		return (
-			<div className="mx-auto max-w-[560px]">
+			<div className="max-w-[560px]">
 				<Card>
 					<CardHeader>
 						<CardTitle className="text-lg">Add Players</CardTitle>
@@ -109,7 +109,7 @@ export default function ManageAddPage() {
 	const canContinue = selectedPlayers.length > 0
 
 	return (
-		<div className="mx-auto max-w-[560px]">
+		<div className="max-w-[560px]">
 			<Card>
 				<CardHeader>
 					<CardTitle className="text-lg">Add Players</CardTitle>

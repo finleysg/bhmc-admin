@@ -90,7 +90,7 @@ export default function ManageReplacePage() {
 	const canReplace = sourcePlayerId !== null && targetPlayerId !== null
 
 	return (
-		<div className="mx-auto max-w-[560px]">
+		<div className="max-w-[560px]">
 			<Card>
 				<CardHeader>
 					<CardTitle className="text-lg">Replace Player</CardTitle>
