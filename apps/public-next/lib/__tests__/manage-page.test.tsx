@@ -161,7 +161,7 @@ test("all links point to correct URLs", async () => {
 	expect(hrefs).toContain("/event/2026-03-01/weeknight/manage/move")
 	expect(hrefs).toContain("/event/2026-03-01/weeknight/manage/replace")
 	expect(hrefs).toContain("/event/2026-03-01/weeknight/manage/notes")
-	expect(hrefs).toContain("/event/2026-03-01/weeknight/manage/skins")
+	expect(hrefs).toContain("/event/2026-03-01/weeknight/manage/edit")
 })
 
 test("back button links to event detail page", async () => {

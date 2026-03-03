@@ -490,6 +490,32 @@ export function RegistrationProvider({
 		[state.clubEvent?.id, queryClient, user?.id],
 	)
 
+	const startEditRegistration = useCallback(
+		(registration: ServerRegistration) => {
+			const fees: ServerRegistrationFee[] = registration.slots.flatMap((slot) => slot.fees)
+			dispatch({
+				type: "load-registration",
+				payload: {
+					registration,
+					payment: {
+						id: 0,
+						eventId: state.clubEvent?.id ?? 0,
+						userId: user?.id ?? 0,
+						paymentCode: "",
+						paymentKey: null,
+						paymentAmount: null,
+						transactionFee: null,
+						notificationType: null,
+						confirmed: false,
+						details: [],
+					},
+					existingFees: fees,
+				},
+			})
+		},
+		[state.clubEvent?.id, user?.id],
+	)
+
 	const editRegistration = useCallback(
 		async (registrationId: number, playerIds: number[]) => {
 			try {
@@ -740,6 +766,7 @@ export function RegistrationProvider({
 			editRegistration,
 			initiateStripeSession,
 			loadRegistration,
+			startEditRegistration,
 			removeFee,
 			removePlayer,
 			requestNavigation,
@@ -761,6 +788,7 @@ export function RegistrationProvider({
 			editRegistration,
 			initiateStripeSession,
 			loadRegistration,
+			startEditRegistration,
 			removeFee,
 			removePlayer,
 			requestNavigation,
