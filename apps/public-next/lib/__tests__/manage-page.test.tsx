@@ -173,6 +173,32 @@ test("back button links to event detail page", async () => {
 	expect((backLink as HTMLAnchorElement).getAttribute("href")).toBe("/event/2026-03-01/weeknight")
 })
 
+test("disables add, drop, and move links when registration window is past", async () => {
+	mockClubEvent.mockImplementation(() => makeClubEvent({ registration_window: "past" }))
+
+	const { default: ManagePage } = await import("@/app/event/[eventDate]/[eventName]/manage/page")
+
+	render(<ManagePage />)
+
+	// Add, Drop, Move, Replace, Notes should be rendered as plain text (not links)
+	for (const label of ["Add Players", "Drop Players", "Move Group", "Replace Player", "Add Notes"]) {
+		expect(screen.getByText(label)).toBeTruthy()
+		expect(screen.getByText(label).closest("a")).toBeNull()
+	}
+
+	// Only Skins should still be a link
+	const links = screen.getAllByRole("link")
+	const hrefs = links.map((a) => (a as HTMLAnchorElement).getAttribute("href"))
+	expect(hrefs).toContain("/event/2026-03-01/weeknight/manage/edit")
+
+	// Registration-dependent links should NOT be present
+	expect(hrefs).not.toContain("/event/2026-03-01/weeknight/manage/add")
+	expect(hrefs).not.toContain("/event/2026-03-01/weeknight/manage/drop")
+	expect(hrefs).not.toContain("/event/2026-03-01/weeknight/manage/move")
+	expect(hrefs).not.toContain("/event/2026-03-01/weeknight/manage/replace")
+	expect(hrefs).not.toContain("/event/2026-03-01/weeknight/manage/notes")
+})
+
 test("displays location text in header", async () => {
 	const { default: ManagePage } = await import("@/app/event/[eventDate]/[eventName]/manage/page")
 

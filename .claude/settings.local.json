@@ -55,7 +55,11 @@
 			"mcp__chrome-devtools__wait_for",
 			"mcp__chrome-devtools__fill",
 			"mcp__chrome-devtools__type_text",
-			"Bash(tree:*)"
+			"Bash(tree:*)",
+			"Bash(do:*)",
+			"Bash(echo === PR $pr reviews ===:*)",
+			"Bash(echo === PR $pr full reviews ===:*)",
+			"Bash(echo === PR $pr ===:*)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],

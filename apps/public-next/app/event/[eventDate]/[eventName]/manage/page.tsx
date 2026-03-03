@@ -16,6 +16,7 @@ interface ManageOption {
 	title: string
 	description: string
 	href: string
+	disabled?: boolean
 }
 
 export default function ManagePage() {
@@ -38,12 +39,15 @@ export default function ManagePage() {
 
 	const locationText = course ? `${course.name} ${startName}` : startName
 
+	const registrationClosed = clubEvent.registration_window === "past"
+
 	const options: ManageOption[] = [
 		{
 			key: "addPlayers",
 			title: "Add Players",
 			description: "Add one or more players to your group, assuming there is space available",
 			href: `${eventUrl}/manage/add`,
+			disabled: registrationClosed,
 		},
 		{
 			key: "dropPlayers",
@@ -51,6 +55,7 @@ export default function ManagePage() {
 			description:
 				"Drop one or more players from your group. A refund will be triggered for fees paid.",
 			href: `${eventUrl}/manage/drop`,
+			disabled: registrationClosed,
 		},
 		...(clubEvent.can_choose
 			? [
@@ -59,6 +64,7 @@ export default function ManagePage() {
 						title: "Move Group",
 						description: "Move your group to another open spot.",
 						href: `${eventUrl}/manage/move`,
+						disabled: registrationClosed,
 					},
 				]
 			: []),
@@ -67,12 +73,14 @@ export default function ManagePage() {
 			title: "Replace Player",
 			description: "Replace one of the players in your group with another player.",
 			href: `${eventUrl}/manage/replace`,
+			disabled: registrationClosed,
 		},
 		{
 			key: "addNotes",
 			title: "Add Notes",
 			description: "Add a special request or other notes to your registration.",
 			href: `${eventUrl}/manage/notes`,
+			disabled: registrationClosed,
 		},
 		{
 			key: "updateRegistration",
@@ -99,12 +107,18 @@ export default function ManagePage() {
 					<ul className="space-y-4">
 						{options.map((opt) => (
 							<li key={opt.key}>
-								<Link
-									href={opt.href}
-									className="text-primary hover:text-primary/80 font-semibold no-underline"
-								>
-									{opt.title}
-								</Link>
+								{opt.disabled ? (
+									<span className="text-muted-foreground font-semibold">
+										{opt.title}
+									</span>
+								) : (
+									<Link
+										href={opt.href}
+										className="text-primary hover:text-primary/80 font-semibold no-underline"
+									>
+										{opt.title}
+									</Link>
+								)}
 								<p className="text-muted-foreground mt-1 text-sm italic">{opt.description}</p>
 							</li>
 						))}

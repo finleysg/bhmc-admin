@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -36,6 +36,13 @@ export default function ManageMovePage() {
 	const [selectedCourseId, setSelectedCourseId] = useState<number | null>(
 		courses.length === 1 ? courses[0].id : null,
 	)
+
+	// Auto-select course when event data loads asynchronously (single-course events)
+	useEffect(() => {
+		if (selectedCourseId === null && courses.length === 1) {
+			setSelectedCourseId(courses[0].id)
+		}
+	}, [courses, selectedCourseId])
 	const [selectedGroupKey, setSelectedGroupKey] = useState<string | null>(null)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 

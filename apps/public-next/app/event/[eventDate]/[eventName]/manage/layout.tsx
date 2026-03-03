@@ -1,5 +1,6 @@
 "use client"
 
+import { isBefore } from "date-fns"
 import { type PropsWithChildren } from "react"
 
 import { useAuth } from "@/lib/auth-context"
@@ -28,6 +29,20 @@ export default function ManageLayout({ children }: PropsWithChildren) {
 		return (
 			<div className="flex justify-center py-12">
 				<div className="text-muted-foreground text-sm">No registration found.</div>
+			</div>
+		)
+	}
+
+	const paymentsOpen = clubEvent?.payments_end
+		? isBefore(new Date(), new Date(clubEvent.payments_end))
+		: false
+
+	if (!paymentsOpen) {
+		return (
+			<div className="flex justify-center py-12">
+				<div className="text-muted-foreground text-sm">
+					The payment window for this event has closed.
+				</div>
 			</div>
 		)
 	}
