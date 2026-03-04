@@ -42,13 +42,17 @@ async function signInAndStartRegistration(
 	await page.getByRole("link", { name: "Sign Up" }).click()
 	await page.waitForURL("**/reserve")
 
-	// Wait for SSE readiness
-	const selectButton = page.getByRole("button", { name: "Select" }).first()
-	await expect(selectButton).toBeEnabled({ timeout: 30_000 })
+	// Wait for SSE readiness — find an enabled Select button (earlier groups
+	// may be full from previous serial tests, so we can't assume .first())
+	const enabledSelect = page
+		.getByRole("button", { name: "Select" })
+		.and(page.locator(":not([disabled])"))
+	await expect(enabledSelect.first()).toBeVisible({ timeout: 30_000 })
 
-	// Select a slot and register
-	await page.getByRole("button", { name: "Open" }).first().click()
-	const registerButton = page.getByRole("button", { name: "Register" }).first()
+	// Scope the Open slot click and Register button to the same group row
+	const groupRow = enabledSelect.first().locator("../..")
+	await groupRow.getByRole("button", { name: "Open" }).first().click()
+	const registerButton = groupRow.getByRole("button", { name: "Register" })
 	await expect(registerButton).toBeEnabled({ timeout: 30_000 })
 	await registerButton.click()
 	await page.waitForURL("**/register", { timeout: 10_000 })

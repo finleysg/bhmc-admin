@@ -122,6 +122,19 @@ export class UserPaymentsController {
 	}
 
 	/**
+	 * Get admin payment details for the standalone payment flow.
+	 * GET /payments/:id/admin-payment/:registrationId
+	 */
+	@Get(":id/admin-payment/:registrationId")
+	async getAdminPaymentDetails(
+		@Req() req: AuthenticatedRequest,
+		@Param("id", ParseIntPipe) paymentId: number,
+		@Param("registrationId", ParseIntPipe) registrationId: number,
+	) {
+		return this.service.getAdminPaymentDetails(paymentId, registrationId, req.user.id)
+	}
+
+	/**
 	 * Get the Stripe amount (in cents) for a payment including fees.
 	 * GET /payments/:id/stripe-amount
 	 */

@@ -1,5 +1,6 @@
 import { BadRequestException, NotFoundException } from "@nestjs/common"
 import {
+	NotificationTypeChoices,
 	RegistrationStatusChoices,
 	EventTypeChoices,
 	type CompleteClubEvent,
@@ -546,6 +547,95 @@ describe("AdminRegistrationService", () => {
 			await service.createAdminRegistration(100, dto)
 
 			expect(drizzle.mockTx.update).toHaveBeenCalled()
+		})
+	})
+
+	describe("payment notificationType", () => {
+		const findPaymentValues = (mockTx: any) => {
+			const valuesCalls = mockTx.values.mock.calls as unknown[][]
+			return valuesCalls
+				.map((call) => call[0] as Record<string, unknown>)
+				.find((arg) => "notificationType" in arg)
+		}
+
+		it("sets SIGNUP_CONFIRMATION when collectPayment=true (choosable)", async () => {
+			const { service, eventsService, repository, drizzle } = createService()
+			const event = createCompleteClubEvent({ canChoose: true })
+			const dto = createAdminRegistration({ collectPayment: true })
+
+			eventsService.getCompleteClubEventById.mockResolvedValue(event)
+			repository.findPlayersByIds.mockResolvedValue([createPlayerRow()])
+			drizzle.mockTx.for.mockResolvedValue([
+				createRegistrationSlotRow({ status: RegistrationStatusChoices.AVAILABLE }),
+			])
+			drizzle.mockTx.insert.mockReturnValue(drizzle.mockTx)
+			repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+			await service.createAdminRegistration(100, dto)
+
+			const paymentValues = findPaymentValues(drizzle.mockTx)
+			expect(paymentValues?.notificationType).toBe(NotificationTypeChoices.SIGNUP_CONFIRMATION)
+		})
+
+		it("sets ADMIN when collectPayment=false (choosable)", async () => {
+			const { service, eventsService, repository, drizzle } = createService()
+			const event = createCompleteClubEvent({ canChoose: true })
+			const dto = createAdminRegistration({ collectPayment: false })
+
+			eventsService.getCompleteClubEventById.mockResolvedValue(event)
+			repository.findPlayersByIds.mockResolvedValue([createPlayerRow()])
+			drizzle.mockTx.for.mockResolvedValue([
+				createRegistrationSlotRow({ status: RegistrationStatusChoices.AVAILABLE }),
+			])
+			drizzle.mockTx.insert.mockReturnValue(drizzle.mockTx)
+			repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+			await service.createAdminRegistration(100, dto)
+
+			const paymentValues = findPaymentValues(drizzle.mockTx)
+			expect(paymentValues?.notificationType).toBe(NotificationTypeChoices.ADMIN)
+		})
+
+		it("sets SIGNUP_CONFIRMATION when collectPayment=true (non-choosable)", async () => {
+			const { service, eventsService, repository, drizzle } = createService()
+			const event = createCompleteClubEvent({ canChoose: false })
+			const dto = createAdminRegistration({ collectPayment: true })
+
+			eventsService.getCompleteClubEventById.mockResolvedValue(event)
+			repository.findPlayersByIds.mockResolvedValue([createPlayerRow()])
+			drizzle.mockTx.for.mockResolvedValue([])
+			drizzle.mockTx.select.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.from.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.where.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.insert.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.values.mockResolvedValue([{ insertId: 1 }, { insertId: 2 }])
+			repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+			await service.createAdminRegistration(100, dto)
+
+			const paymentValues = findPaymentValues(drizzle.mockTx)
+			expect(paymentValues?.notificationType).toBe(NotificationTypeChoices.SIGNUP_CONFIRMATION)
+		})
+
+		it("sets ADMIN when collectPayment=false (non-choosable)", async () => {
+			const { service, eventsService, repository, drizzle } = createService()
+			const event = createCompleteClubEvent({ canChoose: false })
+			const dto = createAdminRegistration({ collectPayment: false })
+
+			eventsService.getCompleteClubEventById.mockResolvedValue(event)
+			repository.findPlayersByIds.mockResolvedValue([createPlayerRow()])
+			drizzle.mockTx.for.mockResolvedValue([])
+			drizzle.mockTx.select.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.from.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.where.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.insert.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.values.mockResolvedValue([{ insertId: 1 }, { insertId: 2 }])
+			repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+			await service.createAdminRegistration(100, dto)
+
+			const paymentValues = findPaymentValues(drizzle.mockTx)
+			expect(paymentValues?.notificationType).toBe(NotificationTypeChoices.ADMIN)
 		})
 	})
 

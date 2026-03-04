@@ -11,6 +11,7 @@ import {
 	CompleteClubEvent,
 	CompleteRegistration,
 	EventTypeChoices,
+	NotificationTypeChoices,
 	AmountDue,
 	ClubEvent,
 	CompletePayment,
@@ -368,7 +369,9 @@ export class AdminRegistrationService {
 				paymentAmount: dto.collectPayment ? amountDue.total.toFixed(2) : "0.00",
 				transactionFee: dto.collectPayment ? amountDue.transactionFee.toFixed(2) : "0.00",
 				confirmed: dto.collectPayment ? 0 : 1,
-				notificationType: "A",
+				notificationType: dto.collectPayment
+					? NotificationTypeChoices.SIGNUP_CONFIRMATION
+					: NotificationTypeChoices.ADMIN,
 			})
 			paymentId = Number(paymentResult.insertId)
 
@@ -472,7 +475,9 @@ export class AdminRegistrationService {
 				paymentAmount: dto.collectPayment ? amountDue.total.toFixed(2) : "0.00",
 				transactionFee: dto.collectPayment ? amountDue.transactionFee.toFixed(2) : "0.00",
 				confirmed: dto.collectPayment ? 0 : 1,
-				notificationType: "A",
+				notificationType: dto.collectPayment
+					? NotificationTypeChoices.SIGNUP_CONFIRMATION
+					: NotificationTypeChoices.ADMIN,
 			})
 			paymentId = Number(paymentResult.insertId)
 

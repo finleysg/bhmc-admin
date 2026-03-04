@@ -1,4 +1,11 @@
-import { Inject, Injectable, Logger } from "@nestjs/common"
+import {
+	BadRequestException,
+	ForbiddenException,
+	Inject,
+	Injectable,
+	Logger,
+	NotFoundException,
+} from "@nestjs/common"
 
 import { calculateAmountDue, deriveNotificationType } from "@repo/domain/functions"
 import {
@@ -374,6 +381,59 @@ export class PaymentsService {
 
 		if (event.canChoose) {
 			this.broadcast.notifyChange(reg.eventId)
+		}
+	}
+
+	/**
+	 * Validate and return admin payment details for the standalone payment flow.
+	 */
+	async getAdminPaymentDetails(
+		paymentId: number,
+		registrationId: number,
+		userId: number,
+	): Promise<{
+		paymentId: number
+		registrationId: number
+		eventId: number
+		eventName: string
+		eventDate: string
+	}> {
+		const payment = await this.findPaymentById(paymentId)
+		if (!payment) {
+			throw new NotFoundException(`Payment ${paymentId} not found`)
+		}
+
+		if (payment.userId !== userId) {
+			throw new ForbiddenException("This payment is not associated with your account")
+		}
+
+		if (payment.paymentCode.toLowerCase() !== "requested") {
+			throw new BadRequestException("This payment has already been processed or is not available")
+		}
+
+		if (payment.confirmed) {
+			throw new BadRequestException("This payment has already been confirmed")
+		}
+
+		const reg = await this.registrationRepository.findRegistrationById(registrationId)
+		if (!reg) {
+			throw new NotFoundException(`Registration ${registrationId} not found`)
+		}
+
+		if (reg.expires && new Date(reg.expires) <= new Date()) {
+			throw new BadRequestException(
+				"This registration has expired. Please contact an administrator.",
+			)
+		}
+
+		const event = await this.events.getEventById(reg.eventId)
+
+		return {
+			paymentId,
+			registrationId,
+			eventId: event.id,
+			eventName: event.name,
+			eventDate: event.startDate,
 		}
 	}
 

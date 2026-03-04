@@ -9,11 +9,12 @@ export function proxy(request: NextRequest) {
 		return NextResponse.redirect(new URL("/maintenance", request.url))
 	}
 
-	// Auth guard: require access_token for member pages
-	if (pathname.startsWith("/member")) {
+	// Auth guard: require access_token for member and registration pages
+	if (pathname.startsWith("/member") || pathname.startsWith("/registration")) {
 		const token = request.cookies.get("access_token")
 		if (!token) {
-			return NextResponse.redirect(new URL("/sign-in", request.url))
+			const redirectUrl = encodeURIComponent(pathname)
+			return NextResponse.redirect(new URL(`/sign-in?redirectUrl=${redirectUrl}`, request.url))
 		}
 	}
 
