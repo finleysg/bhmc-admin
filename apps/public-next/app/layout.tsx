@@ -52,7 +52,7 @@ try {
 						<Header />
 						<div className="flex flex-1">
 							<Sidebar />
-							<main className="flex-1 p-4 lg:p-6">{children}</main>
+							<main className="min-w-0 flex-1 p-4 lg:p-6">{children}</main>
 						</div>
 						<Footer />
 					</div>

@@ -9,6 +9,11 @@ export function proxy(request: NextRequest) {
 		return NextResponse.redirect(new URL("/maintenance", request.url))
 	}
 
+	// Redirect /home to root
+	if (pathname === "/home") {
+		return NextResponse.redirect(new URL("/", request.url))
+	}
+
 	// Auth guard: require access_token for member and registration pages
 	if (pathname.startsWith("/member") || pathname.startsWith("/registration")) {
 		const token = request.cookies.get("access_token")

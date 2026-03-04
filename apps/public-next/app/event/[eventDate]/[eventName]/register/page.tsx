@@ -47,6 +47,7 @@ export default function RegisterPage() {
 		addPlayer,
 		canRegister,
 		cancelRegistration,
+		createRegistration,
 		savePayment,
 		setError,
 		updateRegistrationNotes,
@@ -60,12 +61,21 @@ export default function RegisterPage() {
 	const [showPriorityDialog, setShowPriorityDialog] = useState(false)
 	const [isContinuing, setIsContinuing] = useState(false)
 
-	// Redirect if no registration
+	// For non-choice events (e.g. season registration), auto-create the registration
+	// since there is no reserve step. For choice events, redirect back (user skipped reserve).
+	const creatingRef = useRef(false)
 	useEffect(() => {
-		if (!registration) {
-			router.replace(clubEvent ? getEventUrl(clubEvent) : "../")
+		if (registration || !clubEvent) return
+
+		if (!clubEvent.can_choose) {
+			if (!creatingRef.current) {
+				creatingRef.current = true
+				void createRegistration()
+			}
+		} else {
+			router.replace(getEventUrl(clubEvent))
 		}
-	}, [registration, clubEvent, router])
+	}, [registration, clubEvent, router, createRegistration])
 
 	// Auto-dismiss error after 5 seconds
 	const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)

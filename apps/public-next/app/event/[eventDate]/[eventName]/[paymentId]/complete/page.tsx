@@ -8,6 +8,7 @@ import { useStripe } from "@stripe/react-stripe-js"
 import type { PaymentIntent } from "@stripe/stripe-js"
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { RandomGif } from "@/components/random-gif"
 import { useAuth } from "@/lib/auth-context"
 import { useRegistration } from "@/lib/registration/registration-context"
 import { formatCurrency } from "@/lib/registration/payment-utils"
@@ -92,6 +93,7 @@ export default function CompletePage() {
 							A confirmation email will be sent to {user?.email} and anyone you signed up unless
 							this is just an update. A payment receipt will also be sent from Stripe.
 						</p>
+						<RandomGif />
 					</>
 				)}
 				{intent?.status === "processing" && (

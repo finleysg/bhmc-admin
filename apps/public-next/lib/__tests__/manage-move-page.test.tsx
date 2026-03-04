@@ -107,7 +107,7 @@ function makeClubEvent(overrides: Partial<ClubEventDetail> = {}): ClubEventDetai
 		group_size: 5,
 		start_type: "SG",
 		can_choose: true,
-		registration_window: "current",
+		registration_window: "registration",
 		external_url: null,
 		season: 2026,
 		tee_time_splits: null,

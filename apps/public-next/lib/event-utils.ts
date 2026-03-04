@@ -190,14 +190,16 @@ export function shouldShowSignUpButton(
 		return false
 	}
 
+	const isWindowOpen = event.registration_window === "registration"
+
 	if (event.can_choose) {
 		const signupStart = event.priority_signup_start ?? event.signup_start
-		if (!signupStart) return event.registration_window === "current"
+		if (!signupStart) return isWindowOpen
 		const targetDate = new Date(signupStart)
 		return differenceInMinutes(targetDate, now) <= 60
 	}
 
-	return event.registration_window === "current"
+	return isWindowOpen
 }
 
 export function getRegistrationStartTime(

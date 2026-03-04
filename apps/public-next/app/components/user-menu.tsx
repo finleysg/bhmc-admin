@@ -51,7 +51,7 @@ export function UserMenu() {
 				</DropdownMenuLabel>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem asChild>
-					<Link href="/member/my-account">
+					<Link href="/member/account">
 						<User className="mr-2 size-4" />
 						My Account
 					</Link>

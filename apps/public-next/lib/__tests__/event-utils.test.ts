@@ -302,19 +302,19 @@ describe("shouldShowSignUpButton", () => {
 			expect(shouldShowSignUpButton(event, now)).toBe(true)
 		})
 
-		it("returns true when registration_window is current", () => {
+		it("returns true when registration_window is registration", () => {
 			const event = makeEvent({
 				can_choose: true,
-				registration_window: "current",
+				registration_window: "registration",
 				signup_start: "2024-06-15T11:00:00",
 			})
 			expect(shouldShowSignUpButton(event, now)).toBe(true)
 		})
 
-		it("returns true when no signup_start and window is current", () => {
+		it("returns true when no signup_start and window is registration", () => {
 			const event = makeEvent({
 				can_choose: true,
-				registration_window: "current",
+				registration_window: "registration",
 				signup_start: null,
 			})
 			expect(shouldShowSignUpButton(event, now)).toBe(true)
@@ -348,10 +348,10 @@ describe("shouldShowSignUpButton", () => {
 			expect(shouldShowSignUpButton(event, now)).toBe(false)
 		})
 
-		it("returns true when registration_window is current", () => {
+		it("returns true when registration_window is registration", () => {
 			const event = makeEvent({
 				can_choose: false,
-				registration_window: "current",
+				registration_window: "registration",
 			})
 			expect(shouldShowSignUpButton(event, now)).toBe(true)
 		})

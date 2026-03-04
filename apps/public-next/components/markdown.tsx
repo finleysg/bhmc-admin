@@ -9,7 +9,7 @@ export function Markdown({ content }: MarkdownProps) {
 	if (!content) return null
 
 	return (
-		<div className="prose dark:prose-invert max-w-none">
+		<div className="prose dark:prose-invert max-w-none overflow-x-auto">
 			<ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
 		</div>
 	)
