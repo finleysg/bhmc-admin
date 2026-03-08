@@ -9,7 +9,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOG_DIR = os.path.join(BASE_DIR, "var/log")
 # LOG_DIR = os.path.join(BASE_DIR, '/var/log/django')
 if not os.path.exists(LOG_DIR):
-    os.mkdir(LOG_DIR)
+    os.makedirs(LOG_DIR)
 
 # Load Environment variables, defaulting to prod, where
 # we don't inject DJANGO_ENV.
