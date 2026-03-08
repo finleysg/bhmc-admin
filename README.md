@@ -52,7 +52,7 @@ pnpm test             # Run all tests
 ```
 
 - API: `apps/api` (NestJS, MySQL)
-- Web: `apps/web` (Next.js, SQLite for auth)
+- Admin: `apps/admin` (Next.js, SQLite for auth)
 
 ## Usage
 

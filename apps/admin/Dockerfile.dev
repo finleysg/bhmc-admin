@@ -5,7 +5,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
-COPY apps/web/package.json ./apps/web/
+COPY apps/admin/package.json ./apps/admin/
 COPY packages/domain/package.json ./packages/domain/
 
 RUN pnpm install
@@ -13,9 +13,9 @@ RUN pnpm install
 COPY packages/domain ./packages/domain
 RUN pnpm --filter @repo/domain build
 
-COPY apps/web ./apps/web
+COPY apps/admin ./apps/admin
 
-WORKDIR /app/apps/web
+WORKDIR /app/apps/admin
 
 EXPOSE 3100
 

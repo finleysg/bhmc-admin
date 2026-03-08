@@ -60,7 +60,8 @@
 			"Bash(echo === PR $pr reviews ===:*)",
 			"Bash(echo === PR $pr full reviews ===:*)",
 			"Bash(echo === PR $pr ===:*)",
-			"Bash(playwright-cli eval:*)"
+			"Bash(playwright-cli eval:*)",
+			"Bash(uv lock:*)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],

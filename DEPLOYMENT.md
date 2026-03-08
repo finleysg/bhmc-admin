@@ -55,7 +55,7 @@ This guide covers deploying the BHMC Admin monorepo to a Digital Ocean droplet u
 **This Repo (bhmc-admin):**
 
 - `apps/api` - BHMC API: Golf Genius integration, Stripe callbacks, registration flow with SSE
-- `apps/web` - BHMC Admin: Player management, Golf Genius UI, reporting, light club management
+- `apps/admin` - BHMC Admin: Player management, Golf Genius UI, reporting, light club management
 
 ### Future Roadmap
 
@@ -69,7 +69,7 @@ This guide covers deploying the BHMC Admin monorepo to a Digital Ocean droplet u
 ```
 GitHub (release tag) → GitHub Actions → CapRover → DO Droplet
                                               ├── bhmc-api (NestJS)
-                                              └── bhmc-web (Next.js)
+                                              └── bhmc-admin (Next.js)
 ```
 
 - **Trigger**: Creating a release tag (e.g., `v1.0.0`)
@@ -204,7 +204,7 @@ Configure the app:
 NODE_ENV=production
 PORT=3000
 API_URL=https://api.bhmc.org
-# Add other env vars from apps/web/.env.example
+# Add other env vars from apps/admin/.env.example
 ```
 
 ---
@@ -359,14 +359,14 @@ Check CapRover logs for the app. Common issues:
 
 ## Files Reference
 
-| File                           | Purpose                               |
-| ------------------------------ | ------------------------------------- |
-| `apps/api/Dockerfile`          | Production build for API              |
-| `apps/web/Dockerfile`          | Production build for Web              |
-| `apps/api/captain-definition`  | CapRover config for API               |
-| `apps/web/captain-definition`  | CapRover config for Web               |
-| `.github/workflows/deploy.yml` | GitHub Actions workflow               |
-| `apps/web/next.config.ts`      | Next.js config with standalone output |
+| File                            | Purpose                               |
+| ------------------------------- | ------------------------------------- |
+| `apps/api/Dockerfile`           | Production build for API              |
+| `apps/admin/Dockerfile`         | Production build for Web              |
+| `apps/api/captain-definition`   | CapRover config for API               |
+| `apps/admin/captain-definition` | CapRover config for Web               |
+| `.github/workflows/deploy.yml`  | GitHub Actions workflow               |
+| `apps/admin/next.config.ts`     | Next.js config with standalone output |
 
 ---
 
@@ -379,11 +379,11 @@ Test Docker builds locally before deploying:
 docker build -t bhmc-api -f apps/api/Dockerfile .
 
 # Build Web
-docker build -t bhmc-web -f apps/web/Dockerfile .
+docker build -t bhmc-admin -f apps/admin/Dockerfile .
 
 # Run API
 docker run -p 3000:3000 --env-file apps/api/.env bhmc-api
 
 # Run Web
-docker run -p 3300:3000 --env-file apps/web/.env bhmc-web
+docker run -p 3300:3000 --env-file apps/admin/.env bhmc-admin
 ```

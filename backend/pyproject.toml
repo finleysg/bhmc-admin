@@ -21,6 +21,7 @@ dependencies = [
     "django-structlog==10.0.0",
     "django-templated-email==3.1.1",
     "djangorestframework==3.16.1",
+    "gunicorn>=23.0.0",
     "djoser==2.3.3",
     "mysqlclient==2.2.6",
     "openpyxl==3.1.5",
