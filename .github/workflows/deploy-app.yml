@@ -86,6 +86,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository }}/api:latest
 
       - name: Upload source maps to PostHog
+        continue-on-error: true
         uses: PostHog/upload-source-maps@main
         with:
           directory: ./sourcemaps
@@ -185,6 +186,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository }}/admin:latest
 
       - name: Upload source maps to PostHog
+        continue-on-error: true
         uses: PostHog/upload-source-maps@main
         with:
           directory: ./sourcemaps
@@ -251,6 +253,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository }}/public-next:latest
 
       - name: Upload source maps to PostHog
+        continue-on-error: true
         uses: PostHog/upload-source-maps@main
         with:
           directory: ./sourcemaps
