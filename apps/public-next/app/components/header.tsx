@@ -13,12 +13,12 @@ export function Header() {
 	const [open, setOpen] = useState(false)
 
 	return (
-		<header className="sticky top-0 z-40 border-b bg-primary text-primary-foreground">
+		<header className="sticky top-0 z-40 border-b bg-header text-header-foreground">
 			<div className="flex h-14 items-center gap-4 px-4 lg:px-6">
 				<Button
 					variant="ghost"
 					size="icon"
-					className="text-primary-foreground hover:bg-white/10 lg:hidden"
+					className="text-header-foreground hover:bg-white/10 lg:hidden"
 					onClick={() => setOpen(true)}
 					aria-label="Open menu"
 				>

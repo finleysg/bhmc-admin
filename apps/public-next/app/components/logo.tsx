@@ -5,7 +5,7 @@ export function Logo({ compact }: { compact?: boolean }) {
 		<Link
 			href="/"
 			aria-label="Home"
-			className="flex items-center gap-2 font-heading font-bold text-primary-foreground"
+			className="flex items-center gap-2 font-heading font-bold text-header-foreground"
 		>
 			{compact ? "BHMC" : "Bunker Hills Men's Golf Club"}
 		</Link>

@@ -22,7 +22,7 @@ export function ThemeToggle() {
 		<Button
 			variant="ghost"
 			size="icon"
-			className="text-primary-foreground hover:bg-white/10"
+			className="text-header-foreground hover:bg-white/10"
 			onClick={toggle}
 			aria-label="Toggle theme"
 		>
