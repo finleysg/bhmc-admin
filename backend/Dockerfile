@@ -12,6 +12,7 @@ RUN apt update && apt install --no-install-recommends -y \
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app
 
 RUN mkdir /scripts
 COPY ./backend/scripts /scripts
@@ -27,6 +28,8 @@ RUN rm -rf .venv && uv sync --frozen --no-dev
 
 # Copy application code
 COPY backend/ .
+# Remove local .venv that may have been copied from host
+RUN rm -rf .venv
 
 EXPOSE 8000
 CMD ["/scripts/start-prod.sh"]
