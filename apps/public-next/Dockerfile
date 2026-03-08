@@ -52,6 +52,8 @@ COPY --from=builder /app/apps/public-next/.next/standalone ./
 COPY --from=builder /app/apps/public-next/.next/static ./apps/public-next/.next/static
 COPY --from=builder /app/apps/public-next/public ./apps/public-next/public
 
+RUN mkdir -p ./apps/public-next/.next/cache && chown nextjs:nodejs ./apps/public-next/.next/cache
+
 USER nextjs
 
 EXPOSE 3000
