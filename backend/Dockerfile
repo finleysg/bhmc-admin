@@ -27,3 +27,6 @@ RUN rm -rf .venv && uv sync --frozen --no-dev
 
 # Copy application code
 COPY backend/ .
+
+EXPOSE 8000
+CMD ["/scripts/start-prod.sh"]

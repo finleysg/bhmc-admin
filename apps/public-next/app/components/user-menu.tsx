@@ -22,7 +22,7 @@ export function UserMenu() {
 			<Button
 				variant="ghost"
 				size="sm"
-				className="text-primary-foreground hover:bg-white/10"
+				className="text-header-foreground hover:bg-white/10"
 				asChild
 			>
 				<Link href="/sign-in">Login</Link>

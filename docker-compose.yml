@@ -9,12 +9,6 @@ services:
       - dev-data:/var/lib/mysql
     restart: unless-stopped
 
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
-
   stripe:
     image: stripe/stripe-cli:v1.34.0
     environment:
@@ -53,7 +47,6 @@ services:
       - "5001:5001"
     depends_on:
       - mysql
-      - redis
 
   api:
     build:
@@ -75,16 +68,16 @@ services:
   web-admin:
     build:
       context: .
-      dockerfile: apps/web/Dockerfile.dev
+      dockerfile: apps/admin/Dockerfile.dev
     volumes:
-      - ./apps/web/app:/app/apps/web/app
-      - ./apps/web/components:/app/apps/web/components
-      - ./apps/web/lib:/app/apps/web/lib
-      - ./apps/web/types:/app/apps/web/types
+      - ./apps/admin/app:/app/apps/admin/app
+      - ./apps/admin/components:/app/apps/admin/components
+      - ./apps/admin/lib:/app/apps/admin/lib
+      - ./apps/admin/types:/app/apps/admin/types
     ports:
       - "3100:3300"
     env_file:
-      - ./apps/web/.env.development
+      - ./apps/admin/.env.development
     depends_on:
       - api
     restart: unless-stopped

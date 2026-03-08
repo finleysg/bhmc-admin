@@ -5,8 +5,6 @@ from datetime import timedelta
 import djoser.views
 import structlog
 from django.contrib.auth.models import User
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from djoser import utils
 from djoser.conf import settings
 from faker import Faker
@@ -31,7 +29,6 @@ from .serializers import (
     MajorChampionSerializer,
     SeasonSettingsSerializer,
 )
-from .tasks import debug_task
 
 is_localhost = DJANGO_ENV != "prod"
 logger = structlog.get_logger(__name__)
@@ -40,10 +37,6 @@ logger = structlog.get_logger(__name__)
 class BoardMemberViewSet(viewsets.ModelViewSet):
     serializer_class = BoardMemberSerializer
     queryset = BoardMember.objects.all()
-
-    @method_decorator(cache_page(60 * 60 * 4))
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
 
 class MajorChampionViewSet(viewsets.ModelViewSet):
@@ -65,10 +58,6 @@ class MajorChampionViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    @method_decorator(cache_page(60 * 60 * 4))
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
 
 class LowScoreViewSet(viewsets.ModelViewSet):
     serializer_class = LowScoreSerializer
@@ -81,10 +70,6 @@ class LowScoreViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(season=season)
 
         return queryset
-
-    @method_decorator(cache_page(60 * 60 * 1))
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
 
 class AceViewSet(viewsets.ModelViewSet):
@@ -102,10 +87,6 @@ class AceViewSet(viewsets.ModelViewSet):
             queryset = queryset.order_by("-season")
 
         return queryset
-
-    @method_decorator(cache_page(60 * 60 * 4))
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
 
 class SeasonSettingsViewSet(viewsets.ModelViewSet):
@@ -164,13 +145,6 @@ class TokenDestroyView(djoser.views.TokenDestroyView):
         response.status_code = status.HTTP_204_NO_CONTENT
         utils.logout_user(request)
         return response
-
-
-@api_view(("GET",))
-@permission_classes((permissions.AllowAny,))
-def ping_celery(request):
-    debug_task.delay()
-    return Response(data="task started", status=200)
 
 
 @api_view(("POST",))

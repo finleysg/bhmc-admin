@@ -25,6 +25,14 @@ RUN pnpm build
 
 # Build Next.js app
 WORKDIR /app/apps/public-next
+ARG NEXT_PUBLIC_DJANGO_URL
+ARG NEXT_PUBLIC_STRIPE_PUBLIC_KEY
+ARG NEXT_PUBLIC_GIPHY_API_KEY
+ARG NEXT_PUBLIC_MODE=Live
+ENV NEXT_PUBLIC_DJANGO_URL=$NEXT_PUBLIC_DJANGO_URL
+ENV NEXT_PUBLIC_STRIPE_PUBLIC_KEY=$NEXT_PUBLIC_STRIPE_PUBLIC_KEY
+ENV NEXT_PUBLIC_GIPHY_API_KEY=$NEXT_PUBLIC_GIPHY_API_KEY
+ENV NEXT_PUBLIC_MODE=$NEXT_PUBLIC_MODE
 RUN pnpm build
 
 # Production stage
@@ -39,9 +47,10 @@ ENV PORT=3000
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy standalone build
+# Copy standalone build and public assets
 COPY --from=builder /app/apps/public-next/.next/standalone ./
 COPY --from=builder /app/apps/public-next/.next/static ./apps/public-next/.next/static
+COPY --from=builder /app/apps/public-next/public ./apps/public-next/public
 
 USER nextjs
 

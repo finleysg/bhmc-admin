@@ -24,6 +24,8 @@
 	--color-input: hsl(var(--input));
 	--color-accent-cta: hsl(var(--accent-cta));
 	--color-accent-cta-foreground: hsl(var(--accent-cta-foreground));
+	--color-header: hsl(var(--header));
+	--color-header-foreground: hsl(var(--header-foreground));
 	--color-ring: hsl(var(--ring));
 	--radius: 0.5rem;
 	--font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
@@ -54,6 +56,8 @@
 		--radius: 0.5rem;
 		--accent-cta: 23 93% 52%;
 		--accent-cta-foreground: 23 20% 98%;
+		--header: 226 52% 27%;
+		--header-foreground: 226 40% 98%;
 	}
 
 	.dark {
@@ -78,6 +82,8 @@
 		--ring: 226 80% 65%;
 		--accent-cta: 23 93% 46%;
 		--accent-cta-foreground: 23 20% 98%;
+		--header: 226 47% 11%;
+		--header-foreground: 226 20% 88%;
 	}
 }
 

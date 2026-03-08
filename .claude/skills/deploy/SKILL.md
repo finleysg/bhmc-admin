@@ -1,46 +1,75 @@
 ---
-description: Deploy app to production via GitHub Actions
-user-invocable: true
-arguments:
-  - name: app
-    description: App to deploy (api, public, web)
-    required: true
+name: deploy
+description: Deploy the admin or public app to production by creating and pushing a date-versioned git tag. Use when the user wants to deploy an app to production.
+allowed-tools: Bash(git:*), Bash(date:*)
 ---
 
-# Deploy Skill
+# Deploy App to Production
 
-Deploy an app to production via GitHub Actions workflow.
+Deploy an app (admin, api, public-next, or public) to production by creating and pushing a git tag that triggers the GitHub Actions deployment workflow.
 
-## Usage
+## Tag Format
 
+`{app}-v{yyyy}.{mm}.{dd}.{nn}`
+
+- `{app}` is either `admin`, `api`, `backend`, or `public-next`
+- `{yyyy}.{mm}.{dd}` is today's date
+- `{nn}` is a zero-padded sequential number starting at 01
+
+## Steps
+
+### 1. Determine which app to deploy
+
+If the user specified the app (e.g., `/deploy admin` or `/deploy api`), use that.
+Otherwise, ask the user which app to deploy using AskUserQuestion with options "admin", "api", "backend", and "public-next".
+
+### 2. Verify preconditions
+
+Run these checks and stop with a clear error if any fail:
+
+**Must be on main branch:**
+
+```bash
+git rev-parse --abbrev-ref HEAD
 ```
-/deploy <app>
+
+If not `main`, stop: "You must be on the main branch to deploy."
+
+**Working tree must be clean:**
+
+```bash
+git status --porcelain
 ```
 
-Where `<app>` is one of: `api`, `public`, `web`
+If non-empty, stop: "Working tree is not clean. Commit or stash changes first."
 
-## Instructions
+**Pull latest and fetch tags:**
 
-1. Validate the app argument is one of: api, public, web
-2. If invalid, show error with valid options
-3. Trigger the workflow with date prefix:
-   ```bash
-   DATE_PREFIX="v$(date +%Y.%m.%d)"
-   gh workflow run deploy-app.yml -f app=<app> -f date_prefix=$DATE_PREFIX
-   ```
-4. Get the run ID and show progress link:
-   ```bash
-   gh run list --workflow=deploy-app.yml --limit=1 --json databaseId,url
-   ```
-5. Report the workflow URL to user
-
-## Example
-
-User: `/deploy api`
-
-Response:
-
+```bash
+git fetch --tags && git pull origin main
 ```
-Triggered deploy-app.yml for api
-Workflow: https://github.com/finleysg/bhmc-admin/actions/runs/12345
+
+### 3. Calculate the next tag
+
+```bash
+DATE=$(date +%Y.%m.%d)
+git tag -l "{app}-v${DATE}.*" | sort -V | tail -1
 ```
+
+- If no tags exist for today, use `01`
+- If the last tag is e.g. `admin-v2026.02.22.03`, the next number is `04`
+- Zero-pad to two digits
+
+### 4. Create and push the tag
+
+```bash
+git tag {tag}
+git push origin {tag}
+```
+
+### 5. Report
+
+Tell the user:
+
+- The tag that was created
+- Link to monitor: https://github.com/finleysg/bhmc-admin/actions

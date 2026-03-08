@@ -5,9 +5,9 @@ export default {
 		`prettier --write ${filenames.join(" ")}`,
 	],
 
-	// apps/web - uses local eslint.config.js extending shared config
-	"apps/web/**/*.{ts,tsx,js,jsx}": (filenames) => [
-		`pnpm --filter @repo/web exec eslint --fix ${filenames.join(" ")}`,
+	// apps/admin - uses local eslint.config.js extending shared config
+	"apps/admin/**/*.{ts,tsx,js,jsx}": (filenames) => [
+		`pnpm --filter admin exec eslint --fix ${filenames.join(" ")}`,
 		`prettier --write ${filenames.join(" ")}`,
 	],
 
