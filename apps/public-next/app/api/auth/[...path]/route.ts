@@ -17,6 +17,18 @@ async function proxyToDjango(request: NextRequest): Promise<NextResponse> {
 		case "me":
 			djangoPath = "/auth/users/me/"
 			break
+		case "register":
+			djangoPath = "/auth/users/"
+			break
+		case "reset-password":
+			djangoPath = "/auth/users/reset_password/"
+			break
+		case "reset-password-confirm":
+			djangoPath = "/auth/users/reset_password_confirm/"
+			break
+		case "activation":
+			djangoPath = "/auth/users/activation/"
+			break
 		default:
 			return NextResponse.json({ error: "Not found" }, { status: 404 })
 	}

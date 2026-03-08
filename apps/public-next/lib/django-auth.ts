@@ -18,14 +18,12 @@ export type RegisterResult =
 	| { success: true }
 	| { success: false; error: string; fieldErrors?: Record<string, string> }
 
-const DJANGO_URL = process.env.NEXT_PUBLIC_DJANGO_URL || "http://localhost:8000"
-
 export async function login(
 	email: string,
 	password: string,
 ): Promise<{ success: true; user: DjangoUser } | { success: false; error: string }> {
 	try {
-		const response = await fetch(`${DJANGO_URL}/auth/token/login/`, {
+		const response = await fetch("/api/auth/login", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -58,7 +56,7 @@ export async function login(
 
 export async function logout(): Promise<{ success: boolean }> {
 	try {
-		const response = await fetch(`${DJANGO_URL}/auth/token/logout/`, {
+		const response = await fetch("/api/auth/logout", {
 			method: "POST",
 			credentials: "include",
 		})
@@ -72,7 +70,7 @@ export async function logout(): Promise<{ success: boolean }> {
 
 export async function getCurrentUser(): Promise<DjangoUser | null> {
 	try {
-		const response = await fetch(`${DJANGO_URL}/auth/users/me/`, {
+		const response = await fetch("/api/auth/me", {
 			method: "GET",
 			credentials: "include",
 		})
@@ -99,7 +97,7 @@ export async function checkAuth(): Promise<boolean> {
 
 export async function register(data: RegisterData): Promise<RegisterResult> {
 	try {
-		const response = await fetch(`${DJANGO_URL}/auth/users/`, {
+		const response = await fetch("/api/auth/register", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(data),
@@ -138,7 +136,7 @@ export async function register(data: RegisterData): Promise<RegisterResult> {
 
 export async function requestPasswordReset(email: string): Promise<AuthResult> {
 	try {
-		await fetch(`${DJANGO_URL}/auth/users/reset_password/`, {
+		await fetch("/api/auth/reset-password", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ email }),
@@ -159,7 +157,7 @@ export async function resetPasswordConfirm(data: {
 	re_new_password: string
 }): Promise<AuthResult> {
 	try {
-		const response = await fetch(`${DJANGO_URL}/auth/users/reset_password_confirm/`, {
+		const response = await fetch("/api/auth/reset-password-confirm", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(data),
@@ -184,7 +182,7 @@ export async function resetPasswordConfirm(data: {
 
 export async function activateAccount(uid: string, token: string): Promise<AuthResult> {
 	try {
-		const response = await fetch(`${DJANGO_URL}/auth/users/activation/`, {
+		const response = await fetch("/api/auth/activation", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ uid, token }),
