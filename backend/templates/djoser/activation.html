@@ -1,9 +1,8 @@
 {% load i18n %} {% block subject %} {% blocktrans %}BHMC Account Activation{% endblocktrans %} {%
-endblock subject %} {% block text_body %} {% blocktrans %}You are receiving this email because you
-need to confirm your email to activate your account at bhmc.org.{% endblocktrans %} {% trans "Please
-paste this url into your browser to activate your account:" %} {{ protocol }}://{{ domain }}/{{
-url|safe }} {% trans "Thank you for your interest in our club!" %} {% endblock text_body %} {% block
-html_body %}
+endblock %} {% block text_body %} {% blocktrans %}You are receiving this email because you need to
+confirm your email to activate your account at bhmc.org.{% endblocktrans %} {% trans "Please paste
+this url into your browser to activate your account:" %} {{ protocol }}://{{ domain }}/{{ url|safe
+}} {% trans "Thank you for your interest in our club!" %} {% endblock %} {% block html_body %}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
@@ -100,4 +99,4 @@ html_body %}
 		</div>
 	</body>
 </html>
-{% endblock html_body %}
+{% endblock %}

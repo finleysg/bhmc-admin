@@ -1,5 +1,10 @@
 import { ClubEvent, RegistrationTypeChoices, StartTypeChoices } from "@repo/domain/types"
-import { getRegistrationWindow, getCurrentWave, getStartingWave } from "../wave-calculator"
+import {
+	getRegistrationWindow,
+	getCurrentWave,
+	getStartingWave,
+	parseUtcDatetime,
+} from "../wave-calculator"
 
 function createEvent(overrides: Partial<ClubEvent> = {}): ClubEvent {
 	return {
@@ -27,7 +32,7 @@ describe("getRegistrationWindow", () => {
 		})
 
 		it("returns n/a when signupStart is missing", () => {
-			const event = createEvent({ signupStart: null, signupEnd: "2025-06-14T00:00:00" })
+			const event = createEvent({ signupStart: null, signupEnd: "2025-06-14T00:00:00Z" })
 			expect(getRegistrationWindow(event)).toBe("n/a")
 		})
 
@@ -40,20 +45,20 @@ describe("getRegistrationWindow", () => {
 	describe("future window", () => {
 		it("returns future before signup starts", () => {
 			const event = createEvent({
-				signupStart: "2025-06-10T08:00:00",
-				signupEnd: "2025-06-14T00:00:00",
+				signupStart: "2025-06-10T08:00:00Z",
+				signupEnd: "2025-06-14T00:00:00Z",
 			})
-			const now = new Date("2025-06-05T12:00:00")
+			const now = new Date("2025-06-05T12:00:00Z")
 			expect(getRegistrationWindow(event, now)).toBe("future")
 		})
 
 		it("returns future before priority signup starts", () => {
 			const event = createEvent({
-				prioritySignupStart: "2025-06-08T08:00:00",
-				signupStart: "2025-06-10T08:00:00",
-				signupEnd: "2025-06-14T00:00:00",
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: "2025-06-10T08:00:00Z",
+				signupEnd: "2025-06-14T00:00:00Z",
 			})
-			const now = new Date("2025-06-05T12:00:00")
+			const now = new Date("2025-06-05T12:00:00Z")
 			expect(getRegistrationWindow(event, now)).toBe("future")
 		})
 	})
@@ -61,21 +66,21 @@ describe("getRegistrationWindow", () => {
 	describe("priority window", () => {
 		it("returns priority during priority signup period", () => {
 			const event = createEvent({
-				prioritySignupStart: "2025-06-08T08:00:00",
-				signupStart: "2025-06-10T08:00:00",
-				signupEnd: "2025-06-14T00:00:00",
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: "2025-06-10T08:00:00Z",
+				signupEnd: "2025-06-14T00:00:00Z",
 			})
-			const now = new Date("2025-06-09T12:00:00")
+			const now = new Date("2025-06-09T12:00:00Z")
 			expect(getRegistrationWindow(event, now)).toBe("priority")
 		})
 
 		it("returns priority at exact priority start time", () => {
 			const event = createEvent({
-				prioritySignupStart: "2025-06-08T08:00:00",
-				signupStart: "2025-06-10T08:00:00",
-				signupEnd: "2025-06-14T00:00:00",
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: "2025-06-10T08:00:00Z",
+				signupEnd: "2025-06-14T00:00:00Z",
 			})
-			const now = new Date("2025-06-08T08:00:00")
+			const now = new Date("2025-06-08T08:00:00Z")
 			expect(getRegistrationWindow(event, now)).toBe("priority")
 		})
 	})
@@ -83,29 +88,29 @@ describe("getRegistrationWindow", () => {
 	describe("registration window", () => {
 		it("returns registration during open signup", () => {
 			const event = createEvent({
-				signupStart: "2025-06-10T08:00:00",
-				signupEnd: "2025-06-14T00:00:00",
+				signupStart: "2025-06-10T08:00:00Z",
+				signupEnd: "2025-06-14T00:00:00Z",
 			})
-			const now = new Date("2025-06-12T12:00:00")
+			const now = new Date("2025-06-12T12:00:00Z")
 			expect(getRegistrationWindow(event, now)).toBe("registration")
 		})
 
 		it("returns registration at exact signup start", () => {
 			const event = createEvent({
-				signupStart: "2025-06-10T08:00:00",
-				signupEnd: "2025-06-14T00:00:00",
+				signupStart: "2025-06-10T08:00:00Z",
+				signupEnd: "2025-06-14T00:00:00Z",
 			})
-			const now = new Date("2025-06-10T08:00:00")
+			const now = new Date("2025-06-10T08:00:00Z")
 			expect(getRegistrationWindow(event, now)).toBe("registration")
 		})
 
 		it("transitions from priority to registration at signupStart", () => {
 			const event = createEvent({
-				prioritySignupStart: "2025-06-08T08:00:00",
-				signupStart: "2025-06-10T08:00:00",
-				signupEnd: "2025-06-14T00:00:00",
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: "2025-06-10T08:00:00Z",
+				signupEnd: "2025-06-14T00:00:00Z",
 			})
-			const now = new Date("2025-06-10T08:00:00")
+			const now = new Date("2025-06-10T08:00:00Z")
 			expect(getRegistrationWindow(event, now)).toBe("registration")
 		})
 	})
@@ -113,63 +118,85 @@ describe("getRegistrationWindow", () => {
 	describe("past window", () => {
 		it("returns past after signup ends", () => {
 			const event = createEvent({
-				signupStart: "2025-06-10T08:00:00",
-				signupEnd: "2025-06-14T00:00:00",
+				signupStart: "2025-06-10T08:00:00Z",
+				signupEnd: "2025-06-14T00:00:00Z",
 			})
-			const now = new Date("2025-06-15T12:00:00")
+			const now = new Date("2025-06-15T12:00:00Z")
 			expect(getRegistrationWindow(event, now)).toBe("past")
 		})
 
 		it("returns past at exact signup end", () => {
 			const event = createEvent({
-				signupStart: "2025-06-10T08:00:00",
-				signupEnd: "2025-06-14T00:00:00",
+				signupStart: "2025-06-10T08:00:00Z",
+				signupEnd: "2025-06-14T00:00:00Z",
 			})
-			const now = new Date("2025-06-14T00:00:00")
+			const now = new Date("2025-06-14T00:00:00Z")
 			expect(getRegistrationWindow(event, now)).toBe("past")
 		})
 	})
 })
 
 describe("getCurrentWave", () => {
-	describe("no wave restrictions", () => {
-		it("returns 999 when signupWaves is not set", () => {
+	describe("pre-registration (returns -1)", () => {
+		it("returns -1 when no signup dates are set", () => {
 			const event = createEvent({
 				signupWaves: null,
-				prioritySignupStart: "2025-06-08T08:00:00",
-				signupStart: "2025-06-10T08:00:00",
-			})
-			expect(getCurrentWave(event)).toBe(999)
-		})
-
-		it("returns 999 when prioritySignupStart is not set", () => {
-			const event = createEvent({
-				signupWaves: 4,
 				prioritySignupStart: null,
-				signupStart: "2025-06-10T08:00:00",
-			})
-			expect(getCurrentWave(event)).toBe(999)
-		})
-
-		it("returns 999 when signupStart is not set", () => {
-			const event = createEvent({
-				signupWaves: 4,
-				prioritySignupStart: "2025-06-08T08:00:00",
 				signupStart: null,
 			})
-			expect(getCurrentWave(event)).toBe(999)
+			expect(getCurrentWave(event)).toBe(-1)
+		})
+
+		it("returns -1 before signupStart when no priority", () => {
+			const event = createEvent({
+				signupWaves: null,
+				prioritySignupStart: null,
+				signupStart: "2025-06-10T08:00:00Z",
+			})
+			const now = new Date("2025-06-05T12:00:00Z")
+			expect(getCurrentWave(event, now)).toBe(-1)
+		})
+
+		it("returns -1 before priority signup starts", () => {
+			const event = createEvent({
+				signupWaves: 4,
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: "2025-06-10T08:00:00Z",
+			})
+			const now = new Date("2025-06-05T12:00:00Z")
+			expect(getCurrentWave(event, now)).toBe(-1)
 		})
 	})
 
-	describe("before priority signup", () => {
-		it("returns 0 before priority signup starts", () => {
+	describe("no wave restrictions (returns 999)", () => {
+		it("returns 999 when signupWaves is not set and signup is open", () => {
+			const event = createEvent({
+				signupWaves: null,
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: "2025-06-10T08:00:00Z",
+			})
+			const now = new Date("2025-06-09T12:00:00Z")
+			expect(getCurrentWave(event, now)).toBe(999)
+		})
+
+		it("returns 999 when prioritySignupStart is not set and signup is open", () => {
 			const event = createEvent({
 				signupWaves: 4,
-				prioritySignupStart: "2025-06-08T08:00:00",
-				signupStart: "2025-06-10T08:00:00",
+				prioritySignupStart: null,
+				signupStart: "2025-06-10T08:00:00Z",
 			})
-			const now = new Date("2025-06-05T12:00:00")
-			expect(getCurrentWave(event, now)).toBe(0)
+			const now = new Date("2025-06-10T12:00:00Z")
+			expect(getCurrentWave(event, now)).toBe(999)
+		})
+
+		it("returns 999 when signupStart is not set and priority is open", () => {
+			const event = createEvent({
+				signupWaves: 4,
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: null,
+			})
+			const now = new Date("2025-06-09T12:00:00Z")
+			expect(getCurrentWave(event, now)).toBe(999)
 		})
 	})
 
@@ -177,44 +204,44 @@ describe("getCurrentWave", () => {
 		it("returns wave 1 at priority start", () => {
 			const event = createEvent({
 				signupWaves: 4,
-				prioritySignupStart: "2025-06-08T08:00:00",
-				signupStart: "2025-06-10T08:00:00",
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: "2025-06-10T08:00:00Z",
 			})
-			const now = new Date("2025-06-08T08:00:00")
+			const now = new Date("2025-06-08T08:00:00Z")
 			expect(getCurrentWave(event, now)).toBe(1)
 		})
 
 		it("calculates wave based on elapsed time", () => {
 			const event = createEvent({
 				signupWaves: 4,
-				prioritySignupStart: "2025-06-08T08:00:00", // 48 hours before signupStart
-				signupStart: "2025-06-10T08:00:00",
+				prioritySignupStart: "2025-06-08T08:00:00Z", // 48 hours before signupStart
+				signupStart: "2025-06-10T08:00:00Z",
 			})
 			// Wave duration = 48h / 4 = 12h per wave
 			// 6 hours in = still wave 1
-			const now = new Date("2025-06-08T14:00:00")
+			const now = new Date("2025-06-08T14:00:00Z")
 			expect(getCurrentWave(event, now)).toBe(1)
 		})
 
 		it("returns wave 2 in second quarter", () => {
 			const event = createEvent({
 				signupWaves: 4,
-				prioritySignupStart: "2025-06-08T08:00:00",
-				signupStart: "2025-06-10T08:00:00",
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: "2025-06-10T08:00:00Z",
 			})
 			// 12 hours in = wave 2 (12h / 12h = 1, floor + 1 = 2)
-			const now = new Date("2025-06-08T20:00:00")
+			const now = new Date("2025-06-08T20:00:00Z")
 			expect(getCurrentWave(event, now)).toBe(2)
 		})
 
 		it("returns wave 4 in last quarter", () => {
 			const event = createEvent({
 				signupWaves: 4,
-				prioritySignupStart: "2025-06-08T08:00:00",
-				signupStart: "2025-06-10T08:00:00",
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: "2025-06-10T08:00:00Z",
 			})
 			// 42 hours in = wave 4
-			const now = new Date("2025-06-10T02:00:00")
+			const now = new Date("2025-06-10T02:00:00Z")
 			expect(getCurrentWave(event, now)).toBe(4)
 		})
 	})
@@ -223,20 +250,20 @@ describe("getCurrentWave", () => {
 		it("returns signupWaves + 1 after regular signup starts", () => {
 			const event = createEvent({
 				signupWaves: 4,
-				prioritySignupStart: "2025-06-08T08:00:00",
-				signupStart: "2025-06-10T08:00:00",
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: "2025-06-10T08:00:00Z",
 			})
-			const now = new Date("2025-06-10T08:00:00")
+			const now = new Date("2025-06-10T08:00:00Z")
 			expect(getCurrentWave(event, now)).toBe(5)
 		})
 
 		it("returns signupWaves + 1 well after signup starts", () => {
 			const event = createEvent({
 				signupWaves: 4,
-				prioritySignupStart: "2025-06-08T08:00:00",
-				signupStart: "2025-06-10T08:00:00",
+				prioritySignupStart: "2025-06-08T08:00:00Z",
+				signupStart: "2025-06-10T08:00:00Z",
 			})
-			const now = new Date("2025-06-12T12:00:00")
+			const now = new Date("2025-06-12T12:00:00Z")
 			expect(getCurrentWave(event, now)).toBe(5)
 		})
 	})
@@ -356,5 +383,32 @@ describe("getStartingWave", () => {
 			expect(getStartingWave(event, 2)).toBe(3)
 			expect(getStartingWave(event, 3)).toBe(4)
 		})
+	})
+})
+
+describe("parseUtcDatetime", () => {
+	it("parses MySQL datetime string (no timezone) as UTC", () => {
+		const date = parseUtcDatetime("2025-06-08 20:00:00.000000")
+		expect(date.toISOString()).toBe("2025-06-08T20:00:00.000Z")
+	})
+
+	it("preserves strings that already have Z suffix", () => {
+		const date = parseUtcDatetime("2025-06-08T20:00:00.000Z")
+		expect(date.toISOString()).toBe("2025-06-08T20:00:00.000Z")
+	})
+
+	it("preserves strings with timezone offset", () => {
+		const date = parseUtcDatetime("2025-06-08T14:00:00-06:00")
+		expect(date.toISOString()).toBe("2025-06-08T20:00:00.000Z")
+	})
+
+	it("works with getCurrentWave for MySQL-style strings", () => {
+		const event = createEvent({
+			signupWaves: 4,
+			prioritySignupStart: "2025-06-08 08:00:00.000000",
+			signupStart: "2025-06-10 08:00:00.000000",
+		})
+		const now = new Date("2025-06-08T08:00:00Z")
+		expect(getCurrentWave(event, now)).toBe(1)
 	})
 })

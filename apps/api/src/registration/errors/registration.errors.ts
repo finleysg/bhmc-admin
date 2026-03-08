@@ -16,8 +16,8 @@ export class PlayerConflictError extends HttpException {
 }
 
 export class AlreadyRegisteredError extends HttpException {
-	constructor(playerId: number, eventId: number) {
-		super(`Player ${playerId} is already registered for event ${eventId}`, HttpStatus.BAD_REQUEST)
+	constructor(playerName: string) {
+		super(`${playerName} is already registered for this event`, HttpStatus.CONFLICT)
 	}
 }
 

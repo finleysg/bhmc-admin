@@ -1,5 +1,6 @@
 // Public services
 export { AdminRegistrationController } from "./controllers/admin-registration.controller"
+export { TestRegistrationController } from "./controllers/test-registration.controller"
 export { RegistrationLiveController } from "./controllers/registration-live.controller"
 export { UserPaymentsController } from "./controllers/user-payments.controller"
 export { UserRegistrationController } from "./controllers/user-registration.controller"

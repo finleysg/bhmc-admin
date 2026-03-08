@@ -1,13 +1,11 @@
 import csv
-
 from collections import defaultdict
 from decimal import Decimal
 
-from django.db import connection, transaction, models
+from django.db import connection, models, transaction
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
-from rest_framework import permissions
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework import permissions, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
@@ -17,24 +15,25 @@ from events.models import Event
 from payments.models import Payment, Refund
 from payments.utils import get_start
 from reporting.views import fetch_all_as_dictionary
+
+from .exceptions import EventFullError, PlayerConflictError, RegistrationFullError
 from .models import (
-    Registration,
-    RegistrationSlot,
     Player,
-    RegistrationFee,
     PlayerHandicap,
+    Registration,
+    RegistrationFee,
+    RegistrationSlot,
 )
 from .serializers import (
-    RegistrationSlotSerializer,
-    RegistrationSerializer,
+    PlayerHandicapSerializer,
     PlayerSerializer,
+    RegistrationFeeSerializer,
+    RegistrationSerializer,
+    RegistrationSlotSerializer,
     SimplePlayerSerializer,
     UpdatableRegistrationSlotSerializer,
-    RegistrationFeeSerializer,
-    PlayerHandicapSerializer,
     validate_registration_is_open,
 )
-from .exceptions import RegistrationFullError, EventFullError, PlayerConflictError
 
 
 @permission_classes((permissions.IsAuthenticated,))
@@ -61,7 +60,7 @@ class PlayerViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_context(self):
-        context = super(PlayerViewSet, self).get_serializer_context()
+        context = super().get_serializer_context()
         return context
 
     # @method_decorator(cache_page(60 * 60 * 4))
@@ -72,6 +71,7 @@ class PlayerViewSet(viewsets.ModelViewSet):
     def search(self, request):
         player_id = request.query_params.get("player_id", 0)
         pattern = request.query_params.get("pattern", "")
+        event_id = request.query_params.get("event_id", 0)
 
         with connection.cursor() as cursor:
             cursor.callproc(
@@ -79,6 +79,7 @@ class PlayerViewSet(viewsets.ModelViewSet):
                 [
                     pattern,
                     player_id,
+                    event_id,
                 ],
             )
             players = fetch_all_as_dictionary(cursor)
@@ -105,9 +106,7 @@ class PlayerViewSet(viewsets.ModelViewSet):
         friend = get_object_or_404(Player, pk=pk)
         player.favorites.add(friend)
         player.save()
-        serializer = PlayerSerializer(
-            player.favorites, context={"request": request}, many=True
-        )
+        serializer = PlayerSerializer(player.favorites, context={"request": request}, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated])
@@ -116,9 +115,7 @@ class PlayerViewSet(viewsets.ModelViewSet):
         friend = get_object_or_404(Player, pk=pk)
         player.favorites.remove(friend)
         player.save()
-        serializer = PlayerSerializer(
-            player.favorites, context={"request": request}, many=True
-        )
+        serializer = PlayerSerializer(player.favorites, context={"request": request}, many=True)
         return Response(serializer.data)
 
 
@@ -135,15 +132,11 @@ class RegistrationViewSet(viewsets.ModelViewSet):
         if event_id is not None:
             queryset = queryset.filter(event=event_id).prefetch_related("slots")
         if player_id is not None:
-            queryset = queryset.filter(slots__player_id=player_id).prefetch_related(
-                "slots"
-            )
+            queryset = queryset.filter(slots__player_id=player_id).prefetch_related("slots")
         if seasons:
             queryset = queryset.filter(event__season__in=seasons)
         if is_self == "me":
-            queryset = queryset.filter(user=self.request.user.id).prefetch_related(
-                "slots"
-            )
+            queryset = queryset.filter(user=self.request.user.id).prefetch_related("slots")
 
         return queryset
 
@@ -164,15 +157,15 @@ class RegistrationViewSet(viewsets.ModelViewSet):
     def move(self, request, pk):
         """
         Move one or more players from specified source registration slots to corresponding destination slots within the same registration.
-        
+
         This action reassigns player ownership and registration fees from each source slot to the matching destination slot (by index), updates slot statuses, optionally updates the registration's course when moving to a different tee, and appends a note to the registration describing the move.
-        
+
         Parameters:
             request: DRF Request containing JSON keys:
                 - "source_slots" (list[int]): ordered list of source RegistrationSlot IDs to move.
                 - "destination_slots" (list[int]): ordered list of destination RegistrationSlot IDs to receive players; must match length of "source_slots" and share the same tee time/hole.
             pk (int): ID of the Registration being modified.
-        
+
         Returns:
             dict: On success, a response payload with key "destination" containing the computed destination start information.
             Error behavior: Returns an HTTP 400 response if provided destination slots do not share the same tee time/hole.
@@ -185,9 +178,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
 
         # Load all slots upfront
         source_slots = list(
-            registration.slots.filter(pk__in=source_slot_ids).select_related(
-                "player", "hole"
-            )
+            registration.slots.filter(pk__in=source_slot_ids).select_related("player", "hole")
         )
         destination_slots = list(
             RegistrationSlot.objects.filter(pk__in=destination_slot_ids).select_related(
@@ -199,10 +190,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
         if len(destination_slots) > 1:
             first = destination_slots[0]
             for dest in destination_slots[1:]:
-                if (
-                    dest.hole_id != first.hole_id
-                    or dest.starting_order != first.starting_order
-                ):
+                if dest.hole_id != first.hole_id or dest.starting_order != first.starting_order:
                     return Response(
                         {"error": "Destination slots must be same tee time/hole"},
                         status=400,
@@ -212,9 +200,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
         user_name = request.user.get_full_name()
         source_start = get_start(event, registration, source_slots[0])
         # Temporarily set registration course to destination for get_start
-        dest_course = (
-            destination_slots[0].hole.course if destination_slots[0].hole else None
-        )
+        dest_course = destination_slots[0].hole.course if destination_slots[0].hole else None
         original_course = registration.course
         registration.course = dest_course
         destination_start = get_start(event, registration, destination_slots[0])
@@ -223,7 +209,9 @@ class RegistrationViewSet(viewsets.ModelViewSet):
         player_names = ", ".join(
             f"{s.player.first_name} {s.player.last_name}" for s in source_slots
         )
-        message = f"\n{player_names} moved from {source_start} to {destination_start} by {user_name}"
+        message = (
+            f"\n{player_names} moved from {source_start} to {destination_start} by {user_name}"
+        )
         if registration.notes is None:
             registration.notes = message
         else:
@@ -332,9 +320,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["put"], permission_classes=[IsAdminUser])
     def cancel_expired(self, request):
         cleaned = Registration.objects.clean_up_expired()
-        return Response(
-            "Cleaned up " + str(cleaned) + " registration slots", status=204
-        )
+        return Response("Cleaned up " + str(cleaned) + " registration slots", status=204)
 
     @action(detail=True, methods=["put"], permission_classes=[IsAdminUser])
     def move_registration(self, request, pk):
@@ -348,9 +334,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
 
         registration.event = target_event
         registration.slots.all().update(event=target_event)
-        registration.notes = (
-            f"Moved player(s) from {source_event.name} to {target_event.name}."
-        )
+        registration.notes = f"Moved player(s) from {source_event.name} to {target_event.name}."
         registration.save()
 
         # Find any related payments and move them to the target event
@@ -377,18 +361,18 @@ class RegistrationViewSet(viewsets.ModelViewSet):
     def add_players(self, request, pk):
         """
         Add one or more players to an existing registration, reserving or creating slots and creating a pending payment for required fees.
-        
+
         Adds the provided players to the registration identified by `pk` after validating the registration window, ensuring none of the players are already registered for the event, and enforcing event and group capacity rules. If the event allows choosing slots, available open slots in the registration's group are assigned; otherwise new registration slots are created. The registration expiry is extended by 10 minutes and a pending Payment is created with RegistrationFee records for all required event fees.
-        
+
         Parameters:
             request: DRF request with JSON body containing a `players` list of objects with `id` keys.
             pk (int): Primary key of the Registration to update.
-        
+
         Returns:
             Response containing:
               - `registration`: serialized registration data (updated slots and expiry)
               - `payment_id`: ID of the created Payment
-        
+
         Raises:
             ValidationError: when no players are provided or one or more players are not found.
             PlayerConflictError: when one or more players are already registered (excluding status "A").
@@ -396,6 +380,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
             EventFullError: when the event's overall capacity is exceeded.
         """
         from datetime import timedelta
+
         from django.utils import timezone as tz
 
         player_ids = [p["id"] for p in request.data.get("players", [])]
@@ -459,9 +444,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
             if current_slots + len(players) > event.maximum_signup_group_size:
                 raise RegistrationFullError()
             # Create new slots
-            max_slot = (
-                registration.slots.aggregate(models.Max("slot"))["slot__max"] or -1
-            )
+            max_slot = registration.slots.aggregate(models.Max("slot"))["slot__max"] or -1
             new_slots = []
             for i, player in enumerate(players):
                 slot = RegistrationSlot.objects.create(
@@ -496,9 +479,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
                 )
 
         serializer = RegistrationSerializer(registration, context={"request": request})
-        return Response(
-            {"registration": serializer.data, "payment_id": payment.id}, status=200
-        )
+        return Response({"registration": serializer.data, "payment_id": payment.id}, status=200)
 
 
 class RegistrationSlotViewsSet(viewsets.ModelViewSet):
@@ -582,9 +563,7 @@ def import_handicaps(request):
             if player is None:
                 continue
 
-            player_hcp = PlayerHandicap(
-                season=season, player=player, handicap=get_index(row[1])
-            )
+            player_hcp = PlayerHandicap(season=season, player=player, handicap=get_index(row[1]))
             player_hcp.save()
 
     return Response(status=204)
@@ -596,7 +575,7 @@ def get_index(cell):
         return Decimal(idx[1:]) * -1
     else:
         return Decimal(idx)
-    
+
 
 def get_target_event_fee(source_fee, source_event, target_event):
     fee_type_id = source_event.fees.filter(pk=source_fee.event_fee_id)[0].fee_type_id

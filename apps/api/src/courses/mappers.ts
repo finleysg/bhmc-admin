@@ -11,6 +11,7 @@ export function toCourse(row: CourseRow): Course {
 		name: row.name,
 		numberOfHoles: row.numberOfHoles,
 		ggId: row.ggId,
+		color: row.color ?? undefined,
 		tees: [],
 		holes: [],
 	}
@@ -25,6 +26,7 @@ export function toCourseWithHoles(row: CourseWithHoles): CourseWithHoles {
 		name: row.name,
 		numberOfHoles: row.numberOfHoles,
 		ggId: row.ggId,
+		color: row.color,
 		holes: row.holes,
 	}
 }
@@ -54,6 +56,7 @@ export function toTee(row: TeeRow): Tee {
 		id: row.id,
 		name: row.name,
 		ggId: row.ggId ?? undefined,
+		color: row.color ?? undefined,
 		courseId: row.courseId,
 	}
 }

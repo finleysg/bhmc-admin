@@ -6,6 +6,7 @@ export interface Course {
 	name: string
 	numberOfHoles: number
 	ggId?: string | null
+	color?: string | null
 	tees?: Tee[]
 	holes?: Hole[]
 }

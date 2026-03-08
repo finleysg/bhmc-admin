@@ -16,6 +16,13 @@ import {
 	Logger,
 } from "@nestjs/common"
 
+export function isDuplicateEntryError(error: unknown): boolean {
+	const err = error as any
+	if (err?.errno === 1062 || err?.code === "ER_DUP_ENTRY") return true
+	if (err?.cause?.errno === 1062 || err?.cause?.code === "ER_DUP_ENTRY") return true
+	return false
+}
+
 @Catch()
 export class DatabaseExceptionFilter implements ExceptionFilter {
 	private readonly logger = new Logger(DatabaseExceptionFilter.name)

@@ -9,6 +9,8 @@ if [ -z "$1" ] || [ -z "$2" ]; then
   exit 1
 fi
 
+SANDBOX_NAME="bhmc-admin"
+
 # jq filter to extract streaming text from assistant messages
 stream_text='select(.type == "assistant").message.content[]? | select(.type == "text").text // empty | gsub("\n"; "\r\n") | . + "\r\n\n"'
 
@@ -20,7 +22,7 @@ for ((i=1; i<=$1; i++)); do
   tmpfile=$(mktemp)
   trap "rm -f $tmpfile" EXIT
 
-  docker sandbox run --credentials host claude \
+  docker sandbox run --name "$SANDBOX_NAME" --credentials host claude \
     --verbose \
     --print \
     --output-format stream-json \

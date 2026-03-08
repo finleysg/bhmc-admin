@@ -11,6 +11,7 @@ import {
 	CourseRequiredError,
 	EventFullError,
 	EventRegistrationNotOpenError,
+	PlayerConflictError,
 	SlotConflictError,
 	SlotOverflowError,
 } from "../errors/registration.errors"
@@ -171,6 +172,7 @@ const createMockEventsService = () => ({
 
 const createMockPaymentsService = () => ({
 	deletePaymentAndFees: jest.fn(),
+	deletePaymentsForRegistration: jest.fn(),
 })
 
 const createMockDrizzleService = () => {
@@ -326,6 +328,64 @@ describe("RegistrationService", () => {
 					AlreadyRegisteredError,
 				)
 			})
+
+			it("throws AlreadyRegisteredError when user has AWAITING_PAYMENT slots", async () => {
+				const { service, eventsService, repository } = createService()
+				const user = createDjangoUser()
+				const event = createClubEvent({ canChoose: true })
+				const request = createReserveRequest()
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(
+					createRegistrationWithSlots({
+						slots: [
+							createRegistrationSlotRow({
+								status: RegistrationStatusChoices.AWAITING_PAYMENT,
+							}),
+						],
+					}),
+				)
+
+				await expect(service.createAndReserve(user, request)).rejects.toThrow(
+					AlreadyRegisteredError,
+				)
+			})
+
+			it("cleans up stale PENDING registration and creates new one", async () => {
+				const { service, eventsService, repository, paymentsService, mockTx, slotCleanupService } =
+					createService()
+				const user = createDjangoUser()
+				const event = createClubEvent({ canChoose: true })
+				const request = createReserveRequest()
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(
+					createRegistrationWithSlots({
+						id: 50,
+						slots: [
+							createRegistrationSlotRow({
+								id: 101,
+								status: RegistrationStatusChoices.PENDING,
+								registrationId: 50,
+							}),
+						],
+					}),
+				)
+				mockTx.for.mockResolvedValue([
+					{ ...createRegistrationSlotRow(), status: RegistrationStatusChoices.AVAILABLE },
+				])
+				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+				await service.createAndReserve(user, request)
+
+				// Old registration should be cleaned up
+				expect(paymentsService.deletePaymentsForRegistration).toHaveBeenCalledWith(50)
+				expect(slotCleanupService.releaseSlotsByRegistration).toHaveBeenCalledWith(50, true)
+				expect(repository.deleteRegistration).toHaveBeenCalledWith(50)
+
+				// New registration should be created (insert called)
+				expect(mockTx.insert).toHaveBeenCalled()
+			})
 		})
 
 		describe("non-choosable events", () => {
@@ -379,8 +439,84 @@ describe("RegistrationService", () => {
 				await expect(service.createAndReserve(user, request)).rejects.toThrow(EventFullError)
 			})
 
-			// NOTE: Testing AlreadyRegisteredError in non-choosable flow requires complex
-			// transaction state mocking. This behavior is better tested via integration tests.
+			it("fully cleans up stale PENDING registration for non-choosable event", async () => {
+				const { service, eventsService, repository, paymentsService, mockTx, slotCleanupService } =
+					createService()
+				const user = createDjangoUser()
+				const event = createClubEvent({ canChoose: false, maximumSignupGroupSize: 2 })
+				const request = createReserveRequest({ slotIds: [], courseId: undefined })
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+
+				// Mock the transaction's select query for existing registration
+				// The non-choosable flow queries inside the transaction
+				const existingReg = createRegistrationRow({ id: 60 })
+				mockTx.then = (resolve: (val: unknown) => void) =>
+					Promise.resolve([existingReg]).then(resolve)
+
+				// Mock slot query for reserved check — return only PENDING slots
+				mockTx.for.mockResolvedValueOnce([]) // capacity check (locked slots)
+
+				// After the first `then` (existing reg query), the code queries for reserved slots
+				// We need to handle the second query returning no reserved slots
+				let queryCount = 0
+				const originalThen = mockTx.then
+				mockTx.then = (resolve: (val: unknown) => void) => {
+					queryCount++
+					if (queryCount === 1) {
+						// First query: find existing registration
+						return Promise.resolve([existingReg]).then(resolve)
+					}
+					if (queryCount === 2) {
+						// Second query: find reserved slots (none — only PENDING)
+						return Promise.resolve([]).then(resolve)
+					}
+					return originalThen(resolve)
+				}
+
+				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+				await service.createAndReserve(user, request)
+
+				// Old registration should be cleaned up
+				expect(paymentsService.deletePaymentsForRegistration).toHaveBeenCalledWith(60)
+				expect(slotCleanupService.releaseSlotsByRegistration).toHaveBeenCalledWith(60, false)
+				expect(repository.deleteRegistration).toHaveBeenCalledWith(60)
+			})
+
+			it("throws AlreadyRegisteredError when non-choosable existing registration has RESERVED slots", async () => {
+				const { service, eventsService, mockTx } = createService()
+				const user = createDjangoUser()
+				const event = createClubEvent({ canChoose: false, maximumSignupGroupSize: 2 })
+				const request = createReserveRequest({ slotIds: [], courseId: undefined })
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+
+				const existingReg = createRegistrationRow({ id: 60 })
+				mockTx.for.mockResolvedValueOnce([]) // capacity check
+
+				let queryCount = 0
+				mockTx.then = (resolve: (val: unknown) => void) => {
+					queryCount++
+					if (queryCount === 1) {
+						return Promise.resolve([existingReg]).then(resolve)
+					}
+					if (queryCount === 2) {
+						// Reserved slots exist
+						return Promise.resolve([
+							createRegistrationSlotRow({
+								status: RegistrationStatusChoices.RESERVED,
+								registrationId: 60,
+							}),
+						]).then(resolve)
+					}
+					return Promise.resolve([]).then(resolve)
+				}
+
+				await expect(service.createAndReserve(user, request)).rejects.toThrow(
+					AlreadyRegisteredError,
+				)
+			})
 		})
 
 		describe("validation", () => {
@@ -440,9 +576,45 @@ describe("RegistrationService", () => {
 		})
 	})
 
-	describe("addPlayersToRegistration", () => {
-		it("throws SlotOverflowError when more players than empty slots", async () => {
+	describe("updateSlotPlayer", () => {
+		it("throws PlayerConflictError on duplicate entry", async () => {
+			// GIVEN: Repository throws a Drizzle-wrapped duplicate entry error
 			const { service, repository } = createService()
+			const drizzleError = new Error("Failed query: update ...")
+			;(drizzleError as any).cause = { errno: 1062, code: "ER_DUP_ENTRY" }
+			repository.updateRegistrationSlot.mockRejectedValue(drizzleError)
+
+			// WHEN: Updating slot player
+			// THEN: PlayerConflictError (409) is thrown
+			await expect(service.updateSlotPlayer(1, 237)).rejects.toThrow(PlayerConflictError)
+		})
+
+		it("rethrows non-duplicate errors", async () => {
+			// GIVEN: Repository throws a generic error
+			const { service, repository } = createService()
+			repository.updateRegistrationSlot.mockRejectedValue(new Error("Connection lost"))
+
+			// WHEN/THEN: Original error propagates
+			await expect(service.updateSlotPlayer(1, 237)).rejects.toThrow("Connection lost")
+		})
+
+		it("returns slot on success", async () => {
+			// GIVEN: Repository succeeds
+			const { service, repository } = createService()
+			repository.updateRegistrationSlot.mockResolvedValue(createRegistrationSlotRow())
+
+			// WHEN: Updating slot player
+			const result = await service.updateSlotPlayer(1, 237)
+
+			// THEN: Mapped slot returned
+			expect(result).toBeDefined()
+			expect(result.id).toBe(1)
+		})
+	})
+
+	describe("addPlayersToRegistration", () => {
+		it("throws SlotOverflowError when more players than empty slots (non-canChoose)", async () => {
+			const { service, repository, eventsService } = createService()
 
 			// Mapper converts playerId: null → undefined
 			// So emptySlots will be empty, triggering SlotOverflowError
@@ -454,6 +626,7 @@ describe("RegistrationService", () => {
 			})
 
 			repository.findRegistrationFullById.mockResolvedValue(regFull)
+			eventsService.getEventById.mockResolvedValue({ canChoose: false })
 
 			await expect(service.addPlayersToRegistration(1, [2, 3, 4], 1)).rejects.toThrow(
 				SlotOverflowError,

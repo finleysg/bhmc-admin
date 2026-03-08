@@ -1,0 +1,15 @@
+{
+  "cookies": [
+    {
+      "name": "access_token",
+      "value": "a914ad6b61146aca0d5d715b1c1fc58b9e9cdabb",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1780154231.823166,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

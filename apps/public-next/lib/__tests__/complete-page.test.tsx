@@ -1,0 +1,203 @@
+/**
+ * @jest-environment jsdom
+ */
+import { act, render, screen, waitFor } from "@testing-library/react"
+import React from "react"
+
+// Mock useCurrentPaymentAmount (from the payment layout)
+jest.mock("../../app/event/[eventDate]/[eventName]/[paymentId]/layout", () => ({
+	useCurrentPaymentAmount: () => ({
+		amount: { subtotal: 25.0, transactionFee: 1.05, total: 26.05 },
+	}),
+}))
+
+// Mock useRegistration
+jest.mock("../registration/registration-context", () => ({
+	useRegistration: () => ({
+		clubEvent: { id: 1, name: "Weeknight", start_date: "2026-03-01", season: 2026 },
+		completeRegistration: jest.fn(),
+	}),
+}))
+
+// Mock useAuth
+jest.mock("../auth-context", () => ({
+	useAuth: () => ({
+		user: { firstName: "Test", lastName: "User", email: "test@example.com" },
+	}),
+}))
+
+// Mock next/navigation
+let mockSearchParams = new URLSearchParams("payment_intent_client_secret=pi_secret_test")
+jest.mock("next/navigation", () => ({
+	useRouter: () => ({ replace: jest.fn() }),
+	useSearchParams: () => mockSearchParams,
+}))
+
+// Mock @stripe/react-stripe-js
+const mockRetrievePaymentIntent = jest.fn()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
+const mockUseStripe = jest.fn(() => ({ retrievePaymentIntent: mockRetrievePaymentIntent }) as any)
+jest.mock("@stripe/react-stripe-js", () => ({
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+	useStripe: () => mockUseStripe(),
+}))
+
+beforeEach(() => {
+	jest.useFakeTimers()
+	mockSearchParams = new URLSearchParams("payment_intent_client_secret=pi_secret_test")
+	mockRetrievePaymentIntent.mockReset()
+	mockUseStripe.mockReturnValue({ retrievePaymentIntent: mockRetrievePaymentIntent })
+	globalThis.fetch = jest.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) })
+})
+
+afterEach(() => {
+	jest.useRealTimers()
+})
+
+test("shows success message when payment succeeded", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		paymentIntent: { status: "succeeded" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/payment complete/i)).toBeTruthy()
+	})
+
+	expect(screen.getByText(/\$26\.05/)).toBeTruthy()
+})
+
+test("shows user email in confirmation on success", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		paymentIntent: { status: "succeeded" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/test@example\.com/)).toBeTruthy()
+	})
+})
+
+test("shows processing message", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		paymentIntent: { status: "processing" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/payment processing/i)).toBeTruthy()
+	})
+
+	expect(screen.getByText(/being processed by your bank/i)).toBeTruthy()
+})
+
+test("shows verification required for requires_action", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		paymentIntent: { status: "requires_action" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/action required/i)).toBeTruthy()
+	})
+
+	expect(screen.getByText(/your bank requires additional verification/i)).toBeTruthy()
+})
+
+test("shows payment failed with retry link", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		paymentIntent: { status: "requires_payment_method" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/payment method was declined/i)).toBeTruthy()
+	})
+
+	const retryLink = screen.getByRole("link", { name: /try again/i })
+	expect(retryLink).toBeTruthy()
+	expect(retryLink.getAttribute("href")).toContain("payment")
+})
+
+test("shows error when retrievePaymentIntent fails", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		error: { message: "Something went wrong" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/something went wrong/i)).toBeTruthy()
+	})
+})
+
+test("shows error when client secret is missing", async () => {
+	mockSearchParams = new URLSearchParams("")
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/missing payment intent client secret/i)).toBeTruthy()
+	})
+})
+
+test("renders navigation links to registrations and home", async () => {
+	mockRetrievePaymentIntent.mockResolvedValue({
+		paymentIntent: { status: "succeeded" },
+	})
+
+	const { default: CompletePage } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
+	)
+
+	render(<CompletePage />)
+
+	await waitFor(() => {
+		expect(screen.getByText(/payment complete/i)).toBeTruthy()
+	})
+
+	// Advance past the revalidation delay and flush the fetch promise
+	await act(() => jest.advanceTimersByTimeAsync(1500))
+
+	// Links appear after the revalidation fetch completes
+	const playersLink = await screen.findByRole("link", { name: /see all players/i })
+	expect(playersLink).toBeTruthy()
+	expect(playersLink.getAttribute("href")).toContain("/registrations")
+
+	const homeLink = screen.getByRole("link", { name: /home/i })
+	expect(homeLink).toBeTruthy()
+	expect(homeLink.getAttribute("href")).toBe("/home")
+})

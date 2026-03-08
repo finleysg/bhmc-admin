@@ -50,6 +50,7 @@ export interface CreatePaymentRequest {
 	eventType: EventTypeValue
 	userId: number
 	paymentDetails: PaymentDetailRequest[]
+	isUpdate?: boolean
 }
 
 /**
@@ -90,4 +91,19 @@ export interface MovePlayersRequest {
  */
 export interface MovePlayersResponse {
 	movedCount: number
+}
+
+/**
+ * Request model for dropping players from a registration group.
+ */
+export interface DropPlayersRequest {
+	registrationId: number
+	slotIds: number[]
+}
+
+/**
+ * Response model for drop players operation.
+ */
+export interface DropPlayersResponse {
+	droppedCount: number
 }

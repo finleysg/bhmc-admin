@@ -32,7 +32,12 @@ export class RefundService {
 				throw new NotFoundException(`Payment ${request.paymentId} is not valid for refund`)
 			}
 
-			const refundAmount = paymentRecord.paymentDetails.reduce((total: number, fee) => {
+			const feeIdsToRefund = new Set(request.registrationFeeIds)
+			const feesToRefund =
+				feeIdsToRefund.size > 0
+					? paymentRecord.paymentDetails.filter((fee) => feeIdsToRefund.has(fee.id))
+					: paymentRecord.paymentDetails
+			const refundAmount = feesToRefund.reduce((total: number, fee) => {
 				const amount = fee.isPaid ? Math.round(parseFloat(fee.amount) * 100) : 0
 				return total + amount
 			}, 0)

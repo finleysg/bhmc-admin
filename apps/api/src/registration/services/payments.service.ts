@@ -1,4 +1,11 @@
-import { Inject, Injectable, Logger } from "@nestjs/common"
+import {
+	BadRequestException,
+	ForbiddenException,
+	Inject,
+	Injectable,
+	Logger,
+	NotFoundException,
+} from "@nestjs/common"
 
 import { calculateAmountDue, deriveNotificationType } from "@repo/domain/functions"
 import {
@@ -39,6 +46,13 @@ export class PaymentsService {
 	) {}
 
 	/**
+	 * Find paid registration fees linked to the given slot IDs.
+	 */
+	async findPaidFeesBySlotIds(slotIds: number[]): Promise<{ id: number; paymentId: number }[]> {
+		return this.paymentRepository.findPaidFeesBySlotIds(slotIds)
+	}
+
+	/**
 	 * Get a payment by ID.
 	 */
 	async findPaymentById(paymentId: number): Promise<Payment | null> {
@@ -64,6 +78,8 @@ export class PaymentsService {
 			data.eventType,
 			player?.lastSeason ?? null,
 			hasRequiredFees,
+			new Date(),
+			data.isUpdate,
 		)
 		this.logger.log(
 			`Derived a notification type of ${notificationType} for event type ${data.eventType}`,
@@ -152,6 +168,24 @@ export class PaymentsService {
 	async deletePaymentAndFees(paymentId: number): Promise<void> {
 		await this.paymentRepository.deletePaymentDetailsByPayment(paymentId)
 		await this.paymentRepository.deletePayment(paymentId)
+	}
+
+	/**
+	 * Delete all payments and their fees for a registration.
+	 * Used when cleaning up stale registrations.
+	 */
+	async deletePaymentsForRegistration(registrationId: number): Promise<void> {
+		const payments = await this.paymentRepository.findPaymentsForRegistration(registrationId)
+		for (const p of payments) {
+			if (p.confirmed || p.paymentCode !== "pending") {
+				this.logger.warn(
+					`Skipping deletion of payment ${p.id} for registration ${registrationId}: ` +
+						`confirmed=${p.confirmed}, paymentCode=${p.paymentCode}`,
+				)
+				continue
+			}
+			await this.deletePaymentAndFees(p.id)
+		}
 	}
 
 	/**
@@ -347,6 +381,59 @@ export class PaymentsService {
 
 		if (event.canChoose) {
 			this.broadcast.notifyChange(reg.eventId)
+		}
+	}
+
+	/**
+	 * Validate and return admin payment details for the standalone payment flow.
+	 */
+	async getAdminPaymentDetails(
+		paymentId: number,
+		registrationId: number,
+		userId: number,
+	): Promise<{
+		paymentId: number
+		registrationId: number
+		eventId: number
+		eventName: string
+		eventDate: string
+	}> {
+		const payment = await this.findPaymentById(paymentId)
+		if (!payment) {
+			throw new NotFoundException(`Payment ${paymentId} not found`)
+		}
+
+		if (payment.userId !== userId) {
+			throw new ForbiddenException("This payment is not associated with your account")
+		}
+
+		if (payment.paymentCode.toLowerCase() !== "requested") {
+			throw new BadRequestException("This payment has already been processed or is not available")
+		}
+
+		if (payment.confirmed) {
+			throw new BadRequestException("This payment has already been confirmed")
+		}
+
+		const reg = await this.registrationRepository.findRegistrationById(registrationId)
+		if (!reg) {
+			throw new NotFoundException(`Registration ${registrationId} not found`)
+		}
+
+		if (reg.expires && new Date(reg.expires) <= new Date()) {
+			throw new BadRequestException(
+				"This registration has expired. Please contact an administrator.",
+			)
+		}
+
+		const event = await this.events.getEventById(reg.eventId)
+
+		return {
+			paymentId,
+			registrationId,
+			eventId: event.id,
+			eventName: event.name,
+			eventDate: event.startDate,
 		}
 	}
 

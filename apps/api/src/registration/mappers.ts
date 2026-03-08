@@ -316,6 +316,7 @@ export function toCompleteRegistration(row: CompleteRegistrationRow): CompleteRe
 					name: row.course.name,
 					numberOfHoles: row.course.numberOfHoles,
 					ggId: row.course.ggId ?? undefined,
+					color: row.course.color ?? undefined,
 					holes: [],
 					tees: [],
 				}

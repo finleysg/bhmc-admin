@@ -141,6 +141,7 @@ const createRegistrationRow = (overrides: Partial<RegistrationRow> = {}): Regist
 
 const createMockPaymentsRepository = () => ({
 	findPaymentById: jest.fn(),
+	findPaymentsForRegistration: jest.fn(),
 	createPayment: jest.fn(),
 	updatePayment: jest.fn(),
 	updatePaymentIntent: jest.fn(),
@@ -150,6 +151,8 @@ const createMockPaymentsRepository = () => ({
 	findPaymentWithDetailsById: jest.fn(),
 	deletePayment: jest.fn(),
 	updatePaymentDetailStatus: jest.fn(),
+	findByPaymentCode: jest.fn(),
+	findPaidFeesBySlotIds: jest.fn(),
 })
 
 const createMockRegistrationRepository = () => ({
@@ -396,6 +399,34 @@ describe("PaymentsService", () => {
 				userId: 10,
 				eventType: EventTypeChoices.WEEKNIGHT,
 				paymentDetails: [{ eventFeeId: 2, registrationSlotId: 1, amount: 15 }],
+			}
+
+			await service.createPayment(request)
+
+			expect(paymentsRepo.createPayment).toHaveBeenCalledWith(
+				expect.objectContaining({
+					notificationType: NotificationTypeChoices.UPDATED_REGISTRATION,
+				}),
+			)
+		})
+
+		it("derives notification type as UPDATED_REGISTRATION when isUpdate is true even with required fees", async () => {
+			const { service, paymentsRepo, registrationRepo, eventsService } = createService()
+
+			eventsService.getEventFeesByEventId.mockResolvedValue([
+				createEventFee({ id: 1, isRequired: true }),
+			])
+			registrationRepo.findPlayerByUserId.mockResolvedValue(createPlayerRow())
+			paymentsRepo.createPayment.mockResolvedValue(1)
+			paymentsRepo.createPaymentDetail.mockResolvedValue(1)
+			paymentsRepo.findPaymentWithDetailsById.mockResolvedValue(createPaymentRowWithDetails())
+
+			const request: CreatePaymentRequest = {
+				eventId: 100,
+				userId: 10,
+				eventType: EventTypeChoices.WEEKNIGHT,
+				paymentDetails: [{ eventFeeId: 1, registrationSlotId: 1, amount: 25 }],
+				isUpdate: true,
 			}
 
 			await service.createPayment(request)
@@ -830,6 +861,106 @@ describe("PaymentsService", () => {
 			await service.paymentProcessing(1)
 
 			expect(registrationRepo.updateRegistration).toHaveBeenCalledWith(1, { expires: null })
+		})
+	})
+
+	describe("deletePaymentsForRegistration", () => {
+		it("deletes all payments and fees for a registration", async () => {
+			const { service, paymentsRepo } = createService()
+
+			const payments = [createPaymentRow({ id: 10 }), createPaymentRow({ id: 20 })]
+			paymentsRepo.findPaymentsForRegistration.mockResolvedValue(payments)
+			paymentsRepo.deletePaymentDetailsByPayment.mockResolvedValue(undefined)
+			paymentsRepo.deletePayment.mockResolvedValue(undefined)
+
+			await service.deletePaymentsForRegistration(42)
+
+			expect(paymentsRepo.findPaymentsForRegistration).toHaveBeenCalledWith(42)
+			expect(paymentsRepo.deletePaymentDetailsByPayment).toHaveBeenCalledWith(10)
+			expect(paymentsRepo.deletePaymentDetailsByPayment).toHaveBeenCalledWith(20)
+			expect(paymentsRepo.deletePayment).toHaveBeenCalledWith(10)
+			expect(paymentsRepo.deletePayment).toHaveBeenCalledWith(20)
+		})
+
+		it("does nothing when no payments exist", async () => {
+			const { service, paymentsRepo } = createService()
+
+			paymentsRepo.findPaymentsForRegistration.mockResolvedValue([])
+
+			await service.deletePaymentsForRegistration(42)
+
+			expect(paymentsRepo.deletePaymentDetailsByPayment).not.toHaveBeenCalled()
+			expect(paymentsRepo.deletePayment).not.toHaveBeenCalled()
+		})
+
+		it("skips confirmed payments", async () => {
+			const { service, paymentsRepo } = createService()
+
+			paymentsRepo.findPaymentsForRegistration.mockResolvedValue([
+				createPaymentRow({ id: 10, confirmed: 1 }),
+			])
+
+			await service.deletePaymentsForRegistration(42)
+
+			expect(paymentsRepo.deletePaymentDetailsByPayment).not.toHaveBeenCalled()
+			expect(paymentsRepo.deletePayment).not.toHaveBeenCalled()
+		})
+
+		it("skips payments with active Stripe intent", async () => {
+			const { service, paymentsRepo } = createService()
+
+			paymentsRepo.findPaymentsForRegistration.mockResolvedValue([
+				createPaymentRow({ id: 10, paymentCode: "pi_abc123", confirmed: 0 }),
+			])
+
+			await service.deletePaymentsForRegistration(42)
+
+			expect(paymentsRepo.deletePaymentDetailsByPayment).not.toHaveBeenCalled()
+			expect(paymentsRepo.deletePayment).not.toHaveBeenCalled()
+		})
+
+		it("deletes unconfirmed pending payments but skips confirmed ones", async () => {
+			const { service, paymentsRepo } = createService()
+
+			paymentsRepo.findPaymentsForRegistration.mockResolvedValue([
+				createPaymentRow({ id: 10, paymentCode: "pending", confirmed: 0 }),
+				createPaymentRow({ id: 20, confirmed: 1 }),
+			])
+			paymentsRepo.deletePaymentDetailsByPayment.mockResolvedValue(undefined)
+			paymentsRepo.deletePayment.mockResolvedValue(undefined)
+
+			await service.deletePaymentsForRegistration(42)
+
+			expect(paymentsRepo.deletePaymentDetailsByPayment).toHaveBeenCalledWith(10)
+			expect(paymentsRepo.deletePayment).toHaveBeenCalledWith(10)
+			expect(paymentsRepo.deletePaymentDetailsByPayment).not.toHaveBeenCalledWith(20)
+			expect(paymentsRepo.deletePayment).not.toHaveBeenCalledWith(20)
+		})
+	})
+
+	describe("findPaidFeesBySlotIds", () => {
+		it("delegates to repository and returns results", async () => {
+			const { service, paymentsRepo } = createService()
+			const mockFees = [
+				{ id: 10, paymentId: 1 },
+				{ id: 11, paymentId: 1 },
+				{ id: 12, paymentId: 2 },
+			]
+			paymentsRepo.findPaidFeesBySlotIds.mockResolvedValue(mockFees)
+
+			const result = await service.findPaidFeesBySlotIds([101, 102])
+
+			expect(paymentsRepo.findPaidFeesBySlotIds).toHaveBeenCalledWith([101, 102])
+			expect(result).toEqual(mockFees)
+		})
+
+		it("returns empty array when no paid fees exist", async () => {
+			const { service, paymentsRepo } = createService()
+			paymentsRepo.findPaidFeesBySlotIds.mockResolvedValue([])
+
+			const result = await service.findPaidFeesBySlotIds([101])
+
+			expect(result).toEqual([])
 		})
 	})
 

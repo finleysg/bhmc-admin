@@ -1,0 +1,236 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@plugin "@tailwindcss/typography";
+
+@theme inline {
+	--color-background: hsl(var(--background));
+	--color-foreground: hsl(var(--foreground));
+	--color-card: hsl(var(--card));
+	--color-card-foreground: hsl(var(--card-foreground));
+	--color-popover: hsl(var(--popover));
+	--color-popover-foreground: hsl(var(--popover-foreground));
+	--color-primary: hsl(var(--primary));
+	--color-primary-foreground: hsl(var(--primary-foreground));
+	--color-secondary: hsl(var(--secondary));
+	--color-secondary-foreground: hsl(var(--secondary-foreground));
+	--color-muted: hsl(var(--muted));
+	--color-muted-foreground: hsl(var(--muted-foreground));
+	--color-accent: hsl(var(--accent));
+	--color-accent-foreground: hsl(var(--accent-foreground));
+	--color-destructive: hsl(var(--destructive));
+	--color-destructive-foreground: hsl(var(--destructive-foreground));
+	--color-border: hsl(var(--border));
+	--color-input: hsl(var(--input));
+	--color-accent-cta: hsl(var(--accent-cta));
+	--color-accent-cta-foreground: hsl(var(--accent-cta-foreground));
+	--color-ring: hsl(var(--ring));
+	--radius: 0.5rem;
+	--font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+	--font-heading: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+	:root {
+		--background: 226 30% 98%;
+		--foreground: 226 24% 28%;
+		--card: 0 0% 100%;
+		--card-foreground: 226 24% 28%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 226 24% 28%;
+		--primary: 226 52% 27%;
+		--primary-foreground: 226 40% 98%;
+		--secondary: 152 44% 39%;
+		--secondary-foreground: 150 40% 98%;
+		--muted: 226 40% 96%;
+		--muted-foreground: 226 16% 47%;
+		--accent: 226 40% 96%;
+		--accent-foreground: 226 24% 28%;
+		--destructive: 0 84% 60%;
+		--destructive-foreground: 226 40% 98%;
+		--border: 226 32% 91%;
+		--input: 226 32% 91%;
+		--ring: 226 52% 27%;
+		--radius: 0.5rem;
+		--accent-cta: 23 93% 52%;
+		--accent-cta-foreground: 23 20% 98%;
+	}
+
+	.dark {
+		--background: 226 40% 14%;
+		--foreground: 226 20% 88%;
+		--card: 226 47% 11%;
+		--card-foreground: 226 20% 88%;
+		--popover: 226 47% 11%;
+		--popover-foreground: 226 20% 88%;
+		--primary: 226 80% 65%;
+		--primary-foreground: 226 47% 11%;
+		--secondary: 152 40% 50%;
+		--secondary-foreground: 150 40% 98%;
+		--muted: 226 33% 17%;
+		--muted-foreground: 226 20% 65%;
+		--accent: 226 33% 17%;
+		--accent-foreground: 226 20% 88%;
+		--destructive: 0 63% 31%;
+		--destructive-foreground: 226 40% 98%;
+		--border: 226 33% 17%;
+		--input: 226 33% 17%;
+		--ring: 226 80% 65%;
+		--accent-cta: 23 93% 46%;
+		--accent-cta-foreground: 23 20% 98%;
+	}
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground;
+	}
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+	}
+}
+
+/* Unlayered so it overrides the typography plugin's layered defaults */
+.prose {
+	--tw-prose-body: hsl(var(--foreground));
+	--tw-prose-headings: hsl(var(--foreground));
+	--tw-prose-lead: hsl(var(--muted-foreground));
+	--tw-prose-links: hsl(var(--primary));
+	--tw-prose-bold: hsl(var(--foreground));
+	--tw-prose-counters: hsl(var(--muted-foreground));
+	--tw-prose-bullets: hsl(var(--muted-foreground));
+	--tw-prose-hr: hsl(var(--border));
+	--tw-prose-quotes: hsl(var(--foreground));
+	--tw-prose-quote-borders: hsl(var(--border));
+	--tw-prose-captions: hsl(var(--muted-foreground));
+	--tw-prose-code: hsl(var(--foreground));
+	--tw-prose-pre-code: hsl(var(--foreground));
+	--tw-prose-pre-bg: hsl(var(--muted));
+	--tw-prose-th-borders: hsl(var(--border));
+	--tw-prose-td-borders: hsl(var(--border));
+	--tw-prose-invert-body: hsl(var(--foreground));
+	--tw-prose-invert-headings: hsl(var(--foreground));
+	--tw-prose-invert-lead: hsl(var(--muted-foreground));
+	--tw-prose-invert-links: hsl(var(--primary));
+	--tw-prose-invert-bold: hsl(var(--foreground));
+	--tw-prose-invert-counters: hsl(var(--muted-foreground));
+	--tw-prose-invert-bullets: hsl(var(--muted-foreground));
+	--tw-prose-invert-hr: hsl(var(--border));
+	--tw-prose-invert-quotes: hsl(var(--foreground));
+	--tw-prose-invert-quote-borders: hsl(var(--border));
+	--tw-prose-invert-captions: hsl(var(--muted-foreground));
+	--tw-prose-invert-code: hsl(var(--foreground));
+	--tw-prose-invert-pre-code: hsl(var(--foreground));
+	--tw-prose-invert-pre-bg: hsl(var(--muted));
+	--tw-prose-invert-th-borders: hsl(var(--border));
+	--tw-prose-invert-td-borders: hsl(var(--border));
+}
+
+/* Wave unlock pulse animation */
+@keyframes wave-pulse-text {
+	0%,
+	100% {
+		color: hsl(var(--muted-foreground));
+		font-weight: 400;
+	}
+	50% {
+		color: hsl(var(--primary));
+		font-weight: 600;
+	}
+}
+
+@keyframes wave-pulse-bg {
+	0%,
+	100% {
+		background-color: transparent;
+	}
+	50% {
+		background-color: hsl(var(--primary) / 0.08);
+	}
+}
+
+.animate-wave-pulse-text {
+	animation: wave-pulse-text 1.5s ease-in-out infinite;
+}
+
+.animate-wave-pulse-bg {
+	animation: wave-pulse-bg 1.5s ease-in-out infinite;
+}
+
+/* Scorecard layout */
+.scorecard .score-row {
+	display: flex;
+}
+
+.scorecard .score-label {
+	flex: 1;
+	min-width: 80px;
+	padding: 2px 4px;
+	font-size: 0.75rem;
+	display: flex;
+	align-items: center;
+}
+
+.scorecard .score-cells {
+	display: flex;
+}
+
+.scorecard .score-cell {
+	width: 28px;
+	padding: 2px 0;
+	font-size: 0.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Score shape notation: circles for under par, squares for over par */
+.scorecard .score-mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	line-height: 1;
+}
+
+/* Birdie: single circle */
+.scorecard .score-mark.birdie {
+	border: 1.5px solid currentColor;
+	border-radius: 50%;
+}
+
+/* Eagle / Double-eagle: double circle */
+.scorecard .score-mark.eagle,
+.scorecard .score-mark.double-eagle {
+	border: 1.5px solid currentColor;
+	border-radius: 50%;
+	outline: 1.5px solid currentColor;
+	outline-offset: 1px;
+}
+
+/* Bogey: single square */
+.scorecard .score-mark.bogey {
+	border: 1.5px solid currentColor;
+}
+
+/* Double-bogey / Other (worse): double square */
+.scorecard .score-mark.double-bogey,
+.scorecard .score-mark.other {
+	border: 1.5px solid currentColor;
+	outline: 1.5px solid currentColor;
+	outline-offset: 1px;
+}
+
+/* Totals */
+.scorecard .below-par {
+	font-weight: 600;
+}

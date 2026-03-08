@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, isNotNull } from "drizzle-orm"
 
 import { Inject, Injectable } from "@nestjs/common"
 
@@ -115,6 +115,21 @@ export class PaymentsRepository {
 			.update(registrationFee)
 			.set({ isPaid: isPaid ? 1 : 0 })
 			.where(inArray(registrationFee.id, feeIds))
+	}
+
+	async findPaidFeesBySlotIds(slotIds: number[]): Promise<{ id: number; paymentId: number }[]> {
+		if (slotIds.length === 0) return []
+		const rows = await this.drizzle.db
+			.select({ id: registrationFee.id, paymentId: registrationFee.paymentId })
+			.from(registrationFee)
+			.where(
+				and(
+					inArray(registrationFee.registrationSlotId, slotIds),
+					eq(registrationFee.isPaid, 1),
+					isNotNull(registrationFee.paymentId),
+				),
+			)
+		return rows.map((r) => ({ id: r.id, paymentId: r.paymentId }))
 	}
 
 	async deletePaymentDetailsByPayment(paymentId: number): Promise<void> {

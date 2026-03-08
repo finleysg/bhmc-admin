@@ -7,6 +7,7 @@ export const course = mysqlTable(
 		name: varchar({ length: 100 }).notNull(),
 		numberOfHoles: int("number_of_holes").notNull(),
 		ggId: varchar("gg_id", { length: 22 }),
+		color: varchar({ length: 7 }),
 	},
 	(table) => [
 		primaryKey({ columns: [table.id], name: "courses_course_id" }),
@@ -36,6 +37,7 @@ export const tee = mysqlTable(
 		id: int().autoincrement().notNull(),
 		name: varchar({ length: 20 }).notNull(),
 		ggId: varchar("gg_id", { length: 22 }),
+		color: varchar({ length: 7 }),
 		courseId: int("course_id")
 			.notNull()
 			.references(() => course.id),

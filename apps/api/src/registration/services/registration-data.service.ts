@@ -3,7 +3,7 @@ import { ClubEvent, RegistrationSlotWithPlayerAndWave, WaveInfo } from "@repo/do
 
 import { EventsService } from "../../events"
 import { RegistrationRepository } from "../repositories/registration.repository"
-import { getCurrentWave, getStartingWave } from "../wave-calculator"
+import { getCurrentWave, getStartingWave, parseUtcDatetime } from "../wave-calculator"
 import { toPlayer, toRegistrationSlot } from "../mappers"
 import { toHole } from "../../courses/mappers"
 
@@ -48,8 +48,8 @@ export class RegistrationDataService {
 		const slotWave = getStartingWave(event, startingOrder, holeNumber)
 		const currentWave = getCurrentWave(event)
 
-		const priorityStart = new Date(event.prioritySignupStart)
-		const signupStart = new Date(event.signupStart)
+		const priorityStart = parseUtcDatetime(event.prioritySignupStart)
+		const signupStart = parseUtcDatetime(event.signupStart)
 		const waveDuration = (signupStart.getTime() - priorityStart.getTime()) / event.signupWaves
 		const waveOpens = new Date(priorityStart.getTime() + (slotWave - 1) * waveDuration)
 

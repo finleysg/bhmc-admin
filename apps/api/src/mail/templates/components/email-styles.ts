@@ -36,6 +36,7 @@ export const tableRow = {
 export const labelCell = {
 	fontSize: "14px",
 	padding: "6px",
+	width: "130px",
 }
 
 export const valueCell = {

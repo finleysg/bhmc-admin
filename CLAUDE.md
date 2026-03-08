@@ -1,67 +1,45 @@
 # CLAUDE.md
 
-In all interactions and commit messages, be extremely concise and sacrifice grammar for the sake of concision.
+## CRITICAL Rules
+
+- **NEVER change the password for auth_user id=1.** This is the project owner's account. Do not reset, update, or overwrite this password under any circumstances.
+
+- Never modify user passwords, authentication credentials, or seed data without explicit user approval. Always ask before changing any auth-related data.
 
 ## Project Overview
 
-Bunker Hills Men's Club is a group of golf enthusiastics who compete in weekly and monthly competitions throughout
-the summery. This monorepo contains the websites and services to manage every aspect of the club's online experience:
+Golf tournament management system for Bunker Hills Men's Club (BHMC). This monorepo contains the admin API and admin web dashboard. It complements a separate Django backend (data.bhmc.org) that owns the database schema and a React SPA (bhmc.org) for public-facing users.
 
-- Public facing website for club information and event registration
-- Django backend provides a RESTful layer over club data and django's built-in table administration screens
-- MySQL to store club data
-- Backend nestjs api to orchestrate administration, registration and payments, and integration with the Golf Genius
-  tournament management system
-- Administrative next.js website to manage events, members, players, reports, etc.
+## Code Style
 
-```
-bhmc-admin/
-├── apps/
-│   ├── api/        # NestJS (API)
-│   ├── web/        # Next.js (admin website)
-│   └── public/     # React SPA (member site)
-├── backend/        # Django RESTful backend
-├── packages/
-│   ├── domain/     # Shared TS types (used by all TS apps)
-│   └── eslint-config/
-├── pnpm-workspace.yaml
-└── turbo.json
-```
+This project uses tab-based indentation. When editing files, always match the existing tab indentation exactly. Never convert tabs to spaces.
 
-## Commands
+This project uses TypeScript with strict mode. Always handle possibly-undefined array accesses with non-null assertions or proper guards. Use the full markdown editor component (ContentEditor) for any rich text fields, not simplified alternatives.
 
-This monorepo uses `pnpm`.
+## Data
 
-We always run and test locally using the `docker-compose.yml` file at the root.
+- The Django backend at data.bhmc.org is the source of truth for data. The NestJS API reads/writes the same MySQL database using Drizzle ORM (schema defined externally — no migrations in this repo).
 
-Inspect the logs from these containers when troubleshooting.
+## Build & Development
 
-```bash
-# Development
-docker compose up -d --build
+When the UI package (`packages/ui` or similar) is modified, it must be rebuilt (check for a build/compile step that outputs to `dist/`) before changes will appear in the consuming app. Always rebuild UI packages after editing them.
 
-# Build
-pnpm build                  # Build all packages
+## Feedback
 
-# Testing
-pnpm test                   # Run all tests
-pnpm --filter api test      # API tests only
-pnpm --filter web test      # Web tests only
-pnpm --filter api test -- --testPathPattern="events"  # Run specific test file/pattern
+Use the following tools / commands as feedback on your work.
 
-# Linting & Formatting
-pnpm lint                   # ESLint check
-pnpm lint:fix               # ESLint fix
-pnpm format                 # Prettier format
-pnpm format:check           # Prettier check
-```
+`pnpm format`
+`pnpm lint` (fix warnings and errors, even if pre-existing)
+`pnpm test` (fix failures, even if pre-existing)
+`pnpm typecheck` (fix failures, even if pre-existing)
+`pnpm build` (fix failures -- ALWAYS)
 
-## General Agent Instructions
+When a change is made to a next app, rebuild the container.
 
-Please write a high-quality, general-purpose solution using the standard tools available. Do not create helper scripts or workarounds to accomplish the task more efficiently. Implement a solution that works correctly for all valid inputs, not just the test cases. Do not hard-code values or create solutions that only work for specific test inputs. Instead, implement the actual logic that solves the problem generally.
+### IMPORTANT: UX Feedback
 
-Focus on understanding the problem requirements and implementing the correct algorithm. Tests are there to verify correctness, not to define the solution. Provide a principled implementation that follows best practices and software design principles.
+Use the `playwright cli` skill to validate your work directly:
 
-If the task is unreasonable or infeasible, or if any of the tests are incorrect, please inform me rather than working around them. The solution should be robust, maintainable, and extendable.
-
-**IMPORTANT**: At the end of each plan, give me a list of unresolved questions to answer, if any. Make the questions extremely concise.
+- Public site: http://localhost:3000
+- Admin next site: http://localhost:3100
+- Public next site: http://localhost:3200

@@ -19,7 +19,8 @@ services:
     image: stripe/stripe-cli:v1.34.0
     environment:
       STRIPE_DEVICE_NAME: docker
-    command: listen --forward-to api:3333/stripe/webhook/clover/
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+    command: listen --api-key ${STRIPE_API_KEY} --forward-to api:3333/stripe/webhook/clover/
     restart: unless-stopped
     depends_on:
       - api
@@ -102,6 +103,23 @@ services:
       - NODE_ENV=development
     depends_on:
       - backend
+
+  public-next:
+    build:
+      context: .
+      dockerfile: apps/public-next/Dockerfile.dev
+    volumes:
+      - ./apps/public-next/app:/app/apps/public-next/app
+      - ./apps/public-next/components:/app/apps/public-next/components
+      - ./apps/public-next/lib:/app/apps/public-next/lib
+    ports:
+      - "3200:3200"
+    env_file:
+      - ./apps/public-next/.env.development
+    depends_on:
+      - api
+      - backend
+    restart: unless-stopped
 
 volumes:
   dev-data:

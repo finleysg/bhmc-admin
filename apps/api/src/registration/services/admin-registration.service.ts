@@ -11,6 +11,7 @@ import {
 	CompleteClubEvent,
 	CompleteRegistration,
 	EventTypeChoices,
+	NotificationTypeChoices,
 	AmountDue,
 	ClubEvent,
 	CompletePayment,
@@ -204,10 +205,12 @@ export class AdminRegistrationService {
 			throw new NotFoundException(`Payment ${paymentId} not found`)
 		}
 
-		const allFees = completeRegistration.slots.flatMap((slot) => slot.fees)
+		const paymentFees = completeRegistration.slots
+			.flatMap((slot) => slot.fees)
+			.filter((fee) => fee.paymentId === paymentId)
 		const completePayment: CompletePayment = {
 			...toPayment(paymentRow),
-			details: allFees,
+			details: paymentFees,
 		}
 
 		return {
@@ -242,6 +245,84 @@ export class AdminRegistrationService {
 			convertedSlots.push(convertedSlot)
 		}
 		return convertedSlots
+	}
+
+	/** Create a fully confirmed registration for E2E testing. */
+	async createTestRegistration(
+		eventId: number,
+		dto: AdminRegistration,
+	): Promise<{ registrationId: number; paymentId: number }> {
+		const eventRecord = await this.events.getCompleteClubEventById(eventId, false)
+		const convertedSlots = await this.convertSlots(eventRecord, dto.slots)
+
+		let registrationId = 0
+		let paymentId = 0
+
+		const expires = new Date()
+		expires.setHours(expires.getHours() + (dto.expires ?? 24))
+
+		await this.drizzle.db.transaction(async (tx) => {
+			const slotIds = dto.slots.map((s) => s.slotId)
+			const slots = await tx
+				.select()
+				.from(registrationSlot)
+				.where(inArray(registrationSlot.id, slotIds))
+				.for("update")
+
+			for (const slot of slots) {
+				if (slot.status !== RegistrationStatusChoices.AVAILABLE) {
+					throw new SlotConflictError()
+				}
+			}
+
+			const [result] = await tx.insert(registration).values({
+				eventId,
+				userId: dto.userId,
+				courseId: dto.courseId,
+				signedUpBy: dto.signedUpBy,
+				expires: toDbString(expires),
+				createdDate: toDbString(new Date()),
+			})
+			registrationId = Number(result.insertId)
+
+			const [paymentResult] = await tx.insert(payment).values({
+				paymentCode: "Waived",
+				eventId,
+				userId: dto.userId,
+				paymentAmount: "0.00",
+				transactionFee: "0.00",
+				confirmed: 1,
+				notificationType: "A",
+			})
+			paymentId = Number(paymentResult.insertId)
+
+			for (const slot of convertedSlots) {
+				await tx
+					.update(registrationSlot)
+					.set({
+						registrationId,
+						status: RegistrationStatusChoices.RESERVED,
+						playerId: slot.playerId,
+						holeId: dto.startingHoleId,
+						startingOrder: dto.startingOrder,
+					})
+					.where(eq(registrationSlot.id, slot.slotId))
+
+				for (const fee of slot.amounts) {
+					await tx.insert(registrationFee).values({
+						isPaid: 0,
+						eventFeeId: fee.eventFeeId,
+						paymentId,
+						registrationSlotId: slot.slotId,
+						amount: fee.amount.toFixed(2),
+					})
+				}
+			}
+		})
+
+		this.broadcast.notifyChange(eventId)
+
+		return { registrationId, paymentId }
 	}
 
 	/** Create registration for slot-selection events. */
@@ -288,7 +369,9 @@ export class AdminRegistrationService {
 				paymentAmount: dto.collectPayment ? amountDue.total.toFixed(2) : "0.00",
 				transactionFee: dto.collectPayment ? amountDue.transactionFee.toFixed(2) : "0.00",
 				confirmed: dto.collectPayment ? 0 : 1,
-				notificationType: "A",
+				notificationType: dto.collectPayment
+					? NotificationTypeChoices.SIGNUP_CONFIRMATION
+					: NotificationTypeChoices.ADMIN,
 			})
 			paymentId = Number(paymentResult.insertId)
 
@@ -392,7 +475,9 @@ export class AdminRegistrationService {
 				paymentAmount: dto.collectPayment ? amountDue.total.toFixed(2) : "0.00",
 				transactionFee: dto.collectPayment ? amountDue.transactionFee.toFixed(2) : "0.00",
 				confirmed: dto.collectPayment ? 0 : 1,
-				notificationType: "A",
+				notificationType: dto.collectPayment
+					? NotificationTypeChoices.SIGNUP_CONFIRMATION
+					: NotificationTypeChoices.ADMIN,
 			})
 			paymentId = Number(paymentResult.insertId)
 

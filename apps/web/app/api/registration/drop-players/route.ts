@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { fetchWithAuth } from "@/lib/api-proxy"
 
 export async function POST(request: NextRequest) {
-	const registrationId = request.nextUrl.searchParams.get("registrationId")
+	const eventId = request.nextUrl.searchParams.get("eventId")
 
-	if (!registrationId) {
-		return NextResponse.json({ error: "Registration ID is required" }, { status: 400 })
+	if (!eventId) {
+		return NextResponse.json({ error: "Event ID is required" }, { status: 400 })
 	}
 
-	const backendPath = `/registration/${registrationId}/drop-players`
+	const backendPath = `/registration/${eventId}/drop-players`
 	let body: Record<string, unknown>
 	try {
 		body = (await request.json()) as Record<string, unknown>

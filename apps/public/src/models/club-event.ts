@@ -40,7 +40,7 @@ export const ClubEventApiSchema = z.object({
 	maximum_signup_group_size: z.number().nullish(),
 	minimum_signup_group_size: z.number().nullish(),
 	name: z.string(),
-	notes: z.string().optional(),
+	notes: z.string().nullish(),
 	payments_end: z.coerce.date().nullish(),
 	portal_url: z.string().nullish(),
 	priority_signup_start: z.coerce.date().nullish(),
@@ -86,7 +86,7 @@ export class ClubEvent {
 	maximumSignupGroupSize?: number | null
 	minimumSignupGroupSize?: number | null
 	name: string
-	notes?: string | undefined
+	notes?: string | null
 	paymentsEnd?: Date | null
 	portalUrl?: string | null
 	prioritySignupStart?: Date | null
