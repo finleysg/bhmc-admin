@@ -108,9 +108,7 @@ export default function ManagePage() {
 						{options.map((opt) => (
 							<li key={opt.key}>
 								{opt.disabled ? (
-									<span className="text-muted-foreground font-semibold">
-										{opt.title}
-									</span>
+									<span className="text-muted-foreground font-semibold">{opt.title}</span>
 								) : (
 									<Link
 										href={opt.href}

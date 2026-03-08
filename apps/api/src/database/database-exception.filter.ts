@@ -13,8 +13,13 @@ import {
 	ExceptionFilter,
 	HttpException,
 	HttpStatus,
+	Inject,
 	Logger,
+	Optional,
 } from "@nestjs/common"
+import { PostHog } from "posthog-node"
+
+import { POSTHOG_CLIENT } from "../posthog"
 
 export function isDuplicateEntryError(error: unknown): boolean {
 	const err = error as any
@@ -26,6 +31,8 @@ export function isDuplicateEntryError(error: unknown): boolean {
 @Catch()
 export class DatabaseExceptionFilter implements ExceptionFilter {
 	private readonly logger = new Logger(DatabaseExceptionFilter.name)
+
+	constructor(@Optional() @Inject(POSTHOG_CLIENT) private readonly posthog?: PostHog | null) {}
 
 	catch(exception: unknown, host: ArgumentsHost) {
 		const ctx = host.switchToHttp()
@@ -99,6 +106,11 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
 		} else {
 			this.logger.error("Unhandled non-Error exception", exception)
 		}
+		this.posthog?.captureException(
+			exception instanceof Error ? exception : new Error(String(exception)),
+			undefined,
+			{ app: "api" },
+		)
 		response.status(status).json({ statusCode: status, message })
 	}
 }

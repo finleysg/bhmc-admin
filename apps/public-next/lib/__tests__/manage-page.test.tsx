@@ -181,7 +181,13 @@ test("disables add, drop, and move links when registration window is past", asyn
 	render(<ManagePage />)
 
 	// Add, Drop, Move, Replace, Notes should be rendered as plain text (not links)
-	for (const label of ["Add Players", "Drop Players", "Move Group", "Replace Player", "Add Notes"]) {
+	for (const label of [
+		"Add Players",
+		"Drop Players",
+		"Move Group",
+		"Replace Player",
+		"Add Notes",
+	]) {
 		expect(screen.getByText(label)).toBeTruthy()
 		expect(screen.getByText(label).closest("a")).toBeNull()
 	}

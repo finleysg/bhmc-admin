@@ -5,11 +5,13 @@ const envFile = process.env.NODE_ENV === "development" ? ".env.development" : ".
 dotenv.config({ path: path.resolve(__dirname, "..", envFile) })
 
 import cookieParser from "cookie-parser"
+import type { PostHog } from "posthog-node"
 
 import { LogLevel } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
 
 import { AppModule } from "./app.module"
+import { POSTHOG_CLIENT } from "./posthog"
 
 async function bootstrap() {
 	const logLevelsOrder: LogLevel[] = ["verbose", "debug", "log", "warn", "error"]
@@ -51,6 +53,22 @@ async function bootstrap() {
 	})
 
 	await app.listen(port)
+
+	const posthog = app.get<PostHog | null>(POSTHOG_CLIENT, { strict: false })
+	if (posthog) {
+		const properties = { app: "api" }
+		process.on("unhandledRejection", (reason) => {
+			posthog.captureException(
+				reason instanceof Error ? reason : new Error(String(reason)),
+				undefined,
+				properties,
+			)
+		})
+		process.on("uncaughtException", (error) => {
+			posthog.captureException(error, undefined, properties)
+			void posthog.flush().then(() => process.exit(1))
+		})
+	}
 	console.log(`API listening on http://localhost:${port}`)
 }
 void bootstrap()

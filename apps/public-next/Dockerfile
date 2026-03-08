@@ -33,7 +33,15 @@ ENV NEXT_PUBLIC_DJANGO_URL=$NEXT_PUBLIC_DJANGO_URL
 ENV NEXT_PUBLIC_STRIPE_PUBLIC_KEY=$NEXT_PUBLIC_STRIPE_PUBLIC_KEY
 ENV NEXT_PUBLIC_GIPHY_API_KEY=$NEXT_PUBLIC_GIPHY_API_KEY
 ENV NEXT_PUBLIC_MODE=$NEXT_PUBLIC_MODE
+ARG NEXT_PUBLIC_POSTHOG_KEY
+ARG NEXT_PUBLIC_POSTHOG_HOST
+ENV NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY
+ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
 RUN pnpm build
+
+# Source maps stage (for CI extraction only)
+FROM builder AS sourcemaps
+RUN mkdir -p /sourcemaps && find /app/apps/public-next/.next/static -name '*.map' -exec cp {} /sourcemaps/ \;
 
 # Production stage
 FROM node:24-alpine AS runner
@@ -51,6 +59,9 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/apps/public-next/.next/standalone ./
 COPY --from=builder /app/apps/public-next/.next/static ./apps/public-next/.next/static
 COPY --from=builder /app/apps/public-next/public ./apps/public-next/public
+
+# Remove source maps so they are not served publicly
+RUN find ./apps/public-next/.next/static -name '*.map' -delete
 
 RUN mkdir -p ./apps/public-next/.next/cache && chown nextjs:nodejs ./apps/public-next/.next/cache
 

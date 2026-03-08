@@ -68,23 +68,20 @@ export default function AdminPaymentCompletePage() {
 					{intent?.status === "succeeded" && (
 						<>
 							<p className="text-sm font-medium text-primary">
-								Your payment{amount ? ` for ${formatCurrency(amount)}` : ""} has been
-								processed.
+								Your payment{amount ? ` for ${formatCurrency(amount)}` : ""} has been processed.
 							</p>
 							<p className="text-sm text-muted-foreground">
-								A confirmation email will be sent shortly. A payment receipt will also be
-								sent from Stripe.
+								A confirmation email will be sent shortly. A payment receipt will also be sent from
+								Stripe.
 							</p>
 						</>
 					)}
 					{intent?.status === "processing" && (
 						<>
-							<p className="text-sm font-medium text-warning">
-								Your payment is being processed
-							</p>
+							<p className="text-sm font-medium text-warning">Your payment is being processed</p>
 							<p className="text-sm text-muted-foreground">
-								Your payment is being processed by your bank. You will receive a
-								confirmation email once the payment is complete.
+								Your payment is being processed by your bank. You will receive a confirmation email
+								once the payment is complete.
 							</p>
 						</>
 					)}
@@ -92,8 +89,8 @@ export default function AdminPaymentCompletePage() {
 						<>
 							<p className="text-sm font-medium text-destructive">Payment failed</p>
 							<p className="text-sm text-muted-foreground">
-								Your payment method was declined. Please return to the payment page and
-								try a different payment method.
+								Your payment method was declined. Please return to the payment page and try a
+								different payment method.
 							</p>
 							<Link href="../" className="text-sm font-medium text-primary underline">
 								Try Again

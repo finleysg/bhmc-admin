@@ -35,6 +35,7 @@
 		"node-jose": "^2.2.0",
 		"nodemailer": "^7.0.11",
 		"nodemailer-mailgun-transport": "^2.1.5",
+		"posthog-node": "^5.28.0",
 		"react": "19.2.0",
 		"react-dom": "19.2.0",
 		"reflect-metadata": "^0.2.2",

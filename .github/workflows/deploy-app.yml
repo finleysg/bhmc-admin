@@ -67,6 +67,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract source maps
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          target: sourcemaps
+          outputs: type=local,dest=./sourcemaps
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -76,6 +84,17 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository }}/api:${{ github.ref_name }}
             ${{ env.REGISTRY }}/${{ github.repository }}/api:latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Upload source maps to PostHog
+        run: npx @posthog/cli@latest upload-sourcemaps ./sourcemaps
+        env:
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
 
   deploy-api:
     if: startsWith(github.ref_name, 'api-v')
@@ -142,6 +161,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract source maps
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/admin/Dockerfile
+          target: sourcemaps
+          outputs: type=local,dest=./sourcemaps
+          build-args: |
+            NEXT_PUBLIC_DJANGO_URL=${{ vars.NEXT_PUBLIC_DJANGO_URL }}
+            NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+            NEXT_PUBLIC_POSTHOG_HOST=${{ vars.POSTHOG_HOST }}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -150,9 +181,22 @@ jobs:
           push: true
           build-args: |
             NEXT_PUBLIC_DJANGO_URL=${{ vars.NEXT_PUBLIC_DJANGO_URL }}
+            NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+            NEXT_PUBLIC_POSTHOG_HOST=${{ vars.POSTHOG_HOST }}
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository }}/admin:${{ github.ref_name }}
             ${{ env.REGISTRY }}/${{ github.repository }}/admin:latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Upload source maps to PostHog
+        run: npx @posthog/cli@latest upload-sourcemaps ./sourcemaps
+        env:
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
 
   deploy-admin:
     if: startsWith(github.ref_name, 'admin-v')
@@ -182,6 +226,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract source maps
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/public-next/Dockerfile
+          target: sourcemaps
+          outputs: type=local,dest=./sourcemaps
+          build-args: |
+            NEXT_PUBLIC_DJANGO_URL=${{ vars.NEXT_PUBLIC_DJANGO_URL }}
+            NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
+            NEXT_PUBLIC_GIPHY_API_KEY=${{ secrets.NEXT_PUBLIC_GIPHY_API_KEY }}
+            NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+            NEXT_PUBLIC_POSTHOG_HOST=${{ vars.POSTHOG_HOST }}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -192,9 +250,22 @@ jobs:
             NEXT_PUBLIC_DJANGO_URL=${{ vars.NEXT_PUBLIC_DJANGO_URL }}
             NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
             NEXT_PUBLIC_GIPHY_API_KEY=${{ secrets.NEXT_PUBLIC_GIPHY_API_KEY }}
+            NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+            NEXT_PUBLIC_POSTHOG_HOST=${{ vars.POSTHOG_HOST }}
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository }}/public-next:${{ github.ref_name }}
             ${{ env.REGISTRY }}/${{ github.repository }}/public-next:latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Upload source maps to PostHog
+        run: npx @posthog/cli@latest upload-sourcemaps ./sourcemaps
+        env:
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
 
   deploy-public-next:
     if: startsWith(github.ref_name, 'public-next-v')

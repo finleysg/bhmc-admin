@@ -27,7 +27,15 @@ RUN pnpm build
 WORKDIR /app/apps/admin
 ARG NEXT_PUBLIC_DJANGO_URL
 ENV NEXT_PUBLIC_DJANGO_URL=$NEXT_PUBLIC_DJANGO_URL
+ARG NEXT_PUBLIC_POSTHOG_KEY
+ARG NEXT_PUBLIC_POSTHOG_HOST
+ENV NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY
+ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
 RUN pnpm build
+
+# Source maps stage (for CI extraction only)
+FROM builder AS sourcemaps
+RUN mkdir -p /sourcemaps && find /app/apps/admin/.next/static -name '*.map' -exec cp {} /sourcemaps/ \;
 
 # Production stage
 FROM node:24-alpine AS runner
@@ -44,6 +52,9 @@ RUN adduser --system --uid 1001 nextjs
 # Copy standalone build
 COPY --from=builder /app/apps/admin/.next/standalone ./
 COPY --from=builder /app/apps/admin/.next/static ./apps/admin/.next/static
+
+# Remove source maps so they are not served publicly
+RUN find ./apps/admin/.next/static -name '*.map' -delete
 
 USER nextjs
 

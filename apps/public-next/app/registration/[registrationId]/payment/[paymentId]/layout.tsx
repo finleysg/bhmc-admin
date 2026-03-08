@@ -49,9 +49,14 @@ function PaymentSetup({ children }: { children: React.ReactNode }) {
 	const pid = Number(paymentId)
 	const rid = Number(registrationId)
 
-	const { data: adminData, isPending: adminPending, error: adminError } = useAdminPaymentData(pid, rid)
+	const {
+		data: adminData,
+		isPending: adminPending,
+		error: adminError,
+	} = useAdminPaymentData(pid, rid)
 	const { data: stripeAmount, isPending: amountPending } = useStripeAmount(pid)
-	const { data: customerSessionSecret, isPending: sessionPending } = useCustomerSession(isAuthenticated)
+	const { data: customerSessionSecret, isPending: sessionPending } =
+		useCustomerSession(isAuthenticated)
 
 	if (authLoading) {
 		return null
@@ -90,9 +95,7 @@ function PaymentSetup({ children }: { children: React.ReactNode }) {
 				customerSessionClientSecret: customerSessionSecret ?? undefined,
 			}}
 		>
-			<AdminPaymentContext.Provider
-				value={{ amount: stripeAmount.amountDue, data: adminData }}
-			>
+			<AdminPaymentContext.Provider value={{ amount: stripeAmount.amountDue, data: adminData }}>
 				<div className="max-w-2xl">{children}</div>
 			</AdminPaymentContext.Provider>
 		</Elements>

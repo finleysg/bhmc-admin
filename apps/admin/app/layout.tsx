@@ -2,6 +2,7 @@ import "./global.css"
 
 import type { Metadata } from "next"
 
+import { PostHogErrorProvider } from "../components/posthog-provider"
 import { AuthProvider } from "../lib/auth-context"
 import Breadcrumb from "./components/breadcrumb"
 import Header from "./components/header"
@@ -32,13 +33,15 @@ document.documentElement.setAttribute('data-theme', theme);
 				/>
 			</head>
 			<body>
-				<AuthProvider>
-					<div className="min-h-screen bg-base-100 text-base-content">
-						<Header />
-						<Breadcrumb />
-						<main className="container bg-base-200 mx-auto p-4">{children}</main>
-					</div>
-				</AuthProvider>
+				<PostHogErrorProvider>
+					<AuthProvider>
+						<div className="min-h-screen bg-base-100 text-base-content">
+							<Header />
+							<Breadcrumb />
+							<main className="container bg-base-200 mx-auto p-4">{children}</main>
+						</div>
+					</AuthProvider>
+				</PostHogErrorProvider>
 			</body>
 		</html>
 	)

@@ -151,9 +151,7 @@ beforeEach(() => {
 })
 
 test("shows loading card when context registration is not yet populated", async () => {
-	const { default: EditPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/edit/page"
-	)
+	const { default: EditPage } = await import("@/app/event/[eventDate]/[eventName]/manage/edit/page")
 
 	render(<EditPage />)
 
@@ -163,16 +161,30 @@ test("shows loading card when context registration is not yet populated", async 
 
 test("fetches full registration from NestJS and calls startEditRegistration", async () => {
 	const reg = makeRegistration()
-	const fullReg = makeRegistration({ slots: [{ ...reg.slots[0], fees: [{ id: 1, eventFeeId: 10, registrationSlotId: 101, paymentId: 1, isPaid: true, amount: "5.00" }] }] })
+	const fullReg = makeRegistration({
+		slots: [
+			{
+				...reg.slots[0],
+				fees: [
+					{
+						id: 1,
+						eventFeeId: 10,
+						registrationSlotId: 101,
+						paymentId: 1,
+						isPaid: true,
+						amount: "5.00",
+					},
+				],
+			},
+		],
+	})
 	mockRegistration.mockImplementation(() => reg)
 	mockFetch.mockResolvedValue({
 		ok: true,
 		json: () => Promise.resolve(fullReg),
 	})
 
-	const { default: EditPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/edit/page"
-	)
+	const { default: EditPage } = await import("@/app/event/[eventDate]/[eventName]/manage/edit/page")
 
 	render(<EditPage />)
 
@@ -191,9 +203,7 @@ test("fetches full registration from NestJS and calls startEditRegistration", as
 test("does not initiate when server registration is null", async () => {
 	mockRegistration.mockImplementation(() => null)
 
-	const { default: EditPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/edit/page"
-	)
+	const { default: EditPage } = await import("@/app/event/[eventDate]/[eventName]/manage/edit/page")
 
 	render(<EditPage />)
 
@@ -205,9 +215,7 @@ test("does not initiate when clubEvent is null", async () => {
 	mockClubEvent.mockImplementation(() => null)
 	mockRegistration.mockImplementation(() => makeRegistration())
 
-	const { default: EditPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/edit/page"
-	)
+	const { default: EditPage } = await import("@/app/event/[eventDate]/[eventName]/manage/edit/page")
 
 	render(<EditPage />)
 

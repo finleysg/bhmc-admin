@@ -10,12 +10,14 @@ import { EventsModule } from "./events/events.module"
 import { GolfgeniusModule } from "./golfgenius/golfgenius.module"
 import { HealthModule } from "./health/health.module"
 import { MailModule } from "./mail/mail.module"
+import { PostHogModule } from "./posthog"
 import { RegistrationModule } from "./registration/registration.module"
 import { ReportsModule } from "./reports/reports.module"
 import { StripeModule } from "./stripe/stripe.module"
 
 @Module({
 	imports: [
+		PostHogModule,
 		ScheduleModule.forRoot(),
 		AuthModule,
 		CoreModule,

@@ -27,6 +27,10 @@ RUN pnpm build
 WORKDIR /app/apps/api
 RUN pnpm build
 
+# Source maps stage (for CI extraction only)
+FROM builder AS sourcemaps
+RUN mkdir -p /sourcemaps && find /app/apps/api/dist -name '*.map' -exec cp {} /sourcemaps/ \;
+
 # Production stage
 FROM node:24-alpine AS runner
 

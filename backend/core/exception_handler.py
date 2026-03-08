@@ -5,6 +5,7 @@ from rest_framework.exceptions import NotAuthenticated, NotFound, ValidationErro
 from rest_framework.response import Response
 from rest_framework.views import exception_handler, set_rollback
 
+from bhmc.posthog_config import capture_exception as posthog_capture_exception
 from core.views import is_localhost
 
 logger = structlog.get_logger(__name__)
@@ -32,6 +33,7 @@ def custom_exception_handler(exc, context):
         pass
     else:
         logger.error(exc, exc_info=True)
+        posthog_capture_exception(exc)
 
     # Call REST framework's default exception handler first
     # to get the standard error response.
