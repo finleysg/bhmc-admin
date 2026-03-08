@@ -12,6 +12,7 @@ uv run python manage.py collectstatic --noinput
 
 # Start gunicorn
 exec uv run gunicorn bhmc.wsgi:application \
+  --chdir /app \
   --bind 0.0.0.0:8000 \
   --workers 2 \
   --timeout 120 \
