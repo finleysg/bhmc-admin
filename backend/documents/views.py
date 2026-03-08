@@ -1,5 +1,3 @@
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from rest_framework import pagination, permissions, viewsets
 from rest_framework.decorators import action, permission_classes
 from rest_framework.response import Response
@@ -68,10 +66,6 @@ class PhotoViewSet(viewsets.ModelViewSet):
         queryset = queryset.order_by("-year", "caption")
         return queryset
 
-    @method_decorator(cache_page(timeout=60 * 60 * 4, cache="file"))
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
     @action(detail=False, methods=["get"], permission_classes=[permissions.AllowAny])
     def random(self, request):
         try:
@@ -106,7 +100,3 @@ class StaticDocumentViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(code=code)
 
         return queryset
-
-    @method_decorator(cache_page(60 * 60 * 2))
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)

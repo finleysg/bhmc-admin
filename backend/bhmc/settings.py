@@ -8,13 +8,8 @@ from dotenv import load_dotenv
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOG_DIR = os.path.join(BASE_DIR, "var/log")
 # LOG_DIR = os.path.join(BASE_DIR, '/var/log/django')
-CACHE_DIR = os.path.join(BASE_DIR, "var/cache")
-
 if not os.path.exists(LOG_DIR):
     os.mkdir(LOG_DIR)
-
-if not os.path.exists(CACHE_DIR):
-    os.mkdir(CACHE_DIR)
 
 # Load Environment variables, defaulting to prod, where
 # we don't inject DJANGO_ENV.
@@ -35,7 +30,6 @@ load_dotenv(dotenv_path)
 SECRET_KEY = os.getenv("SECRET_KEY")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 TEST_USER_PASSWORD = os.getenv("TEST_USER_PASSWORD")
 
 # Other common settings that vary by environment
@@ -87,8 +81,6 @@ USE_TZ = True
 INSTALLED_APPS = (
     "anymail",
     "corsheaders",
-    "django_celery_beat",
-    "django_celery_results",
     "django.contrib.contenttypes",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -212,22 +204,11 @@ LOGGING = {
             "backupCount": 12,
             "formatter": "key_value",
         },
-        "celery_file": {
-            "class": "logging.handlers.TimedRotatingFileHandler",
-            "filename": LOG_DIR + "/celery.log",
-            "when": "W5",
-            "backupCount": 12,
-            "formatter": "key_value",
-        },
     },
     "loggers": {
         "django_structlog": {
             "handlers": ["console", "flat_line_file"],
             "level": "ERROR",
-        },
-        "celery": {
-            "handlers": ["console", "celery_file"],
-            "level": "INFO",
         },
         "stripe": {
             "handlers": ["console", "flat_line_file"],
@@ -273,8 +254,6 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
-DJANGO_STRUCTLOG_CELERY_ENABLED = True
-
 # Database
 DATABASES = {
     "default": {
@@ -286,27 +265,6 @@ DATABASES = {
         "PORT": os.getenv("DATABASE_PORT"),
     }
 }
-
-# Caching
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": os.getenv("REDIS_URL"),
-    },
-    "file": {
-        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": CACHE_DIR,
-    },
-}
-
-# Celery
-CELERY_BROKER_URL = os.getenv("REDIS_URL")
-CELERY_RESULT_BACKEND = "django-db"
-CELERY_TIMEZONE = "America/Chicago"
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TASK_TRACK_STARTED = True
 
 # Storage
 AWS_HEADERS = {

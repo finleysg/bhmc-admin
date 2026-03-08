@@ -63,10 +63,6 @@ class PlayerViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         return context
 
-    # @method_decorator(cache_page(60 * 60 * 4))
-    # def list(self, request, *args, **kwargs):
-    #     return super().list(request, *args, **kwargs)
-
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def search(self, request):
         player_id = request.query_params.get("player_id", 0)
