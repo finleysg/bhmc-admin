@@ -1,62 +1,17 @@
 name: Deploy Public (Legacy)
-run-name: "Deploy public (legacy) ${{ inputs.date_prefix }}"
+run-name: "Deploy ${{ github.ref_name }}"
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Version tag (auto-generated if empty)"
-        required: false
-        type: string
-      date_prefix:
-        description: "Date prefix for display (auto-computed by skill)"
-        required: false
-        type: string
-        default: ""
+  push:
+    tags:
+      - "public-v*"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  create-tag:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.tag }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Generate version tag
-        id: version
-        run: |
-          if [ -n "${{ inputs.tag }}" ]; then
-            echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
-          else
-            DATE=$(date +%Y.%m.%d)
-            PREFIX="v${DATE}"
-            EXISTING=$(git tag -l "${PREFIX}.*" | sort -V | tail -1)
-            if [ -z "$EXISTING" ]; then
-              NUM=1
-            else
-              LAST_NUM=$(echo "$EXISTING" | sed "s/${PREFIX}\.//")
-              NUM=$((LAST_NUM + 1))
-            fi
-            TAG="${PREFIX}.${NUM}"
-            echo "tag=${TAG}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create and push tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag ${{ steps.version.outputs.tag }}
-          git push origin ${{ steps.version.outputs.tag }}
-
   lint-test:
     runs-on: ubuntu-latest
-    needs: create-tag
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -84,7 +39,7 @@ jobs:
 
   deploy-public:
     runs-on: ubuntu-latest
-    needs: [create-tag, lint-test]
+    needs: lint-test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -115,7 +70,7 @@ jobs:
           VITE_GIPHY_API_KEY=${{ secrets.VITE_GIPHY_API_KEY }}
           VITE_SENIOR_AGE=62
           VITE_SENIOR_COMPETITION_AGE=50
-          VITE_VERSION=${{ needs.create-tag.outputs.version }}
+          VITE_VERSION=${{ github.ref_name }}
           VITE_MODE=Live
           EOF
 

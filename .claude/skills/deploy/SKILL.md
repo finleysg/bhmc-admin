@@ -1,12 +1,12 @@
 ---
 name: deploy
-description: Deploy the admin or public app to production by creating and pushing a date-versioned git tag. Use when the user wants to deploy an app to production.
+description: Deploy an app to production by creating and pushing a date-versioned git tag. Use when the user wants to deploy an app to production.
 allowed-tools: Bash(git:*), Bash(date:*)
 ---
 
 # Deploy App to Production
 
-Deploy an app (admin, api, public-next, or public) to production by creating and pushing a git tag that triggers the GitHub Actions deployment workflow.
+Deploy an app (admin, api, backend, or public-next) to production by creating and pushing a git tag. The tag push triggers the GitHub Actions deployment workflow automatically.
 
 ## Tag Format
 
