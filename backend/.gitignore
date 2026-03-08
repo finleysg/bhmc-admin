@@ -21,7 +21,6 @@ var/
 bhmc/settings_production.py
 bhmc/settings_docker.py
 bhmc/settings_development.py
-bhmc/wsgi.py
 .env
 .env.*
 
