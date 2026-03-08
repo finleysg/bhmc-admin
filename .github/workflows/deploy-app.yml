@@ -85,16 +85,13 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository }}/api:${{ github.ref_name }}
             ${{ env.REGISTRY }}/${{ github.repository }}/api:latest
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
       - name: Upload source maps to PostHog
-        run: npx @posthog/cli@latest upload-sourcemaps ./sourcemaps
-        env:
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
+        uses: PostHog/upload-source-maps@main
+        with:
+          directory: ./sourcemaps
+          api-key: ${{ secrets.POSTHOG_API_KEY }}
+          project-id: ${{ secrets.POSTHOG_PROJECT_ID }}
+          host: ${{ vars.POSTHOG_HOST }}
 
   deploy-api:
     if: startsWith(github.ref_name, 'api-v')
@@ -187,16 +184,13 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository }}/admin:${{ github.ref_name }}
             ${{ env.REGISTRY }}/${{ github.repository }}/admin:latest
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
       - name: Upload source maps to PostHog
-        run: npx @posthog/cli@latest upload-sourcemaps ./sourcemaps
-        env:
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
+        uses: PostHog/upload-source-maps@main
+        with:
+          directory: ./sourcemaps
+          api-key: ${{ secrets.POSTHOG_API_KEY }}
+          project-id: ${{ secrets.POSTHOG_PROJECT_ID }}
+          host: ${{ vars.POSTHOG_HOST }}
 
   deploy-admin:
     if: startsWith(github.ref_name, 'admin-v')
@@ -256,16 +250,13 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository }}/public-next:${{ github.ref_name }}
             ${{ env.REGISTRY }}/${{ github.repository }}/public-next:latest
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
       - name: Upload source maps to PostHog
-        run: npx @posthog/cli@latest upload-sourcemaps ./sourcemaps
-        env:
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
+        uses: PostHog/upload-source-maps@main
+        with:
+          directory: ./sourcemaps
+          api-key: ${{ secrets.POSTHOG_API_KEY }}
+          project-id: ${{ secrets.POSTHOG_PROJECT_ID }}
+          host: ${{ vars.POSTHOG_HOST }}
 
   deploy-public-next:
     if: startsWith(github.ref_name, 'public-next-v')
