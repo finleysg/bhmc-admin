@@ -249,7 +249,7 @@ export function getSignUpUnavailableReason({
 	}
 
 	if (hasSignedUp) {
-		return "You are registered for this event."
+		return "You are signed up."
 	}
 
 	if (

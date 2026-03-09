@@ -482,7 +482,7 @@ describe("getSignUpUnavailableReason", () => {
 		it("returns message for already registered user", () => {
 			const event = openEvent()
 			expect(getSignUpUnavailableReason({ event, ...defaults, hasSignedUp: true })).toBe(
-				"You are registered for this event.",
+				"You are signed up.",
 			)
 		})
 
