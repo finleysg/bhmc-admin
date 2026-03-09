@@ -33,13 +33,17 @@ export async function login(
 		})
 
 		if (!response.ok) {
-			const errorData = (await response.json()) as LoginError
-			const errorMessage =
-				errorData.non_field_errors?.[0] ||
-				errorData.email?.[0] ||
-				errorData.password?.[0] ||
-				"Login failed"
-			return { success: false, error: errorMessage }
+			const text = await response.text()
+			if (text) {
+				const errorData = JSON.parse(text) as LoginError
+				const errorMessage =
+					errorData.non_field_errors?.[0] ||
+					errorData.email?.[0] ||
+					errorData.password?.[0] ||
+					"Login failed"
+				return { success: false, error: errorMessage }
+			}
+			return { success: false, error: "Login failed" }
 		}
 
 		const user = await getCurrentUser()
@@ -107,16 +111,21 @@ export async function register(data: RegisterData): Promise<RegisterResult> {
 			return { success: true }
 		}
 
-		const errorData = (await response.json()) as DjangoFieldErrors
-		const isDuplicate = Object.values(errorData)
-			.flat()
-			.some((msg) => msg.toLowerCase().includes("user already exists"))
+		const errorData = (await response.json()) as DjangoFieldErrors | string[]
+		const allMessages = Array.isArray(errorData)
+			? errorData
+			: Object.values(errorData).flat()
+		const isDuplicate = allMessages.some((msg) => msg.toLowerCase().includes("already exists"))
 
 		if (isDuplicate) {
 			return {
 				success: false,
 				error: "An account with this email already exists.",
 			}
+		}
+
+		if (Array.isArray(errorData)) {
+			return { success: false, error: errorData[0] ?? "Registration failed" }
 		}
 
 		const fieldErrors: Record<string, string> = {}

@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
 import { getCurrentUser, login as djangoLogin, logout as djangoLogout } from "./django-auth"
@@ -18,6 +19,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+	const router = useRouter()
 	const [user, setUser] = useState<DjangoUser | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
 
@@ -60,7 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const logout = useCallback(async () => {
 		await djangoLogout()
 		setUser(null)
-	}, [])
+		router.push("/")
+	}, [router])
 
 	const value = useMemo(
 		() => ({
