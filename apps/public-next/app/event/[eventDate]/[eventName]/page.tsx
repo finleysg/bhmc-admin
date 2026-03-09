@@ -7,7 +7,7 @@ import { EventDetailCard } from "./components/event-detail-card"
 import { FeesAndPointsCard } from "./components/fees-and-points-card"
 import { EventDocumentsCard } from "./components/event-documents-card"
 import { EventPhotosCard } from "./components/event-photos-card"
-import { RegistrationActions } from "./components/registration-actions"
+import { RegistrationActions, RegistrationBanner } from "./components/registration-actions"
 
 interface EventPageProps {
 	params: Promise<{ eventDate: string; eventName: string }>
@@ -38,7 +38,11 @@ export default async function EventPage({ params }: EventPageProps) {
 	return (
 		<div className="grid gap-6 lg:grid-cols-12">
 			<div className="lg:col-span-8">
-				<EventDetailCard event={event} actions={<RegistrationActions event={event} />} />
+				<EventDetailCard
+					event={event}
+					actions={<RegistrationActions event={event} />}
+					banner={<RegistrationBanner event={event} />}
+				/>
 			</div>
 			<div className="space-y-6 lg:col-span-4">
 				<FeesAndPointsCard event={event} />

@@ -13,6 +13,7 @@ import type { ClubEventDetail } from "@/lib/types"
 interface EventDetailCardProps {
 	event: ClubEventDetail
 	actions?: React.ReactNode
+	banner?: React.ReactNode
 }
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -24,7 +25,7 @@ function DetailRow({ label, children }: { label: string; children: React.ReactNo
 	)
 }
 
-export function EventDetailCard({ event, actions }: EventDetailCardProps) {
+export function EventDetailCard({ event, actions, banner }: EventDetailCardProps) {
 	const startDate = parseApiDate(event.start_date)
 	const isCanceled = event.status === EventStatusType.Canceled
 	const startType = getStartTypeName(event.start_type)
@@ -46,6 +47,7 @@ export function EventDetailCard({ event, actions }: EventDetailCardProps) {
 				</div>
 			</CardHeader>
 			<CardContent className="space-y-4">
+				{banner}
 				<hr className="border-muted-foreground/25" />
 				<div className="space-y-1 text-sm">
 					<DetailRow label="Event date:">

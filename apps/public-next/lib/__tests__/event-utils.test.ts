@@ -9,6 +9,7 @@ import {
 	findEventBySlug,
 	computeOpenSpots,
 	shouldShowSignUpButton,
+	getSignUpUnavailableReason,
 } from "../event-utils"
 import type { ClubEvent, ClubEventDetail, RegistrationSlot } from "../types"
 
@@ -363,6 +364,156 @@ describe("shouldShowSignUpButton", () => {
 				signup_start: "2024-06-15T12:30:00",
 			})
 			expect(shouldShowSignUpButton(event, now)).toBe(false)
+		})
+	})
+})
+
+describe("getSignUpUnavailableReason", () => {
+	const defaults = {
+		isAuthenticated: true,
+		hasSignedUp: false,
+		playerLastSeason: 2025,
+	}
+
+	function openEvent(overrides: Partial<ClubEventDetail> = {}) {
+		return makeEvent({
+			registration_type: "M",
+			registration_window: "registration",
+			status: "S",
+			can_choose: false,
+			signup_start: "2024-06-15T11:00:00",
+			season: 2026,
+			...overrides,
+		})
+	}
+
+	it("returns null when signup button should be showing", () => {
+		const event = openEvent()
+		expect(getSignUpUnavailableReason({ event, ...defaults })).toBeNull()
+	})
+
+	describe("event state reasons (take priority over user state)", () => {
+		it("returns message for registration type None", () => {
+			const event = openEvent({ registration_type: RegistrationType.None })
+			expect(getSignUpUnavailableReason({ event, ...defaults })).toBe(
+				"Online registration is not available for this event.",
+			)
+		})
+
+		it("returns message for canceled event", () => {
+			const event = openEvent({ status: "C" })
+			expect(getSignUpUnavailableReason({ event, ...defaults })).toBe(
+				"This event has been canceled.",
+			)
+		})
+
+		it("returns message for closed registration", () => {
+			const event = openEvent({ registration_window: "past" })
+			expect(getSignUpUnavailableReason({ event, ...defaults })).toBe("Registration is closed.")
+		})
+
+		it("returns message with date for future registration", () => {
+			const event = openEvent({
+				registration_window: "future",
+				can_choose: false,
+				signup_start: "2026-06-15T17:00:00",
+			})
+			const result = getSignUpUnavailableReason({ event, ...defaults })
+			expect(result).toMatch(/^Registration opens /)
+		})
+
+		it("returns generic message when future but no signup_start", () => {
+			const event = openEvent({
+				registration_window: "future",
+				can_choose: false,
+				signup_start: null,
+			})
+			expect(getSignUpUnavailableReason({ event, ...defaults })).toBe(
+				"Registration is not yet open.",
+			)
+		})
+	})
+
+	describe("priority: event state over user state", () => {
+		it("shows 'closed' instead of 'sign in' for anonymous user on past event", () => {
+			const event = openEvent({ registration_window: "past" })
+			expect(
+				getSignUpUnavailableReason({ event, isAuthenticated: false, hasSignedUp: false }),
+			).toBe("Registration is closed.")
+		})
+
+		it("shows 'canceled' instead of 'sign in' for anonymous user on canceled event", () => {
+			const event = openEvent({ status: "C" })
+			expect(
+				getSignUpUnavailableReason({ event, isAuthenticated: false, hasSignedUp: false }),
+			).toBe("This event has been canceled.")
+		})
+
+		it("shows 'not available' instead of 'sign in' for no-registration event", () => {
+			const event = openEvent({ registration_type: RegistrationType.None })
+			expect(
+				getSignUpUnavailableReason({ event, isAuthenticated: false, hasSignedUp: false }),
+			).toBe("Online registration is not available for this event.")
+		})
+
+		it("shows future date instead of 'sign in' for anonymous user on future event", () => {
+			const event = openEvent({
+				registration_window: "future",
+				can_choose: false,
+				signup_start: "2026-06-15T17:00:00",
+			})
+			const result = getSignUpUnavailableReason({
+				event,
+				isAuthenticated: false,
+				hasSignedUp: false,
+			})
+			expect(result).toMatch(/^Registration opens /)
+		})
+	})
+
+	describe("user state reasons", () => {
+		it("returns message for unauthenticated user on open event", () => {
+			const event = openEvent()
+			expect(
+				getSignUpUnavailableReason({ event, isAuthenticated: false, hasSignedUp: false }),
+			).toBe("Sign in to register for this event.")
+		})
+
+		it("returns message for already registered user", () => {
+			const event = openEvent()
+			expect(getSignUpUnavailableReason({ event, ...defaults, hasSignedUp: true })).toBe(
+				"You are registered for this event.",
+			)
+		})
+
+		it("returns message for returning members only when not eligible", () => {
+			const event = openEvent({
+				registration_type: RegistrationType.ReturningMembersOnly,
+				season: 2026,
+			})
+			expect(
+				getSignUpUnavailableReason({ event, ...defaults, playerLastSeason: 2024 }),
+			).toBe("This event is restricted to returning members.")
+		})
+
+		it("returns null for returning members only when eligible", () => {
+			const event = openEvent({
+				registration_type: RegistrationType.ReturningMembersOnly,
+				season: 2026,
+			})
+			expect(
+				getSignUpUnavailableReason({ event, ...defaults, playerLastSeason: 2025 }),
+			).toBeNull()
+		})
+
+		it("returns null for returning members only with null last_season", () => {
+			const event = openEvent({
+				registration_type: RegistrationType.ReturningMembersOnly,
+				season: 2026,
+			})
+			expect(
+				getSignUpUnavailableReason({ event, ...defaults, playerLastSeason: null }),
+			).toBe("This event is restricted to returning members.")
 		})
 	})
 })

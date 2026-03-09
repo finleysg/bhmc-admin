@@ -235,6 +235,7 @@ jobs:
             NEXT_PUBLIC_GIPHY_API_KEY=${{ secrets.NEXT_PUBLIC_GIPHY_API_KEY }}
             NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
             NEXT_PUBLIC_POSTHOG_HOST=${{ vars.POSTHOG_HOST }}
+            NEXT_PUBLIC_ADMIN_URL=${{ vars.NEXT_PUBLIC_ADMIN_URL }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -248,6 +249,7 @@ jobs:
             NEXT_PUBLIC_GIPHY_API_KEY=${{ secrets.NEXT_PUBLIC_GIPHY_API_KEY }}
             NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
             NEXT_PUBLIC_POSTHOG_HOST=${{ vars.POSTHOG_HOST }}
+            NEXT_PUBLIC_ADMIN_URL=${{ vars.NEXT_PUBLIC_ADMIN_URL }}
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository }}/public-next:${{ github.ref_name }}
             ${{ env.REGISTRY }}/${{ github.repository }}/public-next:latest

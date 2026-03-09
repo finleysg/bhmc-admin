@@ -1,6 +1,7 @@
 import { differenceInMinutes, format, parse, isValid } from "date-fns"
 import { notFound } from "next/navigation"
 
+import { dayDateAndTimeFormat } from "./date-utils"
 import { fetchDjango } from "./fetchers"
 import { slugify } from "./slugify"
 import type { ClubEvent, ClubEventDetail, RegistrationSlot } from "./types"
@@ -200,6 +201,65 @@ export function shouldShowSignUpButton(
 	}
 
 	return isWindowOpen
+}
+
+interface SignUpReasonContext {
+	event: Pick<
+		ClubEventDetail,
+		| "registration_type"
+		| "registration_window"
+		| "status"
+		| "can_choose"
+		| "priority_signup_start"
+		| "signup_start"
+		| "season"
+	>
+	isAuthenticated: boolean
+	hasSignedUp: boolean
+	playerLastSeason?: number | null
+}
+
+export function getSignUpUnavailableReason({
+	event,
+	isAuthenticated,
+	hasSignedUp,
+	playerLastSeason,
+}: SignUpReasonContext): string | null {
+	if (event.registration_type === RegistrationType.None) {
+		return "Online registration is not available for this event."
+	}
+
+	if (event.status === "C") {
+		return "This event has been canceled."
+	}
+
+	if (event.registration_window === "past") {
+		return "Registration is closed."
+	}
+
+	const now = new Date()
+	if (!shouldShowSignUpButton(event, now)) {
+		const signupStart = event.priority_signup_start ?? event.signup_start
+		const formatted = dayDateAndTimeFormat(signupStart)
+		return formatted ? `Registration opens ${formatted}.` : "Registration is not yet open."
+	}
+
+	if (!isAuthenticated) {
+		return "Sign in to register for this event."
+	}
+
+	if (hasSignedUp) {
+		return "You are registered for this event."
+	}
+
+	if (
+		event.registration_type === RegistrationType.ReturningMembersOnly &&
+		playerLastSeason !== event.season - 1
+	) {
+		return "This event is restricted to returning members."
+	}
+
+	return null
 }
 
 export function getRegistrationStartTime(

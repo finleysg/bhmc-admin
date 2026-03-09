@@ -15,7 +15,7 @@ export function proxy(request: NextRequest) {
 	}
 
 	// Auth guard: require access_token for member and registration pages
-	if (pathname.startsWith("/member") || pathname.startsWith("/registration")) {
+	if (pathname.startsWith("/member/") || pathname === "/member" || pathname.startsWith("/registration")) {
 		const token = request.cookies.get("access_token")
 		if (!token) {
 			const redirectUrl = encodeURIComponent(pathname)

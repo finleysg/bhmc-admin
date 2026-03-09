@@ -3,9 +3,17 @@
 import Link from "next/link"
 import { isBefore } from "date-fns"
 
+import { Info } from "lucide-react"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
-import { getEventUrl, RegistrationType, shouldShowSignUpButton } from "@/lib/event-utils"
+import {
+	getEventUrl,
+	getSignUpUnavailableReason,
+	RegistrationType,
+	shouldShowSignUpButton,
+} from "@/lib/event-utils"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
 import { usePlayerRegistration } from "@/lib/hooks/use-player-registration"
 import type { ClubEventDetail } from "@/lib/types"
@@ -117,5 +125,30 @@ function ManageButton({
 		<Button variant="accent" size="sm" asChild>
 			<Link href={`${eventUrl}/manage`}>Manage</Link>
 		</Button>
+	)
+}
+
+export function RegistrationBanner({ event }: { event: ClubEventDetail }) {
+	const { isAuthenticated } = useAuth()
+	const { data: player } = useMyPlayer()
+	const { data: registrationData } = usePlayerRegistration(event.id, player?.id)
+
+	const hasSignedUp = !!registrationData?.registration
+	const reason = getSignUpUnavailableReason({
+		event,
+		isAuthenticated,
+		hasSignedUp,
+		playerLastSeason: player?.last_season,
+	})
+
+	if (!reason) return null
+
+	const bg = hasSignedUp ? "bg-secondary/10" : "bg-primary/10"
+
+	return (
+		<Alert className={`${bg} border-none`}>
+			<Info />
+			<AlertDescription>{reason}</AlertDescription>
+		</Alert>
 	)
 }
