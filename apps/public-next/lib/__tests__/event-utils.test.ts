@@ -491,9 +491,9 @@ describe("getSignUpUnavailableReason", () => {
 				registration_type: RegistrationType.ReturningMembersOnly,
 				season: 2026,
 			})
-			expect(
-				getSignUpUnavailableReason({ event, ...defaults, playerLastSeason: 2024 }),
-			).toBe("This event is restricted to returning members.")
+			expect(getSignUpUnavailableReason({ event, ...defaults, playerLastSeason: 2024 })).toBe(
+				"This event is restricted to returning members.",
+			)
 		})
 
 		it("returns null for returning members only when eligible", () => {
@@ -501,9 +501,7 @@ describe("getSignUpUnavailableReason", () => {
 				registration_type: RegistrationType.ReturningMembersOnly,
 				season: 2026,
 			})
-			expect(
-				getSignUpUnavailableReason({ event, ...defaults, playerLastSeason: 2025 }),
-			).toBeNull()
+			expect(getSignUpUnavailableReason({ event, ...defaults, playerLastSeason: 2025 })).toBeNull()
 		})
 
 		it("returns null for returning members only with null last_season", () => {
@@ -511,9 +509,9 @@ describe("getSignUpUnavailableReason", () => {
 				registration_type: RegistrationType.ReturningMembersOnly,
 				season: 2026,
 			})
-			expect(
-				getSignUpUnavailableReason({ event, ...defaults, playerLastSeason: null }),
-			).toBe("This event is restricted to returning members.")
+			expect(getSignUpUnavailableReason({ event, ...defaults, playerLastSeason: null })).toBe(
+				"This event is restricted to returning members.",
+			)
 		})
 	})
 })

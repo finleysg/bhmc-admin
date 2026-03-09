@@ -3,9 +3,12 @@
  * Use these types instead of internal models for type-safe DB access.
  */
 import {
+	announcement,
+	announcementDocuments,
 	authUser,
 	champion,
 	course,
+	document,
 	event,
 	eventFee,
 	eventScore,
@@ -64,6 +67,11 @@ export type LowScoreRow = typeof lowScore.$inferSelect
 // Golf Genius
 export type IntegrationLogRow = typeof integrationLog.$inferSelect
 
+// Announcements
+export type AnnouncementRow = typeof announcement.$inferSelect
+export type AnnouncementDocumentsRow = typeof announcementDocuments.$inferSelect
+export type DocumentRow = typeof document.$inferSelect
+
 // Auth
 export type AuthUserRow = typeof authUser.$inferSelect
 
@@ -103,6 +111,11 @@ export type LowScoreInsert = typeof lowScore.$inferInsert
 
 // Golf Genius
 export type IntegrationLogInsert = typeof integrationLog.$inferInsert
+
+// Announcements
+export type AnnouncementInsert = typeof announcement.$inferInsert
+export type AnnouncementDocumentsInsert = typeof announcementDocuments.$inferInsert
+export type DocumentInsert = typeof document.$inferInsert
 
 // Auth
 export type AuthUserInsert = typeof authUser.$inferInsert

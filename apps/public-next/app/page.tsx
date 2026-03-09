@@ -45,7 +45,7 @@ export default async function HomePage() {
 		tut1Doc,
 		tut2Doc,
 	] = await Promise.all([
-		fetchDjango<Announcement[]>("/news/"),
+		fetchDjango<Announcement[]>("/news/", { revalidate: 3600, tags: ["announcements"] }),
 		fetchDjango<PhotoData[]>("/photos/random/?take=1"),
 		fetchDjango<ClubEvent[]>(`/events/?season=${currentSeason}`, {
 			revalidate: 300,

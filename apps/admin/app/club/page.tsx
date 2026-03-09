@@ -44,6 +44,14 @@ export default function ClubPage() {
 				/>
 
 				<LinkCard
+					title="Announcements"
+					description="Create and manage club announcements"
+					href="/club/announcements"
+					disabled={false}
+					icon="📢"
+				/>
+
+				<LinkCard
 					title="Settings"
 					description="Configure club settings"
 					href="/club/settings"
