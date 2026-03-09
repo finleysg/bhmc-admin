@@ -47,9 +47,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 		})
 	}
 
+	let reader: ReadableStreamDefaultReader<Uint8Array> | undefined
+
 	const stream = new ReadableStream({
 		async start(controller) {
-			const reader = backendResponse.body!.getReader()
+			reader = backendResponse.body!.getReader()
 			const encoder = new TextEncoder()
 
 			try {
@@ -66,7 +68,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 			}
 		},
 		cancel() {
-			void backendResponse.body?.cancel()
+			void reader?.cancel()
 		},
 	})
 
