@@ -12,6 +12,7 @@ import {
 	DjangoUser,
 	RegistrationSlot,
 	RegistrationStatusChoices,
+	RegistrationTypeChoices,
 	RegistrationWithSlots,
 	ReserveRequest,
 } from "@repo/domain/types"
@@ -27,6 +28,7 @@ import {
 	EventRegistrationNotOpenError,
 	EventRegistrationWaveError,
 	PlayerConflictError,
+	ReturningMembersOnlyError,
 	SlotConflictError,
 	SlotOverflowError,
 } from "../errors/registration.errors"
@@ -66,6 +68,14 @@ export class RegistrationService {
 	): Promise<RegistrationWithSlots> {
 		const signedUpBy = `${user.firstName} ${user.lastName}`
 		const event = await this.events.getCompleteClubEventById(request.eventId, false)
+
+		// Check returning member restriction
+		if (event.registrationType === RegistrationTypeChoices.RETURNING_MEMBER) {
+			const playerRow = await this.repository.findPlayerByUserId(user.id)
+			if (!playerRow || playerRow.lastSeason !== event.season - 1) {
+				throw new ReturningMembersOnlyError()
+			}
+		}
 
 		// Validate request
 		await this.validateRegistrationRequest(event, request.slotIds, request.courseId ?? null)

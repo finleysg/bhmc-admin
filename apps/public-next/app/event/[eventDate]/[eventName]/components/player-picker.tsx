@@ -83,6 +83,15 @@ export function PlayerPicker({ eventId, onSelect, excludeIds = [] }: PlayerPicke
 			toast.error(`Not eligible! ${player.first_name} ${player.last_name} is not a member.`)
 			return
 		}
+		if (
+			clubEvent?.registration_type === RegistrationType.ReturningMembersOnly &&
+			player.last_season !== clubEvent.season - 1
+		) {
+			toast.error(
+				`Not eligible! ${player.first_name} ${player.last_name} is not a returning member.`,
+			)
+			return
+		}
 		const playerName = `${player.first_name} ${player.last_name}`
 		const feePlayer: FeePlayer = {
 			birthDate: player.birth_date,

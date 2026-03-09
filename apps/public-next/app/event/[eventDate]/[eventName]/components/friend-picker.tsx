@@ -34,6 +34,15 @@ export function FriendPicker({ onSelect, excludeIds }: FriendPickerProps) {
 			)
 			return
 		}
+		if (
+			clubEvent?.registration_type === RegistrationType.ReturningMembersOnly &&
+			(friend.last_season ?? null) !== clubEvent.season - 1
+		) {
+			toast.warning(
+				`${friend.first_name} ${friend.last_name} is not a returning member and cannot be added to this event.`,
+			)
+			return
+		}
 		const playerName = `${friend.first_name} ${friend.last_name}`
 		const feePlayer: FeePlayer = {
 			birthDate: friend.birth_date ?? null,

@@ -14,3 +14,4 @@ pnpm-lock.yaml
 test-results
 playwright-report
 playwright/.auth
+backend/templates

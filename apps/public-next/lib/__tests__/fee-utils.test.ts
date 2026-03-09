@@ -1,5 +1,5 @@
 import type { EventFee, FeeType } from "../types"
-import { calculateFeeAmount, evaluateRestriction } from "../registration/fee-utils"
+import { calculateFeeAmount, evaluateRestriction, isFeeApplicable } from "../registration/fee-utils"
 import type { FeePlayer } from "../registration/fee-utils"
 
 function makeFeeType(overrides: Partial<FeeType> = {}): FeeType {
@@ -144,5 +144,51 @@ describe("evaluateRestriction", () => {
 	it("returns false for unknown restriction", () => {
 		const player = makePlayer()
 		expect(evaluateRestriction("UnknownRestriction", player)).toBe(false)
+	})
+})
+
+describe("isFeeApplicable", () => {
+	it("returns true when no player provided", () => {
+		const fee = makeEventFee({ fee_type: makeFeeType({ restriction: "Seniors" }) })
+		expect(isFeeApplicable(fee)).toBe(true)
+	})
+
+	it("returns true when fee has no restriction", () => {
+		const fee = makeEventFee({ fee_type: makeFeeType({ restriction: "" }) })
+		const player = makePlayer()
+		expect(isFeeApplicable(fee, player)).toBe(true)
+	})
+
+	it("returns true when fee restriction is None", () => {
+		const fee = makeEventFee({ fee_type: makeFeeType({ restriction: "None" }) })
+		const player = makePlayer()
+		expect(isFeeApplicable(fee, player)).toBe(true)
+	})
+
+	it("returns true when player matches base fee_type.restriction", () => {
+		const birthYear = new Date().getFullYear() - 50
+		const fee = makeEventFee({ fee_type: makeFeeType({ restriction: "Non-Seniors" }) })
+		const player = makePlayer({ birthDate: `${birthYear}-01-15` })
+		expect(isFeeApplicable(fee, player)).toBe(true)
+	})
+
+	it("returns true when player matches override_restriction but not base", () => {
+		const birthYear = new Date().getFullYear() - 70
+		const fee = makeEventFee({
+			fee_type: makeFeeType({ restriction: "Non-Seniors" }),
+			override_restriction: "Seniors",
+			override_amount: "43.25",
+		})
+		const player = makePlayer({ birthDate: `${birthYear}-01-15` })
+		expect(isFeeApplicable(fee, player)).toBe(true)
+	})
+
+	it("returns false when player matches neither restriction", () => {
+		const fee = makeEventFee({
+			fee_type: makeFeeType({ restriction: "Non-Members" }),
+			override_restriction: "Seniors",
+		})
+		const player = makePlayer({ isMember: true, birthDate: "1990-01-15" })
+		expect(isFeeApplicable(fee, player)).toBe(false)
 	})
 })

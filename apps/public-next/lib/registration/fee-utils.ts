@@ -11,6 +11,18 @@ export interface FeePlayer {
 	lastSeason: number | null
 }
 
+export function isFeeApplicable(eventFee: EventFee, feePlayer?: FeePlayer): boolean {
+	if (!feePlayer || !eventFee.fee_type.restriction) return true
+	if (eventFee.fee_type.restriction === "None") return true
+	if (evaluateRestriction(eventFee.fee_type.restriction, feePlayer)) return true
+	if (
+		eventFee.override_restriction &&
+		evaluateRestriction(eventFee.override_restriction, feePlayer)
+	)
+		return true
+	return false
+}
+
 export function calculateFeeAmount(fee: EventFee, player?: FeePlayer): number {
 	const amount = Number(fee.amount)
 	const overrideAmount = fee.override_amount ? Number(fee.override_amount) : null

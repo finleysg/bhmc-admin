@@ -12,6 +12,7 @@ import {
 	EventFullError,
 	EventRegistrationNotOpenError,
 	PlayerConflictError,
+	ReturningMembersOnlyError,
 	SlotConflictError,
 	SlotOverflowError,
 } from "../errors/registration.errors"
@@ -154,6 +155,7 @@ const createMockRegistrationRepository = () => ({
 	findRegistrationByUserAndEvent: jest.fn(),
 	findRegistrationSlotById: jest.fn(),
 	findRegistrationSlotWithHoleById: jest.fn(),
+	findPlayerByUserId: jest.fn(),
 	updateRegistrationSlot: jest.fn(),
 	updateRegistrationSlots: jest.fn(),
 	deleteRegistration: jest.fn(),
@@ -516,6 +518,42 @@ describe("RegistrationService", () => {
 				await expect(service.createAndReserve(user, request)).rejects.toThrow(
 					AlreadyRegisteredError,
 				)
+			})
+		})
+
+		describe("returning members only", () => {
+			it("rejects non-returning member on returning-members-only event", async () => {
+				const { service, eventsService, repository } = createService()
+				const user = createDjangoUser()
+				const event = createClubEvent({
+					registrationType: RegistrationTypeChoices.RETURNING_MEMBER,
+					canChoose: false,
+				})
+				const request = createReserveRequest({ slotIds: [], courseId: undefined })
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findPlayerByUserId.mockResolvedValue(createPlayerRow({ lastSeason: null }))
+
+				await expect(service.createAndReserve(user, request)).rejects.toThrow(
+					ReturningMembersOnlyError,
+				)
+			})
+
+			it("allows returning member on returning-members-only event", async () => {
+				const { service, eventsService, repository } = createService()
+				const user = createDjangoUser()
+				const event = createClubEvent({
+					registrationType: RegistrationTypeChoices.RETURNING_MEMBER,
+					canChoose: false,
+					season: 2025,
+				})
+				const request = createReserveRequest({ slotIds: [], courseId: undefined })
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findPlayerByUserId.mockResolvedValue(createPlayerRow({ lastSeason: 2024 }))
+				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+				await expect(service.createAndReserve(user, request)).resolves.toBeDefined()
 			})
 		})
 

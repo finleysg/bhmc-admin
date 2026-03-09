@@ -26,7 +26,7 @@ export function RegistrationActions({ event }: RegistrationActionsProps) {
 		<div className="flex gap-2">
 			<PortalButton event={event} />
 			<PlayersButton event={event} eventUrl={eventUrl} />
-			<SignUpButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} />
+			<SignUpButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} player={player} />
 			{isAuthenticated && (
 				<ManageButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} />
 			)}
@@ -50,14 +50,23 @@ function SignUpButton({
 	event,
 	hasSignedUp,
 	eventUrl,
+	player,
 }: {
 	event: ClubEventDetail
 	hasSignedUp: boolean
 	eventUrl: string
+	player?: { last_season?: number | null }
 }) {
 	const { isAuthenticated } = useAuth()
 
 	if (hasSignedUp || !isAuthenticated || !shouldShowSignUpButton(event, new Date())) {
+		return null
+	}
+
+	if (
+		event.registration_type === RegistrationType.ReturningMembersOnly &&
+		player?.last_season !== event.season - 1
+	) {
 		return null
 	}
 

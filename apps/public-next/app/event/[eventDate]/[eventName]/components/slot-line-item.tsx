@@ -6,11 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { useRegistration } from "@/lib/registration/registration-context"
-import {
-	calculateFeeAmount,
-	evaluateRestriction,
-	type FeePlayer,
-} from "@/lib/registration/fee-utils"
+import { calculateFeeAmount, isFeeApplicable, type FeePlayer } from "@/lib/registration/fee-utils"
 import type { ServerRegistrationSlot } from "@/lib/registration/types"
 import type { EventFee } from "@/lib/types"
 
@@ -79,12 +75,6 @@ export function SlotLineItem({
 		}
 	}
 
-	const isFeeApplicable = (eventFee: EventFee) => {
-		if (!feePlayer || !eventFee.fee_type.restriction) return true
-		if (eventFee.fee_type.restriction === "None") return true
-		return evaluateRestriction(eventFee.fee_type.restriction, feePlayer)
-	}
-
 	const playerContent = player ? (
 		<>
 			<span className="truncate text-sm font-medium text-emerald-600 dark:text-emerald-400">
@@ -131,7 +121,7 @@ export function SlotLineItem({
 						const existing = isExistingFee(eventFee)
 						const selected = hasPaymentDetail(eventFee) || existing
 						const disabled = !player || existing || eventFee.is_required
-						const applicable = isFeeApplicable(eventFee)
+						const applicable = isFeeApplicable(eventFee, feePlayer)
 						const id = `fee-${slot.id}-${eventFee.id}`
 
 						return (
@@ -193,7 +183,7 @@ export function SlotLineItem({
 					const existing = isExistingFee(eventFee)
 					const selected = hasPaymentDetail(eventFee) || existing
 					const disabled = !player || existing || eventFee.is_required
-					const applicable = isFeeApplicable(eventFee)
+					const applicable = isFeeApplicable(eventFee, feePlayer)
 					const amount = getFeeAmount(eventFee)
 					const id = `fee-${slot.id}-${eventFee.id}`
 

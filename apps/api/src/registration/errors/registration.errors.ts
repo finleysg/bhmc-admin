@@ -54,6 +54,12 @@ export class CourseRequiredError extends HttpException {
 	}
 }
 
+export class ReturningMembersOnlyError extends HttpException {
+	constructor() {
+		super("This event is restricted to returning members", HttpStatus.FORBIDDEN)
+	}
+}
+
 export class PaymentNotFoundError extends HttpException {
 	constructor(paymentId: number) {
 		super(

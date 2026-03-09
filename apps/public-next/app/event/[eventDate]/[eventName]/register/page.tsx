@@ -20,7 +20,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import { getEventUrl } from "@/lib/event-utils"
+import { getEventUrl, RegistrationType } from "@/lib/event-utils"
 import { useAddFriend } from "@/lib/hooks/use-my-friends"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
 import type { FeePlayer } from "@/lib/registration/fee-utils"
@@ -68,6 +68,14 @@ export default function RegisterPage() {
 		if (registration || !clubEvent) return
 
 		if (!clubEvent.can_choose) {
+			if (
+				clubEvent.registration_type === RegistrationType.ReturningMembersOnly &&
+				myPlayer &&
+				myPlayer.last_season !== clubEvent.season - 1
+			) {
+				setError("This event is restricted to returning members.")
+				return
+			}
 			if (!creatingRef.current) {
 				creatingRef.current = true
 				void createRegistration()
@@ -75,7 +83,7 @@ export default function RegisterPage() {
 		} else {
 			router.replace(getEventUrl(clubEvent))
 		}
-	}, [registration, clubEvent, router, createRegistration])
+	}, [registration, clubEvent, router, createRegistration, myPlayer, setError])
 
 	// Auto-dismiss error after 5 seconds
 	const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)

@@ -112,9 +112,7 @@ export async function register(data: RegisterData): Promise<RegisterResult> {
 		}
 
 		const errorData = (await response.json()) as DjangoFieldErrors | string[]
-		const allMessages = Array.isArray(errorData)
-			? errorData
-			: Object.values(errorData).flat()
+		const allMessages = Array.isArray(errorData) ? errorData : Object.values(errorData).flat()
 		const isDuplicate = allMessages.some((msg) => msg.toLowerCase().includes("already exists"))
 
 		if (isDuplicate) {
