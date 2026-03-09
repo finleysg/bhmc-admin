@@ -5,18 +5,11 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { getEventTypeName, parseLocalDate } from "@repo/domain/functions"
-import { EventTypeChoices } from "@repo/domain/types"
+import { EventTypeChoices, RegistrationTypeChoices } from "@repo/domain/types"
 import { ClubEvent } from "@repo/domain/types"
 
 import { useAuth } from "../../lib/auth-context"
 import { LoadingSpinner } from "../components/ui/loading-spinner"
-
-const eventTypeFilter = new Set<string>([
-	EventTypeChoices.WEEKNIGHT,
-	EventTypeChoices.WEEKEND_MAJOR,
-	EventTypeChoices.OPEN,
-	EventTypeChoices.OTHER,
-])
 
 const eventTypeColor: Record<string, string> = {
 	[EventTypeChoices.WEEKNIGHT]: "text-success",
@@ -78,7 +71,7 @@ export default function EventsPage() {
 
 	const filteredEvents = useMemo(() => {
 		return seasonEvents
-			.filter((e) => eventTypeFilter.has(e.eventType))
+			.filter((e) => e.registrationType !== RegistrationTypeChoices.NONE)
 			.sort((a, b) => a.startDate.localeCompare(b.startDate))
 	}, [seasonEvents])
 
