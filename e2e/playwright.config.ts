@@ -18,8 +18,26 @@ export default defineConfig({
 
 	projects: [
 		{
+			name: "admin-setup",
+			testMatch: /admin\/auth\.setup\.ts/,
+			use: {
+				baseURL: "http://localhost:3100",
+				...devices["Desktop Chrome"],
+			},
+		},
+		{
+			name: "admin",
+			testMatch: /admin\/.*\.spec\.ts/,
+			dependencies: ["admin-setup"],
+			use: {
+				baseURL: "http://localhost:3100",
+				storageState: "playwright/.auth/admin.json",
+				...devices["Desktop Chrome"],
+			},
+		},
+		{
 			name: "public-next-setup",
-			testMatch: /auth\.setup\.ts/,
+			testMatch: /public-next\/auth\.setup\.ts/,
 			use: {
 				baseURL: "http://localhost:3200",
 				...devices["Desktop Chrome"],

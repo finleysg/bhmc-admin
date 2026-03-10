@@ -1,4 +1,35 @@
 /**
+ * Convert a raw MySQL datetime string (e.g. "2026-03-08 16:00:00.000000")
+ * to ISO 8601 with explicit UTC indicator ("2026-03-08T16:00:00.000Z").
+ *
+ * Drizzle with `mode: "string"` returns bare datetime strings with no
+ * timezone indicator. Without the "Z" suffix, `new Date()` interprets
+ * these as local time instead of UTC.
+ *
+ * Idempotent: strings already carrying "Z" or a timezone offset are
+ * returned unchanged.
+ */
+export function fromMysqlDatetime(mysql: string): string {
+	const trimmed = mysql.trim()
+	if (trimmed.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(trimmed)) {
+		return trimmed
+	}
+	// "2026-03-08 16:00:00.000000" → "2026-03-08T16:00:00.000Z"
+	// Also handle ISO-like strings without timezone (e.g. "2026-03-08T16:00:00")
+	const hasT = trimmed.includes("T")
+	const [datePart, timePart] = trimmed.split(hasT ? "T" : " ")
+	if (!datePart || !timePart) {
+		throw new Error(`Invalid MySQL datetime value: ${mysql}`)
+	}
+	// Trim microsecond precision (6 digits) to milliseconds (3 digits)
+	const dotIndex = timePart.indexOf(".")
+	const ms =
+		dotIndex >= 0 ? "." + timePart.slice(dotIndex + 1, dotIndex + 4).padEnd(3, "0") : ".000"
+	const timeWithoutFraction = dotIndex >= 0 ? timePart.slice(0, dotIndex) : timePart
+	return `${datePart}T${timeWithoutFraction}${ms}Z`
+}
+
+/**
  * Convert an ISO 8601 datetime string (e.g. "2026-03-08T16:00:00.000Z")
  * to the MySQL datetime format ("2026-03-08 16:00:00.000000").
  *

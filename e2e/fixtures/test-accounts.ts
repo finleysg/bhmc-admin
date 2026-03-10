@@ -9,6 +9,11 @@ export const testUser = {
 	password: process.env.E2E_USER_PASSWORD ?? "sverige8",
 }
 
+export const adminUser = {
+	email: process.env.E2E_ADMIN_EMAIL ?? "finleysg@gmail.com",
+	password: process.env.E2E_USER_PASSWORD ?? "sverige8",
+}
+
 export const testPassword = process.env.E2E_USER_PASSWORD ?? "sverige8"
 
 type TestUser = {

@@ -1,17 +1,13 @@
 import { ClubEvent, RegistrationTypeChoices, StartTypeChoices } from "@repo/domain/types"
+import { fromMysqlDatetime } from "../common"
 
 /**
  * Parse a MySQL datetime string (stored in UTC by Django) as a UTC Date.
  * Drizzle returns raw strings like "2026-02-18 20:00:00.000000" with no
  * timezone indicator, which `new Date()` would interpret as local time.
- * Appending "Z" ensures correct UTC interpretation.
  */
 export function parseUtcDatetime(value: string): Date {
-	const trimmed = value.trim()
-	if (trimmed.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(trimmed)) {
-		return new Date(trimmed)
-	}
-	return new Date(trimmed + "Z")
+	return new Date(fromMysqlDatetime(value))
 }
 
 export type RegistrationWindow = "n/a" | "future" | "priority" | "registration" | "past"

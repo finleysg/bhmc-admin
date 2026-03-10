@@ -19,6 +19,7 @@ import {
 	TournamentResults,
 } from "@repo/domain/types"
 
+import { fromMysqlDatetime } from "../common"
 import { toPlayer } from "../registration/mappers"
 import { toCourse } from "../courses/mappers"
 import type {
@@ -53,9 +54,9 @@ export function toEvent(row: EventRow): ClubEvent {
 		notes: row.notes,
 		startDate: row.startDate,
 		startTime: row.startTime,
-		signupStart: row.signupStart,
-		signupEnd: row.signupEnd,
-		paymentsEnd: row.paymentsEnd,
+		signupStart: row.signupStart ? fromMysqlDatetime(row.signupStart) : null,
+		signupEnd: row.signupEnd ? fromMysqlDatetime(row.signupEnd) : null,
+		paymentsEnd: row.paymentsEnd ? fromMysqlDatetime(row.paymentsEnd) : null,
 		registrationMaximum: row.registrationMaximum,
 		portalUrl: row.portalUrl,
 		externalUrl: row.externalUrl,
@@ -64,7 +65,9 @@ export function toEvent(row: EventRow): ClubEvent {
 		teeTimeSplits: row.teeTimeSplits,
 		starterTimeInterval: row.starterTimeInterval,
 		teamSize: row.teamSize,
-		prioritySignupStart: row.prioritySignupStart,
+		prioritySignupStart: row.prioritySignupStart
+			? fromMysqlDatetime(row.prioritySignupStart)
+			: null,
 		signupWaves: row.signupWaves,
 		ageRestriction: row.ageRestriction,
 		ageRestrictionType: row.ageRestrictionType as AgeRestrictionTypeValue,
@@ -200,7 +203,7 @@ export function toTournamentPoints(
 		score: row.score ?? undefined,
 		points: row.points,
 		details: row.details ?? undefined,
-		createDate: row.createDate,
+		createDate: fromMysqlDatetime(row.createDate),
 		player,
 	}
 }
