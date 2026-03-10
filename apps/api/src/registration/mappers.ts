@@ -16,6 +16,7 @@ import {
 	CompleteCourse,
 } from "@repo/domain/types"
 
+import { fromMysqlDatetime } from "../common"
 import { toHole } from "../courses/mappers"
 import type {
 	CourseRow,
@@ -68,9 +69,9 @@ export function toRegistration(row: RegistrationRow): Registration {
 		course: undefined,
 		signedUpBy: row.signedUpBy ?? "",
 		userId: row.userId ?? 0,
-		expires: row.expires ?? undefined,
+		expires: row.expires ? fromMysqlDatetime(row.expires) : undefined,
 		ggId: row.ggId ?? undefined,
-		createdDate: row.createdDate,
+		createdDate: fromMysqlDatetime(row.createdDate),
 		slots: [],
 	}
 }
@@ -109,8 +110,8 @@ export function toPayment(row: PaymentRow): Payment {
 		userId: row.userId,
 		paymentAmount: parseFloat(row.paymentAmount),
 		transactionFee: parseFloat(row.transactionFee),
-		paymentDate: row.paymentDate ?? "",
-		confirmDate: row.confirmDate ?? null,
+		paymentDate: row.paymentDate ? fromMysqlDatetime(row.paymentDate) : "",
+		confirmDate: row.confirmDate ? fromMysqlDatetime(row.confirmDate) : null,
 	}
 }
 
@@ -124,7 +125,7 @@ export function toRefund(row: RefundRow): Refund {
 		refundAmount: parseFloat(row.refundAmount),
 		notes: row.notes ?? null,
 		confirmed: Boolean(row.confirmed),
-		refundDate: row.refundDate ?? null,
+		refundDate: row.refundDate ? fromMysqlDatetime(row.refundDate) : null,
 		issuerId: row.issuerId,
 		paymentId: row.paymentId,
 	}
@@ -330,9 +331,9 @@ export function toCompleteRegistration(row: CompleteRegistrationRow): CompleteRe
 		course,
 		signedUpBy: row.signedUpBy ?? "",
 		userId: row.userId ?? 0,
-		expires: row.expires ?? undefined,
+		expires: row.expires ? fromMysqlDatetime(row.expires) : undefined,
 		ggId: row.ggId ?? undefined,
-		createdDate: row.createdDate,
+		createdDate: fromMysqlDatetime(row.createdDate),
 		slots,
 	}
 }

@@ -1,6 +1,10 @@
 "use client"
 
+import { useEffect, useState } from "react"
+
 import type { Announcement } from "../types"
+
+const PAGE_SIZE = 10
 
 interface AnnouncementTableProps {
 	announcements: Announcement[]
@@ -50,10 +54,12 @@ function getStatus(starts: string, expires: string): { label: string; className:
 }
 
 function formatDate(dateStr: string): string {
-	return new Date(dateStr).toLocaleDateString("en-US", {
+	return new Date(dateStr).toLocaleString("en-US", {
 		month: "short",
 		day: "numeric",
 		year: "numeric",
+		hour: "numeric",
+		minute: "2-digit",
 	})
 }
 
@@ -63,6 +69,20 @@ export function AnnouncementTable({
 	onEdit,
 	onDelete,
 }: AnnouncementTableProps) {
+	const [currentPage, setCurrentPage] = useState(0)
+
+	const sorted = [...announcements].sort(
+		(a, b) => new Date(b.starts).getTime() - new Date(a.starts).getTime(),
+	)
+	const totalPages = Math.ceil(sorted.length / PAGE_SIZE)
+	const paginated = sorted.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
+
+	useEffect(() => {
+		if (currentPage >= totalPages && totalPages > 0) {
+			setCurrentPage(totalPages - 1)
+		}
+	}, [currentPage, totalPages])
+
 	return (
 		<div>
 			<div className="mb-4 flex justify-end">
@@ -89,7 +109,7 @@ export function AnnouncementTable({
 								</tr>
 							</thead>
 							<tbody>
-								{announcements.map((a) => {
+								{paginated.map((a) => {
 									const status = getStatus(a.starts, a.expires)
 									return (
 										<tr key={a.id}>
@@ -126,7 +146,7 @@ export function AnnouncementTable({
 
 					{/* Mobile cards */}
 					<div className="space-y-3 md:hidden">
-						{announcements.map((a) => {
+						{paginated.map((a) => {
 							const status = getStatus(a.starts, a.expires)
 							return (
 								<div key={a.id} className="card bg-base-100 shadow-xs">
@@ -160,6 +180,44 @@ export function AnnouncementTable({
 						})}
 					</div>
 				</>
+			)}
+
+			{totalPages > 1 && (
+				<div className="mt-4 flex items-center justify-between">
+					<span className="text-sm text-base-content/70">
+						Page {currentPage + 1} of {totalPages} ({announcements.length} total)
+					</span>
+					<div className="join">
+						<button
+							className="join-item btn btn-sm"
+							onClick={() => setCurrentPage(0)}
+							disabled={currentPage === 0}
+						>
+							{"<<"}
+						</button>
+						<button
+							className="join-item btn btn-sm"
+							onClick={() => setCurrentPage((p) => p - 1)}
+							disabled={currentPage === 0}
+						>
+							{"<"}
+						</button>
+						<button
+							className="join-item btn btn-sm"
+							onClick={() => setCurrentPage((p) => p + 1)}
+							disabled={currentPage >= totalPages - 1}
+						>
+							{">"}
+						</button>
+						<button
+							className="join-item btn btn-sm"
+							onClick={() => setCurrentPage(totalPages - 1)}
+							disabled={currentPage >= totalPages - 1}
+						>
+							{">>"}
+						</button>
+					</div>
+				</div>
 			)}
 		</div>
 	)

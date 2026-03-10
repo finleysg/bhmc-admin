@@ -101,12 +101,17 @@ export async function fetchWithAuth({
 			})
 		}
 
-		// Handle 204 No Content (common for DELETE)
+		// Handle empty responses (204 No Content, or 200 with no body from DELETE/void endpoints)
 		if (response.status === 204) {
 			return new NextResponse(null, { status: 204 })
 		}
 
-		const data: unknown = await response.json()
+		const text = await response.text()
+		if (!text) {
+			return new NextResponse(null, { status: 204 })
+		}
+
+		const data: unknown = JSON.parse(text)
 		return NextResponse.json(data)
 	} catch (error) {
 		console.error("Error proxying to backend API:", error)

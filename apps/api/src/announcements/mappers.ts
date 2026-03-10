@@ -1,3 +1,4 @@
+import { fromMysqlDatetime } from "../common"
 import type { AnnouncementRow, DocumentRow } from "../database"
 
 export interface AnnouncementDocument {
@@ -27,7 +28,7 @@ export function toAnnouncementDocument(row: DocumentRow): AnnouncementDocument {
 		documentType: row.documentType,
 		file: row.file,
 		year: row.year,
-		lastUpdate: row.lastUpdate,
+		lastUpdate: fromMysqlDatetime(row.lastUpdate),
 	}
 }
 
@@ -40,8 +41,8 @@ export function toAnnouncement(
 		title: row.title,
 		text: row.text,
 		visibility: row.visibility,
-		starts: row.starts,
-		expires: row.expires,
+		starts: fromMysqlDatetime(row.starts),
+		expires: fromMysqlDatetime(row.expires),
 		eventId: row.eventId,
 		documents,
 	}

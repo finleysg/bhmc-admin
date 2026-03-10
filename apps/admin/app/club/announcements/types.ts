@@ -33,6 +33,7 @@ export interface AvailableDocument {
 	title: string
 	document_type: string
 	year: number | null
+	last_update: string
 }
 
 export interface ClubEvent {

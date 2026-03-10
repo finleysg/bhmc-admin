@@ -1,5 +1,7 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common"
 
+import { toMysqlDatetime } from "../common"
+
 import { AnnouncementsRepository } from "./announcements.repository"
 import { type AnnouncementResponse, toAnnouncement, toAnnouncementDocument } from "./mappers"
 
@@ -54,8 +56,8 @@ export class AnnouncementsService {
 		const row = await this.repository.create({
 			title: input.title,
 			text: input.text,
-			starts: input.starts,
-			expires: input.expires,
+			starts: toMysqlDatetime(input.starts),
+			expires: toMysqlDatetime(input.expires),
 			visibility: input.visibility,
 			eventId: input.eventId ?? null,
 		})
@@ -76,8 +78,8 @@ export class AnnouncementsService {
 		await this.repository.update(id, {
 			...(input.title !== undefined && { title: input.title }),
 			...(input.text !== undefined && { text: input.text }),
-			...(input.starts !== undefined && { starts: input.starts }),
-			...(input.expires !== undefined && { expires: input.expires }),
+			...(input.starts !== undefined && { starts: toMysqlDatetime(input.starts) }),
+			...(input.expires !== undefined && { expires: toMysqlDatetime(input.expires) }),
 			...(input.visibility !== undefined && { visibility: input.visibility }),
 			...(input.eventId !== undefined && { eventId: input.eventId }),
 		})
