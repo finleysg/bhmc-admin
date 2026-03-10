@@ -35,9 +35,9 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
 				{title && <h3 className="font-bold text-lg">{title}</h3>}
 				{children}
 			</div>
-			<form method="dialog" className="modal-backdrop">
-				<button type="submit">close</button>
-			</form>
+			<div className="modal-backdrop" onClick={handleClose}>
+				<span>close</span>
+			</div>
 		</dialog>
 	)
 }

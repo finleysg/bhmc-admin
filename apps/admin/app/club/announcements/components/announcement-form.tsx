@@ -1,8 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+
+import { ContentEditor } from "@/components/content-editor"
 
 import type { Announcement, AnnouncementFormData, AvailableDocument, ClubEvent } from "../types"
+import { DocumentPicker } from "./document-picker"
 
 interface AnnouncementFormProps {
 	announcement?: Announcement
@@ -46,6 +49,28 @@ export function AnnouncementForm({
 		announcement?.documents.map((d) => d.id) ?? [],
 	)
 	const [validationError, setValidationError] = useState<string | null>(null)
+
+	const initialValues = useMemo(
+		() => ({
+			title: announcement?.title ?? "",
+			text: announcement?.text ?? "",
+			visibility: announcement?.visibility ?? "A",
+			starts: announcement ? toDatetimeLocalValue(announcement.starts) : "",
+			expires: announcement ? toDatetimeLocalValue(announcement.expires) : "",
+			eventId: announcement?.eventId ?? null,
+			documentIds: [...(announcement?.documents.map((d) => d.id) ?? [])].sort(),
+		}),
+		[announcement],
+	)
+
+	const isDirty =
+		title !== initialValues.title ||
+		text !== initialValues.text ||
+		visibility !== initialValues.visibility ||
+		starts !== initialValues.starts ||
+		expires !== initialValues.expires ||
+		eventId !== initialValues.eventId ||
+		JSON.stringify([...documentIds].sort()) !== JSON.stringify(initialValues.documentIds)
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault()
@@ -93,51 +118,56 @@ export function AnnouncementForm({
 				</div>
 			)}
 
-			<div className="form-control">
-				<label className="label" htmlFor="title">
-					<span className="label-text">Title</span>
-				</label>
-				<input
-					id="title"
-					type="text"
-					className="input input-bordered w-full"
-					value={title}
-					onChange={(e) => setTitle(e.target.value)}
-					disabled={isSubmitting}
-				/>
+			<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+				<div className="form-control sm:col-span-2">
+					<label className="label" htmlFor="title">
+						<span className="label-text">Title</span>
+					</label>
+					<input
+						id="title"
+						type="text"
+						className="input input-bordered w-full"
+						value={title}
+						onChange={(e) => setTitle(e.target.value)}
+						disabled={isSubmitting}
+					/>
+				</div>
+
+				<div className="form-control">
+					<label className="label" htmlFor="eventId">
+						<span className="label-text">Event (optional)</span>
+					</label>
+					<select
+						id="eventId"
+						className="select select-bordered w-full"
+						value={eventId ?? ""}
+						onChange={(e) => setEventId(e.target.value ? Number(e.target.value) : null)}
+						disabled={isSubmitting}
+					>
+						<option value="">None</option>
+						{events.map((evt) => (
+							<option key={evt.id} value={evt.id}>
+								{evt.name} ({evt.startDate})
+							</option>
+						))}
+					</select>
+				</div>
 			</div>
 
 			<div className="form-control">
-				<label className="label" htmlFor="text">
+				<label className="label">
 					<span className="label-text">Text</span>
 				</label>
-				<textarea
-					id="text"
-					className="textarea textarea-bordered h-32 w-full"
+				<ContentEditor
 					value={text}
-					onChange={(e) => setText(e.target.value)}
+					onChange={setText}
 					disabled={isSubmitting}
+					placeholder="Write your announcement..."
+					minHeight="200px"
 				/>
 			</div>
 
-			<div className="form-control">
-				<label className="label" htmlFor="visibility">
-					<span className="label-text">Visibility</span>
-				</label>
-				<select
-					id="visibility"
-					className="select select-bordered w-full"
-					value={visibility}
-					onChange={(e) => setVisibility(e.target.value)}
-					disabled={isSubmitting}
-				>
-					<option value="A">All</option>
-					<option value="M">Members Only</option>
-					<option value="N">Non-members Only</option>
-				</select>
-			</div>
-
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+			<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 				<div className="form-control">
 					<label className="label" htmlFor="starts">
 						<span className="label-text">Starts</span>
@@ -165,26 +195,29 @@ export function AnnouncementForm({
 						disabled={isSubmitting}
 					/>
 				</div>
-			</div>
 
-			<div className="form-control">
-				<label className="label" htmlFor="eventId">
-					<span className="label-text">Event (optional)</span>
-				</label>
-				<select
-					id="eventId"
-					className="select select-bordered w-full"
-					value={eventId ?? ""}
-					onChange={(e) => setEventId(e.target.value ? Number(e.target.value) : null)}
-					disabled={isSubmitting}
-				>
-					<option value="">None</option>
-					{events.map((evt) => (
-						<option key={evt.id} value={evt.id}>
-							{evt.name} ({evt.startDate})
-						</option>
-					))}
-				</select>
+				<div className="form-control">
+					<label className="label">
+						<span className="label-text">Visibility</span>
+					</label>
+					<div className="join w-full">
+						{[
+							{ value: "A", label: "All" },
+							{ value: "M", label: "Members" },
+							{ value: "N", label: "Guests" },
+						].map((opt) => (
+							<button
+								key={opt.value}
+								type="button"
+								className={`btn join-item flex-1 ${visibility === opt.value ? "btn-primary" : "btn-ghost border-base-content/20"}`}
+								onClick={() => setVisibility(opt.value)}
+								disabled={isSubmitting}
+							>
+								{opt.label}
+							</button>
+						))}
+					</div>
+				</div>
 			</div>
 
 			{documents.length > 0 && (
@@ -192,29 +225,18 @@ export function AnnouncementForm({
 					<label className="label">
 						<span className="label-text">Documents</span>
 					</label>
-					<div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-base-300 p-3">
-						{documents.map((doc) => (
-							<label key={doc.id} className="flex cursor-pointer items-center gap-2">
-								<input
-									type="checkbox"
-									className="checkbox checkbox-sm"
-									checked={documentIds.includes(doc.id)}
-									onChange={() => toggleDocument(doc.id)}
-									disabled={isSubmitting}
-								/>
-								<span className="text-sm">
-									{doc.title}
-									{doc.year ? ` (${doc.year})` : ""}
-								</span>
-							</label>
-						))}
-					</div>
+					<DocumentPicker
+						documents={documents}
+						selectedIds={documentIds}
+						onToggle={toggleDocument}
+						disabled={isSubmitting}
+					/>
 				</div>
 			)}
 
 			<div className="flex justify-end gap-2">
 				<button type="button" className="btn btn-ghost" onClick={onCancel} disabled={isSubmitting}>
-					Cancel
+					{isDirty ? "Cancel" : "Back"}
 				</button>
 				<button type="submit" className="btn btn-primary" disabled={isSubmitting}>
 					{isSubmitting ? (

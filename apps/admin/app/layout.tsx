@@ -1,6 +1,7 @@
 import "./global.css"
 
 import type { Metadata } from "next"
+import { Toaster } from "sonner"
 
 import { PostHogErrorProvider } from "../components/posthog-provider"
 import { AuthProvider } from "../lib/auth-context"
@@ -42,6 +43,7 @@ document.documentElement.setAttribute('data-theme', theme);
 						</div>
 					</AuthProvider>
 				</PostHogErrorProvider>
+				<Toaster />
 			</body>
 		</html>
 	)

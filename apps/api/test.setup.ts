@@ -10,7 +10,7 @@ process.env.GOLF_GENIUS_API_KEY = "fake_api_key"
 
 import "reflect-metadata"
 
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
 // Silence NestJS Logger during tests
 jest.mock("@nestjs/common", () => {
 	const actual = jest.requireActual("@nestjs/common")
@@ -25,4 +25,4 @@ jest.mock("@nestjs/common", () => {
 		})),
 	}
 })
-/* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
