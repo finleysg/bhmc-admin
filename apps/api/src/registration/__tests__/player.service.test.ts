@@ -112,6 +112,10 @@ const createMockCoursesService = () => ({
 	findCourseWithHolesById: jest.fn(),
 })
 
+const createMockAuthUserRepository = () => ({
+	update: jest.fn(),
+})
+
 function createService() {
 	const drizzle = createMockDrizzleService()
 	const repository = createMockRegistrationRepository()
@@ -120,6 +124,7 @@ function createService() {
 	const broadcastService = createMockBroadcastService()
 	const mailService = createMockMailService()
 	const coursesService = createMockCoursesService()
+	const authUserRepository = createMockAuthUserRepository()
 
 	const service = new PlayerService(
 		drizzle as any,
@@ -129,6 +134,7 @@ function createService() {
 		broadcastService as any,
 		mailService as any,
 		coursesService as any,
+		authUserRepository as any,
 	)
 
 	return {

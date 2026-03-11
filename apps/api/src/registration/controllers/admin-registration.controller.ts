@@ -7,6 +7,7 @@ import {
 	Logger,
 	Param,
 	ParseIntPipe,
+	Patch,
 	Post,
 	Query,
 	Req,
@@ -15,7 +16,9 @@ import type {
 	AdminRegistration,
 	AvailableSlotGroup,
 	RefundRequest,
+	Player,
 	PlayerQuery,
+	PlayerUpdate,
 	RegisteredPlayer,
 	CompleteRegistration,
 	ReplacePlayerRequest,
@@ -79,6 +82,19 @@ export class AdminRegistrationController {
 		}
 		this.logger.log("Player search query: {query}", obj)
 		return this.adminRegisterService.searchPlayers(obj)
+	}
+
+	@Get("players/:playerId")
+	async getPlayer(@Param("playerId", ParseIntPipe) playerId: number): Promise<Player> {
+		return this.adminRegisterService.findPlayerById(playerId)
+	}
+
+	@Patch("players/:playerId")
+	async updatePlayer(
+		@Param("playerId", ParseIntPipe) playerId: number,
+		@Body() body: PlayerUpdate,
+	): Promise<Player> {
+		return this.adminRegisterService.updatePlayer(playerId, body)
 	}
 
 	@Get(":eventId/groups/search")

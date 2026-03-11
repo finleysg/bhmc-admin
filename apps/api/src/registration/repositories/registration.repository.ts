@@ -112,8 +112,13 @@ export class RegistrationRepository {
 		return results.map((r) => r.player)
 	}
 
-	async updatePlayer(playerId: number, data: Partial<PlayerInsert>): Promise<PlayerRow> {
-		await this.drizzle.db.update(player).set(data).where(eq(player.id, playerId))
+	async updatePlayer(
+		playerId: number,
+		data: Partial<PlayerInsert>,
+		tx?: MySql2Database,
+	): Promise<PlayerRow> {
+		const db = tx ?? this.drizzle.db
+		await db.update(player).set(data).where(eq(player.id, playerId))
 		return this.findPlayerById(playerId)
 	}
 

@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm"
+import type { MySql2Database } from "drizzle-orm/mysql2"
 
 import { Inject, Injectable } from "@nestjs/common"
 
@@ -25,5 +26,14 @@ export class AuthUserRepository {
 	async create(data: AuthUserInsert): Promise<number> {
 		const [result] = await this.drizzle.db.insert(authUser).values(data)
 		return Number(result.insertId)
+	}
+
+	async update(
+		id: number,
+		data: Partial<Pick<AuthUserInsert, "firstName" | "lastName" | "email" | "username">>,
+		tx?: MySql2Database,
+	): Promise<void> {
+		const db = tx ?? this.drizzle.db
+		await db.update(authUser).set(data).where(eq(authUser.id, id))
 	}
 }

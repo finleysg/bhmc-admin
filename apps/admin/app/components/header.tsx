@@ -7,7 +7,10 @@ import ThemeToggle from "./theme-toggle"
 function getTitle(pathname: string): string {
 	const segments = pathname.split("/").filter(Boolean)
 	if (segments.length === 0) return "BHMC Administration"
-	if (segments[0] === "club") return "Club Administration"
+	if (segments[0] === "club") {
+		if (segments.length >= 2 && segments[1] === "players") return "Player Management"
+		return "Club Administration"
+	}
 	if (segments[0] === "events") {
 		if (segments.length === 1) return "Event Administration"
 		if (segments.length >= 3) {

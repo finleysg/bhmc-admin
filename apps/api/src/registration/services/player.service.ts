@@ -13,6 +13,7 @@ import {
 	Player,
 	PlayerMap,
 	PlayerRecord,
+	PlayerUpdate,
 	RegistrationSlot,
 	RegistrationStatusChoices,
 	PlayerQuery,
@@ -28,6 +29,7 @@ import {
 	SwapPlayersResponse,
 } from "@repo/domain/types"
 
+import { AuthUserRepository } from "../../auth"
 import { CoursesService } from "../../courses"
 import { toCourse, toHole } from "../../courses/mappers"
 import {
@@ -68,6 +70,7 @@ export class PlayerService {
 		@Inject(RegistrationBroadcastService) private readonly broadcast: RegistrationBroadcastService,
 		@Inject(MailService) private readonly mail: MailService,
 		@Inject(CoursesService) private readonly courses: CoursesService,
+		@Inject(AuthUserRepository) private readonly authUserRepository: AuthUserRepository,
 	) {}
 
 	/** Find a player by id */
@@ -286,6 +289,45 @@ export class PlayerService {
 	/** Update player's Golf Genius ID. */
 	async updatePlayerGgId(playerId: number, ggId: string): Promise<Player> {
 		const row = await this.repository.updatePlayer(playerId, { ggId })
+		return toPlayer(row)
+	}
+
+	/** Update editable player fields. */
+	async updatePlayer(playerId: number, data: PlayerUpdate): Promise<Player> {
+		const playerRow = await this.repository.findPlayerById(playerId)
+		const dbData: Record<string, unknown> = { ...data }
+		if (data.isMember !== undefined) {
+			dbData.isMember = data.isMember ? 1 : 0
+		}
+
+		const hasAuthFields =
+			data.firstName !== undefined || data.lastName !== undefined || data.email !== undefined
+		const userId = playerRow.userId
+
+		if (userId && hasAuthFields) {
+			const authData: Partial<{
+				firstName: string
+				lastName: string
+				email: string
+				username: string
+			}> = {}
+			if (data.firstName !== undefined) authData.firstName = data.firstName
+			if (data.lastName !== undefined) authData.lastName = data.lastName
+			if (data.email !== undefined) {
+				authData.email = data.email
+				authData.username = data.email
+			}
+
+			await this.drizzle.db.transaction(async (tx) => {
+				await this.repository.updatePlayer(playerId, dbData, tx)
+				await this.authUserRepository.update(userId, authData, tx)
+			})
+
+			const row = await this.repository.findPlayerById(playerId)
+			return toPlayer(row)
+		}
+
+		const row = await this.repository.updatePlayer(playerId, dbData)
 		return toPlayer(row)
 	}
 
