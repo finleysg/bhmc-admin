@@ -1,7 +1,7 @@
 import structlog
 from django.db import IntegrityError
 from rest_framework import status
-from rest_framework.exceptions import NotAuthenticated, NotFound, ValidationError
+from rest_framework.exceptions import MethodNotAllowed, NotAuthenticated, NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler, set_rollback
 
@@ -30,6 +30,8 @@ def custom_exception_handler(exc, context):
     elif isinstance(exc, NotAuthenticated):
         pass
     elif isinstance(exc, NotFound):
+        pass
+    elif isinstance(exc, MethodNotAllowed):
         pass
     else:
         logger.error(exc, exc_info=True)
