@@ -22,6 +22,7 @@ function getTitle(pathname: string): string {
 			}
 			if (subpage === "players") return "Player Management"
 			if (subpage === "payouts") return "Payout Status"
+			if (subpage === "copy") return "Copy Event"
 		}
 		return "Event Administration"
 	}
