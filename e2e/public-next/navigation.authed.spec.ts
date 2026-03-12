@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test"
 
-test.describe("Authenticated Navigation", () => {
+test.describe.serial("Authenticated Navigation", () => {
 	test("sidebar shows member links", async ({ page }) => {
 		await page.goto("/")
 

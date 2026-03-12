@@ -7,7 +7,7 @@ const DJANGO_URL = "http://localhost:8000"
 type PlayerRow = { email: string }
 type AuthUserRow = { email: string; username: string }
 
-test.describe("player email sync", () => {
+test.describe.serial("player email sync", () => {
 	const member = getMember(1)!
 	let originalEmail: string
 

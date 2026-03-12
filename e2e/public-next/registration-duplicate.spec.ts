@@ -62,7 +62,7 @@ test("member 10 completes registration", async ({ page }) => {
 	await page.waitForURL("**/payment", { timeout: 10_000 })
 })
 
-test("adding already-registered player shows conflict error", async ({ page }) => {
+test("search excludes already-registered players", async ({ page }) => {
 	test.setTimeout(90_000)
 	const member10 = getMember(10)!
 	const member11 = getMember(11)!
@@ -89,7 +89,7 @@ test("adding already-registered player shows conflict error", async ({ page }) =
 	await page.waitForURL("**/register", { timeout: 10_000 })
 	await expect(page.getByText("Players and Fees")).toBeVisible({ timeout: 10_000 })
 
-	// WHEN: Member 11 searches for member 10 via the player picker
+	// WHEN: Member 11 searches for member 10 (already registered) via the player picker
 	const searchInput = page.getByRole("combobox")
 	const searchResponsePromise = page.waitForResponse((resp) =>
 		resp.url().includes("/api/players/search"),
@@ -98,21 +98,7 @@ test("adding already-registered player shows conflict error", async ({ page }) =
 	const searchResponse = await searchResponsePromise
 	expect(searchResponse.ok()).toBe(true)
 
-	// Wait for search results to appear in the a11y tree
-	const playerOption = page.getByRole("option").first()
-	await expect(playerOption).toBeVisible({ timeout: 10_000 })
-
-	// Monitor the PATCH request that fires when selecting a player
-	const patchPromise = page.waitForResponse(
-		(resp) => resp.url().includes("/api/registration/slots/"),
-		{ timeout: 10_000 },
-	)
-
-	await playerOption.click()
-
-	const patchResponse = await patchPromise
-	expect(patchResponse.status()).toBe(409)
-
-	// THEN: Error alert appears with conflict message
-	await expect(page.getByText("already signed up")).toBeVisible({ timeout: 10_000 })
+	// THEN: Already-registered player is excluded from search results
+	await expect(page.getByText("No players found.")).toBeVisible({ timeout: 10_000 })
+	await expect(page.getByRole("option")).toHaveCount(0)
 })
