@@ -1,5 +1,11 @@
 import type { EventFee, FeeType } from "../types"
-import { calculateFeeAmount, evaluateRestriction, isFeeApplicable } from "../registration/fee-utils"
+import {
+	calculateFeeAmount,
+	evaluateRestriction,
+	isFeeApplicable,
+	isSkinsFee,
+	isTeamFeeAllowed,
+} from "../registration/fee-utils"
 import type { FeePlayer } from "../registration/fee-utils"
 
 function makeFeeType(overrides: Partial<FeeType> = {}): FeeType {
@@ -190,5 +196,55 @@ describe("isFeeApplicable", () => {
 		})
 		const player = makePlayer({ isMember: true, birthDate: "1990-01-15" })
 		expect(isFeeApplicable(fee, player)).toBe(false)
+	})
+})
+
+describe("isSkinsFee", () => {
+	it("returns true when fee type name contains 'skins'", () => {
+		const fee = makeEventFee({ fee_type: makeFeeType({ name: "Skins" }) })
+		expect(isSkinsFee(fee)).toBe(true)
+	})
+
+	it("is case insensitive", () => {
+		const fee = makeEventFee({ fee_type: makeFeeType({ name: "Team Skins" }) })
+		expect(isSkinsFee(fee)).toBe(true)
+	})
+
+	it("returns false for non-skins fees", () => {
+		const fee = makeEventFee({ fee_type: makeFeeType({ name: "Green Fee" }) })
+		expect(isSkinsFee(fee)).toBe(false)
+	})
+})
+
+describe("isTeamFeeAllowed", () => {
+	const skinsFee = makeEventFee({ fee_type: makeFeeType({ name: "Skins" }) })
+	const greenFee = makeEventFee({ fee_type: makeFeeType({ name: "Green Fee" }) })
+
+	it("allows non-skins fees for any slot", () => {
+		expect(isTeamFeeAllowed(greenFee, "T", 1, 2)).toBe(true)
+	})
+
+	it("allows skins fees when skins type is individual", () => {
+		expect(isTeamFeeAllowed(skinsFee, "I", 1, 2)).toBe(true)
+	})
+
+	it("allows skins fees when skins type is null", () => {
+		expect(isTeamFeeAllowed(skinsFee, null, 1, 2)).toBe(true)
+	})
+
+	it("allows team skins for first player on team 1 (slot 0)", () => {
+		expect(isTeamFeeAllowed(skinsFee, "T", 0, 2)).toBe(true)
+	})
+
+	it("disallows team skins for second player on team 1 (slot 1)", () => {
+		expect(isTeamFeeAllowed(skinsFee, "T", 1, 2)).toBe(false)
+	})
+
+	it("allows team skins for first player on team 2 (slot 2)", () => {
+		expect(isTeamFeeAllowed(skinsFee, "T", 2, 2)).toBe(true)
+	})
+
+	it("disallows team skins for second player on team 2 (slot 3)", () => {
+		expect(isTeamFeeAllowed(skinsFee, "T", 3, 2)).toBe(false)
 	})
 })

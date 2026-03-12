@@ -180,6 +180,7 @@ export function shouldShowSignUpButton(
 		| "can_choose"
 		| "priority_signup_start"
 		| "signup_start"
+		| "signup_end"
 	>,
 	now: Date,
 ): boolean {
@@ -188,6 +189,12 @@ export function shouldShowSignUpButton(
 		event.registration_window === "past" ||
 		event.status === "C"
 	) {
+		return false
+	}
+
+	// Client-side guard: hide the button once signup_end has passed,
+	// even if the cached registration_window hasn't been refreshed yet.
+	if (event.signup_end && now >= new Date(event.signup_end)) {
 		return false
 	}
 
@@ -212,6 +219,7 @@ interface SignUpReasonContext {
 		| "can_choose"
 		| "priority_signup_start"
 		| "signup_start"
+		| "signup_end"
 		| "season"
 	>
 	isAuthenticated: boolean

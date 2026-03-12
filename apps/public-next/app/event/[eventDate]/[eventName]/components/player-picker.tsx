@@ -50,7 +50,14 @@ export function PlayerPicker({ eventId, onSelect, excludeIds = [] }: PlayerPicke
 				const params = new URLSearchParams({
 					pattern,
 					event_id: String(eventId),
+					exclude_registered: "true",
 				})
+				if (
+					clubEvent?.registration_type === RegistrationType.MembersOnly ||
+					clubEvent?.registration_type === RegistrationType.ReturningMembersOnly
+				) {
+					params.set("is_member", "true")
+				}
 				const response = await fetch(`/api/players/search?${params.toString()}`)
 				if (!response.ok) throw new Error("Search failed")
 				const data = (await response.json()) as SearchResult[]
@@ -61,7 +68,7 @@ export function PlayerPicker({ eventId, onSelect, excludeIds = [] }: PlayerPicke
 				setIsSearching(false)
 			}
 		},
-		[eventId, excludeIds],
+		[eventId, excludeIds, clubEvent?.registration_type],
 	)
 
 	useEffect(() => {

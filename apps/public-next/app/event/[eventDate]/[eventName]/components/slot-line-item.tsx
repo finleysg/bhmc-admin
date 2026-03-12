@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { useRegistration } from "@/lib/registration/registration-context"
-import { calculateFeeAmount, isFeeApplicable, type FeePlayer } from "@/lib/registration/fee-utils"
+import {
+	calculateFeeAmount,
+	isFeeApplicable,
+	isTeamFeeAllowed,
+	type FeePlayer,
+} from "@/lib/registration/fee-utils"
 import type { ServerRegistrationSlot } from "@/lib/registration/types"
 import type { EventFee } from "@/lib/types"
 
@@ -25,7 +30,9 @@ export function SlotLineItem({
 	onPickPlayer,
 	layout = "vertical",
 }: SlotLineItemProps) {
-	const { payment, existingFees, addFee, removeFee, removePlayer } = useRegistration()
+	const { payment, existingFees, addFee, removeFee, removePlayer, clubEvent } = useRegistration()
+	const skinsType = clubEvent?.skins_type ?? null
+	const teamSize = clubEvent?.team_size ?? 1
 
 	const player = slot.player
 	const feePlayer: FeePlayer | undefined = player
@@ -120,7 +127,8 @@ export function SlotLineItem({
 					{eventFees.map((eventFee) => {
 						const existing = isExistingFee(eventFee)
 						const selected = hasPaymentDetail(eventFee) || existing
-						const disabled = !player || existing || eventFee.is_required
+						const teamAllowed = isTeamFeeAllowed(eventFee, skinsType, slot.slot, teamSize)
+						const disabled = !player || existing || eventFee.is_required || !teamAllowed
 						const applicable = isFeeApplicable(eventFee, feePlayer)
 						const id = `fee-${slot.id}-${eventFee.id}`
 
@@ -182,7 +190,8 @@ export function SlotLineItem({
 				{eventFees.map((eventFee) => {
 					const existing = isExistingFee(eventFee)
 					const selected = hasPaymentDetail(eventFee) || existing
-					const disabled = !player || existing || eventFee.is_required
+					const teamAllowed = isTeamFeeAllowed(eventFee, skinsType, slot.slot, teamSize)
+					const disabled = !player || existing || eventFee.is_required || !teamAllowed
 					const applicable = isFeeApplicable(eventFee, feePlayer)
 					const amount = getFeeAmount(eventFee)
 					const id = `fee-${slot.id}-${eventFee.id}`

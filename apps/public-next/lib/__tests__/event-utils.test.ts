@@ -366,6 +366,45 @@ describe("shouldShowSignUpButton", () => {
 			expect(shouldShowSignUpButton(event, now)).toBe(false)
 		})
 	})
+
+	describe("client-side signup_end guard", () => {
+		it("returns false when now is past signup_end even if window says registration", () => {
+			const event = makeEvent({
+				can_choose: false,
+				registration_window: "registration",
+				signup_end: "2024-06-15T11:00:00",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(false)
+		})
+
+		it("returns true when now is before signup_end and window is registration", () => {
+			const event = makeEvent({
+				can_choose: false,
+				registration_window: "registration",
+				signup_end: "2024-06-15T13:00:00",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(true)
+		})
+
+		it("returns false for can_choose events past signup_end", () => {
+			const event = makeEvent({
+				can_choose: true,
+				registration_window: "registration",
+				signup_start: "2024-06-15T11:00:00",
+				signup_end: "2024-06-15T11:30:00",
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(false)
+		})
+
+		it("still works when signup_end is null", () => {
+			const event = makeEvent({
+				can_choose: false,
+				registration_window: "registration",
+				signup_end: null,
+			})
+			expect(shouldShowSignUpButton(event, now)).toBe(true)
+		})
+	})
 })
 
 describe("getSignUpUnavailableReason", () => {

@@ -99,6 +99,7 @@ export interface MovePlayersResponse {
 export interface DropPlayersRequest {
 	registrationId: number
 	slotIds: number[]
+	autoRefund?: boolean
 }
 
 /**

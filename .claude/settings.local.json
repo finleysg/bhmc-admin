@@ -63,14 +63,15 @@
 			"Bash(playwright-cli eval:*)",
 			"Bash(uv lock:*)",
 			"Bash(uv sync:*)",
-			"Bash(uv run:*)"
+			"Bash(uv run:*)",
+			"Bash(bash /tmp/test-hook.sh 2>&1)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],
 	"hooks": {
 		"PreToolUse": [
 			{
-				"matcher": "Bash",
+				"matcher": "Bash|Write",
 				"hooks": [
 					{
 						"type": "command",

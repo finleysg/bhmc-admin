@@ -238,21 +238,42 @@ export class RegistrationService {
 						.where(eq(registrationSlot.id, availableSlots[i].id))
 				}
 			} else {
-				// For non-canChoose events, assign players to existing empty slots
-				const emptySlots = regWithSlots.slots
+				// For non-canChoose events, fill existing empty slots first, then create new ones
+				const existingSlots = regWithSlots.slots
+				const emptySlots = existingSlots
 					.filter((s) => s.playerId === undefined)
 					.sort((a, b) => a.slot - b.slot)
 
-				if (playerIds.length > emptySlots.length) {
+				// Capacity check: total occupied + new players must not exceed group size
+				const occupiedCount = existingSlots.filter((s) => s.playerId !== undefined).length
+				const maxGroupSize = event.maximumSignupGroupSize ?? event.groupSize ?? 0
+				if (occupiedCount + playerIds.length > maxGroupSize) {
 					throw new SlotOverflowError(registrationId, playerIds.length)
 				}
 
-				for (let i = 0; i < playerIds.length; i++) {
+				// Fill existing empty slots first
+				let i = 0
+				for (; i < Math.min(playerIds.length, emptySlots.length); i++) {
 					await this.repository.updateRegistrationSlot(
 						emptySlots[i].id,
 						{ playerId: playerIds[i] },
 						tx,
 					)
+				}
+
+				// Create new slots for remaining players (slots were deleted by a prior drop)
+				if (i < playerIds.length) {
+					const maxSlot = existingSlots.reduce((max, s) => Math.max(max, s.slot), -1)
+					for (let j = i; j < playerIds.length; j++) {
+						await tx.insert(registrationSlot).values({
+							eventId: regWithSlots.eventId,
+							playerId: playerIds[j],
+							registrationId,
+							status: RegistrationStatusChoices.PENDING,
+							startingOrder: maxSlot + 1 + (j - i),
+							slot: maxSlot + 1 + (j - i),
+						})
+					}
 				}
 			}
 		})

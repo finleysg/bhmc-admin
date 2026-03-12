@@ -58,7 +58,7 @@ export default function ManageDropPage() {
 			const response = await fetch(`/api/events/${clubEvent.id}/drop-players`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ registrationId: registration.id, slotIds }),
+				body: JSON.stringify({ registrationId: registration.id, slotIds, autoRefund: true }),
 			})
 			if (!response.ok) {
 				throw new Error("Failed to drop players")

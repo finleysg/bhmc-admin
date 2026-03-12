@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
 	const response = await fetchWithAuth({
 		request,
-		backendPath: `/registration/players/search`,
+		backendPath: `/registration/player-search`,
 	})
 
 	if (!response.ok) {

@@ -65,6 +65,11 @@ test("tee times: returns offset time for startingOrder > 0 with single split", (
 	expect(getGroupStartName(event, 1, 2)).toBe("11:16 AM")
 })
 
+test("tee times: returns raw start_time when it is not a parseable time", () => {
+	const event = makeEvent({ start_type: "TT", start_time: "1st and 2nd Swing" })
+	expect(getGroupStartName(event, 1, 0)).toBe("1st and 2nd Swing")
+})
+
 test("tee times: returns offset time with alternating splits", () => {
 	const event = makeEvent({ start_type: "TT", start_time: "11:00 AM", tee_time_splits: "8,10" })
 	// startingOrder 1 → offset = 8 → 11:08 AM

@@ -33,6 +33,21 @@ export function calculateFeeAmount(fee: EventFee, player?: FeePlayer): number {
 	return amount
 }
 
+export function isSkinsFee(eventFee: EventFee): boolean {
+	return eventFee.fee_type.name.toLowerCase().includes("skins")
+}
+
+export function isTeamFeeAllowed(
+	eventFee: EventFee,
+	skinsType: string | null,
+	slotIndex: number,
+	teamSize: number,
+): boolean {
+	if (!isSkinsFee(eventFee) || skinsType !== "T") return true
+	// Only the first player on each team can select team skins
+	return slotIndex % teamSize === 0
+}
+
 export function evaluateRestriction(restriction: string, player: FeePlayer): boolean {
 	const currentYear = new Date().getFullYear()
 	const isReturningMember = player.lastSeason === currentYear - 1

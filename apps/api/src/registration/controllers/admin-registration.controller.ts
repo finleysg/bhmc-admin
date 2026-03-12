@@ -178,6 +178,7 @@ export class AdminRegistrationController {
 		@Req() req: AuthenticatedRequest,
 	): Promise<DropPlayersResponse> {
 		const isAdmin = req.user.isStaff || req.user.isSuperuser
+		const shouldRefund = request.autoRefund ?? !isAdmin
 
 		// Non-admin users must be a member of the registration group
 		if (!isAdmin) {
@@ -185,17 +186,17 @@ export class AdminRegistrationController {
 		}
 
 		// Collect paid fees BEFORE the drop (drop detaches fees from slots)
-		const paidFees = isAdmin
-			? []
-			: await this.paymentsService.findPaidFeesBySlotIds(request.slotIds)
+		const paidFees = shouldRefund
+			? await this.paymentsService.findPaidFeesBySlotIds(request.slotIds)
+			: []
 
 		const droppedCount = await this.adminRegisterService.dropPlayers(
 			request.registrationId,
 			request.slotIds,
 		)
 
-		// Auto-refund for non-admin users
-		if (!isAdmin && paidFees.length > 0) {
+		// Auto-refund when requested (always for non-admin, opt-in for admin)
+		if (shouldRefund && paidFees.length > 0) {
 			try {
 				const refundRequests = buildRefundRequests(paidFees)
 				await this.refundService.processRefunds(refundRequests, req.user.id)
