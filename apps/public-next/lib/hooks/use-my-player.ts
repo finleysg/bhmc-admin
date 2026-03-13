@@ -29,7 +29,7 @@ export function useUpdateMyPlayer() {
 			const response = await fetch(`/api/players/me?id=${id}`, {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(data),
+				body: JSON.stringify({ id, ...(data as Record<string, unknown>) }),
 			})
 			if (!response.ok) {
 				const err = (await response.json()) as Record<string, unknown>

@@ -1,20 +1,22 @@
 import structlog
+from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.utils import timezone as tz
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from django.contrib.auth.models import User
 
 from courses.models import Course
 from documents.serializers import PhotoSerializer
 from events.serializers import EventFeeSerializer
+
 from .exceptions import (
+    CourseRequiredError,
     EventFullError,
     EventRegistrationNotOpenError,
-    CourseRequiredError,
-    PlayerConflictError, EventRegistrationWaveError,
+    EventRegistrationWaveError,
+    PlayerConflictError,
 )
-from .models import Player, Registration, RegistrationSlot, RegistrationFee, PlayerHandicap
+from .models import Player, PlayerHandicap, Registration, RegistrationFee, RegistrationSlot
 
 logger = structlog.getLogger(__name__)
 
@@ -37,7 +39,6 @@ class SimplePlayerSerializer(serializers.ModelSerializer):
 
 
 class PlayerSerializer(serializers.ModelSerializer):
-
     profile_picture = PhotoSerializer(read_only=True)
 
     class Meta:
@@ -75,27 +76,19 @@ class PlayerSerializer(serializers.ModelSerializer):
             if ghin.strip() == "":
                 ghin = None
             else:
-                exists = (
-                    Player.objects.filter(ghin=ghin).exclude(email=user.email).exists()
-                )
+                exists = Player.objects.filter(ghin=ghin).exclude(email=user.email).exists()
                 if exists:
                     raise ValidationError("ghin is already associated with a player")
 
         instance.first_name = validated_data.get("first_name", instance.first_name)
         instance.last_name = validated_data.get("last_name", instance.last_name)
         instance.email = validated_data.get("email", instance.email)
-        instance.phone_number = validated_data.get(
-            "phone_number", instance.phone_number
-        )
+        instance.phone_number = validated_data.get("phone_number", instance.phone_number)
         instance.ghin = ghin
         instance.tee = validated_data.get("tee", instance.tee)
         instance.birth_date = validated_data.get("birth_date", instance.birth_date)
-        instance.save_last_card = validated_data.get(
-            "save_last_card", instance.save_last_card
-        )
-        instance.profile_picture = validated_data.get(
-            "profile_picture", instance.profile_picture
-        )
+        instance.save_last_card = validated_data.get("save_last_card", instance.save_last_card)
+        instance.profile_picture = validated_data.get("profile_picture", instance.profile_picture)
         instance.save()
 
         user.email = validated_data.get("email", instance.email)
@@ -110,7 +103,10 @@ class PlayerSerializer(serializers.ModelSerializer):
         if view.action == "update":
             user = self.context.get("request").user
             player = Player.objects.get(email=user.email)
-            if player.id != view.request.data["id"]:
+            request_player_id = view.request.data.get("id")
+            if request_player_id is None:
+                raise ValidationError("Player id is required in the request body.")
+            if player.id != request_player_id:
                 # A player can only update self through the api
                 raise ValidationError("To update a player, use the admin website.")
 
@@ -118,7 +114,6 @@ class PlayerSerializer(serializers.ModelSerializer):
 
 
 class RegistrationFeeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = RegistrationFee
         fields = (
@@ -185,7 +180,6 @@ class UpdatableRegistrationSlotSerializer(serializers.ModelSerializer):
 
 
 class PaymentDetailSerializer(serializers.ModelSerializer):
-
     event_fee = EventFeeSerializer()
     registration_slot = RegistrationSlotSerializer()
 
@@ -199,7 +193,6 @@ class PaymentDetailSerializer(serializers.ModelSerializer):
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
-
     # course = CourseSerializer()
     slots = RegistrationSlotSerializer(many=True)
 
@@ -242,6 +235,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
                 hole_number = None
                 if event.start_type == "SG" and slots[0].get("hole"):
                     from courses.models import Hole
+
                     try:
                         hole = slots[0].get("hole")
                         hole_number = hole.hole_number
@@ -250,7 +244,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
                 validate_wave_is_available(event, slots[0].get("starting_order"), hole_number)
             validate_event_is_not_full(event)
 
-        return Registration.objects.create_and_reserve(user, player, event, course, slots, signed_up_by)
+        return Registration.objects.create_and_reserve(
+            user, player, event, course, slots, signed_up_by
+        )
 
     def update(self, instance, validated_data):
         logger.info("Updating a registration")
@@ -261,7 +257,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 
 class PlayerHandicapSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = PlayerHandicap
         fields = (
@@ -273,9 +268,7 @@ class PlayerHandicapSerializer(serializers.ModelSerializer):
 
 def validate_event_is_not_full(event):
     if event.registration_maximum is not None and event.registration_maximum != 0:
-        registrations = (
-            RegistrationSlot.objects.filter(event=event).filter(status="R").count()
-        )
+        registrations = RegistrationSlot.objects.filter(event=event).filter(status="R").count()
         if registrations >= event.registration_maximum:
             raise EventFullError()
 
@@ -297,21 +290,30 @@ def validate_course_for_event(event, course_id):
 
 def validate_wave_is_available(event, starting_order, hole_number=None):
     if event.registration_window == "priority" and event.can_choose and event.signup_waves:
-        this_wave = get_starting_wave(event, starting_order, hole_number) # wave based on the given starting order
-        current_wave = get_current_wave(event) # wave based on the current time
+        this_wave = get_starting_wave(
+            event, starting_order, hole_number
+        )  # wave based on the given starting order
+        current_wave = get_current_wave(event)  # wave based on the current time
         if this_wave > current_wave:
             raise EventRegistrationWaveError(this_wave)
 
 
 def get_current_wave(event):
-    if event.signup_waves is None or event.signup_waves <= 0 or event.priority_signup_start is None or event.signup_start is None:
+    if (
+        event.signup_waves is None
+        or event.signup_waves <= 0
+        or event.priority_signup_start is None
+        or event.signup_start is None
+    ):
         return 999
     now = tz.now()
     if now < event.priority_signup_start:
         return 0
     if now >= event.signup_start:
         return event.signup_waves + 1
-    priority_duration_minutes = (event.signup_start - event.priority_signup_start).total_seconds() / 60
+    priority_duration_minutes = (
+        event.signup_start - event.priority_signup_start
+    ).total_seconds() / 60
     if priority_duration_minutes <= 0:
         return event.signup_waves + 1
     wave_duration = priority_duration_minutes / event.signup_waves

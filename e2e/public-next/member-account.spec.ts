@@ -32,6 +32,40 @@ test.describe("Member Account", () => {
 		await expect(page.getByRole("button", { name: /edit/i }).first()).toBeVisible()
 	})
 
+	test("saving player info succeeds", async ({ page }) => {
+		await page.goto("/member/account")
+
+		await page.getByText("Player Profile").waitFor()
+
+		// Capture original phone number from view mode
+		const phoneRow = page.locator("dt", { hasText: "Phone" }).locator("..")
+		const originalPhone = await phoneRow.locator("dd").textContent()
+
+		// Enter edit mode
+		const editButton = page.getByRole("button", { name: /edit/i }).first()
+		await editButton.click()
+
+		const phoneInput = page.getByLabel("Phone Number")
+		await expect(phoneInput).toBeVisible()
+
+		// Toggle phone number to a different value and save
+		const testPhone = "612-555-0199"
+		const currentValue = await phoneInput.inputValue()
+		const newPhone = currentValue === testPhone ? "612-555-0100" : testPhone
+		await phoneInput.fill(newPhone)
+		await page.getByRole("button", { name: /save/i }).click()
+
+		// Verify we return to view mode (save succeeded)
+		await expect(editButton).toBeVisible({ timeout: 10_000 })
+
+		// Restore original value
+		await editButton.click()
+		await expect(phoneInput).toBeVisible()
+		await phoneInput.fill(originalPhone === "Not given" ? "" : (originalPhone ?? ""))
+		await page.getByRole("button", { name: /save/i }).click()
+		await expect(editButton).toBeVisible({ timeout: 10_000 })
+	})
+
 	test("password section renders with change button", async ({ page }) => {
 		await page.goto("/member/account")
 
