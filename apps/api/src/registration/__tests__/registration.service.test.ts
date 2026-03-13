@@ -651,24 +651,54 @@ describe("RegistrationService", () => {
 	})
 
 	describe("addPlayersToRegistration", () => {
-		it("throws SlotOverflowError when more players than empty slots (non-canChoose)", async () => {
+		it("throws SlotOverflowError when occupied + new players exceeds group size (non-canChoose)", async () => {
 			const { service, repository, eventsService } = createService()
 
-			// Mapper converts playerId: null → undefined
-			// So emptySlots will be empty, triggering SlotOverflowError
+			// 2 occupied slots, maxGroupSize=3, trying to add 2 → overflow (2 + 2 > 3)
 			const regFull = createRegistrationFull({
 				slots: [
-					createRegistrationSlotFull({ id: 1, playerId: 1 }),
-					createRegistrationSlotFull({ id: 2, playerId: null }), // Will be undefined after mapping
+					createRegistrationSlotFull({ id: 1, playerId: 1, slot: 0 }),
+					createRegistrationSlotFull({ id: 2, playerId: 2, slot: 1 }),
 				],
 			})
 
 			repository.findRegistrationFullById.mockResolvedValue(regFull)
-			eventsService.getEventById.mockResolvedValue({ canChoose: false })
+			eventsService.getEventById.mockResolvedValue({
+				canChoose: false,
+				maximumSignupGroupSize: 3,
+				groupSize: 3,
+			})
 
-			await expect(service.addPlayersToRegistration(1, [2, 3, 4], 1)).rejects.toThrow(
+			await expect(service.addPlayersToRegistration(1, [3, 4], 1)).rejects.toThrow(
 				SlotOverflowError,
 			)
+		})
+
+		it("creates new slots when adding players after drop (non-canChoose)", async () => {
+			const { service, repository, eventsService, mockTx } = createService()
+
+			// 2 occupied slots, no empty slots (dropped slots were deleted)
+			const regFull = createRegistrationFull({
+				slots: [
+					createRegistrationSlotFull({ id: 1, playerId: 1, slot: 0 }),
+					createRegistrationSlotFull({ id: 2, playerId: 2, slot: 1 }),
+				],
+			})
+
+			repository.findRegistrationFullById.mockResolvedValue(regFull)
+			eventsService.getEventById.mockResolvedValue({
+				canChoose: false,
+				maximumSignupGroupSize: 4,
+				groupSize: 4,
+			})
+
+			// findRegistrationFullById is called again after the transaction
+			repository.findRegistrationFullById.mockResolvedValue(regFull)
+
+			await service.addPlayersToRegistration(1, [3, 4], 1)
+
+			// Should have inserted 2 new slots via transaction
+			expect(mockTx.insert).toHaveBeenCalledTimes(2)
 		})
 
 		it("throws ForbiddenException when caller not group member", async () => {

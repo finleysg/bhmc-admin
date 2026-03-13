@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { WifiOff } from "lucide-react"
@@ -38,6 +38,39 @@ export function ReserveGrid({
 	const { sseConnected, sseCurrentWave, error, setError, clubEvent } = useRegistration()
 	const [selectedSlots, setSelectedSlots] = useState<ReserveSlot[]>([])
 	const [waveImminent, setWaveImminent] = useState(false)
+
+	// Derive selected IDs from state so selection survives table recreation (SSE updates)
+	const selectedIds = useMemo(() => new Set(selectedSlots.map((s) => s.id)), [selectedSlots])
+
+	// Reconcile selectedSlots when tables change (e.g. SSE delivers new slot objects).
+	// Drop any slots that are no longer available (taken by another user).
+	useEffect(() => {
+		if (selectedSlots.length === 0) return
+		const currentSlotMap = new Map<number, ReserveSlot>()
+		for (const t of tables) {
+			for (const g of t.groups) {
+				for (const s of g.slots) {
+					currentSlotMap.set(s.id, s)
+				}
+			}
+		}
+		const valid = selectedSlots.filter((s) => {
+			const current = currentSlotMap.get(s.id)
+			return current && current.status === RegistrationStatus.Available
+		})
+		if (valid.length !== selectedSlots.length) {
+			selectedSlots.forEach((s) => {
+				s.selected = false
+			})
+			const reconciled: ReserveSlot[] = []
+			for (const old of valid) {
+				const current = currentSlotMap.get(old.id)!
+				current.selected = true
+				reconciled.push(current)
+			}
+			setSelectedSlots(reconciled)
+		}
+	}, [tables]) // selectedSlots intentionally excluded — we read but conditionally update it
 
 	// Pulse "Opens at" labels 15 seconds before the next wave unlocks
 	useEffect(() => {
@@ -109,7 +142,7 @@ export function ReserveGrid({
 	const renderGroupActions = (group: ReserveGroup, table: ReserveTable) => {
 		const waveAvailable = sseCurrentWave !== null && sseCurrentWave >= group.wave
 		const hasOpenings = group.slots.some((s) => s.status === RegistrationStatus.Available)
-		const selectedCount = group.slots.filter((s) => s.selected).length
+		const selectedCount = group.slots.filter((s) => selectedIds.has(s.id)).length
 		const hasEnoughSlots = selectedCount >= minRequired
 		return (
 			<>
@@ -179,7 +212,7 @@ export function ReserveGrid({
 							key={slot.id}
 							slot={slot}
 							courseColor={table.course.color ?? undefined}
-							selected={slot.selected}
+							selected={selectedIds.has(slot.id)}
 							onSelect={canSelect ? (s) => handleSelect([s]) : undefined}
 							label={label}
 							pulse={pulse}

@@ -228,7 +228,7 @@ test("confirming drop calls POST API with slot IDs and navigates to manage", asy
 		expect(global.fetch).toHaveBeenCalledWith("/api/events/1/drop-players", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ registrationId: 42, slotIds: [102] }),
+			body: JSON.stringify({ registrationId: 42, slotIds: [102], autoRefund: true }),
 		})
 	})
 

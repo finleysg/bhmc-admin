@@ -70,6 +70,14 @@ export default function EventHubPage() {
 					disabled={false}
 					icon={"💰"}
 				/>
+
+				<LinkCard
+					title="Copy Event"
+					description="Copy this event to one or more new dates."
+					href={`/events/${eventId}/copy`}
+					disabled={false}
+					icon={"📋"}
+				/>
 			</div>
 		</PageLayout>
 	)

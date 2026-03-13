@@ -55,14 +55,24 @@ export class UserRegistrationController {
 
 	/**
 	 * Search players by name, email, or GHIN.
-	 * GET /registration/players/search?pattern=xyz
+	 * GET /registration/player-search?pattern=xyz&is_member=true&event_id=1&exclude_registered=true
 	 */
-	@Get("players/search")
-	async searchPlayers(@Query("pattern") pattern?: string): Promise<Player[]> {
+	@Get("player-search")
+	async searchPlayers(
+		@Query("pattern") pattern?: string,
+		@Query("is_member") isMember?: string,
+		@Query("event_id") eventId?: string,
+		@Query("exclude_registered") excludeRegistered?: string,
+	): Promise<Player[]> {
 		if (!pattern || pattern.length < 3) {
 			return []
 		}
-		return this.playerService.searchPlayers({ searchText: pattern })
+		return this.playerService.searchPlayers({
+			searchText: pattern,
+			isMember: isMember === undefined ? undefined : isMember === "true",
+			eventId: eventId ? Number(eventId) : undefined,
+			excludeRegistered: excludeRegistered === undefined ? undefined : excludeRegistered === "true",
+		})
 	}
 
 	/**

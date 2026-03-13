@@ -40,6 +40,9 @@ export function getGroupStartName(
 		return calculateStartingHole(startingHoleNumber, startingOrder)
 	} else {
 		const startingTime = parse(event.start_time!, "h:mm a", new Date(event.start_date))
+		if (isNaN(startingTime.getTime())) {
+			return event.start_time ?? ""
+		}
 		const splits = getTeeTimeSplits(event)
 		return calculateTeetime(startingTime, startingOrder, splits)
 	}

@@ -58,6 +58,8 @@ function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
 					label = "Club Documents"
 				} else if (segment === "photos") {
 					label = "Photos"
+				} else if (segment === "copy") {
+					label = "Copy Event"
 				} else if (segment === "settings") {
 					label = "Settings"
 				} else {

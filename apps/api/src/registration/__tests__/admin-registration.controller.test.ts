@@ -170,6 +170,60 @@ describe("AdminRegistrationController", () => {
 			expect(result).toEqual({ droppedCount: 2 })
 		})
 
+		it("admin user with autoRefund true: collects paid fees and processes refunds", async () => {
+			const { controller, playerService, paymentsService, refundService, registrationService } =
+				createController()
+			const user = createUser({ isStaff: true })
+			const req = { user } as any
+			const dropWithRefund = { ...dropRequest, autoRefund: true }
+
+			paymentsService.findPaidFeesBySlotIds.mockResolvedValue([{ id: 10, paymentId: 1 }])
+			playerService.dropPlayers.mockResolvedValue(2)
+			refundService.processRefunds.mockResolvedValue(undefined)
+
+			const result = await controller.dropPlayers(100, dropWithRefund, req)
+
+			expect(registrationService.findRegistrationById).not.toHaveBeenCalled()
+			expect(paymentsService.findPaidFeesBySlotIds).toHaveBeenCalledWith([101, 102])
+			expect(refundService.processRefunds).toHaveBeenCalledWith(
+				[{ paymentId: 1, registrationFeeIds: [10] }],
+				10,
+			)
+			expect(result).toEqual({ droppedCount: 2 })
+		})
+
+		it("admin user with autoRefund false: skips refund even when explicitly set", async () => {
+			const { controller, playerService, paymentsService, refundService } = createController()
+			const user = createUser({ isStaff: true })
+			const req = { user } as any
+			const dropNoRefund = { ...dropRequest, autoRefund: false }
+
+			playerService.dropPlayers.mockResolvedValue(2)
+
+			const result = await controller.dropPlayers(100, dropNoRefund, req)
+
+			expect(paymentsService.findPaidFeesBySlotIds).not.toHaveBeenCalled()
+			expect(refundService.processRefunds).not.toHaveBeenCalled()
+			expect(result).toEqual({ droppedCount: 2 })
+		})
+
+		it("non-admin user with autoRefund omitted: defaults to auto-refund", async () => {
+			const { controller, playerService, paymentsService, refundService, registrationService } =
+				createController()
+			const user = createUser()
+			const req = { user } as any
+
+			registrationService.findRegistrationById.mockResolvedValue({ id: 42 })
+			paymentsService.findPaidFeesBySlotIds.mockResolvedValue([{ id: 10, paymentId: 1 }])
+			playerService.dropPlayers.mockResolvedValue(1)
+			refundService.processRefunds.mockResolvedValue(undefined)
+
+			await controller.dropPlayers(100, dropRequest, req)
+
+			expect(paymentsService.findPaidFeesBySlotIds).toHaveBeenCalled()
+			expect(refundService.processRefunds).toHaveBeenCalled()
+		})
+
 		it("refund failure after successful drop: logs error, still returns droppedCount", async () => {
 			const { controller, playerService, paymentsService, refundService, registrationService } =
 				createController()
@@ -197,6 +251,71 @@ describe("AdminRegistrationController", () => {
 			)
 
 			await expect(controller.dropPlayers(100, dropRequest, req)).rejects.toThrow(
+				ForbiddenException,
+			)
+
+			expect(registrationService.findRegistrationById).toHaveBeenCalledWith(42, 5)
+		})
+	})
+
+	describe("replacePlayer", () => {
+		const replaceRequest = { slotId: 101, originalPlayerId: 1, replacementPlayerId: 2 }
+
+		it("non-admin user: validates ownership then replaces player", async () => {
+			const { controller, playerService, registrationService } = createController()
+			const user = createUser()
+			const req = { user } as any
+
+			registrationService.findSlotById.mockResolvedValue({ registrationId: 42 })
+			registrationService.findRegistrationById.mockResolvedValue({ id: 42 })
+			playerService.replacePlayer.mockResolvedValue({ success: true })
+
+			const result = await controller.replacePlayer(100, replaceRequest, req)
+
+			expect(registrationService.findSlotById).toHaveBeenCalledWith(101)
+			expect(registrationService.findRegistrationById).toHaveBeenCalledWith(42, 1)
+			expect(playerService.replacePlayer).toHaveBeenCalledWith(100, replaceRequest)
+			expect(result).toEqual({ success: true })
+		})
+
+		it("admin user: skips ownership check and replaces player", async () => {
+			const { controller, playerService, registrationService } = createController()
+			const user = createUser({ isStaff: true })
+			const req = { user } as any
+
+			playerService.replacePlayer.mockResolvedValue({ success: true })
+
+			const result = await controller.replacePlayer(100, replaceRequest, req)
+
+			expect(registrationService.findSlotById).not.toHaveBeenCalled()
+			expect(registrationService.findRegistrationById).not.toHaveBeenCalled()
+			expect(playerService.replacePlayer).toHaveBeenCalledWith(100, replaceRequest)
+			expect(result).toEqual({ success: true })
+		})
+
+		it("non-admin with slot not in registration: throws ForbiddenException", async () => {
+			const { controller, registrationService } = createController()
+			const user = createUser()
+			const req = { user } as any
+
+			registrationService.findSlotById.mockResolvedValue({ registrationId: null })
+
+			await expect(controller.replacePlayer(100, replaceRequest, req)).rejects.toThrow(
+				ForbiddenException,
+			)
+		})
+
+		it("non-admin ownership failure: throws ForbiddenException", async () => {
+			const { controller, registrationService } = createController()
+			const user = createUser({ playerId: 5 })
+			const req = { user } as any
+
+			registrationService.findSlotById.mockResolvedValue({ registrationId: 42 })
+			registrationService.findRegistrationById.mockRejectedValue(
+				new ForbiddenException("Not authorized"),
+			)
+
+			await expect(controller.replacePlayer(100, replaceRequest, req)).rejects.toThrow(
 				ForbiddenException,
 			)
 
