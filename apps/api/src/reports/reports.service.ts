@@ -1,6 +1,7 @@
 import { and, eq, isNotNull, sql } from "drizzle-orm"
 
 import { Inject, Injectable } from "@nestjs/common"
+import { toLocalDatetime } from "../common/datetime"
 import { getAge, getFullName, getPlayerStartName, getPlayerTeamName } from "@repo/domain/functions"
 import {
 	EventReportRow,
@@ -322,7 +323,7 @@ export class ReportsService {
 				fullName: slot.fullName,
 				email: slot.email || "",
 				signedUpBy: slot.signedUpBy || "",
-				signupDate: slot.signupDate?.split(" ")[0] || "",
+				signupDate: slot.signupDate ? toLocalDatetime(slot.signupDate) : "",
 			}
 			for (const fee of slot.fees) {
 				row[fee.name] = fee.amount
@@ -355,7 +356,7 @@ export class ReportsService {
 				fullName: slot.fullName,
 				email: slot.email || "",
 				signedUpBy: slot.signedUpBy || "",
-				signupDate: slot.signupDate?.split(" ")[0] || "",
+				signupDate: slot.signupDate ? toLocalDatetime(slot.signupDate) : "",
 				type: lastSeasonMemberIds.has(slot.playerId) ? "Returning" : "New",
 				notes: slot.notes || "",
 			}

@@ -37,6 +37,23 @@ export function fromMysqlDatetime(mysql: string): string {
  * Drizzle with `mode: "string"` passes values through without conversion,
  * so we must format them before writing.
  */
+/**
+ * Convert a raw MySQL datetime string (UTC) to a local date+time string
+ * in the given timezone, formatted as "YYYY-MM-DD h:mm AM/PM".
+ */
+export function toLocalDatetime(mysql: string, tz = "America/Chicago"): string {
+	const iso = fromMysqlDatetime(mysql)
+	const dt = new Date(iso)
+	const datePart = dt.toLocaleDateString("en-CA", { timeZone: tz })
+	const timePart = dt.toLocaleTimeString("en-US", {
+		timeZone: tz,
+		hour: "numeric",
+		minute: "2-digit",
+		hour12: true,
+	})
+	return `${datePart} ${timePart}`
+}
+
 export function toMysqlDatetime(iso: string): string {
 	const date = new Date(iso)
 	if (isNaN(date.getTime())) {
