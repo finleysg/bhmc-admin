@@ -171,6 +171,8 @@ DJOSER = {
 }
 LOGIN_REDIRECT_URL = "/"
 
+APP_LOG_LEVEL = "INFO"
+
 # Logging
 LOGGING = {
     "version": 1,
@@ -216,23 +218,23 @@ LOGGING = {
         },
         "core": {
             "handlers": ["console", "flat_line_file"],
-            "level": "INFO",
+            "level": APP_LOG_LEVEL,
         },
         "damcup": {
             "handlers": ["console", "flat_line_file"],
-            "level": "INFO",
+            "level": APP_LOG_LEVEL,
         },
         "payments": {
             "handlers": ["console", "flat_line_file"],
-            "level": "INFO",
+            "level": APP_LOG_LEVEL,
         },
         "register": {
             "handlers": ["console", "flat_line_file"],
-            "level": "INFO",
+            "level": APP_LOG_LEVEL,
         },
         "scores": {
             "handlers": ["console", "flat_line_file"],
-            "level": "INFO",
+            "level": APP_LOG_LEVEL,
         },
     },
 }

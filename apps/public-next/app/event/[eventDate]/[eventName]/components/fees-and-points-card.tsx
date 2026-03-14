@@ -17,6 +17,7 @@ export async function FeesAndPointsCard({ event }: FeesAndPointsCardProps) {
 		try {
 			const slots = await fetchDjango<RegistrationSlot[]>(
 				`/registration-slots/?event_id=${event.id}`,
+				{ tags: [`event-slots-${event.id}`] },
 			)
 			openSpots = computeOpenSpots(event, slots)
 		} catch {

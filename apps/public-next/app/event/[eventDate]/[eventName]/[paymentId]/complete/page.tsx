@@ -52,13 +52,21 @@ export default function CompletePage() {
 	useEffect(() => {
 		if (intent?.status === "succeeded" && clubEvent?.id) {
 			const tag = `event-registrations-${clubEvent.id}`
+			const slotsTag = `event-slots-${clubEvent.id}`
 			// Brief delay to allow the Stripe webhook to update slot statuses
 			const timer = setTimeout(() => {
-				fetch("/api/revalidate", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ tag }),
-				})
+				Promise.all([
+					fetch("/api/revalidate", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ tag }),
+					}),
+					fetch("/api/revalidate", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ tag: slotsTag }),
+					}),
+				])
 					.then(() => setRevalidated(true))
 					.catch(() => setRevalidated(true))
 			}, 1500)

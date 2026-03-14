@@ -68,6 +68,13 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
 			} else {
 				// Fallback to original message when available
 				message = JSON.stringify(error)
+				this.posthog?.captureException(
+					new Error(
+						`Unhandled MySQL error: ${error.code ?? error.errno ?? "unknown"} – ${error.sqlMessage ?? message}`,
+					),
+					undefined,
+					{ app: "api" },
+				)
 			}
 
 			// Collect details for logging and (in dev) for the response body

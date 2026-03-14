@@ -24,8 +24,13 @@ export function CourseScorecard({
 	const showGross = scoreType === "gross" || scoreType === "both"
 	const rounds = showGross ? grossRounds : netRounds
 
-	const averageScores = calculateAverageScores(rounds, holes)
-	const bestScores = calculateBestScores(rounds, holes)
+	const isBoth = scoreType === "both"
+	const averageScores = !isBoth ? calculateAverageScores(rounds, holes) : undefined
+	const bestScores = !isBoth ? calculateBestScores(rounds, holes) : undefined
+	const grossAverageScores = isBoth ? calculateAverageScores(grossRounds, holes) : undefined
+	const grossBestScores = isBoth ? calculateBestScores(grossRounds, holes) : undefined
+	const netAverageScores = isBoth ? calculateAverageScores(netRounds, holes) : undefined
+	const netBestScores = isBoth ? calculateBestScores(netRounds, holes) : undefined
 
 	return (
 		<Card className="pt-0 overflow-hidden">
@@ -45,6 +50,10 @@ export function CourseScorecard({
 					scoreType={scoreType}
 					averageScores={averageScores}
 					bestScores={bestScores}
+					grossAverageScores={grossAverageScores}
+					grossBestScores={grossBestScores}
+					netAverageScores={netAverageScores}
+					netBestScores={netBestScores}
 				/>
 			</CardContent>
 		</Card>

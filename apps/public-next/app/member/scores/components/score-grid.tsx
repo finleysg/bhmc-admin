@@ -78,10 +78,10 @@ function RoundScores({ round, scoreType }: { round: Round; scoreType: string }) 
 	)
 }
 
-function AverageRow({ scores }: { scores: ScoreByHole[] }) {
+function AverageRow({ scores, label = "Average" }: { scores: ScoreByHole[]; label?: string }) {
 	return (
 		<div className="score-row">
-			<div className="score-label">Average</div>
+			<div className="score-label">{label}</div>
 			<div className="score-cells">
 				{scores.map((score) => (
 					<AverageScoreCell key={score.hole.id} score={score} />
@@ -92,10 +92,10 @@ function AverageRow({ scores }: { scores: ScoreByHole[] }) {
 	)
 }
 
-function BestBallRow({ scores }: { scores: ScoreByHole[] }) {
+function BestBallRow({ scores, label = "Best Ball" }: { scores: ScoreByHole[]; label?: string }) {
 	return (
 		<div className="score-row">
-			<div className="score-label">Best Ball</div>
+			<div className="score-label">{label}</div>
 			<div className="score-cells">
 				{scores.map((score) => (
 					<HoleScoreCell key={score.hole.id} score={score} />
@@ -111,8 +111,12 @@ interface ScoreGridProps {
 	grossRounds: Round[]
 	netRounds: Round[]
 	scoreType: "gross" | "net" | "both"
-	averageScores: ScoreByHole[]
-	bestScores: ScoreByHole[]
+	averageScores?: ScoreByHole[]
+	bestScores?: ScoreByHole[]
+	grossAverageScores?: ScoreByHole[]
+	grossBestScores?: ScoreByHole[]
+	netAverageScores?: ScoreByHole[]
+	netBestScores?: ScoreByHole[]
 }
 
 export function ScoreGrid({
@@ -122,6 +126,10 @@ export function ScoreGrid({
 	scoreType,
 	averageScores,
 	bestScores,
+	grossAverageScores,
+	grossBestScores,
+	netAverageScores,
+	netBestScores,
 }: ScoreGridProps) {
 	const showGross = scoreType === "gross" || scoreType === "both"
 	const rounds = showGross ? grossRounds : netRounds
@@ -152,8 +160,19 @@ export function ScoreGrid({
 						/>
 					))}
 			<div className="my-2 border-t" />
-			<AverageRow scores={averageScores} />
-			<BestBallRow scores={bestScores} />
+			{scoreType === "both" ? (
+				<>
+					<AverageRow scores={grossAverageScores!} label="Avg (Gross)" />
+					<AverageRow scores={netAverageScores!} label="Avg (Net)" />
+					<BestBallRow scores={grossBestScores!} label="Best (Gross)" />
+					<BestBallRow scores={netBestScores!} label="Best (Net)" />
+				</>
+			) : (
+				<>
+					<AverageRow scores={averageScores!} />
+					<BestBallRow scores={bestScores!} />
+				</>
+			)}
 		</div>
 	)
 }
