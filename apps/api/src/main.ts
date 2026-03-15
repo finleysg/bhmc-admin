@@ -7,7 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, "..", envFile) })
 import cookieParser from "cookie-parser"
 import type { PostHog } from "posthog-node"
 
-import { LogLevel } from "@nestjs/common"
+import { Logger, LogLevel } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
 
 import { AppModule } from "./app.module"
@@ -31,6 +31,7 @@ async function bootstrap() {
 		logger: enabledLevels.length > 0 ? enabledLevels : false,
 		rawBody: true,
 	})
+	const logger = new Logger("CORS")
 	const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001
 	const allowedOrigins = (
 		process.env.ALLOWED_ORIGINS || "http://localhost:3000,http://localhost:3100"
@@ -46,7 +47,8 @@ async function bootstrap() {
 			if (!origin || allowedOrigins.includes(origin)) {
 				callback(null, true)
 			} else {
-				callback(new Error("Not allowed by CORS: " + origin))
+				logger.warn(`CORS rejected origin: ${origin}`)
+				callback(null, false)
 			}
 		},
 		credentials: true,
