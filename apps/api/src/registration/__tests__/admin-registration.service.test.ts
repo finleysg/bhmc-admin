@@ -8,7 +8,7 @@ import {
 	type DjangoUser,
 } from "@repo/domain/types"
 
-import { SlotConflictError, EventFullError } from "../errors"
+import { SlotConflictError } from "../errors"
 import { AdminRegistrationService } from "../services/admin-registration.service"
 
 jest.mock("@repo/domain/functions", () => ({
@@ -469,30 +469,30 @@ describe("AdminRegistrationService", () => {
 			expect(drizzle.mockTx.insert).toHaveBeenCalled()
 		})
 
-		it("throws EventFullError when exceeds registrationMaximum capacity", async () => {
+		it("allows admin to exceed registrationMaximum capacity", async () => {
 			const { service, eventsService, repository, drizzle } = createService()
 			const event = createCompleteClubEvent({
 				canChoose: false,
 				registrationMaximum: 2,
 			})
 			const dto = createAdminRegistration({
-				slots: [
-					{ slotId: 1, playerId: 1, feeIds: [1] },
-					{ slotId: 2, playerId: 2, feeIds: [1] },
-					{ slotId: 3, playerId: 3, feeIds: [1] },
-				],
+				slots: [{ slotId: 1, playerId: 1, feeIds: [1] }],
 			})
 
 			eventsService.getCompleteClubEventById.mockResolvedValue(event)
-			repository.findPlayersByIds.mockResolvedValue([
-				createPlayerRow(),
-				createPlayerRow({ id: 2 }),
-				createPlayerRow({ id: 3 }),
-			])
+			repository.findPlayersByIds.mockResolvedValue([createPlayerRow()])
 			// Return 2 already-locked slots (at capacity)
 			drizzle.mockTx.for.mockResolvedValue([{ id: 1 }, { id: 2 }])
+			drizzle.mockTx.select.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.from.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.where.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.insert.mockReturnValue(drizzle.mockTx)
+			drizzle.mockTx.values.mockResolvedValue([{ insertId: 1 }, { insertId: 2 }])
+			repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
 
-			await expect(service.createAdminRegistration(100, dto)).rejects.toThrow(EventFullError)
+			await service.createAdminRegistration(100, dto)
+
+			expect(drizzle.mockTx.insert).toHaveBeenCalled()
 		})
 	})
 

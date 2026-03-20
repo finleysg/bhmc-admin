@@ -31,7 +31,7 @@ import { MailService } from "../../mail/mail.service"
 import { toCompleteRegistration, toPayment, toPlayer } from "../mappers"
 import { RegistrationRepository } from "../repositories/registration.repository"
 import { RegistrationBroadcastService } from "./registration-broadcast.service"
-import { EventFullError, SlotConflictError } from "../errors"
+import { SlotConflictError } from "../errors"
 import { DjangoAuthService } from "../../auth"
 import { CoursesService } from "../../courses"
 import { PaymentsRepository } from "../repositories/payments.repository"
@@ -414,29 +414,6 @@ export class AdminRegistrationService {
 		let paymentId = 0
 
 		await this.drizzle.db.transaction(async (tx) => {
-			// Lock all reserved/pending/awaiting slots for this event
-			const lockedSlots = await tx
-				.select({ id: registrationSlot.id })
-				.from(registrationSlot)
-				.where(
-					and(
-						eq(registrationSlot.eventId, event.id),
-						inArray(registrationSlot.status, [
-							RegistrationStatusChoices.PENDING,
-							RegistrationStatusChoices.AWAITING_PAYMENT,
-							RegistrationStatusChoices.RESERVED,
-						]),
-					),
-				)
-				.for("update")
-
-			// Capacity check
-			if (event.registrationMaximum) {
-				if (lockedSlots.length + slotAmounts.length > event.registrationMaximum) {
-					throw new EventFullError()
-				}
-			}
-
 			// If this user already started a registration, create a new one
 			// and let the system cleanup process deal with a stale registration
 			const [existing] = await tx
