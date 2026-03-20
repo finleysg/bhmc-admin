@@ -316,6 +316,7 @@ export function RegistrationProvider({
 		},
 		onSettled: () => {
 			void queryClient.invalidateQueries({ queryKey: ["registration"] })
+			void queryClient.invalidateQueries({ queryKey: ["player-registration"] })
 			void queryClient.invalidateQueries({
 				queryKey: ["event-registrations", state.clubEvent?.id],
 			})

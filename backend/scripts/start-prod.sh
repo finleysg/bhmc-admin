@@ -14,7 +14,7 @@ uv run python manage.py collectstatic --noinput
 exec uv run gunicorn bhmc.wsgi:application \
   --chdir /app \
   --bind 0.0.0.0:8000 \
-  --workers 2 \
+  --workers 5 \
   --timeout 120 \
   --access-logfile - \
   --error-logfile -

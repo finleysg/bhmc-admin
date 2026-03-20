@@ -20,9 +20,10 @@ import type { ClubEventDetail } from "@/lib/types"
 
 interface RegistrationActionsProps {
 	event: ClubEventDetail
+	isEventFull?: boolean
 }
 
-export function RegistrationActions({ event }: RegistrationActionsProps) {
+export function RegistrationActions({ event, isEventFull }: RegistrationActionsProps) {
 	const { isAuthenticated } = useAuth()
 	const { data: player } = useMyPlayer()
 	const { data: registrationData } = usePlayerRegistration(event.id, player?.id)
@@ -34,7 +35,13 @@ export function RegistrationActions({ event }: RegistrationActionsProps) {
 		<div className="flex gap-2">
 			<PortalButton event={event} />
 			<PlayersButton event={event} eventUrl={eventUrl} />
-			<SignUpButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} player={player} />
+			<SignUpButton
+				event={event}
+				hasSignedUp={hasSignedUp}
+				eventUrl={eventUrl}
+				player={player}
+				isEventFull={isEventFull}
+			/>
 			{isAuthenticated && (
 				<ManageButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} />
 			)}
@@ -59,15 +66,22 @@ function SignUpButton({
 	hasSignedUp,
 	eventUrl,
 	player,
+	isEventFull,
 }: {
 	event: ClubEventDetail
 	hasSignedUp: boolean
 	eventUrl: string
 	player?: { last_season?: number | null }
+	isEventFull?: boolean
 }) {
 	const { isAuthenticated } = useAuth()
 
-	if (hasSignedUp || !isAuthenticated || !shouldShowSignUpButton(event, new Date())) {
+	if (
+		hasSignedUp ||
+		!isAuthenticated ||
+		isEventFull ||
+		!shouldShowSignUpButton(event, new Date())
+	) {
 		return null
 	}
 
@@ -128,7 +142,13 @@ function ManageButton({
 	)
 }
 
-export function RegistrationBanner({ event }: { event: ClubEventDetail }) {
+export function RegistrationBanner({
+	event,
+	isEventFull,
+}: {
+	event: ClubEventDetail
+	isEventFull?: boolean
+}) {
 	const { isAuthenticated } = useAuth()
 	const { data: player } = useMyPlayer()
 	const { data: registrationData } = usePlayerRegistration(event.id, player?.id)
@@ -139,6 +159,7 @@ export function RegistrationBanner({ event }: { event: ClubEventDetail }) {
 		isAuthenticated,
 		hasSignedUp,
 		playerLastSeason: player?.last_season,
+		isEventFull,
 	})
 
 	if (!reason) return null

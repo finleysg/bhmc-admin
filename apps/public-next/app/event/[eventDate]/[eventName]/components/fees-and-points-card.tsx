@@ -6,18 +6,19 @@ import type { ClubEventDetail, RegistrationSlot } from "@/lib/types"
 
 interface FeesAndPointsCardProps {
 	event: ClubEventDetail
+	openSpots?: number
 }
 
-export async function FeesAndPointsCard({ event }: FeesAndPointsCardProps) {
+export async function FeesAndPointsCard({ event, openSpots: precomputedSpots }: FeesAndPointsCardProps) {
 	const fees = event.fees ?? []
 
-	let openSpots = -1
+	let openSpots = precomputedSpots ?? -1
 	const hasRegistration = event.registration_type !== RegistrationType.None
-	if (hasRegistration && event.registration_window !== "past") {
+	if (precomputedSpots === undefined && hasRegistration && event.registration_window !== "past") {
 		try {
 			const slots = await fetchDjango<RegistrationSlot[]>(
 				`/registration-slots/?event_id=${event.id}`,
-				{ tags: [`event-slots-${event.id}`] },
+				{ revalidate: 60, tags: [`event-slots-${event.id}`] },
 			)
 			openSpots = computeOpenSpots(event, slots)
 		} catch {

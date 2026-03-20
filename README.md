@@ -69,6 +69,41 @@ pnpm test             # Run all tests
 - ESLint/Prettier: zero errors, consistent formatting
 - Dockerized databases for dev parity
 
+## Infrastructure (DigitalOcean)
+
+**Current:** 2 vCPU / 1.9 GiB ($21/mo) — plan to scale to 4 GiB ($24/mo) for the 2026 season.
+
+### Services Running
+
+| Container                  | ~Memory | Notes                                         |
+| -------------------------- | ------- | --------------------------------------------- |
+| bhmc-next (Next.js public) | 385 MiB | Largest consumer, shows gradual memory growth |
+| bhmc-backend (Django)      | 247 MiB | Gunicorn with 5 workers                       |
+| bhmc-api (NestJS)          | 134 MiB |                                               |
+| CapRover                   | 106 MiB |                                               |
+| bhmc-admin (Next.js)       | 75 MiB  |                                               |
+| nginx                      | 46 MiB  |                                               |
+
+### Nginx Tuning (CapRover Base Config)
+
+Applied via CapRover Settings > Nginx Configurations > Base Configuration:
+
+| Setting                | Default | Tuned         | Why                                                          |
+| ---------------------- | ------- | ------------- | ------------------------------------------------------------ |
+| `worker_processes`     | `1`     | `auto`        | Use both vCPUs                                               |
+| `worker_rlimit_nofile` | not set | `4096`        | Ensure file descriptors aren't a bottleneck                  |
+| `worker_connections`   | `1024`  | `2048`        | 4096 total connections (2 workers x 2048)                    |
+| `gzip`                 | `off`   | `on` (global) | Compress responses for all apps, not just CapRover dashboard |
+
+### Season Prep Checklist
+
+- [ ] Resize to 4 GiB / 2 vCPU droplet
+- [ ] Apply nginx base config tuning (see table above)
+- [ ] Set Docker memory limit on bhmc-next (512 MiB) via CapRover to auto-restart on leak
+- [ ] Run `docker system prune -a` to reclaim disk before the season
+- [ ] Confirm 1 GiB swap file is active (`free -h`)
+- [ ] Scale back down at end of season
+
 ## Related Projects
 
 - [BHMC React frontend](https://github.com/finleysg/bhmc)

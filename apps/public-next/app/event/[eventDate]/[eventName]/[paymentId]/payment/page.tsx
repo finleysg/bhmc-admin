@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { AlertCircle } from "lucide-react"
 
 import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/lib/auth-context"
@@ -23,6 +25,7 @@ export default function PaymentPage() {
 	const {
 		currentStep,
 		clubEvent,
+		error,
 		setError,
 		createPaymentIntent,
 		updateStep,
@@ -54,35 +57,50 @@ export default function PaymentPage() {
 
 		setPaymentProcessing(true)
 
-		// 1. Validate the payment element
-		const { error: submitError } = await elements.submit()
-		if (submitError) {
-			setError(submitError.message ?? "Validation failed")
-			setPaymentProcessing(false)
-			return
-		}
+		try {
+			// 1. Validate the payment element
+			const { error: submitError } = await elements.submit()
+			if (submitError) {
+				setError(submitError.message ?? "Validation failed")
+				setPaymentProcessing(false)
+				return
+			}
 
-		// 2. Create the payment intent
-		const intent = await createPaymentIntent()
+			// 2. Create the payment intent
+			const intent = await createPaymentIntent()
 
-		// 3. Confirm the payment — suppress beforeunload handlers before the redirect
-		setPaymentSubmitted(true)
-		redirectingRef.current = true
-		suppressBeforeUnload()
-		await stripe.confirmPayment({
-			elements,
-			clientSecret: intent.client_secret,
-			confirmParams: {
-				payment_method_data: {
-					billing_details: {
-						name: user ? `${user.firstName} ${user.lastName}` : "",
-						email: user?.email ?? "",
-						address: { country: "US" },
+			// 3. Confirm the payment — suppress beforeunload handlers before the redirect
+			setPaymentSubmitted(true)
+			redirectingRef.current = true
+			suppressBeforeUnload()
+			const { error: confirmError } = await stripe.confirmPayment({
+				elements,
+				clientSecret: intent.client_secret,
+				confirmParams: {
+					payment_method_data: {
+						billing_details: {
+							name: user ? `${user.firstName} ${user.lastName}` : "",
+							email: user?.email ?? "",
+							address: { country: "US" },
+						},
 					},
+					return_url: `${window.location.origin}${window.location.pathname.replace("/payment", "/complete")}`,
 				},
-				return_url: `${window.location.origin}${window.location.pathname.replace("/payment", "/complete")}`,
-			},
-		})
+			})
+
+			// confirmPayment only returns (instead of redirecting) when there's an error
+			if (confirmError) {
+				setError(confirmError.message ?? "Payment failed. Please try again.")
+				setPaymentProcessing(false)
+				setPaymentSubmitted(false)
+				redirectingRef.current = false
+			}
+		} catch {
+			// createPaymentIntent failed — error already dispatched by mutation onError
+			setPaymentProcessing(false)
+			setPaymentSubmitted(false)
+			redirectingRef.current = false
+		}
 	}, [stripe, elements, createPaymentIntent, setError, suppressBeforeUnload, user])
 
 	return (
@@ -94,6 +112,12 @@ export default function PaymentPage() {
 				<p className="text-sm font-medium text-primary">
 					Amount due: {formatCurrency(amount.total)}
 				</p>
+				{error && (
+					<Alert variant="destructive">
+						<AlertCircle className="size-4" />
+						<AlertDescription>{error}</AlertDescription>
+					</Alert>
+				)}
 				<PaymentElement
 					options={{
 						business: { name: "BHMC" },

@@ -508,6 +508,25 @@ describe("getSignUpUnavailableReason", () => {
 			})
 			expect(result).toMatch(/^Registration opens /)
 		})
+
+		it("shows 'canceled' instead of 'event full' for canceled event", () => {
+			const event = openEvent({ status: "C" })
+			expect(
+				getSignUpUnavailableReason({ event, ...defaults, isEventFull: true }),
+			).toBe("This event has been canceled.")
+		})
+
+		it("shows 'sign in' instead of 'event full' for anonymous user", () => {
+			const event = openEvent()
+			expect(
+				getSignUpUnavailableReason({
+					event,
+					isAuthenticated: false,
+					hasSignedUp: false,
+					isEventFull: true,
+				}),
+			).toBe("Sign in to register for this event.")
+		})
 	})
 
 	describe("user state reasons", () => {
@@ -523,6 +542,25 @@ describe("getSignUpUnavailableReason", () => {
 			expect(getSignUpUnavailableReason({ event, ...defaults, hasSignedUp: true })).toBe(
 				"You are signed up.",
 			)
+		})
+
+		it("returns message when event is full", () => {
+			const event = openEvent()
+			expect(getSignUpUnavailableReason({ event, ...defaults, isEventFull: true })).toBe(
+				"The event is full.",
+			)
+		})
+
+		it("'You are signed up' takes precedence over 'event is full'", () => {
+			const event = openEvent()
+			expect(
+				getSignUpUnavailableReason({ event, ...defaults, hasSignedUp: true, isEventFull: true }),
+			).toBe("You are signed up.")
+		})
+
+		it("returns null when isEventFull is false", () => {
+			const event = openEvent()
+			expect(getSignUpUnavailableReason({ event, ...defaults, isEventFull: false })).toBeNull()
 		})
 
 		it("returns message for returning members only when not eligible", () => {

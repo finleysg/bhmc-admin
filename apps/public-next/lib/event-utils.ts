@@ -225,6 +225,7 @@ interface SignUpReasonContext {
 	isAuthenticated: boolean
 	hasSignedUp: boolean
 	playerLastSeason?: number | null
+	isEventFull?: boolean
 }
 
 export function getSignUpUnavailableReason({
@@ -232,6 +233,7 @@ export function getSignUpUnavailableReason({
 	isAuthenticated,
 	hasSignedUp,
 	playerLastSeason,
+	isEventFull,
 }: SignUpReasonContext): string | null {
 	if (event.registration_type === RegistrationType.None) {
 		return "Online registration is not available for this event."
@@ -258,6 +260,10 @@ export function getSignUpUnavailableReason({
 
 	if (hasSignedUp) {
 		return "You are signed up."
+	}
+
+	if (isEventFull) {
+		return "The event is full."
 	}
 
 	if (
