@@ -188,9 +188,8 @@ test("handles confirmPayment error", async () => {
 		expect(screen.getByText(/your card was declined/i)).toBeTruthy()
 	})
 
-	expect(
-		(screen.getByRole("button", { name: /submit payment/i }) as HTMLButtonElement).disabled,
-	).toBe(false)
+	const button = screen.getByRole("button", { name: /submit payment/i })
+	expect((button as HTMLButtonElement).disabled).toBe(false)
 })
 
 test("handles payment intent fetch failure", async () => {
