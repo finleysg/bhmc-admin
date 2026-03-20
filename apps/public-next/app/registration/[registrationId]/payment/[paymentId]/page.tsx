@@ -1,9 +1,11 @@
 "use client"
 
 import { useCallback, useState } from "react"
+import { AlertCircle } from "lucide-react"
 
 import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/lib/auth-context"
@@ -25,44 +27,52 @@ export default function AdminPaymentPage() {
 		setPaymentProcessing(true)
 		setError(null)
 
-		const { error: submitError } = await elements.submit()
-		if (submitError) {
-			setError(submitError.message ?? "Validation failed")
-			setPaymentProcessing(false)
-			return
-		}
+		try {
+			const { error: submitError } = await elements.submit()
+			if (submitError) {
+				setError(submitError.message ?? "Validation failed")
+				return
+			}
 
-		const intentResponse = await fetch(`/api/payments/${data.paymentId}/payment-intent`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				eventId: data.eventId,
-				registrationId: data.registrationId,
-			}),
-		})
+			const intentResponse = await fetch(`/api/payments/${data.paymentId}/payment-intent`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					eventId: data.eventId,
+					registrationId: data.registrationId,
+				}),
+			})
 
-		if (!intentResponse.ok) {
-			setError("Failed to create payment intent")
-			setPaymentProcessing(false)
-			return
-		}
+			if (!intentResponse.ok) {
+				setError("Failed to create payment intent")
+				return
+			}
 
-		const intent = (await intentResponse.json()) as { client_secret: string }
+			const intent = (await intentResponse.json()) as { client_secret: string }
 
-		await stripe.confirmPayment({
-			elements,
-			clientSecret: intent.client_secret,
-			confirmParams: {
-				payment_method_data: {
-					billing_details: {
-						name: user ? `${user.firstName} ${user.lastName}` : "",
-						email: user?.email ?? "",
-						address: { country: "US" },
+			const { error: confirmError } = await stripe.confirmPayment({
+				elements,
+				clientSecret: intent.client_secret,
+				confirmParams: {
+					payment_method_data: {
+						billing_details: {
+							name: user ? `${user.firstName} ${user.lastName}` : "",
+							email: user?.email ?? "",
+							address: { country: "US" },
+						},
 					},
+					return_url: `${window.location.origin}${window.location.pathname}/complete`,
 				},
-				return_url: `${window.location.origin}${window.location.pathname}/complete`,
-			},
-		})
+			})
+
+			if (confirmError) {
+				setError(confirmError.message ?? "Payment failed. Please try again.")
+			}
+		} catch {
+			setError("An unexpected error occurred. Please try again.")
+		} finally {
+			setPaymentProcessing(false)
+		}
 	}, [stripe, elements, user, data])
 
 	return (
@@ -77,7 +87,12 @@ export default function AdminPaymentPage() {
 				<p className="text-sm font-medium text-primary">
 					Amount due: {formatCurrency(amount.total)}
 				</p>
-				{error && <p className="text-sm text-destructive">{error}</p>}
+				{error && (
+					<Alert variant="destructive">
+						<AlertCircle className="size-4" />
+						<AlertDescription>{error}</AlertDescription>
+					</Alert>
+				)}
 				<PaymentElement
 					options={{
 						business: { name: "BHMC" },

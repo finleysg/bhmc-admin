@@ -40,9 +40,15 @@ jest.mock("@stripe/react-stripe-js", () => ({
 	),
 }))
 
+const originalFetch = globalThis.fetch
+
 beforeEach(() => {
 	mockUseStripe.mockReturnValue({})
 	mockUseElements.mockReturnValue({})
+})
+
+afterEach(() => {
+	globalThis.fetch = originalFetch
 })
 
 test("renders event name, date, and amount due", async () => {
@@ -153,5 +159,76 @@ test("handles Stripe validation errors", async () => {
 
 	await waitFor(() => {
 		expect(screen.getByText(/card number is invalid/i)).toBeTruthy()
+	})
+})
+
+test("handles confirmPayment error", async () => {
+	const mockSubmit = jest.fn().mockResolvedValue({})
+	const mockConfirmPayment = jest
+		.fn()
+		.mockResolvedValue({ error: { message: "Your card was declined" } })
+
+	mockUseStripe.mockReturnValue({ confirmPayment: mockConfirmPayment })
+	mockUseElements.mockReturnValue({ submit: mockSubmit })
+
+	globalThis.fetch = jest.fn().mockResolvedValue({
+		ok: true,
+		json: () => Promise.resolve({ client_secret: "pi_test_secret" }),
+	})
+
+	const { default: AdminPaymentPage } = await import(
+		"@/app/registration/[registrationId]/payment/[paymentId]/page"
+	)
+
+	render(<AdminPaymentPage />)
+
+	fireEvent.click(screen.getByRole("button", { name: /submit payment/i }))
+
+	await waitFor(() => {
+		expect(screen.getByText(/your card was declined/i)).toBeTruthy()
+	})
+
+	expect(
+		(screen.getByRole("button", { name: /submit payment/i }) as HTMLButtonElement).disabled,
+	).toBe(false)
+})
+
+test("handles payment intent fetch failure", async () => {
+	const mockSubmit = jest.fn().mockResolvedValue({})
+	mockUseStripe.mockReturnValue({ confirmPayment: jest.fn() })
+	mockUseElements.mockReturnValue({ submit: mockSubmit })
+
+	globalThis.fetch = jest.fn().mockResolvedValue({ ok: false })
+
+	const { default: AdminPaymentPage } = await import(
+		"@/app/registration/[registrationId]/payment/[paymentId]/page"
+	)
+
+	render(<AdminPaymentPage />)
+
+	fireEvent.click(screen.getByRole("button", { name: /submit payment/i }))
+
+	await waitFor(() => {
+		expect(screen.getByText(/failed to create payment intent/i)).toBeTruthy()
+	})
+})
+
+test("handles unexpected errors during payment submission", async () => {
+	const mockSubmit = jest.fn().mockResolvedValue({})
+	mockUseStripe.mockReturnValue({ confirmPayment: jest.fn() })
+	mockUseElements.mockReturnValue({ submit: mockSubmit })
+
+	globalThis.fetch = jest.fn().mockRejectedValue(new Error("Network error"))
+
+	const { default: AdminPaymentPage } = await import(
+		"@/app/registration/[registrationId]/payment/[paymentId]/page"
+	)
+
+	render(<AdminPaymentPage />)
+
+	fireEvent.click(screen.getByRole("button", { name: /submit payment/i }))
+
+	await waitFor(() => {
+		expect(screen.getByText(/an unexpected error occurred/i)).toBeTruthy()
 	})
 })
