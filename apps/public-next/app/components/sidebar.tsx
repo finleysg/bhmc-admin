@@ -19,6 +19,7 @@ import {
 	UserPlus,
 	Shield,
 	UserCheck,
+	CalendarClock,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
@@ -108,6 +109,15 @@ export function SidebarNav() {
 					>
 						<Shield className="size-4" />
 						Administration
+					</a>
+					<a
+						href="https://docs.google.com/spreadsheets/d/1d0DyeELbWPKCX8kHqi0gdBsRVx83HZMm-LiBhBSBw-w/edit?usp=sharing"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+					>
+						<CalendarClock className="size-4" />
+						Paul&#39;s Schedule
 					</a>
 				</>
 			)}
