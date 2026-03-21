@@ -44,6 +44,7 @@ export default async function HomePage() {
 		hcpDoc,
 		tut1Doc,
 		tut2Doc,
+		nmpDoc,
 	] = await Promise.all([
 		fetchDjango<Announcement[]>("/news/", { revalidate: 3600, tags: ["announcements"] }),
 		fetchDjango<PhotoData[]>("/photos/random/?take=1"),
@@ -61,11 +62,12 @@ export default async function HomePage() {
 		fetchStaticDoc("HCP"),
 		fetchStaticDoc("TUT1"),
 		fetchStaticDoc("TUT2"),
+		fetchStaticDoc("NMP"),
 	])
 
 	const holeInOneContent = holeInOneContentArr[0]
 	const specialOrders = [acctDoc, soDoc].filter(Boolean) as StaticDocument[]
-	const clubDocuments = [bylawDoc, finDoc, hcpDoc, tut1Doc, tut2Doc].filter(
+	const clubDocuments = [bylawDoc, finDoc, hcpDoc, tut1Doc, tut2Doc, nmpDoc].filter(
 		Boolean,
 	) as StaticDocument[]
 

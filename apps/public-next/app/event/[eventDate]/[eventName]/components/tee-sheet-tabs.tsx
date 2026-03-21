@@ -2,9 +2,10 @@
 
 import { type ReactNode, useState } from "react"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { ReserveGroup, ReserveTable } from "@/lib/registration/reserve-utils"
+import { cn } from "@/lib/utils"
 import { TeeSheetBody } from "./tee-sheet-body"
 
 interface TeeSheetTabsProps {
@@ -48,8 +49,17 @@ export function TeeSheetTabs({
 	)
 
 	if (tables.length === 1) {
+		const course = tables[0].course
 		return (
 			<Card className={className}>
+				<CardHeader
+					className={cn("py-3", !course.color && "bg-primary/10")}
+					style={course.color ? { backgroundColor: `${course.color}20` } : undefined}
+				>
+					<CardTitle className="text-base" style={course.color ? { color: course.color } : undefined}>
+						{course.name}
+					</CardTitle>
+				</CardHeader>
 				<CardContent>{renderTable(tables[0])}</CardContent>
 			</Card>
 		)
