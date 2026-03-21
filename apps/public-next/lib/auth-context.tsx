@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			user,
 			isLoading,
 			isAuthenticated: user !== null,
-			isAdmin: user?.isStaff ?? false,
+			isAdmin: user?.isSuperuser ?? false,
 			login,
 			logout,
 			refreshUser,

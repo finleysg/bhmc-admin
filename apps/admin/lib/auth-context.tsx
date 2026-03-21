@@ -9,6 +9,7 @@ interface AuthContextType {
 	user: DjangoUser | null
 	isLoading: boolean
 	isAuthenticated: boolean
+	isSuperuser: boolean
 	login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
 	logout: () => Promise<void>
 	refreshUser: () => Promise<void>
@@ -67,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			user,
 			isLoading,
 			isAuthenticated: user !== null,
+			isSuperuser: user?.isSuperuser ?? false,
 			login,
 			logout,
 			refreshUser,

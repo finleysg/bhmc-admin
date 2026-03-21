@@ -7,6 +7,7 @@ import { PostHogErrorProvider } from "../components/posthog-provider"
 import { AuthProvider } from "../lib/auth-context"
 import Breadcrumb from "./components/breadcrumb"
 import Header from "./components/header"
+import { SuperuserGuard } from "./components/superuser-guard"
 
 export const metadata: Metadata = {
 	title: "BHMC Event Administration",
@@ -36,11 +37,13 @@ document.documentElement.setAttribute('data-theme', theme);
 			<body>
 				<PostHogErrorProvider>
 					<AuthProvider>
-						<div className="min-h-screen bg-base-100 text-base-content">
-							<Header />
-							<Breadcrumb />
-							<main className="container bg-base-200 mx-auto p-4">{children}</main>
-						</div>
+						<SuperuserGuard>
+							<div className="min-h-screen bg-base-100 text-base-content">
+								<Header />
+								<Breadcrumb />
+								<main className="container bg-base-200 mx-auto p-4">{children}</main>
+							</div>
+						</SuperuserGuard>
 					</AuthProvider>
 				</PostHogErrorProvider>
 				<Toaster />
