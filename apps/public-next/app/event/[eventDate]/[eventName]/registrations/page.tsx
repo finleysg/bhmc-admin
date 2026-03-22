@@ -1,3 +1,6 @@
+import Link from "next/link"
+import { ArrowLeft, Home } from "lucide-react"
+
 import { fetchDjango } from "@/lib/fetchers"
 import { resolveEventFromParams } from "@/lib/event-utils"
 import type { RegistrationSlot } from "@/lib/types"
@@ -78,20 +81,44 @@ export default async function RegistrationsPage({ params }: RegistrationsPagePro
 	const event = await resolveEventFromParams(eventDate, eventName)
 
 	const tag = `event-registrations-${event.id}`
+	const eventDetailUrl = `/event/${eventDate}/${eventName}`
 
+	let content: React.ReactNode
 	if (event.can_choose) {
 		const slots = await fetchDjango<RegistrationSlot[]>(
 			`/registration-slots/?event_id=${event.id}`,
 			{ revalidate: 60, tags: [tag] },
 		)
 		const tables = loadReserveTables(event, slots)
-		return <RegisteredGrid tables={tables} />
+		content = <RegisteredGrid tables={tables} />
+	} else {
+		const registrations = await fetchDjango<DjangoRegistration[]>(
+			`/registration/?event_id=${event.id}`,
+			{ revalidate: 60, tags: [tag] },
+		)
+		const reservations = convertRegistrationsToReservations(registrations)
+		content = <RegisteredList reservations={reservations} eventName={event.name} />
 	}
 
-	const registrations = await fetchDjango<DjangoRegistration[]>(
-		`/registration/?event_id=${event.id}`,
-		{ revalidate: 60, tags: [tag] },
+	return (
+		<>
+			<div className="mb-4 flex gap-4">
+				<Link
+					href={eventDetailUrl}
+					className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+				>
+					<ArrowLeft className="size-4" />
+					Event Details
+				</Link>
+				<Link
+					href="/"
+					className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+				>
+					<Home className="size-4" />
+					Home
+				</Link>
+			</div>
+			{content}
+		</>
 	)
-	const reservations = convertRegistrationsToReservations(registrations)
-	return <RegisteredList reservations={reservations} eventName={event.name} />
 }
