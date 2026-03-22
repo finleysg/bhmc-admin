@@ -1,5 +1,7 @@
 import { BadRequestException } from "@nestjs/common"
-import { RegistrationStatusChoices } from "@repo/domain/types"
+import { ClubEvent, RegistrationStatusChoices, RegistrationTypeChoices } from "@repo/domain/types"
+
+import { EventRegistrationWaveError } from "../errors/registration.errors"
 
 import { PlayerService } from "../services/player.service"
 import type { PlayerRow, RegistrationSlotRow } from "../../database"
@@ -55,6 +57,7 @@ const createMockDrizzleService = () => {
 		db: {
 			transaction: jest.fn(),
 			update: jest.fn().mockReturnValue(mockUpdateBuilder),
+			select: jest.fn(),
 		},
 	}
 }
@@ -89,6 +92,7 @@ const createMockRegistrationRepository = () => ({
 	findRegistrationById: jest.fn(),
 	findSlotsWithStatusByRegistration: jest.fn(),
 	updateRegistration: jest.fn(),
+	findPlayersByIds: jest.fn(),
 })
 
 const createMockPaymentsRepository = () => ({
@@ -97,6 +101,7 @@ const createMockPaymentsRepository = () => ({
 
 const createMockEventsService = () => ({
 	getCompleteClubEventById: jest.fn(),
+	getEventById: jest.fn(),
 })
 
 const createMockBroadcastService = () => ({
@@ -1277,5 +1282,276 @@ describe("PlayerService.searchPlayers", () => {
 
 		expect(result).toHaveLength(2)
 		expect(repository.findRegisteredPlayers).not.toHaveBeenCalled()
+	})
+})
+
+// =============================================================================
+// Wave Validation Helpers
+// =============================================================================
+
+function createClubEvent(overrides: Partial<ClubEvent> = {}): ClubEvent {
+	return {
+		id: 100,
+		eventType: "N",
+		name: "Test Event",
+		registrationType: RegistrationTypeChoices.MEMBER,
+		canChoose: true,
+		ghinRequired: false,
+		startDate: "2025-06-15",
+		status: "S",
+		season: 2025,
+		starterTimeInterval: 10,
+		teamSize: 4,
+		ageRestrictionType: "N",
+		...overrides,
+	}
+}
+
+/** Create an event in priority window with waves. Wave duration = 30min each. */
+function createPriorityWaveEvent(signupWaves: number, totalGroups: number): ClubEvent {
+	const now = Date.now()
+	// Priority started 10 minutes ago, signup starts in 80 minutes (3 waves × 30min = 90min total)
+	const priorityStart = new Date(now - 10 * 60 * 1000).toISOString()
+	const signupStart = new Date(now + (signupWaves * 30 - 10) * 60 * 1000).toISOString()
+	const signupEnd = new Date(now + 24 * 60 * 60 * 1000).toISOString()
+	return createClubEvent({
+		signupWaves,
+		totalGroups,
+		prioritySignupStart: priorityStart,
+		signupStart,
+		signupEnd,
+	})
+}
+
+// =============================================================================
+// movePlayers Wave Validation
+// =============================================================================
+
+describe("PlayerService.movePlayers wave validation", () => {
+	function setupMoveTest(event: ClubEvent) {
+		const { service, drizzle, repository, eventsService, broadcastService } = createService()
+
+		eventsService.getEventById.mockResolvedValue(event)
+
+		// Source slots: 2 reserved slots
+		const sourceSlot1 = createRegistrationSlotRow({
+			id: 101,
+			eventId: 100,
+			registrationId: 1,
+			playerId: 1,
+			holeId: 10,
+			startingOrder: 0,
+		})
+		const sourceSlot2 = createRegistrationSlotRow({
+			id: 102,
+			eventId: 100,
+			registrationId: 1,
+			playerId: 2,
+			holeId: 10,
+			startingOrder: 0,
+			slot: 1,
+		})
+		repository.findRegistrationSlotById
+			.mockResolvedValueOnce(sourceSlot1)
+			.mockResolvedValueOnce(sourceSlot2)
+		repository.findRegistrationById.mockResolvedValue(createRegistrationRow({ courseId: 1 }))
+		repository.findPlayersByIds.mockResolvedValue([
+			createPlayerRow({ id: 1 }),
+			createPlayerRow({ id: 2, firstName: "Jane" }),
+		])
+
+		// Destination hole
+		drizzle.db.select = jest.fn().mockReturnValue({
+			from: jest.fn().mockReturnValue({
+				where: jest.fn().mockReturnValue({
+					limit: jest.fn().mockResolvedValue([{ id: 200, courseId: 1, holeNumber: 9, par: 4 }]),
+				}),
+			}),
+		})
+
+		// Available destination slots
+		const destSlotQuery = {
+			from: jest.fn().mockReturnValue({
+				where: jest.fn().mockResolvedValue([
+					{ id: 201, eventId: 100, holeId: 200, startingOrder: 4, slot: 0, status: "A" },
+					{ id: 202, eventId: 100, holeId: 200, startingOrder: 4, slot: 1, status: "A" },
+				]),
+			}),
+		}
+
+		// Chain: first call is hole lookup, second is available slots
+		let callCount = 0
+		drizzle.db.select = jest.fn().mockImplementation(() => {
+			callCount++
+			if (callCount === 1) {
+				return {
+					from: jest.fn().mockReturnValue({
+						where: jest.fn().mockReturnValue({
+							limit: jest.fn().mockResolvedValue([{ id: 200, courseId: 1, holeNumber: 9, par: 4 }]),
+						}),
+					}),
+				}
+			}
+			return destSlotQuery
+		})
+
+		drizzle.db.transaction.mockImplementation((fn: any) => fn(drizzle.db))
+		broadcastService.notifyChange.mockReturnValue(undefined)
+
+		return { service, eventsService }
+	}
+
+	test("rejects move to wave-locked slot during priority window", async () => {
+		// 3 waves, 12 total groups. With 10min elapsed out of 90min, current wave = 1.
+		// Destination startingOrder=4 with 12 groups / 3 waves => wave 2.
+		const event = createPriorityWaveEvent(3, 12)
+		const { service } = setupMoveTest(event)
+
+		await expect(
+			service.movePlayers(100, {
+				sourceSlotIds: [101, 102],
+				destinationStartingHoleId: 200,
+				destinationStartingOrder: 4,
+			}),
+		).rejects.toThrow(EventRegistrationWaveError)
+	})
+
+	test("allows move to current-wave slot during priority window", async () => {
+		// 3 waves, 12 groups. startingOrder=0 => wave 1, which is current.
+		const event = createPriorityWaveEvent(3, 12)
+		const { service } = setupMoveTest(event)
+
+		await expect(
+			service.movePlayers(100, {
+				sourceSlotIds: [101, 102],
+				destinationStartingHoleId: 200,
+				destinationStartingOrder: 0,
+			}),
+		).resolves.toEqual({ movedCount: 2 })
+	})
+
+	test("allows move during normal registration window", async () => {
+		const now = Date.now()
+		const event = createClubEvent({
+			signupWaves: 3,
+			totalGroups: 12,
+			prioritySignupStart: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+			signupStart: new Date(now - 60 * 60 * 1000).toISOString(),
+			signupEnd: new Date(now + 24 * 60 * 60 * 1000).toISOString(),
+		})
+		const { service } = setupMoveTest(event)
+
+		await expect(
+			service.movePlayers(100, {
+				sourceSlotIds: [101, 102],
+				destinationStartingHoleId: 200,
+				destinationStartingOrder: 4,
+			}),
+		).resolves.toEqual({ movedCount: 2 })
+	})
+
+	test("allows move when event has no waves", async () => {
+		const event = createClubEvent({
+			signupWaves: null,
+			totalGroups: 12,
+			signupStart: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+			signupEnd: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+		})
+		const { service } = setupMoveTest(event)
+
+		await expect(
+			service.movePlayers(100, {
+				sourceSlotIds: [101, 102],
+				destinationStartingHoleId: 200,
+				destinationStartingOrder: 4,
+			}),
+		).resolves.toEqual({ movedCount: 2 })
+	})
+})
+
+// =============================================================================
+// getAvailableSlots Wave Filtering
+// =============================================================================
+
+describe("PlayerService.getAvailableSlots wave filtering", () => {
+	function setupAvailableSlotsTest(event: ClubEvent) {
+		const { service, repository, eventsService } = createService()
+
+		eventsService.getEventById.mockResolvedValue(event)
+
+		// Slot rows spanning 3 waves: startingOrder 0-3 (wave 1), 4-7 (wave 2), 8-11 (wave 3)
+		const slotRows = [
+			{
+				slot: createRegistrationSlotRow({
+					id: 1,
+					holeId: 10,
+					startingOrder: 0,
+					status: "A" as any,
+				}),
+				hole: { id: 10, holeNumber: 1, par: 4, courseId: 1 },
+			},
+			{
+				slot: createRegistrationSlotRow({
+					id: 2,
+					holeId: 10,
+					startingOrder: 4,
+					status: "A" as any,
+				}),
+				hole: { id: 10, holeNumber: 1, par: 4, courseId: 1 },
+			},
+			{
+				slot: createRegistrationSlotRow({
+					id: 3,
+					holeId: 10,
+					startingOrder: 8,
+					status: "A" as any,
+				}),
+				hole: { id: 10, holeNumber: 1, par: 4, courseId: 1 },
+			},
+		]
+		repository.findAvailableSlots.mockResolvedValue(slotRows)
+
+		return { service }
+	}
+
+	test("filters out wave-locked slot groups during priority window", async () => {
+		// 3 waves, 12 groups. 10min in => wave 1. Only startingOrder 0-3 should be available.
+		const event = createPriorityWaveEvent(3, 12)
+		const { service } = setupAvailableSlotsTest(event)
+
+		const result = await service.getAvailableSlots(100, 1, 1)
+
+		expect(result).toHaveLength(1)
+		expect(result[0].startingOrder).toBe(0)
+	})
+
+	test("returns all slot groups during normal registration", async () => {
+		const now = Date.now()
+		const event = createClubEvent({
+			signupWaves: 3,
+			totalGroups: 12,
+			prioritySignupStart: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+			signupStart: new Date(now - 60 * 60 * 1000).toISOString(),
+			signupEnd: new Date(now + 24 * 60 * 60 * 1000).toISOString(),
+		})
+		const { service } = setupAvailableSlotsTest(event)
+
+		const result = await service.getAvailableSlots(100, 1, 1)
+
+		expect(result).toHaveLength(3)
+	})
+
+	test("returns all slot groups when no waves configured", async () => {
+		const event = createClubEvent({
+			signupWaves: null,
+			totalGroups: 12,
+			signupStart: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+			signupEnd: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+		})
+		const { service } = setupAvailableSlotsTest(event)
+
+		const result = await service.getAvailableSlots(100, 1, 1)
+
+		expect(result).toHaveLength(3)
 	})
 })

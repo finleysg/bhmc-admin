@@ -56,7 +56,9 @@ import {
 } from "../mappers"
 import { RegistrationRepository } from "../repositories/registration.repository"
 import { PaymentsRepository } from "../repositories/payments.repository"
+import { EventRegistrationWaveError } from "../errors/registration.errors"
 import { RegistrationBroadcastService } from "./registration-broadcast.service"
+import { getCurrentWave, getRegistrationWindow, getStartingWave } from "../wave-calculator"
 
 @Injectable()
 export class PlayerService {
@@ -373,9 +375,22 @@ export class PlayerService {
 	): Promise<AvailableSlotGroup[]> {
 		const slotRows = await this.repository.findAvailableSlots(eventId, courseId)
 
+		// Determine wave filtering state
+		const event = await this.events.getEventById(eventId)
+		const registrationWindow = getRegistrationWindow(event)
+		const isPriorityWithWaves = registrationWindow === "priority" && !!event.signupWaves
+		const currentWave = isPriorityWithWaves ? getCurrentWave(event) : 999
+
 		const groups = new Map<string, RegistrationSlot[]>()
 		for (const row of slotRows) {
 			const holeNumber = row.hole.holeNumber
+
+			// Skip slots belonging to waves that haven't opened yet
+			if (isPriorityWithWaves) {
+				const slotWave = getStartingWave(event, row.slot.startingOrder, holeNumber)
+				if (slotWave > currentWave) continue
+			}
+
 			const key = `${row.slot.holeId}-${holeNumber}-${row.slot.startingOrder}`
 			if (!groups.has(key)) {
 				groups.set(key, [])
@@ -741,6 +756,21 @@ export class PlayerService {
 			throw new BadRequestException(`Destination hole ${destinationStartingHoleId} not found`)
 		}
 		const destinationCourseId = destinationHoleRow[0].courseId
+
+		// Validate wave restrictions during priority window
+		const event = await this.events.getEventById(eventId)
+		const registrationWindow = getRegistrationWindow(event)
+		if (registrationWindow === "priority" && event.signupWaves) {
+			const currentWave = getCurrentWave(event)
+			const slotWave = getStartingWave(
+				event,
+				destinationStartingOrder,
+				destinationHoleRow[0].holeNumber,
+			)
+			if (slotWave > currentWave) {
+				throw new EventRegistrationWaveError(slotWave)
+			}
+		}
 
 		// Find available slots at destination
 		const availableDestinationSlots = await this.drizzle.db
