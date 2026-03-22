@@ -1,4 +1,4 @@
-import { catchError, from, Observable, tap } from "rxjs"
+import { catchError, Observable, tap } from "rxjs"
 
 import {
 	CallHandler,
@@ -46,15 +46,15 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 					}
 				}
 
-				from(
-					this.integrationLogService.createLogEntry({
+				void this.integrationLogService
+					.createLogEntry({
 						actionName,
 						actionDate: new Date(),
 						details: JSON.stringify(logResult, null, 2),
 						eventId,
 						isSuccessful: 1,
-					}),
-				).subscribe()
+					})
+					.catch((err: unknown) => this.logger.error("Failed to log integration success", err))
 			}),
 			catchError((error: unknown) => {
 				// Error case - log the full error including stack trace
@@ -64,15 +64,15 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 					name: error instanceof Error ? error.name : "UnknownError",
 				}
 
-				from(
-					this.integrationLogService.createLogEntry({
+				void this.integrationLogService
+					.createLogEntry({
 						actionName,
 						actionDate: new Date(),
 						details: JSON.stringify(errorDetails, null, 2),
 						eventId,
 						isSuccessful: 0,
-					}),
-				).subscribe()
+					})
+					.catch((err: unknown) => this.logger.error("Failed to log integration error", err))
 
 				throw error as Error // Re-throw to maintain normal error handling
 			}),

@@ -43,6 +43,7 @@ FROM node:24-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=256"
 ENV PORT=3000
 
 # Create non-root user

@@ -18,6 +18,7 @@ interface EventStreamState {
 	trigger$: Subject<void>
 	stream$: Observable<RegistrationUpdateEvent>
 	waveTimerSub?: Subscription
+	cleanupTimeout?: ReturnType<typeof setTimeout>
 	subscriberCount: number
 	lastWave: number
 	cachedEvent?: ClubEvent
@@ -61,7 +62,19 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 			this.logger.log(`Created stream for event ${eventId}`)
 		}
 
+		// Cancel pending cleanup if a new subscriber joins
+		if (state.cleanupTimeout) {
+			clearTimeout(state.cleanupTimeout)
+			state.cleanupTimeout = undefined
+		}
+
 		state.subscriberCount++
+
+		// Start wave timer when first subscriber joins
+		if (state.subscriberCount === 1 && !state.waveTimerSub) {
+			state.waveTimerSub = this.startWaveTimer(eventId, state)
+		}
+
 		this.logger.debug(`Subscriber added for event ${eventId}, count: ${state.subscriberCount}`)
 
 		return state.stream$.pipe(finalize(() => this.onUnsubscribe(eventId)))
@@ -83,9 +96,6 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 			switchMap(() => this.buildUpdateEvent(eventId, state)),
 			share(),
 		)
-
-		// Start wave timer for priority window detection
-		state.waveTimerSub = this.startWaveTimer(eventId, state)
 
 		return state
 	}
@@ -145,10 +155,23 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 		if (!state) return
 
 		state.subscriberCount--
+		if (state.subscriberCount < 0) {
+			this.logger.warn(
+				`Subscriber count went negative for event ${eventId} — possible double-unsubscribe`,
+			)
+		}
 		this.logger.debug(`Subscriber removed for event ${eventId}, count: ${state.subscriberCount}`)
 
 		if (state.subscriberCount <= 0) {
-			setTimeout(() => {
+			// Stop wave timer when no subscribers remain
+			state.waveTimerSub?.unsubscribe()
+			state.waveTimerSub = undefined
+
+			// Schedule cleanup, replacing any existing timeout
+			if (state.cleanupTimeout) {
+				clearTimeout(state.cleanupTimeout)
+			}
+			state.cleanupTimeout = setTimeout(() => {
 				const current = this.eventStreams.get(eventId)
 				if (current && current.subscriberCount <= 0) {
 					this.cleanupStream(eventId, current)
@@ -159,6 +182,9 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 
 	private cleanupStream(eventId: number, state: EventStreamState): void {
 		state.waveTimerSub?.unsubscribe()
+		if (state.cleanupTimeout) {
+			clearTimeout(state.cleanupTimeout)
+		}
 		state.trigger$.complete()
 		this.eventStreams.delete(eventId)
 		this.logger.log(`Cleaned up stream for event ${eventId}`)
