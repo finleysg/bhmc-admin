@@ -6,13 +6,13 @@ allowed-tools: Bash(git:*), Bash(date:*)
 
 # Deploy App to Production
 
-Deploy an app (admin, api, backend, or public-next) to production by creating and pushing a git tag. The tag push triggers the GitHub Actions deployment workflow automatically.
+Deploy an app (admin, api, backend, or public) to production by creating and pushing a git tag. The tag push triggers the GitHub Actions deployment workflow automatically.
 
 ## Tag Format
 
 `{app}-v{yyyy}.{mm}.{dd}.{nn}`
 
-- `{app}` is either `admin`, `api`, `backend`, or `public-next`
+- `{app}` is either `admin`, `api`, `backend`, or `public`
 - `{yyyy}.{mm}.{dd}` is today's date
 - `{nn}` is a zero-padded sequential number starting at 01
 
@@ -21,7 +21,7 @@ Deploy an app (admin, api, backend, or public-next) to production by creating an
 ### 1. Determine which app to deploy
 
 If the user specified the app (e.g., `/deploy admin` or `/deploy api`), use that.
-Otherwise, ask the user which app to deploy using AskUserQuestion with options "admin", "api", "backend", and "public-next".
+Otherwise, ask the user which app to deploy using AskUserQuestion with options "admin", "api", "backend", and "public".
 
 ### 2. Verify preconditions
 

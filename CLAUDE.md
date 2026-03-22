@@ -8,7 +8,7 @@
 
 ## Project Overview
 
-Golf tournament management system for Bunker Hills Men's Club (BHMC). This monorepo contains the admin API and admin web dashboard. It complements a separate Django backend (data.bhmc.org) that owns the database schema and a React SPA (bhmc.org) for public-facing users.
+Golf tournament management system for Bunker Hills Men's Club (BHMC). This monorepo contains the admin API, admin web dashboard, and public-facing Next.js site (bhmc.org). It complements a separate Django backend (data.bhmc.org) that owns the database schema.
 
 ## Code Style
 
@@ -40,6 +40,5 @@ When a change is made to a next app, rebuild the container.
 
 Use the `playwright cli` skill to validate your work directly:
 
-- Public site: http://localhost:3000
-- Admin next site: http://localhost:3100
-- Public next site: http://localhost:3200
+- Admin site: http://localhost:3100
+- Public site: http://localhost:3200

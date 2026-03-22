@@ -1,111 +1,113 @@
-# BHMC Admin
+# Bunker Hills Men's Club
 
-Administrative interface for golf tournament management, designed to complement the [BHMC React frontend](https://github.com/finleysg/bhmc) and [Django backend](https://github.com/finleysg/bhmc-api). This monorepo implements the admin service and admins service in the following diagram:
+Club management system for [Bunker Hills Men's Club](https://bhmc.org). Monorepo containing the admin API, admin dashboard, public website, and Django backend.
 
-```mermaid
-architecture-beta
+## Architecture
 
-    group do[Digital Ocean]
-    service admin(server)[NodeJs] in do
-    service api(server)[Django] in do
-    service db(database)[MySQL] in do
-
-    group web[UI]
-    service users(internet)[React Users] in web
-    service admins(internet)[Next Admins] in web
-
-    service stripe(cloud)[Stripe]
-    service storage(disk)[Amazon S3]
-    service email(cloud)[Mailgun]
-
-    admin:R -- L:db
-    api:R -- L:db
-    users:L -- R:api
-    admins:L -- R:admin
+```
+bhmc/
+├── apps/
+│   ├── admin/          Next.js admin dashboard (:3100)
+│   ├── api/            NestJS API (:3333)
+│   └── public-next/    Next.js public site (:3200)
+├── backend/            Django backend (:8000)
+├── packages/
+│   ├── domain/         Shared types and business logic
+│   └── eslint-config/  Shared ESLint config
+├── e2e/                Playwright end-to-end tests
+└── docker-compose.yml
 ```
 
-## Features
-
-- **Tournament Management:** Full event lifecycle, tee time calculations, group assignments, hole-based starts
-- **Player Registration:** Automated slots, fee tracking, Golf Genius sync
-- **Golf Genius Integration:** Bidirectional sync for events, rosters, scores, and results
-- **Scoring & Results:** Scorecard management, automated results import, multi-format reporting
-- **Admin Dashboard:** Authenticated interface for all tournament operations, audit logging
-- **Reporting & Analytics:** Tournament reports, player stats, Excel export
+The Django backend at data.bhmc.org owns the database schema and handles authentication (Djoser token auth). The NestJS API reads/writes the same MySQL database using Drizzle ORM and handles admin operations, event registration, and Stripe payments. Both Next.js apps proxy auth requests through their own API routes to avoid CORS.
 
 ## Tech Stack
 
-- Node.js 20+, pnpm@10+, TurboRepo
-- **API:** NestJS, Drizzle ORM (MySQL, containerized via Docker), Zod, Axios, RxJS, ExcelJS
-- **Web:** Next.js (App Router, TypeScript), better-auth, Tailwind CSS v4, daisyUI 5, @tanstack/react-table
-- **Shared Types:** TypeScript domain package for DTOs and interfaces
-- **Testing:** Jest, ESLint, Prettier (zero errors)
+| Layer             | Technology                                                       |
+| ----------------- | ---------------------------------------------------------------- |
+| Frontend (Admin)  | Next.js 16, React 19, Tailwind v4, daisyUI 5                     |
+| Frontend (Public) | Next.js 16, React 19, shadcn/ui, React Hook Form, TanStack Query |
+| API               | NestJS, TypeScript, Drizzle ORM                                  |
+| Backend           | Django, Python, MySQL 8.4                                        |
+| Payments          | Stripe                                                           |
+| Analytics         | PostHog                                                          |
+| Email             | React Email, Nodemailer, Mailgun                                 |
+| Testing           | Jest (unit), Playwright (e2e)                                    |
+| Tooling           | pnpm, Turborepo, Docker, ESLint, Prettier, Husky                 |
+| CI/CD             | GitHub Actions, CapRover                                         |
 
-## Setup
+## Prerequisites
 
-```sh
+- Node.js 24
+- pnpm 10
+- Python with [uv](https://docs.astral.sh/uv/)
+- Docker
+
+## Getting Started
+
+```bash
 pnpm install
-pnpm docker:up        # Start MySQL/SQLite containers
-pnpm dev              # Run both apps (API & Web)
-pnpm lint             # Lint all code
-pnpm test             # Run all tests
+docker compose up -d
 ```
 
-- API: `apps/api` (NestJS, MySQL)
-- Admin: `apps/admin` (Next.js, SQLite for auth)
+### Local Services
 
-## Usage
+| Service         | URL                   |
+| --------------- | --------------------- |
+| Django backend  | http://localhost:8000 |
+| NestJS API      | http://localhost:3333 |
+| Admin dashboard | http://localhost:3100 |
+| Public site     | http://localhost:3200 |
+| Mailpit         | http://localhost:8025 |
 
-- API health: `GET /health`
-- Web health: `GET /health`
-- Auth: better-auth (see `.env.example` in each app)
-- Reports: Excel export via admin dashboard
+## Development
 
-## Development Notes
+```bash
+pnpm dev           # Start all apps (Turbo)
+pnpm build         # Build all apps
+pnpm lint          # Lint all apps
+pnpm test          # Run unit tests
+pnpm typecheck     # TypeScript checks
+pnpm test:e2e      # Playwright end-to-end tests
+pnpm format        # Format with Prettier
+```
 
-- Strict TypeScript, no `any` types in production
-- Domain-driven design, shared DTOs/interfaces
-- Module boundaries enforced via barrel exports
-- ESLint/Prettier: zero errors, consistent formatting
-- Dockerized databases for dev parity
+### Backend
+
+```bash
+cd backend
+uv sync
+uv run python manage.py runserver
+uv run python manage.py test
+uv run python manage.py migrate
+```
+
+Set `DJANGO_ENV` to control configuration: `local`, `docker`, or `prod`.
+
+## Deployment
+
+Tagged releases trigger GitHub Actions workflows that build Docker images, upload source maps to PostHog, and deploy to CapRover.
+
+| App     | Tag pattern                      |
+| ------- | -------------------------------- |
+| API     | `api-v{yyyy}.{mm}.{dd}.{nn}`     |
+| Admin   | `admin-v{yyyy}.{mm}.{dd}.{nn}`   |
+| Backend | `backend-v{yyyy}.{mm}.{dd}.{nn}` |
+| Public  | `public-v{yyyy}.{mm}.{dd}.{nn}`  |
 
 ## Infrastructure (DigitalOcean)
 
-**Current:** 2 vCPU / 1.9 GiB ($21/mo) — plan to scale to 4 GiB ($24/mo) for the 2026 season.
+| Season     | Spec               |
+| ---------- | ------------------ |
+| Off season | 1 vCPU / 2 GiB RAM |
+| In season  | 2 vCPU / 4 GiB RAM |
 
-### Services Running
+### Services
 
-| Container                  | ~Memory | Notes                                         |
-| -------------------------- | ------- | --------------------------------------------- |
-| bhmc-next (Next.js public) | 385 MiB | Largest consumer, shows gradual memory growth |
-| bhmc-backend (Django)      | 247 MiB | Gunicorn with 5 workers                       |
-| bhmc-api (NestJS)          | 134 MiB |                                               |
-| CapRover                   | 106 MiB |                                               |
-| bhmc-admin (Next.js)       | 75 MiB  |                                               |
-| nginx                      | 46 MiB  |                                               |
-
-### Nginx Tuning (CapRover Base Config)
-
-Applied via CapRover Settings > Nginx Configurations > Base Configuration:
-
-| Setting                | Default | Tuned         | Why                                                          |
-| ---------------------- | ------- | ------------- | ------------------------------------------------------------ |
-| `worker_processes`     | `1`     | `auto`        | Use both vCPUs                                               |
-| `worker_rlimit_nofile` | not set | `4096`        | Ensure file descriptors aren't a bottleneck                  |
-| `worker_connections`   | `1024`  | `2048`        | 4096 total connections (2 workers x 2048)                    |
-| `gzip`                 | `off`   | `on` (global) | Compress responses for all apps, not just CapRover dashboard |
-
-### Season Prep Checklist
-
-- [ ] Resize to 4 GiB / 2 vCPU droplet
-- [ ] Apply nginx base config tuning (see table above)
-- [ ] Set Docker memory limit on bhmc-next (512 MiB) via CapRover to auto-restart on leak
-- [ ] Run `docker system prune -a` to reclaim disk before the season
-- [ ] Confirm 1 GiB swap file is active (`free -h`)
-- [ ] Scale back down at end of season
-
-## Related Projects
-
-- [BHMC React frontend](https://github.com/finleysg/bhmc)
-- [BHMC Django backend](https://github.com/finleysg/bhmc-api)
-- [daisyUI documentation](https://daisyui.com/docs/)
+| Container    | Stack         |
+| ------------ | ------------- |
+| bhmc-public  | Next.js       |
+| bhmc-admin   | Next.js       |
+| bhmc-api     | NestJS        |
+| bhmc-backend | Django        |
+| CapRover     | Orchestration |
+| nginx        | Reverse proxy |

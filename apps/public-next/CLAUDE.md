@@ -1,6 +1,6 @@
 # apps/public-next
 
-Next.js 16 rewrite of the public site (replacing apps/public).
+Next.js 16 public site.
 
 ## Next.js 16 Conventions
 

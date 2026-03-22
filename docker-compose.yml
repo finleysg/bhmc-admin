@@ -82,21 +82,6 @@ services:
       - api
     restart: unless-stopped
 
-  public:
-    build:
-      context: .
-      dockerfile: apps/public/Dockerfile
-    volumes:
-      - ./apps/public/src:/app/apps/public/src
-    ports:
-      - "3000:3000"
-    env_file:
-      - ./apps/public/.env.development
-    environment:
-      - NODE_ENV=development
-    depends_on:
-      - backend
-
   public-next:
     build:
       context: .
