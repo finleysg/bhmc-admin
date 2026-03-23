@@ -170,6 +170,7 @@ export default function ClubDocumentsPage() {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
+					code: state.selectedCode.code,
 					document: createdDoc.id,
 				}),
 			})
