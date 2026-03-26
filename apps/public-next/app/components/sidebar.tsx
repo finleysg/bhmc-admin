@@ -74,7 +74,7 @@ function NavLink({ item }: { item: NavItem }) {
 }
 
 export function SidebarNav() {
-	const { isAuthenticated, isAdmin } = useAuth()
+	const { isAuthenticated, isAdmin, isStaff } = useAuth()
 
 	return (
 		<nav className="flex flex-col gap-1 p-2">
@@ -98,18 +98,9 @@ export function SidebarNav() {
 				</>
 			)}
 
-			{isAdmin && (
+			{(isAdmin || isStaff) && (
 				<>
 					<Separator className="my-2" />
-					<a
-						href={process.env.NEXT_PUBLIC_ADMIN_URL ?? "/admin"}
-						target="_blank"
-						rel="noopener noreferrer"
-						className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
-					>
-						<Shield className="size-4" />
-						Administration
-					</a>
 					<a
 						href="https://docs.google.com/spreadsheets/d/1d0DyeELbWPKCX8kHqi0gdBsRVx83HZMm-LiBhBSBw-w/edit?usp=sharing"
 						target="_blank"
@@ -120,6 +111,18 @@ export function SidebarNav() {
 						Paul&#39;s Schedule
 					</a>
 				</>
+			)}
+
+			{isAdmin && (
+				<a
+					href={process.env.NEXT_PUBLIC_ADMIN_URL ?? "/admin"}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+				>
+					<Shield className="size-4" />
+					Administration
+				</a>
 			)}
 		</nav>
 	)
