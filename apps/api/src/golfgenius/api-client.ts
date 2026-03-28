@@ -389,10 +389,32 @@ export class ApiClient {
 		const season = await this.getSeasonForYear(year)
 		const categoryId = this.configService.get<string>("golfGenius.categoryId")
 		const events = await this.getEvents(season.id?.toString(), categoryId)
-		const dateMatches = events.filter((e) => this.normalizeDateOnly(e.start_date) === targetDate)
+		let dateMatches = events.filter((e) => this.normalizeDateOnly(e.start_date) === targetDate)
 
 		if (dateMatches.length === 0) {
-			throw new ApiError(`No Golf Genius events found matching start date ${targetDate}`)
+			const lookback = this.configService.get<number>("golfGenius.lookback") ?? 0
+			if (lookback !== 0) {
+				const direction = lookback > 0 ? -1 : 1
+				const maxShift = Math.abs(lookback)
+				for (let i = 1; i <= maxShift; i++) {
+					const shifted = new Date(`${targetDate}T12:00:00Z`)
+					shifted.setUTCDate(shifted.getUTCDate() + direction * i)
+					const shiftedStr = shifted.toISOString().substring(0, 10)
+					const shiftedMatches = events.filter(
+						(e) => this.normalizeDateOnly(e.start_date) === shiftedStr,
+					)
+					if (shiftedMatches.length > 0) {
+						this.logger.warn(
+							`No events on ${targetDate}; matched ${shiftedMatches.length} on ${shiftedStr} (shift ${direction * i}d)`,
+						)
+						dateMatches = shiftedMatches
+						break
+					}
+				}
+			}
+			if (dateMatches.length === 0) {
+				throw new ApiError(`No Golf Genius events found matching start date ${targetDate}`)
+			}
 		}
 
 		if (dateMatches.length === 1) return dateMatches[0]
