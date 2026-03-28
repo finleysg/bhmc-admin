@@ -1,4 +1,8 @@
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 import { defineConfig, devices } from "@playwright/test"
+
+process.loadEnvFile(path.join(path.dirname(fileURLToPath(import.meta.url)), ".env"))
 
 const isCI = !!process.env.CI
 

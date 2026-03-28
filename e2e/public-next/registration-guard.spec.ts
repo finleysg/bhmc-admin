@@ -17,7 +17,7 @@ test.beforeAll(async () => {
 	// Use a date 3 days out to avoid conflicting with reserve.spec.ts (which uses tomorrow)
 	const startDate = new Date()
 	startDate.setDate(startDate.getDate() + 3)
-	testEvent = await createTestEvent(token, 914, startDate.toISOString().slice(0, 10))
+	testEvent = await createTestEvent(token, undefined, startDate.toISOString().slice(0, 10))
 	await warmCacheAndVerify(testEvent.eventUrl, testEvent.name)
 })
 

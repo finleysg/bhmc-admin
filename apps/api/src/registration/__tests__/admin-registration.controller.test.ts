@@ -58,12 +58,19 @@ const createMockRegistrationService = () => ({
 	getAvailableSpots: jest.fn(),
 })
 
+const createMockEventsService = () => ({
+	getEventById: jest.fn().mockResolvedValue({
+		signupEnd: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+	}),
+})
+
 function createController() {
 	const adminRegistrationService = createMockAdminRegistrationService()
 	const playerService = createMockPlayerService()
 	const paymentsService = createMockPaymentsService()
 	const refundService = createMockRefundService()
 	const registrationService = createMockRegistrationService()
+	const eventsService = createMockEventsService()
 
 	const controller = new AdminRegistrationController(
 		adminRegistrationService as any,
@@ -71,6 +78,7 @@ function createController() {
 		paymentsService as any,
 		refundService as any,
 		registrationService as any,
+		eventsService as any,
 	)
 
 	return {
@@ -80,6 +88,7 @@ function createController() {
 		paymentsService,
 		refundService,
 		registrationService,
+		eventsService,
 	}
 }
 
@@ -237,6 +246,52 @@ describe("AdminRegistrationController", () => {
 
 			const result = await controller.dropPlayers(100, dropRequest, req)
 
+			expect(refundService.processRefunds).toHaveBeenCalled()
+			expect(result).toEqual({ droppedCount: 2 })
+		})
+
+		it("non-admin user after signupEnd: drops without refund", async () => {
+			const {
+				controller,
+				playerService,
+				paymentsService,
+				refundService,
+				registrationService,
+				eventsService,
+			} = createController()
+			const user = createUser()
+			const req = { user } as any
+
+			registrationService.findRegistrationById.mockResolvedValue({ id: 42 })
+			eventsService.getEventById.mockResolvedValue({
+				signupEnd: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+			})
+			playerService.dropPlayers.mockResolvedValue(2)
+
+			const result = await controller.dropPlayers(100, dropRequest, req)
+
+			expect(paymentsService.findPaidFeesBySlotIds).not.toHaveBeenCalled()
+			expect(refundService.processRefunds).not.toHaveBeenCalled()
+			expect(result).toEqual({ droppedCount: 2 })
+		})
+
+		it("admin user with autoRefund true after signupEnd: still processes refunds", async () => {
+			const { controller, playerService, paymentsService, refundService, eventsService } =
+				createController()
+			const user = createUser({ isStaff: true })
+			const req = { user } as any
+			const dropWithRefund = { ...dropRequest, autoRefund: true }
+
+			eventsService.getEventById.mockResolvedValue({
+				signupEnd: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+			})
+			paymentsService.findPaidFeesBySlotIds.mockResolvedValue([{ id: 10, paymentId: 1 }])
+			playerService.dropPlayers.mockResolvedValue(2)
+			refundService.processRefunds.mockResolvedValue(undefined)
+
+			const result = await controller.dropPlayers(100, dropWithRefund, req)
+
+			expect(paymentsService.findPaidFeesBySlotIds).toHaveBeenCalledWith([101, 102])
 			expect(refundService.processRefunds).toHaveBeenCalled()
 			expect(result).toEqual({ droppedCount: 2 })
 		})

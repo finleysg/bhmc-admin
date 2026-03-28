@@ -26,7 +26,7 @@ test.beforeAll(async () => {
 	// Use +8 days to avoid collisions with other specs (+1, +2, +5, +7)
 	const startDate = new Date()
 	startDate.setDate(startDate.getDate() + 8)
-	testEvent = await createTestEvent(token, 914, startDate.toISOString().slice(0, 10))
+	testEvent = await createTestEvent(token, undefined, startDate.toISOString().slice(0, 10))
 	await warmCacheAndVerify(testEvent.eventUrl, testEvent.name)
 	testRegistration = await createTestRegistration(token, testEvent.id, [member1, member2, member3])
 })
@@ -159,7 +159,7 @@ test("move group to a different spot", async ({ page }) => {
 	// Verify move page loaded
 	await expect(page.getByText("Move Group")).toBeVisible({ timeout: 10_000 })
 
-	// Select a course (template 914 has multiple courses)
+	// Select a course (template event has multiple courses)
 	await page.getByRole("button", { name: "East" }).click()
 
 	// Wait for spot selector to appear after course selection

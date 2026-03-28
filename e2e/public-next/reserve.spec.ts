@@ -14,7 +14,7 @@ test.describe.configure({ mode: "serial" })
 
 test.beforeAll(async () => {
 	token = await getAdminToken()
-	testEvent = await createTestEvent(token, 914)
+	testEvent = await createTestEvent(token)
 	await warmCacheAndVerify(testEvent.eventUrl, testEvent.name)
 })
 
@@ -85,7 +85,7 @@ test("requires minimum group size during priority registration", async ({ page }
 	dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2)
 	const startDate = dayAfterTomorrow.toISOString().slice(0, 10)
 	const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000).toISOString()
-	const priorityEvent = await createTestEvent(token, 914, startDate, {
+	const priorityEvent = await createTestEvent(token, undefined, startDate, {
 		signup_start: oneHourFromNow,
 	})
 
@@ -108,7 +108,7 @@ test("requires minimum group size during priority registration", async ({ page }
 		const selectButton = page.getByRole("button", { name: "Select" }).first()
 		await expect(selectButton).toBeEnabled({ timeout: 30_000 })
 
-		// Template event 914 has minimum_signup_group_size=3 and group_size=5.
+		// Template event has minimum_signup_group_size=3 and group_size=5.
 		// Click a single open slot — Register should be disabled (1 < 3)
 		await page.getByRole("button", { name: "Open" }).first().click()
 		const registerButton = page.getByRole("button", { name: "Register" }).first()
@@ -140,12 +140,17 @@ test("redirects to event detail page when registration is closed", async ({ page
 	const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
 	const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
 
-	const closedEvent = await createTestEvent(token, 914, startDate.toISOString().slice(0, 10), {
-		priority_signup_start: threeHoursAgo,
-		signup_start: twoHoursAgo,
-		signup_end: oneHourAgo,
-		payments_end: oneHourAgo,
-	})
+	const closedEvent = await createTestEvent(
+		token,
+		undefined,
+		startDate.toISOString().slice(0, 10),
+		{
+			priority_signup_start: threeHoursAgo,
+			signup_start: twoHoursAgo,
+			signup_end: oneHourAgo,
+			payments_end: oneHourAgo,
+		},
+	)
 
 	try {
 		await warmCacheAndVerify(closedEvent.eventUrl, closedEvent.name)

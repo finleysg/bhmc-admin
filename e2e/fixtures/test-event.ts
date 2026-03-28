@@ -1,6 +1,7 @@
-const DJANGO_URL = process.env.DJANGO_URL ?? "http://localhost:8000"
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "finleysg@gmail.com"
-const PASSWORD = process.env.E2E_USER_PASSWORD ?? "sverige8"
+const DJANGO_URL = process.env.DJANGO_URL
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL
+const PASSWORD = process.env.E2E_ADMIN_PASSWORD
+const TEMPLATE_EVENT_ID = Number(process.env.E2E_TEMPLATE_EVENT_ID)
 
 export type TestEvent = {
 	id: number
@@ -46,7 +47,7 @@ function tomorrow(): string {
 
 export async function createTestEvent(
 	token: string,
-	templateId = 914,
+	templateId = TEMPLATE_EVENT_ID,
 	startDate?: string,
 	patchOverrides?: Record<string, string>,
 ): Promise<TestEvent> {

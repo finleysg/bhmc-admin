@@ -33,6 +33,7 @@ import type {
 } from "@repo/domain/types"
 
 import { Admin, type AuthenticatedRequest, Roles } from "../../auth"
+import { EventsService } from "../../events"
 import { AdminRegistrationService } from "../services/admin-registration.service"
 import { PaymentsService } from "../services/payments.service"
 import { PlayerService } from "../services/player.service"
@@ -67,6 +68,7 @@ export class AdminRegistrationController {
 		@Inject(PaymentsService) private readonly paymentsService: PaymentsService,
 		@Inject(RefundService) private readonly refundService: RefundService,
 		@Inject(RegistrationService) private readonly registrationService: RegistrationService,
+		@Inject(EventsService) private readonly events: EventsService,
 	) {}
 
 	@Get("players")
@@ -178,11 +180,19 @@ export class AdminRegistrationController {
 		@Req() req: AuthenticatedRequest,
 	): Promise<DropPlayersResponse> {
 		const isAdmin = req.user.isStaff || req.user.isSuperuser
-		const shouldRefund = request.autoRefund ?? !isAdmin
+		let shouldRefund = request.autoRefund ?? !isAdmin
 
 		// Non-admin users must be a member of the registration group
 		if (!isAdmin) {
 			await this.registrationService.findRegistrationById(request.registrationId, req.user.playerId)
+		}
+
+		// Non-admin auto-refunds are only available before signupEnd
+		if (shouldRefund && !isAdmin) {
+			const event = await this.events.getEventById(_eventId)
+			if (event.signupEnd && new Date() >= new Date(event.signupEnd)) {
+				shouldRefund = false
+			}
 		}
 
 		// Collect paid fees BEFORE the drop (drop detaches fees from slots)

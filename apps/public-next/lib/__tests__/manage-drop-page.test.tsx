@@ -165,6 +165,64 @@ beforeEach(() => {
 	global.fetch = jest.fn()
 })
 
+test("shows no-refund alert when signup_end is in the past", async () => {
+	mockClubEvent.mockImplementation(() =>
+		makeClubEvent({ signup_end: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() }),
+	)
+
+	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
+
+	render(<DropPage />)
+
+	expect(screen.getByText(/NOTE: Refunds are not available after the signup deadline/)).toBeTruthy()
+})
+
+test("does not show no-refund alert when signup_end is in the future", async () => {
+	mockClubEvent.mockImplementation(() =>
+		makeClubEvent({ signup_end: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }),
+	)
+
+	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
+
+	render(<DropPage />)
+
+	expect(screen.queryByText(/NOTE: Refunds are not available after the signup deadline/)).toBeNull()
+})
+
+test("confirmation dialog shows no-refund message after signup_end", async () => {
+	mockClubEvent.mockImplementation(() =>
+		makeClubEvent({ signup_end: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() }),
+	)
+
+	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
+
+	render(<DropPage />)
+
+	fireEvent.click(screen.getByLabelText("Alice Smith"))
+	fireEvent.click(screen.getByRole("button", { name: /^drop$/i }))
+
+	await waitFor(() => {
+		expect(screen.getByText(/No automatic refund will be issued/)).toBeTruthy()
+	})
+})
+
+test("confirmation dialog shows refund message before signup_end", async () => {
+	mockClubEvent.mockImplementation(() =>
+		makeClubEvent({ signup_end: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }),
+	)
+
+	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
+
+	render(<DropPage />)
+
+	fireEvent.click(screen.getByLabelText("Alice Smith"))
+	fireEvent.click(screen.getByRole("button", { name: /^drop$/i }))
+
+	await waitFor(() => {
+		expect(screen.getByText(/Any paid fees will be refunded/)).toBeTruthy()
+	})
+})
+
 test("renders drop players page with player list and disabled Drop button", async () => {
 	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
 
@@ -190,6 +248,10 @@ test("Drop button enabled after selecting a player", async () => {
 })
 
 test("clicking Drop shows confirmation dialog with refund notice", async () => {
+	mockClubEvent.mockImplementation(() =>
+		makeClubEvent({ signup_end: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }),
+	)
+
 	const { default: DropPage } = await import("@/app/event/[eventDate]/[eventName]/manage/drop/page")
 
 	render(<DropPage />)
@@ -200,11 +262,14 @@ test("clicking Drop shows confirmation dialog with refund notice", async () => {
 	await waitFor(() => {
 		const description = screen.getByText(/Are you sure you want to remove 1 player\(s\)/)
 		expect(description).toBeTruthy()
-		expect(description.textContent).toContain("Any paid fees will be automatically refunded")
+		expect(description.textContent).toContain("Any paid fees will be refunded")
 	})
 })
 
 test("confirming drop calls POST API with slot IDs and navigates to manage", async () => {
+	mockClubEvent.mockImplementation(() =>
+		makeClubEvent({ signup_end: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }),
+	)
 	;(global.fetch as jest.Mock).mockResolvedValue({
 		ok: true,
 		json: () => Promise.resolve({ droppedCount: 1 }),
@@ -241,6 +306,9 @@ test("confirming drop calls POST API with slot IDs and navigates to manage", asy
 })
 
 test("dropping self navigates to event detail page", async () => {
+	mockClubEvent.mockImplementation(() =>
+		makeClubEvent({ signup_end: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }),
+	)
 	;(global.fetch as jest.Mock).mockResolvedValue({
 		ok: true,
 		json: () => Promise.resolve({ droppedCount: 1 }),

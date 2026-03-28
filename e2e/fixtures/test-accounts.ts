@@ -5,16 +5,16 @@ import { fileURLToPath } from "node:url"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export const testUser = {
-	email: process.env.E2E_USER_EMAIL ?? "finleysg@zoho.com",
-	password: process.env.E2E_USER_PASSWORD ?? "sverige8",
+	email: process.env.E2E_USER_EMAIL,
+	password: process.env.E2E_USER_PASSWORD,
 }
 
 export const adminUser = {
-	email: process.env.E2E_ADMIN_EMAIL ?? "finleysg@gmail.com",
-	password: process.env.E2E_USER_PASSWORD ?? "sverige8",
+	email: process.env.E2E_ADMIN_EMAIL,
+	password: process.env.E2E_ADMIN_PASSWORD,
 }
 
-export const testPassword = process.env.E2E_USER_PASSWORD ?? "sverige8"
+export const testPassword = process.env.E2E_USER_PASSWORD
 
 type TestUser = {
 	email: string

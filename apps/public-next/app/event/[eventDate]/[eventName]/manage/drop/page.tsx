@@ -3,8 +3,11 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
+import { isBefore } from "date-fns"
+import { Info } from "lucide-react"
 import { toast } from "sonner"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -41,6 +44,10 @@ export default function ManageDropPage() {
 
 	if (!clubEvent || !registration) return null
 
+	const refundEligible = clubEvent.signup_end
+		? isBefore(new Date(), new Date(clubEvent.signup_end))
+		: false
+
 	const eventUrl = getEventUrl(clubEvent)
 	const manageUrl = `${eventUrl}/manage`
 
@@ -58,7 +65,11 @@ export default function ManageDropPage() {
 			const response = await fetch(`/api/events/${clubEvent.id}/drop-players`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ registrationId: registration.id, slotIds, autoRefund: true }),
+				body: JSON.stringify({
+					registrationId: registration.id,
+					slotIds,
+					autoRefund: refundEligible,
+				}),
 			})
 			if (!response.ok) {
 				throw new Error("Failed to drop players")
@@ -96,6 +107,14 @@ export default function ManageDropPage() {
 					<CardTitle className="text-lg">Drop Players</CardTitle>
 				</CardHeader>
 				<CardContent>
+					{!refundEligible && (
+						<Alert className="mb-4">
+							<Info className="h-4 w-4" />
+							<AlertDescription>
+								NOTE: Refunds are not available after the signup deadline.
+							</AlertDescription>
+						</Alert>
+					)}
 					<div className="space-y-2">
 						<Label className="font-semibold">Select players to drop</Label>
 						<RegisteredPlayerSelector registration={registration} onChange={setSelectedPlayerIds} />
@@ -123,8 +142,10 @@ export default function ManageDropPage() {
 					<AlertDialogHeader>
 						<AlertDialogTitle>Drop Players</AlertDialogTitle>
 						<AlertDialogDescription>
-							Are you sure you want to remove {selectedPlayerIds.length} player(s) from your group?
-							Any paid fees will be automatically refunded.
+							Are you sure you want to remove {selectedPlayerIds.length} player(s) from your group?{" "}
+							{refundEligible
+								? "Any paid fees will be refunded."
+								: "No automatic refund will be issued."}
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>

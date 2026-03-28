@@ -4,9 +4,9 @@ import { fileURLToPath } from "node:url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const DJANGO_URL = process.env.DJANGO_URL ?? "http://localhost:8000"
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "finleysg@gmail.com"
-const PASSWORD = process.env.E2E_USER_PASSWORD ?? "sverige8"
+const DJANGO_URL = process.env.DJANGO_URL
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL
+const PASSWORD = process.env.E2E_ADMIN_PASSWORD
 
 async function getAdminToken(): Promise<string | null> {
 	const res = await fetch(`${DJANGO_URL}/auth/token/login/`, {

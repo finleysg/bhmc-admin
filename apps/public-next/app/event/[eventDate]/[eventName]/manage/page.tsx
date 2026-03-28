@@ -53,7 +53,7 @@ export default function ManagePage() {
 			key: "dropPlayers",
 			title: "Drop Players",
 			description:
-				"Drop one or more players from your group. A refund will be triggered for fees paid.",
+				"Drop one or more players from your group.",
 			href: `${eventUrl}/manage/drop`,
 			disabled: registrationClosed,
 		},

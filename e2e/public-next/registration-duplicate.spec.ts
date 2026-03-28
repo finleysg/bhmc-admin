@@ -17,7 +17,7 @@ test.beforeAll(async () => {
 	// Use a date 7 days out to avoid conflicting with other specs
 	const startDate = new Date()
 	startDate.setDate(startDate.getDate() + 7)
-	testEvent = await createTestEvent(token, 914, startDate.toISOString().slice(0, 10))
+	testEvent = await createTestEvent(token, undefined, startDate.toISOString().slice(0, 10))
 	await warmCacheAndVerify(testEvent.eventUrl, testEvent.name)
 })
 

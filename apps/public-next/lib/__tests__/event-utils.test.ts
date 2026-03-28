@@ -511,9 +511,9 @@ describe("getSignUpUnavailableReason", () => {
 
 		it("shows 'canceled' instead of 'event full' for canceled event", () => {
 			const event = openEvent({ status: "C" })
-			expect(
-				getSignUpUnavailableReason({ event, ...defaults, isEventFull: true }),
-			).toBe("This event has been canceled.")
+			expect(getSignUpUnavailableReason({ event, ...defaults, isEventFull: true })).toBe(
+				"This event has been canceled.",
+			)
 		})
 
 		it("shows 'sign in' instead of 'event full' for anonymous user", () => {

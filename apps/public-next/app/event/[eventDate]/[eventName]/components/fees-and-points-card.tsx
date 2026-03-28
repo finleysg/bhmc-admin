@@ -9,7 +9,10 @@ interface FeesAndPointsCardProps {
 	openSpots?: number
 }
 
-export async function FeesAndPointsCard({ event, openSpots: precomputedSpots }: FeesAndPointsCardProps) {
+export async function FeesAndPointsCard({
+	event,
+	openSpots: precomputedSpots,
+}: FeesAndPointsCardProps) {
 	const fees = event.fees ?? []
 
 	let openSpots = precomputedSpots ?? -1
