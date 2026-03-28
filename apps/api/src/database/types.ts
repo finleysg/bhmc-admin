@@ -21,6 +21,7 @@ import {
 	player,
 	refund,
 	registration,
+	registrationChangeLog,
 	registrationFee,
 	registrationSlot,
 	round,
@@ -53,6 +54,7 @@ export type PlayerRow = typeof player.$inferSelect
 export type RegistrationRow = typeof registration.$inferSelect
 export type RegistrationSlotRow = typeof registrationSlot.$inferSelect
 export type RegistrationFeeRow = typeof registrationFee.$inferSelect
+export type RegistrationChangeLogRow = typeof registrationChangeLog.$inferSelect
 export type PaymentRow = typeof payment.$inferSelect
 export type RefundRow = typeof refund.$inferSelect
 
@@ -98,6 +100,7 @@ export type PlayerInsert = typeof player.$inferInsert
 export type RegistrationInsert = typeof registration.$inferInsert
 export type RegistrationSlotInsert = typeof registrationSlot.$inferInsert
 export type RegistrationFeeInsert = typeof registrationFee.$inferInsert
+export type RegistrationChangeLogInsert = typeof registrationChangeLog.$inferInsert
 export type PaymentInsert = typeof payment.$inferInsert
 export type RefundInsert = typeof refund.$inferInsert
 

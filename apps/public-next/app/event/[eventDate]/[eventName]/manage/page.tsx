@@ -52,8 +52,7 @@ export default function ManagePage() {
 		{
 			key: "dropPlayers",
 			title: "Drop Players",
-			description:
-				"Drop one or more players from your group.",
+			description: "Drop one or more players from your group.",
 			href: `${eventUrl}/manage/drop`,
 			disabled: registrationClosed,
 		},

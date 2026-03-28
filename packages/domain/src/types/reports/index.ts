@@ -1,3 +1,4 @@
+export * from "./changelog-report"
 export * from "./event-report-row"
 export * from "./membership-report-row"
 export * from "./event-results-report-row"

@@ -53,6 +53,11 @@ export default function EventReportsPage() {
 			description: "Per-event payment details, fees, and refunds",
 			href: `/events/${eventId}/reports/payments`,
 		},
+		{
+			title: "Change Log",
+			description: "History of registration changes and admin actions",
+			href: `/events/${eventId}/reports/changelog`,
+		},
 	]
 
 	return (

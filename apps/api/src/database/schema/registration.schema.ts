@@ -4,6 +4,7 @@ import {
 	decimal,
 	index,
 	int,
+	json,
 	longtext,
 	mysqlTable,
 	primaryKey,
@@ -158,4 +159,25 @@ export const registrationSlot = mysqlTable(
 		primaryKey({ columns: [table.id], name: "register_registrationslot_id" }),
 		unique("unique_player_registration").on(table.eventId, table.playerId),
 	],
+)
+
+export const registrationChangeLog = mysqlTable(
+	"register_registrationchangelog",
+	{
+		id: int().autoincrement().notNull(),
+		eventId: int("event_id")
+			.notNull()
+			.references(() => event.id),
+		registrationId: int("registration_id")
+			.notNull()
+			.references(() => registration.id),
+		action: varchar({ length: 20 }).notNull(),
+		actorId: int("actor_id")
+			.notNull()
+			.references(() => authUser.id),
+		isAdmin: tinyint("is_admin").notNull(),
+		details: json().notNull(),
+		createdDate: datetime("created_date", { mode: "string", fsp: 6 }).notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.id], name: "register_registrationchangelog_id" })],
 )

@@ -136,4 +136,24 @@ export class ReportsController {
 		res.setHeader("Content-Disposition", `attachment; filename="payment-report-${eventId}.xlsx"`)
 		res.send(buffer)
 	}
+
+	@Get("events/:eventId/changelog")
+	async getChangeLogReport(@Param("eventId", ParseIntPipe) eventId: number) {
+		return this.reports.getChangeLogReport(eventId)
+	}
+
+	@Get("events/:eventId/changelog/excel")
+	async getChangeLogReportExcel(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Res() res: Response,
+	) {
+		const buffer = await this.reports.generateChangeLogReportExcel(eventId)
+
+		res.setHeader(
+			"Content-Type",
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		)
+		res.setHeader("Content-Disposition", `attachment; filename="changelog-${eventId}.xlsx"`)
+		res.send(buffer)
+	}
 }
