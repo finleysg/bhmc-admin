@@ -638,6 +638,8 @@ describe("MailService", () => {
 				eventName: "Wednesday Event",
 				eventDate: "Wednesday, June 15, 2026",
 				registrationDate: "6/15/2026, 8:00:00 AM",
+				registrationId: 42,
+				paymentCode: "pi_abc123",
 			})
 
 			expect(sendEmailSpy).toHaveBeenCalledTimes(1)
@@ -654,6 +656,8 @@ describe("MailService", () => {
 				eventName: "Wednesday Event",
 				eventDate: "Wednesday, June 15, 2026",
 				registrationDate: "6/15/2026, 8:00:00 AM",
+				registrationId: 42,
+				paymentCode: "pi_abc123",
 			})
 
 			const template = sendEmailSpy.mock.calls[0][0].template

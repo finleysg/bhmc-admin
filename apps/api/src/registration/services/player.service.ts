@@ -179,7 +179,7 @@ export class PlayerService {
 		if (searchText) {
 			const results = await this.repository.findPlayersByText(searchText)
 			results.forEach((r) => players.push(toPlayer(r)))
-			this.logger.log("Players found: {players}", players.length)
+			this.logger.debug("Players found: {players}", players.length)
 		} else {
 			const results = await this.repository.getPlayers()
 			results.forEach((r) => players.push(toPlayer(r)))
@@ -187,14 +187,14 @@ export class PlayerService {
 
 		if (isMember !== undefined) {
 			players = players.filter((p) => p.isMember === isMember)
-			this.logger.log("Players found after isMember filter: {players}", players.length)
+			this.logger.debug("Players found after isMember filter: {players}", players.length)
 		}
 
 		if (excludeRegistered && eventId) {
 			const registered = await this.repository.findRegisteredPlayers(eventId)
 			const registeredIds = new Set(registered.map((r) => r.id))
 			const filtered = players.filter((p) => !registeredIds.has(p.id))
-			this.logger.log("Players found after excludeRegistered filter: {players}", filtered.length)
+			this.logger.debug("Players found after excludeRegistered filter: {players}", filtered.length)
 			return filtered
 		}
 

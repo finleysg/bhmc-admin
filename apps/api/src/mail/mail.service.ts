@@ -581,6 +581,8 @@ export class MailService {
 			eventName: string
 			eventDate: string
 			registrationDate: string
+			registrationId: number
+			paymentCode: string | null
 		},
 	): Promise<void> {
 		await this.sendEmail({

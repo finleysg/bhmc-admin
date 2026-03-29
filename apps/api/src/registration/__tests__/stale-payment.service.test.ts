@@ -55,6 +55,7 @@ describe("StalePaymentService", () => {
 				eventDate: "2026-06-15",
 				paymentUserEmail: "john@example.com",
 				createdDate: "2026-06-15 08:00:00",
+				paymentCode: "pi_abc123",
 			},
 			{
 				registrationId: 2,
@@ -62,6 +63,7 @@ describe("StalePaymentService", () => {
 				eventDate: "2026-06-20",
 				paymentUserEmail: "jane@example.com",
 				createdDate: "2026-06-20 09:30:00",
+				paymentCode: null,
 			},
 		])
 
@@ -80,6 +82,7 @@ describe("StalePaymentService", () => {
 				eventDate: "2026-06-15",
 				paymentUserEmail: "admin@bhmc.org",
 				createdDate: "2026-06-15 08:00:00",
+				paymentCode: "pi_xyz789",
 			},
 		])
 
@@ -99,6 +102,7 @@ describe("StalePaymentService", () => {
 				eventDate: "2026-06-15",
 				paymentUserEmail: "john@example.com",
 				createdDate: "2026-06-15 08:00:00",
+				paymentCode: "pi_def456",
 			},
 		])
 
@@ -120,6 +124,7 @@ describe("StalePaymentService", () => {
 				eventDate: "2026-06-15",
 				paymentUserEmail: "john@example.com",
 				createdDate: "2026-06-15 08:00:00",
+				paymentCode: "pi_fail123",
 			},
 			{
 				registrationId: 2,
@@ -127,6 +132,7 @@ describe("StalePaymentService", () => {
 				eventDate: "2026-06-20",
 				paymentUserEmail: "jane@example.com",
 				createdDate: "2026-06-20 09:30:00",
+				paymentCode: null,
 			},
 		])
 

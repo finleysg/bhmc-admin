@@ -37,6 +37,8 @@ export class StalePaymentService {
 					eventName: reg.eventName,
 					eventDate,
 					registrationDate: new Date(reg.createdDate).toLocaleString("en-US"),
+					registrationId: reg.registrationId,
+					paymentCode: reg.paymentCode,
 				})
 			} catch (error) {
 				this.logger.error(

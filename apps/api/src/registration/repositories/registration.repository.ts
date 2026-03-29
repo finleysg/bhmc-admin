@@ -605,6 +605,7 @@ export class RegistrationRepository {
 			eventDate: string
 			paymentUserEmail: string
 			createdDate: string
+			paymentCode: string | null
 		}[]
 	> {
 		const cutoffStr = toDbString(cutoff)
@@ -615,11 +616,14 @@ export class RegistrationRepository {
 				eventDate: event.startDate,
 				paymentUserEmail: authUser.email,
 				createdDate: registration.createdDate,
+				paymentCode: payment.paymentCode,
 			})
 			.from(registrationSlot)
 			.innerJoin(registration, eq(registrationSlot.registrationId, registration.id))
 			.innerJoin(event, eq(registrationSlot.eventId, event.id))
 			.innerJoin(authUser, eq(registration.userId, authUser.id))
+			.leftJoin(registrationFee, eq(registrationFee.registrationSlotId, registrationSlot.id))
+			.leftJoin(payment, eq(registrationFee.paymentId, payment.id))
 			.where(
 				and(
 					eq(registrationSlot.status, RegistrationStatusChoices.AWAITING_PAYMENT),
@@ -633,6 +637,7 @@ export class RegistrationRepository {
 			eventDate: r.eventDate,
 			paymentUserEmail: r.paymentUserEmail,
 			createdDate: r.createdDate,
+			paymentCode: r.paymentCode,
 		}))
 	}
 

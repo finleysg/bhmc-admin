@@ -7,12 +7,16 @@ interface StalePaymentNotificationEmailProps {
 	eventName: string
 	eventDate: string
 	registrationDate: string
+	registrationId: number
+	paymentCode: string | null
 }
 
 export function StalePaymentNotificationEmail({
 	eventName,
 	eventDate,
 	registrationDate,
+	registrationId,
+	paymentCode,
 }: StalePaymentNotificationEmailProps) {
 	return (
 		<EmailLayout>
@@ -35,6 +39,16 @@ export function StalePaymentNotificationEmail({
 				<Column style={labelCell}>Registered:</Column>
 				<Column style={valueCell}>{registrationDate}</Column>
 			</Row>
+			<Row style={tableRow}>
+				<Column style={labelCell}>Registration ID:</Column>
+				<Column style={valueCell}>{registrationId}</Column>
+			</Row>
+			{paymentCode && (
+				<Row style={tableRow}>
+					<Column style={labelCell}>Payment Code:</Column>
+					<Column style={valueCell}>{paymentCode}</Column>
+				</Row>
+			)}
 
 			<Text style={paragraph}>
 				Please reach out to the tournament coordinator or treasurer if you still want to get into
