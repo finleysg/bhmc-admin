@@ -618,6 +618,51 @@ describe("MailService", () => {
 		})
 	})
 
+	describe("sendStalePaymentNotification", () => {
+		let service: MailService
+		let mockConfigService: ReturnType<typeof createMockConfigService>
+		let sendEmailSpy: jest.SpyInstance
+
+		beforeEach(() => {
+			mockConfigService = createMockConfigService()
+			service = new MailService(mockConfigService as unknown as ConfigService)
+			sendEmailSpy = jest.spyOn(service, "sendEmail").mockResolvedValue(undefined)
+		})
+
+		afterEach(() => {
+			jest.restoreAllMocks()
+		})
+
+		it("sends email to all recipients with correct subject", async () => {
+			await service.sendStalePaymentNotification(["admin@bhmc.org", "john@example.com"], {
+				eventName: "Wednesday Event",
+				eventDate: "Wednesday, June 15, 2026",
+				registrationDate: "6/15/2026, 8:00:00 AM",
+			})
+
+			expect(sendEmailSpy).toHaveBeenCalledTimes(1)
+			expect(sendEmailSpy).toHaveBeenCalledWith(
+				expect.objectContaining({
+					to: ["admin@bhmc.org", "john@example.com"],
+					subject: "Failed Payment Alert: Wednesday Event",
+				}),
+			)
+		})
+
+		it("includes event details in template", async () => {
+			await service.sendStalePaymentNotification(["admin@bhmc.org"], {
+				eventName: "Wednesday Event",
+				eventDate: "Wednesday, June 15, 2026",
+				registrationDate: "6/15/2026, 8:00:00 AM",
+			})
+
+			const template = sendEmailSpy.mock.calls[0][0].template
+			const json = JSON.stringify(template)
+			expect(json).toContain("Wednesday Event")
+			expect(json).toContain("Wednesday, June 15, 2026")
+		})
+	})
+
 	describe("sendMoveNotification", () => {
 		let service: MailService
 		let mockConfigService: ReturnType<typeof createMockConfigService>
