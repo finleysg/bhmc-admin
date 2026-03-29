@@ -15,6 +15,7 @@ const INITIAL_RETRY_DELAY = 1000
 const MAX_RETRY_DELAY = 30000
 const MAX_RETRIES = 5
 const BACKOFF_MULTIPLIER = 2
+const RECOVERY_INTERVAL = 60000
 
 export function useRegistrationSSE({
 	eventId,
@@ -25,6 +26,7 @@ export function useRegistrationSSE({
 	const eventSourceRef = useRef<EventSource | null>(null)
 	const retryCountRef = useRef(0)
 	const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const recoveryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 	const [connected, setConnected] = useState(false)
 
 	const cleanup = useCallback(() => {
@@ -35,6 +37,10 @@ export function useRegistrationSSE({
 		if (retryTimeoutRef.current) {
 			clearTimeout(retryTimeoutRef.current)
 			retryTimeoutRef.current = null
+		}
+		if (recoveryTimeoutRef.current) {
+			clearTimeout(recoveryTimeoutRef.current)
+			recoveryTimeoutRef.current = null
 		}
 		setConnected(false)
 	}, [])
@@ -84,6 +90,9 @@ export function useRegistrationSSE({
 				)
 				retryCountRef.current++
 				retryTimeoutRef.current = setTimeout(connect, delay)
+			} else if (enabled) {
+				// All retries exhausted — schedule periodic recovery attempts
+				recoveryTimeoutRef.current = setTimeout(connect, RECOVERY_INTERVAL)
 			}
 		}
 	}, [eventId, enabled, cleanup, onUpdate, onError])

@@ -25,12 +25,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 	}
 
 	const backendUrl = `${apiUrl}/registration/${id}/live`
+	const abortController = new AbortController()
 
 	const backendResponse = await fetch(backendUrl, {
 		headers: {
 			Authorization: `Token ${token}`,
 			Accept: "text/event-stream",
 		},
+		signal: abortController.signal,
 	})
 
 	if (!backendResponse.ok) {
@@ -68,6 +70,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 			}
 		},
 		cancel() {
+			abortController.abort()
 			void reader?.cancel()
 		},
 	})

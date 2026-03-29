@@ -56,7 +56,7 @@ describe("RegistrationBroadcastService", () => {
 
 			// Start waiting for emission, then advance timers past debounce
 			const promise = firstValueFrom(subscription.pipe(take(1)))
-			jest.advanceTimersByTime(2100)
+			jest.advanceTimersByTime(600)
 
 			const event = await promise
 			expect(event.eventId).toBe(1)
@@ -73,7 +73,7 @@ describe("RegistrationBroadcastService", () => {
 
 			const promise1 = firstValueFrom(sub1.pipe(take(1)))
 			const promise2 = firstValueFrom(sub2.pipe(take(1)))
-			jest.advanceTimersByTime(2100)
+			jest.advanceTimersByTime(600)
 
 			await promise1
 			await promise2

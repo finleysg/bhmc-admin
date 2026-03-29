@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleDestroy } from "@nestjs/common"
-import { Subject, Observable, Subscription, interval } from "rxjs"
-import { debounceTime, share, startWith, switchMap, finalize } from "rxjs/operators"
+import { Subject, Observable, Subscription, interval, asyncScheduler } from "rxjs"
+import { throttleTime, share, startWith, switchMap, finalize } from "rxjs/operators"
 import { ClubEvent, RegistrationSlotWithPlayerAndWave } from "@repo/domain/types"
 
 import { EventsService } from "../../events"
@@ -22,10 +22,11 @@ interface EventStreamState {
 	subscriberCount: number
 	lastWave: number
 	cachedEvent?: ClubEvent
+	lastSuccessfulEvent?: RegistrationUpdateEvent
 }
 
-const DEBOUNCE_MS = 2000
-const WAVE_CHECK_INTERVAL_MS = 30000
+const THROTTLE_MS = 500
+const WAVE_CHECK_INTERVAL_MS = 5000
 const IDLE_CLEANUP_MS = 5 * 60 * 1000
 
 @Injectable()
@@ -92,7 +93,7 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 
 		state.stream$ = trigger$.pipe(
 			startWith(undefined),
-			debounceTime(DEBOUNCE_MS),
+			throttleTime(THROTTLE_MS, asyncScheduler, { leading: true, trailing: true }),
 			switchMap(() => this.buildUpdateEvent(eventId, state)),
 			share(),
 		)
@@ -112,14 +113,19 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 			const currentWave = getCurrentWave(state.cachedEvent)
 			state.lastWave = currentWave
 
-			return {
+			const event: RegistrationUpdateEvent = {
 				eventId,
 				slots,
 				currentWave,
 				timestamp: new Date().toISOString(),
 			}
+			state.lastSuccessfulEvent = event
+			return event
 		} catch (error) {
 			this.logger.error(`Failed to build update event for ${eventId}`, error)
+			if (state.lastSuccessfulEvent) {
+				return { ...state.lastSuccessfulEvent, timestamp: new Date().toISOString() }
+			}
 			return {
 				eventId,
 				slots: [],

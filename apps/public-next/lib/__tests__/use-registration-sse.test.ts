@@ -197,7 +197,7 @@ describe("useRegistrationSSE", () => {
 			expect(es.close).toHaveBeenCalled()
 		})
 
-		it("retries with exponential backoff and stops after MAX_RETRIES", () => {
+		it("retries with exponential backoff then schedules periodic recovery", () => {
 			renderHook(() =>
 				useRegistrationSSE({
 					eventId: 42,
@@ -226,15 +226,66 @@ describe("useRegistrationSSE", () => {
 				expect(MockEventSource.instances.length).toBe(countBefore + 1)
 			}
 
-			// After 5 retries, another error should NOT create a new connection
+			// After 5 retries, another error schedules recovery at 60s
 			const lastEs = MockEventSource.instances[MockEventSource.instances.length - 1]
 			lastEs.simulateConnectionError()
 
 			const countAfterMax = MockEventSource.instances.length
+
+			// Should not reconnect before 60s
+			act(() => {
+				jest.advanceTimersByTime(59999)
+			})
+			expect(MockEventSource.instances.length).toBe(countAfterMax)
+
+			// Recovery attempt at 60s
+			act(() => {
+				jest.advanceTimersByTime(1)
+			})
+			expect(MockEventSource.instances.length).toBe(countAfterMax + 1)
+		})
+
+		it("resets retry count on successful recovery", () => {
+			renderHook(() =>
+				useRegistrationSSE({
+					eventId: 42,
+					enabled: true,
+				}),
+			)
+
+			// Exhaust all retries
+			for (let i = 0; i <= 5; i++) {
+				const es = MockEventSource.instances[MockEventSource.instances.length - 1]
+				es.simulateConnectionError()
+				if (i < 5) {
+					act(() => {
+						jest.advanceTimersByTime(30001)
+					})
+				}
+			}
+
+			// Advance to recovery attempt
 			act(() => {
 				jest.advanceTimersByTime(60000)
 			})
-			expect(MockEventSource.instances.length).toBe(countAfterMax)
+
+			const recoveryEs = MockEventSource.instances[MockEventSource.instances.length - 1]
+
+			// Simulate successful connection — resets retry count
+			act(() => {
+				recoveryEs.simulateOpen()
+			})
+
+			// Error again — should use normal backoff (1s), not recovery (60s)
+			act(() => {
+				recoveryEs.simulateConnectionError()
+			})
+
+			const countAfterError = MockEventSource.instances.length
+			act(() => {
+				jest.advanceTimersByTime(1000)
+			})
+			expect(MockEventSource.instances.length).toBe(countAfterError + 1)
 		})
 	})
 })
