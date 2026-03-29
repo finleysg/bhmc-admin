@@ -4,8 +4,10 @@ import type { MySql2Database } from "drizzle-orm/mysql2"
 import { Inject, Injectable, Logger } from "@nestjs/common"
 
 import {
+	authUser,
 	course,
 	DrizzleService,
+	event,
 	eventFee,
 	feeType,
 	hole,
@@ -33,7 +35,7 @@ import {
 	CompleteRegistrationSlotRow,
 } from "../../database"
 import { type FeeWithEventFeeRow, type SlotWithPlayerAndHoleRow } from "../mappers"
-import { RegistrationStatusValue } from "@repo/domain/types"
+import { RegistrationStatusChoices, RegistrationStatusValue } from "@repo/domain/types"
 
 @Injectable()
 export class RegistrationRepository {
@@ -594,5 +596,51 @@ export class RegistrationRepository {
 			.from(registrationSlot)
 			.where(eq(registrationSlot.eventId, eventId))
 		return Number(result?.count ?? 0)
+	}
+
+	async findStalePaymentProcessingRegistrations(cutoff: Date): Promise<
+		{
+			registrationId: number
+			eventName: string
+			eventDate: string
+			paymentUserEmail: string
+			createdDate: string
+		}[]
+	> {
+		const cutoffStr = toDbString(cutoff)
+		const results = await this.drizzle.db
+			.selectDistinct({
+				registrationId: registration.id,
+				eventName: event.name,
+				eventDate: event.startDate,
+				paymentUserEmail: authUser.email,
+				createdDate: registration.createdDate,
+			})
+			.from(registrationSlot)
+			.innerJoin(registration, eq(registrationSlot.registrationId, registration.id))
+			.innerJoin(event, eq(registrationSlot.eventId, event.id))
+			.innerJoin(authUser, eq(registration.userId, authUser.id))
+			.where(
+				and(
+					eq(registrationSlot.status, RegistrationStatusChoices.AWAITING_PAYMENT),
+					lt(registration.createdDate, sql`${cutoffStr}`),
+				),
+			)
+
+		return results.map((r) => ({
+			registrationId: r.registrationId,
+			eventName: r.eventName,
+			eventDate: r.eventDate,
+			paymentUserEmail: r.paymentUserEmail,
+			createdDate: r.createdDate,
+		}))
+	}
+
+	async resetStaleRegistrations(registrationIds: number[]): Promise<void> {
+		if (registrationIds.length === 0) return
+		await this.drizzle.db
+			.update(registrationSlot)
+			.set({ status: RegistrationStatusChoices.PENDING })
+			.where(inArray(registrationSlot.registrationId, registrationIds))
 	}
 }

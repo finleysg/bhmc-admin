@@ -11,6 +11,7 @@ import {
 	RegistrationLiveController,
 	UserRegistrationController,
 	RegistrationCleanupCron,
+	StalePaymentCron,
 	ChangeLogRepository,
 	PaymentsRepository,
 	RegistrationRepository,
@@ -24,6 +25,7 @@ import {
 	RefundService,
 	PlayerService,
 	CleanupService,
+	StalePaymentService,
 } from "./"
 
 @Module({
@@ -55,6 +57,8 @@ import {
 		RegistrationDataService,
 		RegistrationRepository,
 		RegistrationService,
+		StalePaymentCron,
+		StalePaymentService,
 	],
 	exports: [
 		AdminRegistrationService,

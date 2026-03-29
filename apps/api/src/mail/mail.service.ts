@@ -32,6 +32,7 @@ import {
 	RefundNotificationEmail,
 	RegistrationConfirmationEmail,
 	RegistrationUpdateEmail,
+	StalePaymentNotificationEmail,
 	WelcomeEmail,
 } from "./templates"
 import { WelcomeBackEmail } from "./templates/welcome-back-email"
@@ -572,5 +573,20 @@ export class MailService {
 				)
 			}
 		}
+	}
+
+	async sendStalePaymentNotification(
+		recipients: string[],
+		details: {
+			eventName: string
+			eventDate: string
+			registrationDate: string
+		},
+	): Promise<void> {
+		await this.sendEmail({
+			to: recipients,
+			subject: `Failed Payment Alert: ${details.eventName}`,
+			template: StalePaymentNotificationEmail(details),
+		})
 	}
 }

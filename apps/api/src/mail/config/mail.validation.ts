@@ -3,6 +3,7 @@ import * as Joi from "joi"
 export const mailValidationSchema = Joi.object({
 	MAIL_FROM: Joi.string().required(),
 	WEBSITE_URL: Joi.string().uri().required(),
+	ADMIN_NOTIFICATION_EMAIL: Joi.string().email().required(),
 	NODE_ENV: Joi.string().valid("development", "production", "test").default("development"),
 	// Dev-only (SMTP for mailpit)
 	MAIL_HOST: Joi.when("NODE_ENV", { is: "development", then: Joi.string().required() }),
