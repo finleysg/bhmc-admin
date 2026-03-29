@@ -92,7 +92,7 @@ function PaymentSetup({ children }: { children: React.ReactNode }) {
 				mode: "payment",
 				currency: "usd",
 				amount: stripeAmount.amountCents,
-				customerSessionClientSecret: customerSessionSecret ?? undefined,
+				customerSessionClientSecret: customerSessionSecret,
 			}}
 		>
 			<AdminPaymentContext.Provider value={{ amount: stripeAmount.amountDue, data: adminData }}>

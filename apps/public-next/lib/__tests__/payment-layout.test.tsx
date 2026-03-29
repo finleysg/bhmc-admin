@@ -11,14 +11,18 @@ jest.mock("../hooks/use-stripe-amount", () => ({
 	useStripeAmount: (...args: unknown[]) => mockUseStripeAmount(...args),
 }))
 
-// Mock useRegistration
-const mockInitiateStripeSession = jest.fn()
-jest.mock("../registration/registration-context", () => ({
-	useRegistration: () => ({
-		payment: { id: 42 },
-		stripeClientSession: "cuss_test_secret",
-		initiateStripeSession: mockInitiateStripeSession,
-	}),
+// Mock useAuth
+const mockUseAuth = jest.fn()
+jest.mock("../auth-context", () => ({
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+	useAuth: () => mockUseAuth(),
+}))
+
+// Mock useCustomerSession
+const mockUseCustomerSession = jest.fn()
+jest.mock("../hooks/use-customer-session", () => ({
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+	useCustomerSession: (...args: unknown[]) => mockUseCustomerSession(...args),
 }))
 
 // Mock next/navigation
@@ -43,7 +47,14 @@ jest.mock("@stripe/stripe-js", () => ({
 beforeEach(() => {
 	capturedElementsProps = {}
 	mockUseStripeAmount.mockReset()
-	mockInitiateStripeSession.mockReset()
+	mockUseAuth.mockReset()
+	mockUseCustomerSession.mockReset()
+
+	mockUseAuth.mockReturnValue({ isAuthenticated: true })
+	mockUseCustomerSession.mockReturnValue({
+		data: "cuss_test_secret",
+		isPending: false,
+	})
 })
 
 test("renders Elements provider when stripe amount loads", async () => {
@@ -73,11 +84,12 @@ test("renders Elements provider when stripe amount loads", async () => {
 			mode: "payment",
 			currency: "usd",
 			amount: 2605,
+			customerSessionClientSecret: "cuss_test_secret",
 		}),
 	)
 })
 
-test("calls initiateStripeSession on mount", async () => {
+test("calls useCustomerSession with isAuthenticated", async () => {
 	mockUseStripeAmount.mockReturnValue({
 		data: {
 			amountDue: { subtotal: 25.0, transactionFee: 1.05, total: 26.05 },
@@ -97,7 +109,7 @@ test("calls initiateStripeSession on mount", async () => {
 		</PaymentLayout>,
 	)
 
-	expect(mockInitiateStripeSession).toHaveBeenCalled()
+	expect(mockUseCustomerSession).toHaveBeenCalledWith(true)
 })
 
 test("shows nothing while stripe amount is pending", async () => {
@@ -119,6 +131,34 @@ test("shows nothing while stripe amount is pending", async () => {
 
 	expect(screen.queryByTestId("stripe-elements")).toBeNull()
 	expect(screen.queryByText("child content")).toBeNull()
+	expect(container.innerHTML).toBe("")
+})
+
+test("shows nothing while customer session is pending for authenticated user", async () => {
+	mockUseCustomerSession.mockReturnValue({
+		data: undefined,
+		isPending: true,
+	})
+	mockUseStripeAmount.mockReturnValue({
+		data: {
+			amountDue: { subtotal: 25.0, transactionFee: 1.05, total: 26.05 },
+			amountCents: 2605,
+		},
+		isPending: false,
+		isError: false,
+	})
+
+	const { default: PaymentLayout } = await import(
+		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
+	)
+
+	const { container } = render(
+		<PaymentLayout>
+			<div>child content</div>
+		</PaymentLayout>,
+	)
+
+	expect(screen.queryByTestId("stripe-elements")).toBeNull()
 	expect(container.innerHTML).toBe("")
 })
 

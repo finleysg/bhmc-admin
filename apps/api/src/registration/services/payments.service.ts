@@ -282,24 +282,32 @@ export class PaymentsService {
 
 	/**
 	 * Create or get a Stripe customer session for saved payment methods.
+	 * Uses a row lock to prevent concurrent requests from creating duplicate customers.
 	 */
 	async createCustomerSession(
 		email: string,
 	): Promise<{ clientSecret: string; customerId: string }> {
-		const player = await this.registrationRepository.findPlayerByEmail(email)
-		if (!player) {
-			throw new Error(`No player found with email ${email}`)
-		}
+		const customerId = await this.drizzle.db.transaction(async (tx) => {
+			const lockedPlayer = await this.registrationRepository.findPlayerByEmail(email, tx)
+			if (!lockedPlayer) {
+				throw new Error(`No player found with email ${email}`)
+			}
 
-		let customerId = player.stripeCustomerId
+			if (lockedPlayer.stripeCustomerId) {
+				return lockedPlayer.stripeCustomerId
+			}
 
-		// Create new Stripe customer if player doesn't have one
-		if (!customerId) {
-			customerId = await this.stripe.createCustomer(email, `${player.firstName} ${player.lastName}`)
-
-			// Persist customerId to player record
-			await this.registrationRepository.updatePlayer(player.id, { stripeCustomerId: customerId })
-		}
+			const newCustomerId = await this.stripe.createCustomer(
+				email,
+				`${lockedPlayer.firstName} ${lockedPlayer.lastName}`,
+			)
+			await this.registrationRepository.updatePlayer(
+				lockedPlayer.id,
+				{ stripeCustomerId: newCustomerId },
+				tx,
+			)
+			return newCustomerId
+		})
 
 		const clientSecret = await this.stripe.createCustomerSession(customerId)
 

@@ -1,12 +1,13 @@
 "use client"
 
-import { createContext, useContext, useEffect } from "react"
+import { createContext, useContext } from "react"
 import { useParams } from "next/navigation"
 
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
 
-import { useRegistration } from "@/lib/registration/registration-context"
+import { useAuth } from "@/lib/auth-context"
+import { useCustomerSession } from "@/lib/hooks/use-customer-session"
 import { type PaymentAmount, useStripeAmount } from "@/lib/hooks/use-stripe-amount"
 
 type PaymentAmountContextType = { amount: PaymentAmount }
@@ -25,14 +26,12 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!)
 
 export default function PaymentLayout({ children }: { children: React.ReactNode }) {
 	const { paymentId } = useParams<{ paymentId: string }>()
-	const { stripeClientSession, initiateStripeSession } = useRegistration()
-	const { data: stripeAmount, isPending } = useStripeAmount(Number(paymentId))
+	const { isAuthenticated } = useAuth()
+	const { data: customerSessionSecret, isPending: sessionPending } =
+		useCustomerSession(isAuthenticated)
+	const { data: stripeAmount, isPending: amountPending } = useStripeAmount(Number(paymentId))
 
-	useEffect(() => {
-		initiateStripeSession()
-	}, [initiateStripeSession])
-
-	if (isPending || !stripeAmount) {
+	if (amountPending || !stripeAmount || (isAuthenticated && sessionPending)) {
 		return null
 	}
 
@@ -43,7 +42,7 @@ export default function PaymentLayout({ children }: { children: React.ReactNode 
 				mode: "payment",
 				currency: "usd",
 				amount: stripeAmount.amountCents,
-				customerSessionClientSecret: stripeClientSession,
+				customerSessionClientSecret: customerSessionSecret,
 			}}
 		>
 			<PaymentAmountContext.Provider value={{ amount: stripeAmount.amountDue }}>

@@ -184,6 +184,10 @@ const createMockDrizzleService = () => ({
 		from: jest.fn().mockReturnThis(),
 		where: jest.fn().mockReturnThis(),
 		limit: jest.fn().mockResolvedValue([]),
+		transaction: jest.fn((callback: (tx: unknown) => Promise<unknown>) => {
+			const txMock = {}
+			return callback(txMock)
+		}),
 	},
 })
 
@@ -780,10 +784,28 @@ describe("PaymentsService", () => {
 			const result = await service.createCustomerSession("john@example.com")
 
 			expect(stripeService.createCustomer).toHaveBeenCalledWith("john@example.com", "John Doe")
-			expect(registrationRepo.updatePlayer).toHaveBeenCalledWith(1, {
-				stripeCustomerId: "cus_new123",
-			})
+			expect(registrationRepo.updatePlayer).toHaveBeenCalledWith(
+				1,
+				{ stripeCustomerId: "cus_new123" },
+				expect.anything(),
+			)
 			expect(result.customerId).toBe("cus_new123")
+		})
+
+		it("passes tx to findPlayerByEmail for row locking", async () => {
+			const { service, registrationRepo, stripeService } = createService()
+
+			registrationRepo.findPlayerByEmail.mockResolvedValue(
+				createPlayerRow({ stripeCustomerId: "cus_existing" }),
+			)
+			stripeService.createCustomerSession.mockResolvedValue("cs_secret")
+
+			await service.createCustomerSession("john@example.com")
+
+			expect(registrationRepo.findPlayerByEmail).toHaveBeenCalledWith(
+				"john@example.com",
+				expect.anything(),
+			)
 		})
 
 		it("uses existing Stripe customer ID without creating new one", async () => {

@@ -66,8 +66,10 @@ export class RegistrationRepository {
 		return await this.drizzle.db.select().from(player).where(eq(player.isMember, 1))
 	}
 
-	async findPlayerByEmail(email: string): Promise<PlayerRow | null> {
-		const [p] = await this.drizzle.db.select().from(player).where(eq(player.email, email)).limit(1)
+	async findPlayerByEmail(email: string, tx?: MySql2Database): Promise<PlayerRow | null> {
+		const db = tx ?? this.drizzle.db
+		const query = db.select().from(player).where(eq(player.email, email)).limit(1)
+		const [p] = tx ? await query.for("update") : await query
 
 		return p ?? null
 	}
