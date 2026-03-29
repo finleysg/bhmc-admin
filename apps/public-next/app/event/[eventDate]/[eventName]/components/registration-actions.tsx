@@ -14,6 +14,7 @@ import {
 	RegistrationType,
 	shouldShowSignUpButton,
 } from "@/lib/event-utils"
+import { RegistrationStatus } from "@/lib/registration/types"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
 import { usePlayerRegistration } from "@/lib/hooks/use-player-registration"
 import type { ClubEventDetail } from "@/lib/types"
@@ -28,7 +29,9 @@ export function RegistrationActions({ event, isEventFull }: RegistrationActionsP
 	const { data: player } = useMyPlayer()
 	const { data: registrationData } = usePlayerRegistration(event.id, player?.id)
 
-	const hasSignedUp = !!registrationData?.registration
+	const hasSignedUp = !!registrationData?.registration?.slots.some(
+		(s) => s.status === RegistrationStatus.Reserved || s.status === RegistrationStatus.Processing,
+	)
 	const eventUrl = getEventUrl(event)
 
 	return (
@@ -153,7 +156,9 @@ export function RegistrationBanner({
 	const { data: player } = useMyPlayer()
 	const { data: registrationData } = usePlayerRegistration(event.id, player?.id)
 
-	const hasSignedUp = !!registrationData?.registration
+	const hasSignedUp = !!registrationData?.registration?.slots.some(
+		(s) => s.status === RegistrationStatus.Reserved || s.status === RegistrationStatus.Processing,
+	)
 	const reason = getSignUpUnavailableReason({
 		event,
 		isAuthenticated,

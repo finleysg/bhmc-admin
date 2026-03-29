@@ -623,7 +623,7 @@ export class RegistrationRepository {
 			.where(
 				and(
 					eq(registrationSlot.status, RegistrationStatusChoices.AWAITING_PAYMENT),
-					lt(registration.createdDate, sql`${cutoffStr}`),
+					lt(registration.expires, sql`${cutoffStr}`),
 				),
 			)
 

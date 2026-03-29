@@ -80,21 +80,20 @@ export default async function RegistrationsPage({ params }: RegistrationsPagePro
 	const { eventDate, eventName } = await params
 	const event = await resolveEventFromParams(eventDate, eventName)
 
-	const tag = `event-registrations-${event.id}`
 	const eventDetailUrl = `/event/${eventDate}/${eventName}`
 
 	let content: React.ReactNode
 	if (event.can_choose) {
 		const slots = await fetchDjango<RegistrationSlot[]>(
 			`/registration-slots/?event_id=${event.id}`,
-			{ revalidate: 60, tags: [tag] },
+			{ revalidate: 0 },
 		)
 		const tables = loadReserveTables(event, slots)
 		content = <RegisteredGrid tables={tables} />
 	} else {
 		const registrations = await fetchDjango<DjangoRegistration[]>(
 			`/registration/?event_id=${event.id}`,
-			{ revalidate: 60, tags: [tag] },
+			{ revalidate: 0 },
 		)
 		const reservations = convertRegistrationsToReservations(registrations)
 		content = <RegisteredList reservations={reservations} eventName={event.name} />

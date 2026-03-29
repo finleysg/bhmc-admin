@@ -25,6 +25,7 @@ const ACTION_BADGE: Record<string, string> = {
 	admin_create: "badge-success",
 	drop: "badge-error",
 	cancel: "badge-error",
+	expired: "badge-warning",
 	refund: "badge-warning",
 	replace: "badge-info",
 	move: "badge-info",

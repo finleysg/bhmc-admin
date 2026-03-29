@@ -1145,6 +1145,10 @@ function formatChangeLogDetails(action: string, details: Record<string, unknown>
 			const players = details.players as string[] | undefined
 			return players?.length ? `Cancelled: ${players.join(", ")}` : "Registration cancelled"
 		}
+		case "expired": {
+			const players = details.players as string[] | undefined
+			return players?.length ? `Expired: ${players.join(", ")}` : "Registration expired"
+		}
 		case "add_notes":
 		case "update_notes": {
 			const notes = details.notes as string | undefined
