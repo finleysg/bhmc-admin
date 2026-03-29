@@ -147,6 +147,7 @@ const createMockMailService = () => ({
 describe("StripeWebhookService", () => {
 	let service: StripeWebhookService
 	let mockAdminRegistrationService: ReturnType<typeof createMockAdminRegistrationService>
+	let mockChangeLogService: { log: jest.Mock; resolveStartInfo: jest.Mock }
 	let mockPaymentsService: ReturnType<typeof createMockPaymentsService>
 	let mockRefundService: ReturnType<typeof createMockRefundService>
 	let mockDjangoAuthService: ReturnType<typeof createMockDjangoAuthService>
@@ -155,6 +156,7 @@ describe("StripeWebhookService", () => {
 
 	beforeEach(() => {
 		mockAdminRegistrationService = createMockAdminRegistrationService()
+		mockChangeLogService = { log: jest.fn(), resolveStartInfo: jest.fn().mockResolvedValue({}) }
 		mockPaymentsService = createMockPaymentsService()
 		mockRefundService = createMockRefundService()
 		mockDjangoAuthService = createMockDjangoAuthService()
@@ -163,6 +165,7 @@ describe("StripeWebhookService", () => {
 
 		service = new StripeWebhookService(
 			mockAdminRegistrationService as never,
+			mockChangeLogService as never,
 			mockPaymentsService as never,
 			mockRefundService as never,
 			mockDjangoAuthService as never,
@@ -517,6 +520,204 @@ describe("StripeWebhookService", () => {
 				registration,
 				payment,
 			)
+		})
+
+		it("logs update_fees changelog entry for UPDATED_REGISTRATION", async () => {
+			setupSuccessfulPayment()
+			const payment = createCompletePayment({
+				id: 5,
+				notificationType: NotificationTypeChoices.UPDATED_REGISTRATION,
+				userId: 10,
+				eventId: 100,
+				details: [
+					{
+						id: 1,
+						registrationSlotId: 101,
+						paymentId: 5,
+						amount: 10,
+						isPaid: true,
+						eventFeeId: 1,
+						eventFee: {
+							id: 1,
+							eventId: 100,
+							amount: 10,
+							isRequired: false,
+							displayOrder: 1,
+							feeTypeId: 1,
+							feeType: { id: 1, name: "Skins", code: "S", payout: "Cash", restriction: "Members" },
+						},
+					},
+					{
+						id: 2,
+						registrationSlotId: 102,
+						paymentId: 5,
+						amount: 23,
+						isPaid: true,
+						eventFeeId: 2,
+						eventFee: {
+							id: 2,
+							eventId: 100,
+							amount: 23,
+							isRequired: true,
+							displayOrder: 0,
+							feeTypeId: 2,
+							feeType: {
+								id: 2,
+								name: "Greens Fee",
+								code: "G",
+								payout: "None",
+								restriction: "Members",
+							},
+						},
+					},
+				],
+			})
+			const hole1 = { id: 1, courseId: 1, holeNumber: 1, par: 4 }
+			const hole8 = { id: 8, courseId: 1, holeNumber: 8, par: 4 }
+			const registration = createRegistration({
+				id: 1,
+				course: {
+					id: 1,
+					name: "East",
+					numberOfHoles: 18,
+					holes: [hole1, hole8],
+					tees: [],
+				},
+				slots: [
+					{
+						id: 101,
+						registrationId: 1,
+						eventId: 100,
+						startingOrder: 0,
+						slot: 0,
+						status: "R",
+						holeId: 8,
+						hole: hole8,
+						player: {
+							id: 20,
+							firstName: "Sam",
+							lastName: "Shafer",
+							email: "sam@example.com",
+							tee: "Club",
+							isMember: true,
+						},
+						fees: [
+							{
+								id: 1,
+								registrationSlotId: 101,
+								paymentId: 5,
+								amount: 10,
+								isPaid: true,
+								eventFeeId: 1,
+								eventFee: {
+									id: 1,
+									eventId: 100,
+									amount: 10,
+									isRequired: false,
+									displayOrder: 1,
+									feeTypeId: 1,
+									feeType: {
+										id: 1,
+										name: "Skins",
+										code: "S",
+										payout: "Cash",
+										restriction: "Members",
+									},
+								},
+							},
+						],
+					},
+					{
+						id: 102,
+						registrationId: 1,
+						eventId: 100,
+						startingOrder: 0,
+						slot: 1,
+						status: "R",
+						holeId: 8,
+						hole: hole8,
+						player: {
+							id: 21,
+							firstName: "Cory",
+							lastName: "Moore",
+							email: "cory@example.com",
+							tee: "Club",
+							isMember: true,
+						},
+						fees: [
+							{
+								id: 2,
+								registrationSlotId: 102,
+								paymentId: 5,
+								amount: 23,
+								isPaid: true,
+								eventFeeId: 2,
+								eventFee: {
+									id: 2,
+									eventId: 100,
+									amount: 23,
+									isRequired: true,
+									displayOrder: 0,
+									feeTypeId: 2,
+									feeType: {
+										id: 2,
+										name: "Greens Fee",
+										code: "G",
+										payout: "None",
+										restriction: "Members",
+									},
+								},
+							},
+						],
+					},
+				],
+			} as never)
+			mockAdminRegistrationService.getCompleteRegistrationAndPayment.mockResolvedValue({
+				registration,
+				payment,
+			})
+			mockDjangoAuthService.findById.mockResolvedValue(createUser())
+			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
+			mockChangeLogService.resolveStartInfo.mockResolvedValue({ course: "East", start: "8A" })
+
+			const paymentIntent = createPaymentIntent()
+			await service.handlePaymentIntentSucceeded(paymentIntent)
+
+			expect(mockChangeLogService.resolveStartInfo).toHaveBeenCalledWith(1, 100)
+			expect(mockChangeLogService.log).toHaveBeenCalledWith({
+				eventId: 100,
+				registrationId: 1,
+				action: "update_fees",
+				actorId: 10,
+				isAdmin: false,
+				details: {
+					players: [
+						{ name: "Sam Shafer", fees: [{ name: "Skins", amount: 10 }] },
+						{ name: "Cory Moore", fees: [{ name: "Greens Fee", amount: 23 }] },
+					],
+					course: "East",
+					start: "8A",
+				},
+			})
+		})
+
+		it("does not log changelog for SIGNUP_CONFIRMATION", async () => {
+			setupSuccessfulPayment()
+			const registration = createRegistration()
+			const payment = createCompletePayment({
+				notificationType: NotificationTypeChoices.SIGNUP_CONFIRMATION,
+			})
+			mockAdminRegistrationService.getCompleteRegistrationAndPayment.mockResolvedValue({
+				registration,
+				payment,
+			})
+			mockDjangoAuthService.findById.mockResolvedValue(createUser())
+			mockEventsService.getCompleteClubEventById.mockResolvedValue(createClubEvent())
+
+			const paymentIntent = createPaymentIntent()
+			await service.handlePaymentIntentSucceeded(paymentIntent)
+
+			expect(mockChangeLogService.log).not.toHaveBeenCalled()
 		})
 
 		it("sends registration confirmation for default notification type", async () => {

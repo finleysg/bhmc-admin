@@ -35,6 +35,7 @@ import type {
 import { Admin, type AuthenticatedRequest, Roles } from "../../auth"
 import { EventsService } from "../../events"
 import { AdminRegistrationService } from "../services/admin-registration.service"
+import { ChangeLogService } from "../services/changelog.service"
 import { PaymentsService } from "../services/payments.service"
 import { PlayerService } from "../services/player.service"
 import { RefundService } from "../services/refund.service"
@@ -64,6 +65,7 @@ export class AdminRegistrationController {
 	constructor(
 		@Inject(AdminRegistrationService)
 		private readonly adminRegistrationService: AdminRegistrationService,
+		@Inject(ChangeLogService) private readonly changeLog: ChangeLogService,
 		@Inject(PlayerService) private readonly adminRegisterService: PlayerService,
 		@Inject(PaymentsService) private readonly paymentsService: PaymentsService,
 		@Inject(RefundService) private readonly refundService: RefundService,
@@ -122,6 +124,7 @@ export class AdminRegistrationController {
 	async createAdminRegistration(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Body() dto: AdminRegistration,
+		@Req() req: AuthenticatedRequest,
 	) {
 		this.logger.log(`Admin ${dto.signedUpBy} registering user ${dto.userId} for event ${eventId}.`)
 		const { registrationId, paymentId } =
@@ -136,6 +139,16 @@ export class AdminRegistrationController {
 			paymentId,
 			dto.collectPayment,
 		)
+
+		const playerNames = await this.changeLog.resolvePlayerNames(dto.slots.map((s) => s.playerId))
+		void this.changeLog.log({
+			eventId,
+			registrationId,
+			action: "admin_create",
+			actorId: req.user.id,
+			isAdmin: true,
+			details: { players: playerNames, signedUpBy: dto.signedUpBy },
+		})
 
 		return { registrationId, paymentId }
 	}
@@ -182,9 +195,15 @@ export class AdminRegistrationController {
 		const isAdmin = req.user.isStaff || req.user.isSuperuser
 		let shouldRefund = request.autoRefund ?? !isAdmin
 
+		// Fetch registration once — used for ownership check and changelog
+		const reg = await this.registrationService.findRegistrationById(request.registrationId)
+
 		// Non-admin users must be a member of the registration group
 		if (!isAdmin) {
-			await this.registrationService.findRegistrationById(request.registrationId, req.user.playerId)
+			const isGroupMember = reg.slots.some((s) => s.playerId === req.user.playerId)
+			if (!isGroupMember) {
+				throw new ForbiddenException("Not a member of this group")
+			}
 		}
 
 		// Non-admin auto-refunds are only available before signupEnd
@@ -194,6 +213,14 @@ export class AdminRegistrationController {
 				shouldRefund = false
 			}
 		}
+
+		// Resolve player names BEFORE the drop (drop detaches players from slots)
+		const slotIdsSet = new Set(request.slotIds)
+		const droppedPlayerIds = reg.slots
+			.filter((s) => slotIdsSet.has(s.id))
+			.map((s) => s.playerId)
+			.filter((id): id is number => id !== null)
+		const playerNames = await this.changeLog.resolvePlayerNames(droppedPlayerIds)
 
 		// Collect paid fees BEFORE the drop (drop detaches fees from slots)
 		const paidFees = shouldRefund
@@ -218,6 +245,19 @@ export class AdminRegistrationController {
 			}
 		}
 
+		const details: Record<string, unknown> = { players: playerNames }
+		if (shouldRefund && paidFees.length > 0) {
+			details.refunded = true
+		}
+		void this.changeLog.log({
+			eventId: _eventId,
+			registrationId: request.registrationId,
+			action: "drop",
+			actorId: req.user.id,
+			isAdmin,
+			details,
+		})
+
 		return { droppedCount }
 	}
 
@@ -232,16 +272,43 @@ export class AdminRegistrationController {
 			`Replacing player ${request.originalPlayerId} with ${request.replacementPlayerId} in slot ${request.slotId} for event ${eventId}`,
 		)
 
+		const isAdmin = req.user.isStaff || req.user.isSuperuser
+
+		// Fetch slot once — used for ownership check and changelog
+		const slot = await this.registrationService.findSlotById(request.slotId)
+
 		// Non-admin users must be a member of the registration group
-		if (!req.user.isStaff && !req.user.isSuperuser) {
-			const slot = await this.registrationService.findSlotById(request.slotId)
+		if (!isAdmin) {
 			if (!slot.registrationId) {
 				throw new ForbiddenException("Slot is not part of a registration")
 			}
 			await this.registrationService.findRegistrationById(slot.registrationId, req.user.playerId)
 		}
 
-		return this.adminRegisterService.replacePlayer(eventId, request)
+		const result = await this.adminRegisterService.replacePlayer(eventId, request)
+		const [droppedNames, addedNames, startInfo] = await Promise.all([
+			this.changeLog.resolvePlayerNames([request.originalPlayerId]),
+			this.changeLog.resolvePlayerNames([request.replacementPlayerId]),
+			this.changeLog.resolveStartInfo(slot.registrationId, eventId),
+		])
+		const details: Record<string, unknown> = {
+			droppedPlayer: droppedNames[0],
+			addedPlayer: addedNames[0],
+			...startInfo,
+		}
+		if (result.greenFeeDifference) {
+			details.feeDifference = result.greenFeeDifference
+		}
+		void this.changeLog.log({
+			eventId,
+			registrationId: slot.registrationId,
+			action: "replace",
+			actorId: req.user.id,
+			isAdmin,
+			details,
+		})
+
+		return result
 	}
 
 	@Post(":eventId/move-players")
@@ -255,43 +322,134 @@ export class AdminRegistrationController {
 			`Moving ${request.sourceSlotIds.length} players to hole ${request.destinationStartingHoleId} order ${request.destinationStartingOrder} for event ${eventId}`,
 		)
 
+		const isAdmin = req.user.isStaff || req.user.isSuperuser
+		const sourceSlot = await this.registrationService.findSlotById(request.sourceSlotIds[0])
+
 		// Non-admin users must be a member of the registration group
-		if (!req.user.isStaff && !req.user.isSuperuser) {
-			const slot = await this.registrationService.findSlotById(request.sourceSlotIds[0])
-			if (!slot.registrationId) {
+		if (!isAdmin) {
+			if (!sourceSlot.registrationId) {
 				throw new ForbiddenException("Slot is not part of a registration")
 			}
-			await this.registrationService.findRegistrationById(slot.registrationId, req.user.playerId)
+			await this.registrationService.findRegistrationById(
+				sourceSlot.registrationId,
+				req.user.playerId,
+			)
 		}
 
-		return this.adminRegisterService.movePlayers(eventId, request)
+		const result = await this.adminRegisterService.movePlayers(eventId, request)
+
+		const moveDetails = await this.changeLog.resolveMoveDetails(
+			sourceSlot.registrationId,
+			eventId,
+			sourceSlot,
+			request.destinationStartingHoleId,
+			request.destinationStartingOrder,
+		)
+		void this.changeLog.log({
+			eventId,
+			registrationId: sourceSlot.registrationId,
+			action: "move",
+			actorId: req.user.id,
+			isAdmin,
+			details: moveDetails,
+		})
+
+		return result
 	}
 
 	@Post(":eventId/swap-players")
 	async swapPlayers(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Body() request: SwapPlayersRequest,
+		@Req() req: AuthenticatedRequest,
 	): Promise<SwapPlayersResponse> {
 		this.logger.log(
 			`Swapping player ${request.playerAId} in slot ${request.slotAId} with player ${request.playerBId} in slot ${request.slotBId} for event ${eventId}`,
 		)
-		return this.adminRegisterService.swapPlayers(eventId, request)
+		const isAdmin = req.user.isStaff || req.user.isSuperuser
+		const result = await this.adminRegisterService.swapPlayers(eventId, request)
+
+		const [slotA, slotB] = await Promise.all([
+			this.registrationService.findSlotById(request.slotAId),
+			this.registrationService.findSlotById(request.slotBId),
+		])
+		const swapDetails = { player1: result.playerAName, player2: result.playerBName }
+
+		void this.changeLog.log({
+			eventId,
+			registrationId: slotA.registrationId,
+			action: "swap",
+			actorId: req.user.id,
+			isAdmin,
+			details: swapDetails,
+		})
+		// Log for the other registration too (swaps always span two registrations)
+		if (slotB.registrationId !== slotA.registrationId) {
+			void this.changeLog.log({
+				eventId,
+				registrationId: slotB.registrationId,
+				action: "swap",
+				actorId: req.user.id,
+				isAdmin,
+				details: swapDetails,
+			})
+		}
+
+		return result
 	}
 
 	@Post(":registrationId/update-notes")
 	async updateNotes(
 		@Param("registrationId", ParseIntPipe) registrationId: number,
 		@Body() request: UpdateNotesRequest,
+		@Req() req: AuthenticatedRequest,
 	): Promise<{ success: boolean }> {
 		this.logger.log(`Updating notes for registration ${registrationId}`)
 		await this.adminRegisterService.updateNotes(registrationId, request.notes)
+
+		const reg = await this.registrationService.findRegistrationById(registrationId)
+		void this.changeLog.log({
+			eventId: reg.eventId,
+			registrationId,
+			action: "update_notes",
+			actorId: req.user.id,
+			isAdmin: true,
+			details: { notes: request.notes },
+		})
+
 		return { success: true }
 	}
 
 	@Post("refund")
-	async processRefunds(@Body() refundRequests: RefundRequest[]) {
-		const issuerId = 1 // TODO: change issuer to a string
-		await this.refundService.processRefunds(refundRequests, issuerId)
+	async processRefunds(@Body() refundRequests: RefundRequest[], @Req() req: AuthenticatedRequest) {
+		await this.refundService.processRefunds(refundRequests, req.user.id)
+
+		for (const refundReq of refundRequests) {
+			const payment = await this.paymentsService.findPaymentById(refundReq.paymentId)
+			if (!payment) continue
+
+			const registrationId =
+				refundReq.registrationFeeIds.length > 0
+					? await this.changeLog.resolveRegistrationIdFromFeeId(refundReq.registrationFeeIds[0])
+					: null
+
+			if (registrationId == null) {
+				this.logger.warn(
+					`Could not resolve registrationId for refund paymentId=${refundReq.paymentId}, skipping changelog`,
+				)
+				continue
+			}
+
+			void this.changeLog.log({
+				eventId: payment.eventId,
+				registrationId,
+				action: "refund",
+				actorId: req.user.id,
+				isAdmin: true,
+				details: { amount: payment.paymentAmount, paymentId: refundReq.paymentId },
+			})
+		}
+
 		return { success: true }
 	}
 }

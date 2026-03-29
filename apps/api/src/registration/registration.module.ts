@@ -11,8 +11,10 @@ import {
 	RegistrationLiveController,
 	UserRegistrationController,
 	RegistrationCleanupCron,
+	ChangeLogRepository,
 	PaymentsRepository,
 	RegistrationRepository,
+	ChangeLogService,
 	PaymentsService,
 	RegistrationService,
 	AdminRegistrationService,
@@ -41,6 +43,8 @@ import {
 	],
 	providers: [
 		AdminRegistrationService,
+		ChangeLogRepository,
+		ChangeLogService,
 		CleanupService,
 		PaymentsRepository,
 		PaymentsService,
@@ -54,6 +58,8 @@ import {
 	],
 	exports: [
 		AdminRegistrationService,
+		ChangeLogRepository,
+		ChangeLogService,
 		CleanupService,
 		PaymentsService,
 		PlayerService,

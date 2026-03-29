@@ -24,6 +24,7 @@ import type {
 	UpdateNotesRequest,
 	UpdateSlotPlayerRequest,
 } from "@repo/domain/types"
+import { ChangeLogService } from "../services/changelog.service"
 import { RegistrationService } from "../services/registration.service"
 import { PlayerService } from "../services/player.service"
 import type { AuthenticatedRequest } from "../../auth"
@@ -33,6 +34,7 @@ export class UserRegistrationController {
 	private readonly logger = new Logger(UserRegistrationController.name)
 
 	constructor(
+		@Inject(ChangeLogService) private readonly changeLog: ChangeLogService,
 		@Inject(RegistrationService) private readonly flowService: RegistrationService,
 		@Inject(PlayerService) private readonly playerService: PlayerService,
 	) {}
@@ -128,6 +130,17 @@ export class UserRegistrationController {
 		@Body() dto: UpdateNotesRequest,
 	): Promise<{ success: boolean }> {
 		await this.flowService.updateNotes(registrationId, req.user.playerId, dto.notes)
+
+		const reg = await this.flowService.findRegistrationById(registrationId, req.user.playerId)
+		void this.changeLog.log({
+			eventId: reg.eventId,
+			registrationId,
+			action: "add_notes",
+			actorId: req.user.id,
+			isAdmin: false,
+			details: { notes: dto.notes },
+		})
+
 		return { success: true }
 	}
 
@@ -170,6 +183,25 @@ export class UserRegistrationController {
 		const playerIds = dto.players.map((p) => p.id)
 		this.logger.log(`Adding ${playerIds.length} players to registration ${registrationId}`)
 
-		return this.flowService.addPlayersToRegistration(registrationId, playerIds, req.user.playerId)
+		const result = await this.flowService.addPlayersToRegistration(
+			registrationId,
+			playerIds,
+			req.user.playerId,
+		)
+
+		const [playerNames, startInfo] = await Promise.all([
+			this.changeLog.resolvePlayerNames(playerIds),
+			this.changeLog.resolveStartInfo(registrationId, result.eventId),
+		])
+		void this.changeLog.log({
+			eventId: result.eventId,
+			registrationId,
+			action: "add_players",
+			actorId: req.user.id,
+			isAdmin: false,
+			details: { players: playerNames, ...startInfo },
+		})
+
+		return result
 	}
 }

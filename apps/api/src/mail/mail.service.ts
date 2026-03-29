@@ -26,6 +26,7 @@ import {
 	AdminRegistrationNotificationEmail,
 	MatchPlayEmail,
 	PayoutNotificationEmail,
+	PlayerMoveNotificationEmail,
 	PlayerReplacementNotificationEmail,
 	PlayerSwapNotificationEmail,
 	RefundNotificationEmail,
@@ -38,6 +39,7 @@ import { WelcomeHonoraryEmail } from "./templates/welcome-honorary-email"
 
 export interface SendEmailOptions {
 	to: string | string[]
+	cc?: string | string[]
 	subject: string
 	template: ReactElement
 }
@@ -74,7 +76,7 @@ export class MailService {
 
 	async sendEmail(options: SendEmailOptions): Promise<void> {
 		try {
-			const { to, subject, template } = options
+			const { to, cc, subject, template } = options
 
 			// Render React template to HTML
 			const html = await render(template)
@@ -83,6 +85,7 @@ export class MailService {
 			const mailOptions = {
 				from: this.fromAddress,
 				to: Array.isArray(to) ? to.join(",") : to,
+				...(cc ? { cc: Array.isArray(cc) ? cc.join(",") : cc } : {}),
 				subject,
 				html,
 			}
@@ -224,7 +227,8 @@ export class MailService {
 		const startValue = registration.course
 			? getStart(event, registration.slots[0], registration.course.holes)
 			: undefined
-		const eventHoleOrStart = startValue === "N/A" ? undefined : startValue
+		const eventHoleOrStart =
+			startValue === "N/A" || !startValue ? undefined : `${registration.course!.name} ${startValue}`
 
 		// Build a set of slot IDs that have fees in this payment
 		const paymentSlotIds = new Set(payment.details.map((d) => d.registrationSlotId))
@@ -378,7 +382,8 @@ export class MailService {
 		const startValue = registration.course
 			? getStart(event, registration.slots[0], registration.course.holes)
 			: undefined
-		const eventHoleOrStart = startValue === "N/A" ? undefined : startValue
+		const eventHoleOrStart =
+			startValue === "N/A" || !startValue ? undefined : `${registration.course!.name} ${startValue}`
 
 		const players = registration.slots.map((slot) => ({
 			name: `${slot.player.firstName} ${slot.player.lastName}`,
@@ -461,7 +466,8 @@ export class MailService {
 		const startValue = registration.course
 			? getStart(event, registration.slots[0], registration.course.holes)
 			: undefined
-		const eventHoleOrStart = startValue === "N/A" ? undefined : startValue
+		const eventHoleOrStart =
+			startValue === "N/A" || !startValue ? undefined : `${registration.course!.name} ${startValue}`
 
 		const eventDate = new Date(event.startDate).toLocaleDateString("en-US", {
 			weekday: "long",
@@ -508,6 +514,36 @@ export class MailService {
 				eventName: event.name,
 				eventDate,
 				newStartInfo,
+			}),
+		})
+	}
+
+	async sendMoveNotification(
+		players: Pick<Player, "firstName" | "email">[],
+		event: ClubEvent,
+		previousStart: string,
+		newStart: string,
+	): Promise<void> {
+		if (players.length === 0) return
+
+		const eventDate = new Date(event.startDate).toLocaleDateString("en-US", {
+			weekday: "long",
+			month: "long",
+			day: "numeric",
+			year: "numeric",
+		})
+
+		const ccEmails = players.slice(1).map((p) => p.email)
+
+		await this.sendEmail({
+			to: players[0].email,
+			...(ccEmails.length > 0 ? { cc: ccEmails } : {}),
+			subject: `Tee Time Change: ${event.name}`,
+			template: PlayerMoveNotificationEmail({
+				eventName: event.name,
+				eventDate,
+				previousStart,
+				newStart,
 			}),
 		})
 	}

@@ -52,8 +52,7 @@ export default function ManagePage() {
 		{
 			key: "dropPlayers",
 			title: "Drop Players",
-			description:
-				"Drop one or more players from your group.",
+			description: "Drop one or more players from your group.",
 			href: `${eventUrl}/manage/drop`,
 			disabled: registrationClosed,
 		},
@@ -85,7 +84,7 @@ export default function ManagePage() {
 		{
 			key: "updateRegistration",
 			title: "Get in Skins",
-			description: "Pay for skins or other extras.",
+			description: "Pay for skins or other optional fees.",
 			href: `${eventUrl}/manage/edit`,
 		},
 	]

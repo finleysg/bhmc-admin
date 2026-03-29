@@ -1,9 +1,10 @@
-import { and, eq, isNotNull, sql } from "drizzle-orm"
+import { and, desc, eq, isNotNull, sql } from "drizzle-orm"
 
 import { Inject, Injectable } from "@nestjs/common"
 import { toLocalDatetime } from "../common/datetime"
 import { getAge, getFullName, getPlayerStartName, getPlayerTeamName } from "@repo/domain/functions"
 import {
+	ChangeLogReportRow,
 	EventReportRow,
 	EventResultsReport,
 	EventResultsReportRow,
@@ -32,6 +33,7 @@ import {
 	payment,
 	player,
 	refund,
+	registrationChangeLog,
 	registrationFee,
 	registrationSlot,
 	tournament,
@@ -1025,5 +1027,143 @@ export class ReportsService {
 		]
 
 		return generateBuffer(workbook)
+	}
+
+	async getChangeLogReport(eventId: number): Promise<ChangeLogReportRow[]> {
+		await this.validateEvent(eventId)
+
+		const rows = await this.drizzle.db
+			.select({
+				action: registrationChangeLog.action,
+				isAdmin: registrationChangeLog.isAdmin,
+				details: registrationChangeLog.details,
+				createdDate: registrationChangeLog.createdDate,
+				firstName: authUser.firstName,
+				lastName: authUser.lastName,
+			})
+			.from(registrationChangeLog)
+			.innerJoin(authUser, eq(registrationChangeLog.actorId, authUser.id))
+			.where(eq(registrationChangeLog.eventId, eventId))
+			.orderBy(desc(registrationChangeLog.createdDate))
+
+		return rows.map((r) => ({
+			createdDate: r.createdDate,
+			action: r.action,
+			actor: `${r.firstName} ${r.lastName}`,
+			isAdmin: r.isAdmin === 1,
+			details: formatChangeLogDetails(r.action, r.details as Record<string, unknown>),
+		}))
+	}
+
+	async generateChangeLogReportExcel(eventId: number): Promise<Buffer> {
+		const rows = await this.getChangeLogReport(eventId)
+
+		const workbook = createWorkbook()
+		const worksheet = workbook.addWorksheet("Change Log")
+
+		const fixedColumns = [
+			{ header: "Time", key: "createdDate", width: 20 },
+			{ header: "Action", key: "action", width: 15 },
+			{ header: "Actor", key: "actor", width: 20 },
+			{ header: "Admin", key: "isAdmin", width: 8 },
+			{ header: "Details", key: "details", width: 50 },
+		]
+
+		addFixedColumns(worksheet, fixedColumns)
+		styleHeaderRow(worksheet, 1)
+
+		const excelRows = rows.map((r) => ({
+			...r,
+			isAdmin: r.isAdmin ? "Yes" : "No",
+		}))
+		addDataRows(worksheet, 2, excelRows, fixedColumns)
+
+		return generateBuffer(workbook)
+	}
+}
+
+function formatLocation(details: Record<string, unknown>): string {
+	const course = details.course as string | undefined
+	const start = details.start as string | undefined
+	return [course, start].filter(Boolean).join(" — ")
+}
+
+function withLocation(details: Record<string, unknown>, text: string): string {
+	const location = formatLocation(details)
+	return location ? `${location}: ${text}` : text
+}
+
+function formatChangeLogDetails(action: string, details: Record<string, unknown>): string {
+	switch (action) {
+		case "add_players": {
+			const players = details.players as string[] | undefined
+			const base = players?.length ? `Added ${players.join(", ")}` : "Added players"
+			return withLocation(details, base)
+		}
+		case "drop": {
+			const players = details.players as string[] | undefined
+			const base = players?.length ? `Dropped ${players.join(", ")}` : "Dropped players"
+			return details.refunded ? `${base} (refund initiated)` : base
+		}
+		case "replace": {
+			const dropped = (details.droppedPlayer as string) ?? "unknown"
+			const added = (details.addedPlayer as string) ?? "unknown"
+			let base = `Replaced ${dropped} with ${added}`
+			if (details.feeDifference && Number(details.feeDifference) !== 0) {
+				const diff = Number(details.feeDifference)
+				base = `${base} (${diff > 0 ? "+" : ""}$${diff.toFixed(2)})`
+			}
+			return withLocation(details, base)
+		}
+		case "move": {
+			const fromCourse = details.fromCourse as string | undefined
+			const from = details.from as string | undefined
+			const toCourse = details.toCourse as string | undefined
+			const to = details.to as string | undefined
+			const source = fromCourse && from ? `${fromCourse} ${from}` : (from ?? fromCourse)
+			const dest = toCourse && to ? `${toCourse} ${to}` : (to ?? toCourse)
+			if (source && dest) return `Moved from ${source} to ${dest}`
+			if (dest) return `Moved to ${dest}`
+			return "Moved"
+		}
+		case "swap": {
+			const p1 = (details.player1 as string) ?? "unknown"
+			const p2 = (details.player2 as string) ?? "unknown"
+			return `Swapped ${p1} and ${p2}`
+		}
+		case "admin_create": {
+			const players = details.players as string[] | undefined
+			const names = players?.length ? players.join(", ") : "players"
+			const signedUpBy = (details.signedUpBy as string) ?? "admin"
+			return `Created registration for ${names} (by ${signedUpBy})`
+		}
+		case "refund": {
+			const amount = details.amount != null ? `$${Number(details.amount).toFixed(2)}` : ""
+			return amount ? `Refunded ${amount}` : "Refund processed"
+		}
+		case "cancel": {
+			const players = details.players as string[] | undefined
+			return players?.length ? `Cancelled: ${players.join(", ")}` : "Registration cancelled"
+		}
+		case "add_notes":
+		case "update_notes": {
+			const notes = details.notes as string | undefined
+			return notes ? `Notes: ${notes}` : "Notes updated"
+		}
+		case "update_fees": {
+			const players = details.players as
+				| { name: string; fees: { name: string; amount: number }[] }[]
+				| undefined
+			if (!players?.length) return "Fees updated"
+			const playerSummary = players
+				.map((p) => {
+					const fees = p.fees.map((f) => `${f.name}: $${Number(f.amount).toFixed(2)}`).join(", ")
+					return `${p.name} — ${fees}`
+				})
+				.join("; ")
+			return withLocation(details, playerSummary)
+		}
+		default:
+			return JSON.stringify(details)
 	}
 }
