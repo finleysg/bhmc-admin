@@ -5,7 +5,7 @@ export function useCustomerSession(enabled: boolean) {
 		queryKey: ["customer-session"],
 		queryFn: async () => {
 			const response = await fetch("/api/payments/customer-session", { method: "POST" })
-			if (!response.ok) return undefined
+			if (!response.ok) throw new Error("Failed to create customer session")
 			const data = (await response.json()) as { clientSecret: string }
 			return data.clientSecret
 		},
