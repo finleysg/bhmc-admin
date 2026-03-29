@@ -22,7 +22,6 @@ import type {
 	UpdatePaymentRequest,
 } from "@repo/domain/types"
 import type { AuthenticatedRequest } from "../../auth"
-import { ChangeLogService } from "../services/changelog.service"
 import { PaymentsService } from "../services/payments.service"
 import Stripe from "stripe"
 
@@ -40,10 +39,7 @@ interface CustomerSessionResponse {
 export class UserPaymentsController {
 	private readonly logger = new Logger(UserPaymentsController.name)
 
-	constructor(
-		@Inject(ChangeLogService) private readonly changeLog: ChangeLogService,
-		@Inject(PaymentsService) private readonly service: PaymentsService,
-	) {}
+	constructor(@Inject(PaymentsService) private readonly service: PaymentsService) {}
 
 	/**
 	 * Create a payment record with details.
@@ -87,21 +83,6 @@ export class UserPaymentsController {
 
 		this.logger.log(`Updating payment ${paymentId}`)
 		const updatedPayment = await this.service.updatePayment(paymentId, dto)
-
-		// Log as get_in_skins when updating an already-confirmed payment (post-registration fee change)
-		if (payment.confirmed && dto.paymentDetails.length > 0) {
-			const firstSlotId = dto.paymentDetails[0].registrationSlotId
-			const registrationId = await this.changeLog.resolveRegistrationIdFromSlotId(firstSlotId)
-			const totalAmount = dto.paymentDetails.reduce((sum, d) => sum + d.amount, 0)
-			void this.changeLog.log({
-				eventId: dto.eventId,
-				registrationId: registrationId ?? 0,
-				action: "get_in_skins",
-				actorId: req.user.id,
-				isAdmin: false,
-				details: { amount: totalAmount },
-			})
-		}
 
 		return updatedPayment
 	}

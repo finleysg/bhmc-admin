@@ -109,6 +109,7 @@ const createMockBroadcastService = () => ({
 })
 
 const createMockMailService = () => ({
+	sendMoveNotification: jest.fn(),
 	sendPlayerReplacementNotification: jest.fn(),
 	sendSwapNotification: jest.fn(),
 })

@@ -617,4 +617,58 @@ describe("MailService", () => {
 			)
 		})
 	})
+
+	describe("sendMoveNotification", () => {
+		let service: MailService
+		let mockConfigService: ReturnType<typeof createMockConfigService>
+		let sendEmailSpy: jest.SpyInstance
+
+		const event = createClubEvent()
+
+		beforeEach(() => {
+			mockConfigService = createMockConfigService()
+			service = new MailService(mockConfigService as unknown as ConfigService)
+			sendEmailSpy = jest.spyOn(service, "sendEmail").mockResolvedValue(undefined)
+		})
+
+		afterEach(() => {
+			jest.restoreAllMocks()
+		})
+
+		it("sends one email with cc when multiple players", async () => {
+			const players = [
+				{ firstName: "John", email: "john@example.com" },
+				{ firstName: "Jane", email: "jane@example.com" },
+				{ firstName: "Bob", email: "bob@example.com" },
+			]
+
+			await service.sendMoveNotification(players, event, "Hole 1", "Hole 7")
+
+			expect(sendEmailSpy).toHaveBeenCalledTimes(1)
+			expect(sendEmailSpy).toHaveBeenCalledWith(
+				expect.objectContaining({
+					to: "john@example.com",
+					cc: ["jane@example.com", "bob@example.com"],
+					subject: "Tee Time Change: Test Event",
+				}),
+			)
+		})
+
+		it("sends one email with no cc for a single player", async () => {
+			const players = [{ firstName: "John", email: "john@example.com" }]
+
+			await service.sendMoveNotification(players, event, "Hole 1", "Hole 7")
+
+			expect(sendEmailSpy).toHaveBeenCalledTimes(1)
+			const callArgs = sendEmailSpy.mock.calls[0][0]
+			expect(callArgs.to).toBe("john@example.com")
+			expect(callArgs.cc).toBeUndefined()
+		})
+
+		it("does not send email for empty players array", async () => {
+			await service.sendMoveNotification([], event, "Hole 1", "Hole 7")
+
+			expect(sendEmailSpy).not.toHaveBeenCalled()
+		})
+	})
 })

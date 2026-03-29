@@ -870,6 +870,43 @@ export class PlayerService {
 		// Broadcast change
 		this.broadcast.notifyChange(eventId)
 
+		// Send move notification emails to affected players
+		try {
+			const sourceCourse = sourceRegistration.courseId
+				? await this.courses.findCourseWithHolesById(sourceRegistration.courseId)
+				: undefined
+			const destCourse = await this.courses.findCourseWithHolesById(destinationCourseId)
+
+			const sourceStart = sourceCourse
+				? getStart(event, sourceSlotRows[0] as never, sourceCourse.holes)
+				: "N/A"
+			const destStart = getStart(
+				event,
+				{ holeId: destinationStartingHoleId, startingOrder: destinationStartingOrder } as never,
+				destCourse.holes,
+			)
+
+			const previousStartLabel =
+				sourceStart !== "N/A" && sourceCourse ? `${sourceCourse.name} ${sourceStart}` : sourceStart
+			const newStartLabel = destStart !== "N/A" ? `${destCourse.name} ${destStart}` : destStart
+
+			await this.mail.sendMoveNotification(
+				playerRows.map((p) => toPlayer(p)),
+				event,
+				previousStartLabel,
+				newStartLabel,
+			)
+
+			this.logger.log(
+				`Move notification emails sent to ${playerRows.map((p) => p.email).join(", ")}`,
+			)
+		} catch (error) {
+			this.logger.error(
+				`Failed to send move notification emails: ${error instanceof Error ? error.message : "Unknown error"}`,
+			)
+			// Don't fail the move if email fails
+		}
+
 		return { movedCount: sourceSlotIds.length }
 	}
 
@@ -1060,10 +1097,12 @@ export class PlayerService {
 
 				if (slotAUpdated && slotBUpdated) {
 					// PlayerA is now in slotB, so get slotB's start info
-					const newStartInfoForPlayerA = getStart(eventRecord, slotBUpdated, courseB.holes)
+					const startA = getStart(eventRecord, slotBUpdated, courseB.holes)
+					const newStartInfoForPlayerA = startA === "N/A" ? startA : `${courseB.name} ${startA}`
 
 					// PlayerB is now in slotA, so get slotA's start info
-					const newStartInfoForPlayerB = getStart(eventRecord, slotAUpdated, courseA.holes)
+					const startB = getStart(eventRecord, slotAUpdated, courseA.holes)
+					const newStartInfoForPlayerB = startB === "N/A" ? startB : `${courseA.name} ${startB}`
 
 					// Send emails in parallel
 					await Promise.all([

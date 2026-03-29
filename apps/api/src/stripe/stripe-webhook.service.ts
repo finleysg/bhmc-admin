@@ -1,13 +1,23 @@
 import { Inject, Injectable, Logger } from "@nestjs/common"
 import Stripe from "stripe"
 
-import { EventTypeChoices, NotificationTypeChoices } from "@repo/domain/types"
+import {
+	type CompletePayment,
+	type CompleteRegistration,
+	EventTypeChoices,
+	NotificationTypeChoices,
+} from "@repo/domain/types"
 
 import { wrapError } from "../common/errors"
 import { DjangoAuthService } from "../auth"
 import { EventsService } from "../events"
 import { MailService } from "../mail"
-import { AdminRegistrationService, PaymentsService, RefundService } from "../registration"
+import {
+	AdminRegistrationService,
+	ChangeLogService,
+	PaymentsService,
+	RefundService,
+} from "../registration"
 
 @Injectable()
 export class StripeWebhookService {
@@ -15,6 +25,7 @@ export class StripeWebhookService {
 
 	constructor(
 		@Inject(AdminRegistrationService) private adminRegistrationService: AdminRegistrationService,
+		@Inject(ChangeLogService) private changeLogService: ChangeLogService,
 		@Inject(PaymentsService) private paymentsService: PaymentsService,
 		@Inject(RefundService) private refundService: RefundService,
 		@Inject(DjangoAuthService) private djangoAuthService: DjangoAuthService,
@@ -224,6 +235,7 @@ export class StripeWebhookService {
 					break
 				case NotificationTypeChoices.UPDATED_REGISTRATION:
 					await this.mailService.sendRegistrationUpdate(user, event, registration, payment)
+					void this.logRegistrationUpdate(registration, payment)
 					break
 				case NotificationTypeChoices.SIGNUP_CONFIRMATION:
 					await this.mailService.sendRegistrationConfirmation(user, event, registration, payment)
@@ -241,5 +253,34 @@ export class StripeWebhookService {
 			const wrapped = wrapError(error, `sendConfirmationEmail for payment ${paymentId}`)
 			this.logger.error({ message: wrapped.message, cause: wrapped.cause, stack: wrapped.stack })
 		}
+	}
+
+	private async logRegistrationUpdate(
+		registration: CompleteRegistration,
+		payment: CompletePayment,
+	): Promise<void> {
+		const paymentSlotIds = new Set(payment.details.map((d) => d.registrationSlotId))
+		const relevantSlots = registration.slots.filter((slot) => paymentSlotIds.has(slot.id))
+
+		const players = relevantSlots.map((slot) => ({
+			name: `${slot.player.firstName} ${slot.player.lastName}`,
+			fees: slot.fees
+				.filter((fee) => fee.paymentId === payment.id)
+				.map((fee) => ({
+					name: fee.eventFee.feeType.name,
+					amount: fee.amount,
+				})),
+		}))
+
+		const startInfo = await this.changeLogService.resolveStartInfo(registration.id, payment.eventId)
+
+		void this.changeLogService.log({
+			eventId: payment.eventId,
+			registrationId: registration.id,
+			action: "update_fees",
+			actorId: payment.userId,
+			isAdmin: false,
+			details: { players, ...startInfo },
+		})
 	}
 }

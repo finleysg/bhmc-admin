@@ -69,6 +69,8 @@ const createMockChangeLogService = () => ({
 	resolvePlayerNames: jest.fn().mockResolvedValue([]),
 	resolveRegistrationIdFromFeeId: jest.fn().mockResolvedValue(null),
 	resolveRegistrationIdFromSlotId: jest.fn().mockResolvedValue(null),
+	resolveStartInfo: jest.fn().mockResolvedValue({}),
+	resolveMoveDetails: jest.fn().mockResolvedValue({}),
 })
 
 function createController() {

@@ -64,7 +64,9 @@
 			"Bash(uv lock:*)",
 			"Bash(uv sync:*)",
 			"Bash(uv run:*)",
-			"Bash(bash /tmp/test-hook.sh 2>&1)"
+			"Bash(bash /tmp/test-hook.sh 2>&1)",
+			"Bash(grep -rn '\"\"cc\"\"' apps/api/src/mail/)",
+			"Bash(stat apps/api/src/mail/__tests__/*.test.*)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],

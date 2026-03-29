@@ -280,14 +280,16 @@ export class AdminRegistrationController {
 
 		const result = await this.adminRegisterService.replacePlayer(eventId, request)
 
-		const [droppedNames, addedNames] = await Promise.all([
+		const slot = await this.registrationService.findSlotById(request.slotId)
+		const [droppedNames, addedNames, startInfo] = await Promise.all([
 			this.changeLog.resolvePlayerNames([request.originalPlayerId]),
 			this.changeLog.resolvePlayerNames([request.replacementPlayerId]),
+			this.changeLog.resolveStartInfo(slot.registrationId, eventId),
 		])
-		const slot = await this.registrationService.findSlotById(request.slotId)
 		const details: Record<string, unknown> = {
 			droppedPlayer: droppedNames[0],
 			addedPlayer: addedNames[0],
+			...startInfo,
 		}
 		if (result.greenFeeDifference) {
 			details.feeDifference = result.greenFeeDifference
@@ -331,16 +333,20 @@ export class AdminRegistrationController {
 
 		const result = await this.adminRegisterService.movePlayers(eventId, request)
 
+		const moveDetails = await this.changeLog.resolveMoveDetails(
+			sourceSlot.registrationId,
+			eventId,
+			sourceSlot,
+			request.destinationStartingHoleId,
+			request.destinationStartingOrder,
+		)
 		void this.changeLog.log({
 			eventId,
 			registrationId: sourceSlot.registrationId,
 			action: "move",
 			actorId: req.user.id,
 			isAdmin,
-			details: {
-				destinationHoleId: request.destinationStartingHoleId,
-				destinationStartingOrder: request.destinationStartingOrder,
-			},
+			details: moveDetails,
 		})
 
 		return result

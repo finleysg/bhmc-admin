@@ -45,8 +45,7 @@ export function PlayerReplacementNotificationEmail({
 				Event Registration Confirmation
 			</Heading>
 			<Text style={paragraph}>
-				Hi {recipientName}, you have been added as a replacement player for a Bunker Hills Golf
-				Event.
+				Hi {recipientName}, you have been added to a Bunker Hills Men's Club event.
 			</Text>
 
 			{/* Event Details */}

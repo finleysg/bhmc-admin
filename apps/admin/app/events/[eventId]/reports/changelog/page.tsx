@@ -31,7 +31,7 @@ const ACTION_BADGE: Record<string, string> = {
 	swap: "badge-info",
 	add_notes: "badge-ghost",
 	update_notes: "badge-ghost",
-	get_in_skins: "badge-accent",
+	update_fees: "badge-accent",
 }
 
 function formatAction(action: string): string {
@@ -50,6 +50,11 @@ const ChangeLogTable = ({ data }: { data: ChangeLogReportRow[] | null }) => {
 			accessorKey: "createdDate",
 			header: "Time",
 			enableSorting: true,
+			cell: ({ getValue }) => {
+				const utc = getValue<string>()
+				const date = new Date(utc.replace(" ", "T") + "Z")
+				return date.toLocaleString()
+			},
 		},
 		{
 			accessorKey: "action",

@@ -1082,11 +1082,23 @@ export class ReportsService {
 	}
 }
 
+function formatLocation(details: Record<string, unknown>): string {
+	const course = details.course as string | undefined
+	const start = details.start as string | undefined
+	return [course, start].filter(Boolean).join(" — ")
+}
+
+function withLocation(details: Record<string, unknown>, text: string): string {
+	const location = formatLocation(details)
+	return location ? `${location}: ${text}` : text
+}
+
 function formatChangeLogDetails(action: string, details: Record<string, unknown>): string {
 	switch (action) {
 		case "add_players": {
 			const players = details.players as string[] | undefined
-			return players?.length ? `Added ${players.join(", ")}` : "Added players"
+			const base = players?.length ? `Added ${players.join(", ")}` : "Added players"
+			return withLocation(details, base)
 		}
 		case "drop": {
 			const players = details.players as string[] | undefined
@@ -1096,17 +1108,23 @@ function formatChangeLogDetails(action: string, details: Record<string, unknown>
 		case "replace": {
 			const dropped = (details.droppedPlayer as string) ?? "unknown"
 			const added = (details.addedPlayer as string) ?? "unknown"
-			const base = `Replaced ${dropped} with ${added}`
+			let base = `Replaced ${dropped} with ${added}`
 			if (details.feeDifference && Number(details.feeDifference) !== 0) {
 				const diff = Number(details.feeDifference)
-				return `${base} (${diff > 0 ? "+" : ""}$${diff.toFixed(2)})`
+				base = `${base} (${diff > 0 ? "+" : ""}$${diff.toFixed(2)})`
 			}
-			return base
+			return withLocation(details, base)
 		}
 		case "move": {
-			const holeId = (details.destinationHoleId as number | undefined) ?? "?"
-			const order = (details.destinationStartingOrder as number | undefined) ?? "?"
-			return `Moved to hole ${holeId} order ${order}`
+			const fromCourse = details.fromCourse as string | undefined
+			const from = details.from as string | undefined
+			const toCourse = details.toCourse as string | undefined
+			const to = details.to as string | undefined
+			const source = fromCourse && from ? `${fromCourse} ${from}` : (from ?? fromCourse)
+			const dest = toCourse && to ? `${toCourse} ${to}` : (to ?? toCourse)
+			if (source && dest) return `Moved from ${source} to ${dest}`
+			if (dest) return `Moved to ${dest}`
+			return "Moved"
 		}
 		case "swap": {
 			const p1 = (details.player1 as string) ?? "unknown"
@@ -1132,9 +1150,18 @@ function formatChangeLogDetails(action: string, details: Record<string, unknown>
 			const notes = details.notes as string | undefined
 			return notes ? `Notes: ${notes}` : "Notes updated"
 		}
-		case "get_in_skins": {
-			const amount = details.amount != null ? `$${Number(details.amount).toFixed(2)}` : ""
-			return amount ? `Skins payment: ${amount}` : "Skins payment"
+		case "update_fees": {
+			const players = details.players as
+				| { name: string; fees: { name: string; amount: number }[] }[]
+				| undefined
+			if (!players?.length) return "Fees updated"
+			const playerSummary = players
+				.map((p) => {
+					const fees = p.fees.map((f) => `${f.name}: $${Number(f.amount).toFixed(2)}`).join(", ")
+					return `${p.name} — ${fees}`
+				})
+				.join("; ")
+			return withLocation(details, playerSummary)
 		}
 		default:
 			return JSON.stringify(details)

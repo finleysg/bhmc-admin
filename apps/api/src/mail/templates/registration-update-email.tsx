@@ -46,9 +46,7 @@ export function RegistrationUpdateEmail({
 			<Heading as="h3" style={subheading}>
 				BHMC Event Signup Change
 			</Heading>
-			<Text style={paragraph}>
-				You have been signed up for a Bunker Hills Golf Event by {userName}.
-			</Text>
+			<Text style={paragraph}>{userName} has made a change to your group.</Text>
 
 			{/* Event Details */}
 			<Row style={tableRow}>

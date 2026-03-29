@@ -189,14 +189,17 @@ export class UserRegistrationController {
 			req.user.playerId,
 		)
 
-		const playerNames = await this.changeLog.resolvePlayerNames(playerIds)
+		const [playerNames, startInfo] = await Promise.all([
+			this.changeLog.resolvePlayerNames(playerIds),
+			this.changeLog.resolveStartInfo(registrationId, result.eventId),
+		])
 		void this.changeLog.log({
 			eventId: result.eventId,
 			registrationId,
 			action: "add_players",
 			actorId: req.user.id,
 			isAdmin: false,
-			details: { players: playerNames },
+			details: { players: playerNames, ...startInfo },
 		})
 
 		return result

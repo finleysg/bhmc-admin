@@ -84,7 +84,7 @@ export default function ManagePage() {
 		{
 			key: "updateRegistration",
 			title: "Get in Skins",
-			description: "Pay for skins or other extras.",
+			description: "Pay for skins or other optional fees.",
 			href: `${eventUrl}/manage/edit`,
 		},
 	]
