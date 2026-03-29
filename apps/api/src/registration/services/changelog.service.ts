@@ -3,6 +3,10 @@ import { asc, eq } from "drizzle-orm"
 import { Inject, Injectable, Logger } from "@nestjs/common"
 
 import { getStart } from "@repo/domain/functions"
+import type { RegistrationSlot } from "@repo/domain/types"
+
+/** Narrow type matching the fields `getStart` actually reads from a slot. */
+type SlotLike = Pick<RegistrationSlot, "startingOrder" | "holeId">
 
 import { CoursesService } from "../../courses/courses.service"
 import {
@@ -110,7 +114,7 @@ export class ChangeLogService {
 
 			if (!firstSlot) return { course: result.courseName }
 
-			const start = this.computeStart(result.event, firstSlot as never, result.holes)
+			const start = this.computeStart(result.event, firstSlot, result.holes)
 
 			return { course: result.courseName, start }
 		} catch (error) {
@@ -122,7 +126,7 @@ export class ChangeLogService {
 	async resolveMoveDetails(
 		registrationId: number,
 		eventId: number,
-		sourceSlot: { holeId?: number | null; startingOrder: number },
+		sourceSlot: SlotLike,
 		destinationHoleId: number,
 		destinationStartingOrder: number,
 	): Promise<{ fromCourse?: string; from?: string; toCourse?: string; to?: string }> {
@@ -133,7 +137,7 @@ export class ChangeLogService {
 			const sourceResult = await this.loadCourseAndEvent(registrationId, eventId)
 			const fromCourse = sourceResult?.courseName
 			const from = sourceResult
-				? this.computeStart(event, sourceSlot as never, sourceResult.holes)
+				? this.computeStart(event, sourceSlot, sourceResult.holes)
 				: undefined
 
 			// Destination: resolve from the destination hole's course
@@ -151,7 +155,7 @@ export class ChangeLogService {
 				const destCourseWithHoles = await this.courses.findCourseWithHolesById(destHoleRow.courseId)
 				to = this.computeStart(
 					event,
-					{ holeId: destinationHoleId, startingOrder: destinationStartingOrder } as never,
+					{ holeId: destinationHoleId, startingOrder: destinationStartingOrder },
 					destCourseWithHoles.holes,
 				)
 			}
@@ -176,10 +180,11 @@ export class ChangeLogService {
 
 	private computeStart(
 		event: Parameters<typeof getStart>[0],
-		slot: Parameters<typeof getStart>[1],
+		slot: SlotLike,
 		holes: Parameters<typeof getStart>[2],
 	): string | undefined {
-		const startValue = getStart(event, slot, holes)
+		// Safe cast: getStart only reads startingOrder and holeId from the slot
+		const startValue = getStart(event, slot as RegistrationSlot, holes)
 		return startValue !== "N/A" ? startValue : undefined
 	}
 }

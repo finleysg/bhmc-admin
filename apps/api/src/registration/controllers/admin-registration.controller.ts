@@ -195,9 +195,15 @@ export class AdminRegistrationController {
 		const isAdmin = req.user.isStaff || req.user.isSuperuser
 		let shouldRefund = request.autoRefund ?? !isAdmin
 
+		// Fetch registration once — used for ownership check and changelog
+		const reg = await this.registrationService.findRegistrationById(request.registrationId)
+
 		// Non-admin users must be a member of the registration group
 		if (!isAdmin) {
-			await this.registrationService.findRegistrationById(request.registrationId, req.user.playerId)
+			const isGroupMember = reg.slots.some((s) => s.playerId === req.user.playerId)
+			if (!isGroupMember) {
+				throw new ForbiddenException("Not a member of this group")
+			}
 		}
 
 		// Non-admin auto-refunds are only available before signupEnd
@@ -209,7 +215,6 @@ export class AdminRegistrationController {
 		}
 
 		// Resolve player names BEFORE the drop (drop detaches players from slots)
-		const reg = await this.registrationService.findRegistrationById(request.registrationId)
 		const slotIdsSet = new Set(request.slotIds)
 		const droppedPlayerIds = reg.slots
 			.filter((s) => slotIdsSet.has(s.id))
@@ -269,9 +274,11 @@ export class AdminRegistrationController {
 
 		const isAdmin = req.user.isStaff || req.user.isSuperuser
 
+		// Fetch slot once — used for ownership check and changelog
+		const slot = await this.registrationService.findSlotById(request.slotId)
+
 		// Non-admin users must be a member of the registration group
 		if (!isAdmin) {
-			const slot = await this.registrationService.findSlotById(request.slotId)
 			if (!slot.registrationId) {
 				throw new ForbiddenException("Slot is not part of a registration")
 			}
@@ -279,8 +286,6 @@ export class AdminRegistrationController {
 		}
 
 		const result = await this.adminRegisterService.replacePlayer(eventId, request)
-
-		const slot = await this.registrationService.findSlotById(request.slotId)
 		const [droppedNames, addedNames, startInfo] = await Promise.all([
 			this.changeLog.resolvePlayerNames([request.originalPlayerId]),
 			this.changeLog.resolvePlayerNames([request.replacementPlayerId]),
@@ -361,17 +366,34 @@ export class AdminRegistrationController {
 		this.logger.log(
 			`Swapping player ${request.playerAId} in slot ${request.slotAId} with player ${request.playerBId} in slot ${request.slotBId} for event ${eventId}`,
 		)
+		const isAdmin = req.user.isStaff || req.user.isSuperuser
 		const result = await this.adminRegisterService.swapPlayers(eventId, request)
 
-		const slotA = await this.registrationService.findSlotById(request.slotAId)
+		const [slotA, slotB] = await Promise.all([
+			this.registrationService.findSlotById(request.slotAId),
+			this.registrationService.findSlotById(request.slotBId),
+		])
+		const swapDetails = { player1: result.playerAName, player2: result.playerBName }
+
 		void this.changeLog.log({
 			eventId,
 			registrationId: slotA.registrationId,
 			action: "swap",
 			actorId: req.user.id,
-			isAdmin: true,
-			details: { player1: result.playerAName, player2: result.playerBName },
+			isAdmin,
+			details: swapDetails,
 		})
+		// Log for the other registration too (swaps always span two registrations)
+		if (slotB.registrationId !== slotA.registrationId) {
+			void this.changeLog.log({
+				eventId,
+				registrationId: slotB.registrationId,
+				action: "swap",
+				actorId: req.user.id,
+				isAdmin,
+				details: swapDetails,
+			})
+		}
 
 		return result
 	}
@@ -404,21 +426,28 @@ export class AdminRegistrationController {
 
 		for (const refundReq of refundRequests) {
 			const payment = await this.paymentsService.findPaymentById(refundReq.paymentId)
-			if (payment) {
-				const registrationId =
-					refundReq.registrationFeeIds.length > 0
-						? await this.changeLog.resolveRegistrationIdFromFeeId(refundReq.registrationFeeIds[0])
-						: null
+			if (!payment) continue
 
-				void this.changeLog.log({
-					eventId: payment.eventId,
-					registrationId: registrationId ?? 0,
-					action: "refund",
-					actorId: req.user.id,
-					isAdmin: true,
-					details: { amount: payment.paymentAmount, paymentId: refundReq.paymentId },
-				})
+			const registrationId =
+				refundReq.registrationFeeIds.length > 0
+					? await this.changeLog.resolveRegistrationIdFromFeeId(refundReq.registrationFeeIds[0])
+					: null
+
+			if (registrationId == null) {
+				this.logger.warn(
+					`Could not resolve registrationId for refund paymentId=${refundReq.paymentId}, skipping changelog`,
+				)
+				continue
 			}
+
+			void this.changeLog.log({
+				eventId: payment.eventId,
+				registrationId,
+				action: "refund",
+				actorId: req.user.id,
+				isAdmin: true,
+				details: { amount: payment.paymentAmount, paymentId: refundReq.paymentId },
+			})
 		}
 
 		return { success: true }

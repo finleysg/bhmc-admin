@@ -388,29 +388,26 @@ describe("AdminRegistrationController", () => {
 			expect(result).toEqual({ droppedCount: 2 })
 		})
 
-		it("non-admin ownership validation: calls findRegistrationById with playerId", async () => {
+		it("non-admin ownership validation: throws when user is not in the group", async () => {
 			const { controller, registrationService } = createController()
 			const user = createUser({ playerId: 5 })
 			const req = { user } as any
 
-			// First call (for changelog): succeeds
-			registrationService.findRegistrationById
-				.mockResolvedValueOnce({
-					id: 42,
-					eventId: 100,
-					slots: [
-						{ id: 101, playerId: 1 },
-						{ id: 102, playerId: 2 },
-					],
-				})
-				// Second call (for ownership validation): rejects
-				.mockRejectedValueOnce(new ForbiddenException("Not authorized"))
+			registrationService.findRegistrationById.mockResolvedValue({
+				id: 42,
+				eventId: 100,
+				slots: [
+					{ id: 101, playerId: 1 },
+					{ id: 102, playerId: 2 },
+				],
+			})
 
 			await expect(controller.dropPlayers(100, dropRequest, req)).rejects.toThrow(
 				ForbiddenException,
 			)
 
-			expect(registrationService.findRegistrationById).toHaveBeenCalledWith(42, 5)
+			expect(registrationService.findRegistrationById).toHaveBeenCalledTimes(1)
+			expect(registrationService.findRegistrationById).toHaveBeenCalledWith(42)
 		})
 	})
 
