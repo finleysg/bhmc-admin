@@ -8,6 +8,7 @@ overrides:
   '@types/react': ^19.0.0
   '@types/react-dom': ^19.0.0
   baseline-browser-mapping: ^2.9.17
+  axios: <=1.13.2
 
 importers:
 
@@ -184,7 +185,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/domain
       axios:
-        specifier: ^1.13.1
+        specifier: <=1.13.2
         version: 1.13.2
       cookie-parser:
         specifier: ^1.4.7
