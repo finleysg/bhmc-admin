@@ -243,6 +243,10 @@ export function getSignUpUnavailableReason({
 		return "This event has been canceled."
 	}
 
+	if (hasSignedUp) {
+		return "You are signed up."
+	}
+
 	if (event.registration_window === "past") {
 		return "Registration is closed."
 	}
@@ -256,10 +260,6 @@ export function getSignUpUnavailableReason({
 
 	if (!isAuthenticated) {
 		return "Sign in to register for this event."
-	}
-
-	if (hasSignedUp) {
-		return "You are signed up."
 	}
 
 	if (isEventFull) {
