@@ -39,22 +39,18 @@ export default function ManagePage() {
 
 	const locationText = course ? `${course.name} ${startName}` : startName
 
-	const registrationClosed = clubEvent.registration_window === "past"
-
 	const options: ManageOption[] = [
 		{
 			key: "addPlayers",
 			title: "Add Players",
 			description: "Add one or more players to your group, assuming there is space available",
 			href: `${eventUrl}/manage/add`,
-			disabled: registrationClosed,
 		},
 		{
 			key: "dropPlayers",
 			title: "Drop Players",
 			description: "Drop one or more players from your group.",
 			href: `${eventUrl}/manage/drop`,
-			disabled: registrationClosed,
 		},
 		...(clubEvent.can_choose
 			? [
@@ -63,7 +59,6 @@ export default function ManagePage() {
 						title: "Move Group",
 						description: "Move your group to another open spot.",
 						href: `${eventUrl}/manage/move`,
-						disabled: registrationClosed,
 					},
 				]
 			: []),
@@ -72,14 +67,12 @@ export default function ManagePage() {
 			title: "Replace Player",
 			description: "Replace one of the players in your group with another player.",
 			href: `${eventUrl}/manage/replace`,
-			disabled: registrationClosed,
 		},
 		{
 			key: "addNotes",
 			title: "Add Notes",
 			description: "Add a special request or other notes to your registration.",
 			href: `${eventUrl}/manage/notes`,
-			disabled: registrationClosed,
 		},
 		{
 			key: "updateRegistration",
