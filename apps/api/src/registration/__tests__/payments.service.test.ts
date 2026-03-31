@@ -117,6 +117,7 @@ const createRegistrationSlotRow = (
 	eventId: 100,
 	holeId: null,
 	playerId: 1,
+	sessionId: null,
 	registrationId: 1,
 	ggId: null,
 	...overrides,

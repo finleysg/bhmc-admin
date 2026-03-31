@@ -7,7 +7,7 @@ from simple_history.models import HistoricalRecords
 
 from courses.models import Course, Hole
 from documents.models import Photo
-from events.models import Event, EventFee
+from events.models import Event, EventFee, EventSession
 from payments.models import Payment
 
 from .managers import RegistrationManager, RegistrationSlotManager
@@ -126,6 +126,14 @@ class RegistrationSlot(models.Model):
     )
     player = models.ForeignKey(
         verbose_name="Player", to=Player, blank=True, null=True, on_delete=DO_NOTHING
+    )
+    session = models.ForeignKey(
+        verbose_name="Session",
+        to=EventSession,
+        blank=True,
+        null=True,
+        on_delete=DO_NOTHING,
+        related_name="slots",
     )
     starting_order = models.IntegerField(verbose_name="Starting order", default=0)
     slot = models.IntegerField(verbose_name="Slot number", default=0)

@@ -36,6 +36,12 @@ export class EventFullError extends HttpException {
 	}
 }
 
+export class SessionFullError extends HttpException {
+	constructor(sessionName: string) {
+		super(`The ${sessionName} session is full`, HttpStatus.BAD_REQUEST)
+	}
+}
+
 export class EventRegistrationNotOpenError extends HttpException {
 	constructor() {
 		super("The event is not currently open for registration", HttpStatus.BAD_REQUEST)

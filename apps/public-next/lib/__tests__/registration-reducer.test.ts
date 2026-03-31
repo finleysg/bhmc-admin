@@ -66,6 +66,7 @@ function makeEvent(overrides: Partial<ClubEventDetail> = {}): ClubEventDetail {
 		registration_maximum: null,
 		courses: [],
 		fees: [makeEventFee()],
+		sessions: [],
 		default_tag: null,
 		starter_time_interval: 8,
 		team_size: 1,

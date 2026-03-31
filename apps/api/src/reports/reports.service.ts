@@ -69,6 +69,7 @@ interface EventPlayerFee {
 interface EventPlayerSlot {
 	playerId: number
 	team: string
+	session: string
 	course: string
 	start: string
 	ghin?: string | null
@@ -236,6 +237,12 @@ export class ReportsService {
 			}),
 		)
 
+		// Build session name lookup
+		const sessionNameMap = new Map<number, string>()
+		for (const session of event.sessions ?? []) {
+			sessionNameMap.set(session.id, session.name)
+		}
+
 		const transformed = registeredPlayers.map((registeredPlayer): EventPlayerSlot => {
 			const player = registeredPlayer.player
 			const registration = registeredPlayer.registration
@@ -262,9 +269,13 @@ export class ReportsService {
 				}
 			})
 
+			const sessionId = registeredPlayer.slot.sessionId
+			const sessionName = sessionId ? (sessionNameMap.get(sessionId) ?? "") : ""
+
 			return {
 				playerId: player.id,
 				team,
+				session: sessionName,
 				course: courseName,
 				start: startValue,
 				ghin: player.ghin,
@@ -315,6 +326,7 @@ export class ReportsService {
 		const rows = registeredPlayers.map((slot) => {
 			const row: EventReportRow = {
 				teamId: slot.team,
+				session: slot.session,
 				course: slot.course,
 				start: slot.start,
 				ghin: slot.ghin || "",

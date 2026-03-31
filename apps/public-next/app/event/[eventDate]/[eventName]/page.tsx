@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation"
 import { parse, isValid } from "date-fns"
 import { fetchDjango } from "@/lib/fetchers"
-import { findEventBySlug, computeOpenSpots, RegistrationType } from "@/lib/event-utils"
+import {
+	findEventBySlug,
+	computeOpenSpots,
+	computeSessionSpots,
+	RegistrationType,
+} from "@/lib/event-utils"
 import type { ClubEventDetail, RegistrationSlot } from "@/lib/types"
 import { EventDetailCard } from "./components/event-detail-card"
 import { FeesAndPointsCard } from "./components/fees-and-points-card"
@@ -36,31 +41,42 @@ export default async function EventPage({ params }: EventPageProps) {
 	}
 
 	let openSpots = -1
+	let slots: RegistrationSlot[] = []
 	const hasRegistration = event.registration_type !== RegistrationType.None
 	if (hasRegistration && event.registration_window !== "past") {
 		try {
-			const slots = await fetchDjango<RegistrationSlot[]>(
-				`/registration-slots/?event_id=${event.id}`,
-				{ revalidate: 60, tags: [`event-slots-${event.id}`] },
-			)
+			slots = await fetchDjango<RegistrationSlot[]>(`/registration-slots/?event_id=${event.id}`, {
+				revalidate: 60,
+				tags: [`event-slots-${event.id}`],
+			})
 			openSpots = computeOpenSpots(event, slots)
 		} catch {
 			// If slots can't be fetched, skip showing spots
 		}
 	}
-	const isEventFull = openSpots === 0
+
+	const sessions = event.sessions ?? []
+	const sessionSpots = sessions.length > 0 ? computeSessionSpots(slots, sessions) : []
+	const isEventFull =
+		sessions.length > 0 ? sessionSpots.every((s) => s.availableSpots <= 0) : openSpots === 0
 
 	return (
 		<div className="grid gap-6 lg:grid-cols-12">
 			<div className="lg:col-span-8">
 				<EventDetailCard
 					event={event}
-					actions={<RegistrationActions event={event} isEventFull={isEventFull} />}
+					actions={
+						<RegistrationActions
+							event={event}
+							isEventFull={isEventFull}
+							sessionSpots={sessionSpots}
+						/>
+					}
 					banner={<RegistrationBanner event={event} isEventFull={isEventFull} />}
 				/>
 			</div>
 			<div className="space-y-6 lg:col-span-4">
-				<FeesAndPointsCard event={event} openSpots={openSpots} />
+				<FeesAndPointsCard event={event} openSpots={openSpots} sessionSpots={sessionSpots} />
 				<EventDocumentsCard eventId={event.id} />
 				{event.default_tag && <EventPhotosCard tag={event.default_tag} />}
 			</div>

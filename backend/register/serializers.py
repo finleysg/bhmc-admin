@@ -142,6 +142,7 @@ class RegistrationSlotSerializer(serializers.ModelSerializer):
             "event",
             "hole",
             "registration",
+            "session",
             "starting_order",
             "slot",
             "status",

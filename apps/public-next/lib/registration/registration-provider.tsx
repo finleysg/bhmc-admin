@@ -32,6 +32,7 @@ import {
 	defaultRegistrationState,
 	registrationReducer,
 	type RegistrationStep,
+	type SelectedSession,
 } from "./registration-reducer"
 import { RegistrationContext } from "./registration-context"
 import { getWaveUnlockTimes, transformSSESlots } from "./reserve-utils"
@@ -364,6 +365,7 @@ export function RegistrationProvider({
 					eventId: state.clubEvent?.id,
 					courseId: course?.id,
 					slotIds: slots?.map((s) => s.id),
+					sessionId: state.selectedSession?.id ?? undefined,
 				}),
 				correlationId: state.correlationId,
 			})
@@ -405,6 +407,7 @@ export function RegistrationProvider({
 			lastSeason: null,
 		}
 
+		const sessionOverrides = state.selectedSession?.feeOverrides
 		state.clubEvent.fees
 			.filter((f) => f.is_required)
 			.forEach((fee) => {
@@ -413,7 +416,7 @@ export function RegistrationProvider({
 					paymentId: 0,
 					eventFeeId: fee.id,
 					registrationSlotId: firstSlot.id,
-					amount: calculateFeeAmount(fee, feePlayer),
+					amount: calculateFeeAmount(fee, feePlayer, sessionOverrides),
 					isPaid: false,
 				})
 			})
@@ -739,6 +742,10 @@ export function RegistrationProvider({
 		return false
 	}, [state.clubEvent, state.registration])
 
+	const selectSession = useCallback((session: SelectedSession) => {
+		dispatch({ type: "select-session", payload: { session } })
+	}, [])
+
 	const setError = useCallback((error: string | null) => {
 		dispatch({ type: "update-error", payload: { error } })
 	}, [])
@@ -772,6 +779,7 @@ export function RegistrationProvider({
 			editRegistration,
 			initiateStripeSession,
 			loadRegistration,
+			selectSession,
 			startEditRegistration,
 			removeFee,
 			removePlayer,
@@ -794,6 +802,7 @@ export function RegistrationProvider({
 			editRegistration,
 			initiateStripeSession,
 			loadRegistration,
+			selectSession,
 			startEditRegistration,
 			removeFee,
 			removePlayer,

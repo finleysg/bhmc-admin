@@ -151,6 +151,22 @@ export interface Course {
 	tees: Tee[]
 }
 
+export interface EventSessionFeeOverride {
+	id: number
+	session: number
+	event_fee: number
+	amount: string
+}
+
+export interface EventSession {
+	id: number
+	event: number
+	name: string
+	registration_limit: number
+	display_order: number
+	fee_overrides: EventSessionFeeOverride[]
+}
+
 export interface ClubEventDetail {
 	id: number
 	name: string
@@ -183,6 +199,7 @@ export interface ClubEventDetail {
 	registration_maximum: number | null
 	courses: Course[]
 	fees: EventFee[]
+	sessions?: EventSession[]
 	default_tag: string | null
 	starter_time_interval: number
 	team_size: number | null
@@ -211,6 +228,7 @@ export interface RegistrationSlot {
 	starting_order: number
 	slot: number
 	status: string
+	session: number | null
 	player: RegistrationSlotPlayer | null
 }
 

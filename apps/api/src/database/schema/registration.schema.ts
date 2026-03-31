@@ -15,7 +15,7 @@ import {
 
 import { authUser } from "./auth.schema"
 import { course, hole } from "./courses.schema"
-import { event, eventFee } from "./events.schema"
+import { event, eventFee, eventSession } from "./events.schema"
 
 export const payment = mysqlTable(
 	"payments_payment",
@@ -152,6 +152,7 @@ export const registrationSlot = mysqlTable(
 			.references(() => event.id),
 		holeId: int("hole_id").references(() => hole.id),
 		playerId: int("player_id").references(() => player.id),
+		sessionId: int("session_id").references(() => eventSession.id),
 		registrationId: int("registration_id").references(() => registration.id),
 		ggId: varchar("gg_id", { length: 22 }),
 	},

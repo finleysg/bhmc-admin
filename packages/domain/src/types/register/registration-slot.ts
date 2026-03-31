@@ -14,6 +14,7 @@ export interface RegistrationSlot {
 	hole?: Hole
 	playerId?: number | null
 	player?: Player
+	sessionId?: number | null
 	ggId?: string | null
 	fees?: RegistrationFee[]
 }

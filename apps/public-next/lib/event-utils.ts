@@ -4,7 +4,7 @@ import { notFound } from "next/navigation"
 import { dayDateAndTimeFormat } from "./date-utils"
 import { fetchDjango } from "./fetchers"
 import { slugify } from "./slugify"
-import type { ClubEvent, ClubEventDetail, RegistrationSlot } from "./types"
+import type { ClubEvent, ClubEventDetail, EventSession, RegistrationSlot } from "./types"
 
 export const EventType = {
 	Weeknight: "N",
@@ -324,4 +324,30 @@ export function computeOpenSpots(event: ClubEventDetail, slots: RegistrationSlot
 		return event.registration_maximum - filled
 	}
 	return -1
+}
+
+export interface SessionSpots {
+	sessionId: number
+	sessionName: string
+	availableSpots: number
+	totalSpots: number
+}
+
+export function computeSessionSpots(
+	slots: RegistrationSlot[],
+	sessions: EventSession[],
+): SessionSpots[] {
+	return sessions
+		.slice()
+		.sort((a, b) => a.display_order - b.display_order)
+		.map((session) => {
+			const sessionSlots = slots.filter((s) => s.session === session.id)
+			const filled = sessionSlots.filter((s) => s.status === "R").length
+			return {
+				sessionId: session.id,
+				sessionName: session.name,
+				availableSpots: session.registration_limit - filled,
+				totalSpots: session.registration_limit,
+			}
+		})
 }

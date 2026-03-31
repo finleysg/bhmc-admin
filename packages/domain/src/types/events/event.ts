@@ -1,5 +1,6 @@
 import { Course } from "../courses/course"
 import { EventFee } from "./event-fee"
+import { EventSessionWithFees } from "./event-session"
 import { Round } from "./round"
 import { Tournament } from "./tournament"
 import type {
@@ -47,6 +48,7 @@ export interface ClubEvent {
 	ggId?: string | null
 	courses?: Course[]
 	eventFees?: EventFee[]
+	sessions?: EventSessionWithFees[]
 	eventRounds?: Round[]
 	tournaments?: Tournament[]
 }

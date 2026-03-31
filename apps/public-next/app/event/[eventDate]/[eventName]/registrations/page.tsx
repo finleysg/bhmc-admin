@@ -17,6 +17,7 @@ interface DjangoRegistrationSlot {
 	starting_order: number
 	slot: number
 	status: string
+	session: number | null
 	player: {
 		id: number
 		first_name: string
@@ -50,9 +51,13 @@ export interface Reservation {
 	sortName: string
 	signedUpBy: string
 	signupDate: string
+	sessionName: string | null
 }
 
-function convertRegistrationsToReservations(registrations: DjangoRegistration[]): Reservation[] {
+function convertRegistrationsToReservations(
+	registrations: DjangoRegistration[],
+	sessionMap: Map<number, string>,
+): Reservation[] {
 	const reservations: Reservation[] = []
 	for (const reg of registrations) {
 		for (const slot of reg.slots) {
@@ -65,6 +70,7 @@ function convertRegistrationsToReservations(registrations: DjangoRegistration[])
 					sortName: `${slot.player.last_name}, ${slot.player.first_name}`,
 					signedUpBy: reg.signed_up_by,
 					signupDate: reg.created_date,
+					sessionName: slot.session ? (sessionMap.get(slot.session) ?? null) : null,
 				})
 			}
 		}
@@ -82,6 +88,10 @@ export default async function RegistrationsPage({ params }: RegistrationsPagePro
 
 	const eventDetailUrl = `/event/${eventDate}/${eventName}`
 
+	const sessions = event.sessions ?? []
+	const sessionMap = new Map(sessions.map((s) => [s.id, s.name]))
+	const hasSessions = sessions.length > 0
+
 	let content: React.ReactNode
 	if (event.can_choose) {
 		const slots = await fetchDjango<RegistrationSlot[]>(
@@ -95,8 +105,14 @@ export default async function RegistrationsPage({ params }: RegistrationsPagePro
 			`/registration/?event_id=${event.id}`,
 			{ revalidate: 0 },
 		)
-		const reservations = convertRegistrationsToReservations(registrations)
-		content = <RegisteredList reservations={reservations} eventName={event.name} />
+		const reservations = convertRegistrationsToReservations(registrations, sessionMap)
+		content = (
+			<RegisteredList
+				reservations={reservations}
+				eventName={event.name}
+				hasSessions={hasSessions}
+			/>
+		)
 	}
 
 	return (

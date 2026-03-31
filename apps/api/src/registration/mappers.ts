@@ -91,6 +91,7 @@ export function toRegistrationSlot(row: RegistrationSlotRow): RegistrationSlot {
 		hole: undefined,
 		playerId: row.playerId ?? undefined,
 		player: undefined,
+		sessionId: row.sessionId ?? undefined,
 		ggId: row.ggId ?? undefined,
 		fees: [],
 	}

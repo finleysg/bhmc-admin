@@ -125,6 +125,7 @@ export interface SSESlotData {
 	eventId: number
 	registrationId: number | null
 	holeId: number | null
+	sessionId?: number | null
 	player: ServerPlayer | null
 	startingOrder: number
 	slot: number

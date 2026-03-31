@@ -7,8 +7,10 @@ import React from "react"
 // --- Mocks ---
 
 const mockReplace = jest.fn()
+const mockSearchParams = new URLSearchParams()
 jest.mock("next/navigation", () => ({
 	useRouter: () => ({ replace: mockReplace }),
+	useSearchParams: () => mockSearchParams,
 }))
 
 const mockCreateRegistration = jest.fn(() => Promise.resolve())
@@ -31,10 +33,12 @@ const mockRegistrationContext = jest.fn(() => ({
 	mode: "new" as const,
 	error: null,
 	selectedStart: null,
+	selectedSession: null,
 	addPlayer: jest.fn(),
 	canRegister: jest.fn(() => false),
 	cancelRegistration: jest.fn(),
 	createRegistration: mockCreateRegistration,
+	selectSession: jest.fn(),
 	savePayment: jest.fn(),
 	setError: jest.fn(),
 	updateRegistrationNotes: jest.fn(),
@@ -87,6 +91,8 @@ beforeEach(() => {
 		savePayment: jest.fn(),
 		setError: jest.fn(),
 		updateRegistrationNotes: jest.fn(),
+		selectedSession: null,
+		selectSession: jest.fn(),
 		updateStep: jest.fn(),
 	}))
 })
@@ -131,6 +137,8 @@ test("redirects to event page for can_choose events when registration is null", 
 		savePayment: jest.fn(),
 		setError: jest.fn(),
 		updateRegistrationNotes: jest.fn(),
+		selectedSession: null,
+		selectSession: jest.fn(),
 		updateStep: jest.fn(),
 	}))
 
@@ -176,6 +184,8 @@ test("does not call createRegistration for non-returning member on returning-mem
 		savePayment: jest.fn(),
 		setError: mockSetError,
 		updateRegistrationNotes: jest.fn(),
+		selectedSession: null,
+		selectSession: jest.fn(),
 		updateStep: jest.fn(),
 	}))
 
@@ -220,6 +230,8 @@ test("calls createRegistration for returning member on returning-members-only ev
 		savePayment: jest.fn(),
 		setError: jest.fn(),
 		updateRegistrationNotes: jest.fn(),
+		selectedSession: null,
+		selectSession: jest.fn(),
 		updateStep: jest.fn(),
 	}))
 

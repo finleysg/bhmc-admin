@@ -2,7 +2,16 @@ from rest_framework import serializers
 
 from courses.serializers import CourseSerializer
 
-from .models import Event, EventFee, FeeType, Tournament, TournamentPoints, TournamentResult
+from .models import (
+    Event,
+    EventFee,
+    EventSession,
+    EventSessionFee,
+    FeeType,
+    Tournament,
+    TournamentPoints,
+    TournamentResult,
+)
 
 
 class TournamentSerializer(serializers.ModelSerializer):
@@ -86,9 +95,36 @@ class EventFeeSerializer(serializers.ModelSerializer):
         )
 
 
+class EventSessionFeeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventSessionFee
+        fields = (
+            "id",
+            "session",
+            "event_fee",
+            "amount",
+        )
+
+
+class EventSessionSerializer(serializers.ModelSerializer):
+    fee_overrides = EventSessionFeeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = EventSession
+        fields = (
+            "id",
+            "event",
+            "name",
+            "registration_limit",
+            "display_order",
+            "fee_overrides",
+        )
+
+
 class EventSerializer(serializers.ModelSerializer):
     courses = CourseSerializer(many=True, read_only=True)
     fees = EventFeeSerializer(many=True, read_only=True)
+    sessions = EventSessionSerializer(many=True, read_only=True)
     default_tag = serializers.CharField(required=False, source="default_tag.name")
 
     class Meta:
@@ -125,6 +161,7 @@ class EventSerializer(serializers.ModelSerializer):
             "registration_maximum",
             "courses",
             "fees",
+            "sessions",
             "default_tag",
             "starter_time_interval",
             "team_size",

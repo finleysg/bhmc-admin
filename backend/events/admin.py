@@ -6,7 +6,16 @@ from django.db.models import QuerySet
 from core.util import current_season
 from register.admin import CurrentSeasonFilter
 
-from .models import Event, EventFee, FeeType, Round, Tournament, TournamentResult
+from .models import (
+    Event,
+    EventFee,
+    EventSession,
+    EventSessionFee,
+    FeeType,
+    Round,
+    Tournament,
+    TournamentResult,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -25,7 +34,7 @@ class TournamentResultEventFilter(SimpleListFilter):
     def _get_events_with_results(self, current_season_year: int) -> QuerySet[Event]:
         """
         Retrieve events in the specified season that have at least one tournament result.
-        
+
         Returns:
             QuerySet[Event]: Events in the given season that have one or more associated tournament results, ordered by start_date then name.
         """
@@ -38,28 +47,24 @@ class TournamentResultEventFilter(SimpleListFilter):
             .order_by("start_date", "name")
         )
 
-    def _get_all_current_season_events(
-        self, current_season_year: int
-    ) -> QuerySet[Event]:
+    def _get_all_current_season_events(self, current_season_year: int) -> QuerySet[Event]:
         """
         Return all events for the given season ordered by start date and name.
-        
+
         Parameters:
             current_season_year (int): Year of the season to filter events by.
-        
+
         Returns:
             QuerySet[Event]: Events in the specified season ordered by `start_date`, then `name`.
         """
-        return Event.objects.filter(season=current_season_year).order_by(
-            "start_date", "name"
-        )
+        return Event.objects.filter(season=current_season_year).order_by("start_date", "name")
 
     def lookups(self, request, model_admin):
         """
         Builds the admin filter choices for current-season events that have associated tournament results.
-        
+
         If retrieving events with results fails, falls back to all events in the current season; if that also fails, returns an empty list.
-        
+
         Returns:
             list[tuple[int, str]]: Tuples of (event_id, "start_date - event_name") suitable for Django admin filter choices, or an empty list if no events could be retrieved.
         """
@@ -85,7 +90,7 @@ class TournamentResultEventFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         """
         Filter the provided queryset to tournament results belonging to the selected event.
-        
+
         Returns:
             QuerySet: TournamentResult queryset filtered to the event whose id matches the current filter value, or the original queryset if no event is selected.
         """
@@ -108,12 +113,12 @@ class TournamentByEventFilter(SimpleListFilter):
     def lookups(self, request, model_admin):
         """
         Provide tournament choices for the admin filter based on the "event" GET parameter.
-        
+
         Reads the "event" parameter from the provided request and returns a list of tuples suitable for Django admin filter lookups. Each tuple is (tournament_id_as_str, display), where display is formatted as "<Round or 'No Round'> - <tournament name>". If the "event" parameter is missing or an error occurs while fetching tournaments, an empty list is returned.
-        
+
         Parameters:
             request (HttpRequest): The incoming request used to read the "event" GET parameter.
-        
+
         Returns:
             list[tuple[str, str]]: A list of (tournament id, display string) tuples for the given event, or an empty list.
         """
@@ -128,9 +133,7 @@ class TournamentByEventFilter(SimpleListFilter):
                 .order_by("round__round_date", "name")
             )
         except Exception as e:
-            logger.error(
-                "Failed to get tournaments for event", event_id=event_id, exc_info=e
-            )
+            logger.error("Failed to get tournaments for event", event_id=event_id, exc_info=e)
             return []
 
         choices = []
@@ -144,7 +147,7 @@ class TournamentByEventFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         """
         Filter the provided queryset to the tournament selected by the admin filter.
-        
+
         @returns Filtered queryset limited to the selected tournament when a value is set, the original queryset otherwise.
         """
         if self.value():
@@ -158,6 +161,50 @@ class CoursesInline(admin.TabularInline):
     extra = 0
     fields = [
         "name",
+    ]
+
+
+class EventSessionFeeInline(admin.TabularInline):
+    model = EventSessionFee
+    can_delete = True
+    extra = 0
+    verbose_name_plural = "Fee Overrides"
+    fields = [
+        "event_fee",
+        "amount",
+    ]
+
+
+class EventSessionAdmin(admin.ModelAdmin):
+    fields = [
+        "event",
+        "name",
+        "registration_limit",
+        "display_order",
+    ]
+    list_display = [
+        "event",
+        "name",
+        "registration_limit",
+        "display_order",
+    ]
+    list_display_links = ("name",)
+    list_filter = (CurrentSeasonFilter,)
+    ordering = ["event", "display_order"]
+    search_fields = ["event__name", "name"]
+    save_on_top = True
+    inlines = [EventSessionFeeInline]
+
+
+class EventSessionsInline(admin.TabularInline):
+    model = EventSession
+    can_delete = True
+    extra = 0
+    verbose_name_plural = "Sessions"
+    fields = [
+        "name",
+        "registration_limit",
+        "display_order",
     ]
 
 
@@ -232,15 +279,15 @@ class EventAdmin(admin.ModelAdmin):
                         "payments_end",
                         "priority_signup_start",
                     ),
-            (
-                "group_size",
-                "team_size",
-                "total_groups",
-                "registration_maximum",
-                "signup_waves",
-                "minimum_signup_group_size",
-                "maximum_signup_group_size",
-            ),
+                    (
+                        "group_size",
+                        "team_size",
+                        "total_groups",
+                        "registration_maximum",
+                        "signup_waves",
+                        "minimum_signup_group_size",
+                        "maximum_signup_group_size",
+                    ),
                     (
                         "ghin_required",
                         "can_choose",
@@ -271,15 +318,16 @@ class EventAdmin(admin.ModelAdmin):
     )
     inlines = [
         EventFeesInline,
+        EventSessionsInline,
     ]
 
     def event_type_display(self, obj):
         """
         Return the human-readable label for the event's type.
-        
+
         Parameters:
             obj (Event): The Event model instance whose event type label to retrieve.
-        
+
         Returns:
             label (str): Human-readable label for the event's type.
         """
@@ -358,6 +406,7 @@ class TournamentResultAdmin(admin.ModelAdmin):
 
 admin.site.register(FeeType, FeeTypeAdmin)
 admin.site.register(Event, EventAdmin)
+admin.site.register(EventSession, EventSessionAdmin)
 admin.site.register(Round, RoundAdmin)
 admin.site.register(Tournament, TournamentAdmin)
 admin.site.register(TournamentResult, TournamentResultAdmin)

@@ -27,6 +27,11 @@ const fixedColumnDefs: Record<string, ColumnDef<EventReportRow>> = {
 		header: "Team",
 		enableSorting: true,
 	},
+	session: {
+		accessorKey: "session",
+		header: "Session",
+		enableSorting: true,
+	},
 	course: {
 		accessorKey: "course",
 		header: "Course",
