@@ -71,7 +71,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 		},
 		cancel() {
 			abortController.abort()
-			void reader?.cancel()
+			void reader?.cancel().catch(() => {})
 		},
 	})
 
