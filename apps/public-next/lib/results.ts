@@ -11,10 +11,10 @@ export function groupResultsByEvent(
 	points: TournamentPointsData[] | undefined,
 	clubEvents: ClubEvent[] | undefined,
 ): EventResultSummary[] {
-	if (!results || !clubEvents) return []
+	if (!clubEvents) return []
 
 	const eventMap = new Map<number, TournamentResultData[]>()
-	for (const result of results) {
+	for (const result of results ?? []) {
 		const eventId = result.tournament.event
 		const existing = eventMap.get(eventId) ?? []
 		existing.push(result)
@@ -70,6 +70,31 @@ export function groupResultsByEvent(
 			grossPointsDetails: grossPoints?.details ?? null,
 			netPointsDetails: netPoints?.details ?? null,
 			payouts,
+		})
+	})
+
+	// Add events that have points but no results
+	pointsMap.forEach((eventPoints, eventId) => {
+		if (eventMap.has(eventId)) return
+		const clubEvent = clubEvents.find((e) => e.id === eventId)
+		if (!clubEvent) return
+
+		const grossPoints = eventPoints.find((p) => !p.tournament.is_net)
+		const netPoints = eventPoints.find((p) => p.tournament.is_net)
+
+		summaries.push({
+			eventId,
+			eventName: clubEvent.name,
+			eventDate: clubEvent.start_date,
+			grossScore: grossPoints?.score ?? null,
+			grossPosition: grossPoints?.position ?? null,
+			netScore: netPoints?.score ?? null,
+			netPosition: netPoints?.position ?? null,
+			grossPoints: grossPoints?.points ?? null,
+			netPoints: netPoints?.points ?? null,
+			grossPointsDetails: grossPoints?.details ?? null,
+			netPointsDetails: netPoints?.details ?? null,
+			payouts: [],
 		})
 	})
 

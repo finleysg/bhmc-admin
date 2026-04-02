@@ -155,6 +155,44 @@ describe("groupResultsByEvent", () => {
 		expect(summaries[0].netPoints).toBeNull()
 	})
 
+	it("shows card for event with points but no results", () => {
+		const points: TournamentPointsData[] = [
+			{
+				id: 1,
+				tournament: makeTournament(100, 10, false),
+				player: 1,
+				position: 5,
+				score: 42,
+				points: 6,
+				details: "5th place",
+				create_date: "2024-06-01",
+			},
+			{
+				id: 2,
+				tournament: makeTournament(101, 10, true),
+				player: 1,
+				position: 3,
+				score: 38,
+				points: 8,
+				details: "3rd place",
+				create_date: "2024-06-01",
+			},
+		]
+
+		const summaries = groupResultsByEvent([], points, events)
+		expect(summaries).toHaveLength(1)
+		expect(summaries[0].eventName).toBe("Event A")
+		expect(summaries[0].grossScore).toBe(42)
+		expect(summaries[0].grossPosition).toBe(5)
+		expect(summaries[0].grossPoints).toBe(6)
+		expect(summaries[0].grossPointsDetails).toBe("5th place")
+		expect(summaries[0].netScore).toBe(38)
+		expect(summaries[0].netPosition).toBe(3)
+		expect(summaries[0].netPoints).toBe(8)
+		expect(summaries[0].netPointsDetails).toBe("3rd place")
+		expect(summaries[0].payouts).toHaveLength(0)
+	})
+
 	it("sorts summaries by date descending", () => {
 		const results: TournamentResultData[] = [
 			{
