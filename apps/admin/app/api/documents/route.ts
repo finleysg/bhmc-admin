@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { fetchFormDataWithAuth, fetchWithAuth } from "@/lib/api-proxy"
+import { revalidatePublicNextCache } from "@/lib/revalidate"
 
 export async function GET(request: NextRequest) {
 	const response = await fetchWithAuth({
@@ -27,11 +28,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
 	const formData = await request.formData()
-	return fetchFormDataWithAuth({
+	const response = await fetchFormDataWithAuth({
 		request,
 		backendPath: "/documents/",
 		method: "POST",
 		formData,
 		apiBaseUrl: process.env.DJANGO_API_URL,
 	})
+	if (response.ok) {
+		void revalidatePublicNextCache("documents")
+	}
+	return response
 }

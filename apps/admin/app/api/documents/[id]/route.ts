@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { fetchFormDataWithAuth, fetchWithAuth } from "@/lib/api-proxy"
+import { revalidatePublicNextCache } from "@/lib/revalidate"
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params
@@ -10,13 +11,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 	}
 
 	const formData = await request.formData()
-	return fetchFormDataWithAuth({
+	const response = await fetchFormDataWithAuth({
 		request,
 		backendPath: `/documents/${id}/`,
 		method: "PUT",
 		formData,
 		apiBaseUrl: process.env.DJANGO_API_URL,
 	})
+	if (response.ok) {
+		void revalidatePublicNextCache("documents")
+	}
+	return response
 }
 
 export async function DELETE(
@@ -29,10 +34,14 @@ export async function DELETE(
 		return NextResponse.json({ error: "Document ID is required" }, { status: 400 })
 	}
 
-	return fetchWithAuth({
+	const response = await fetchWithAuth({
 		request,
 		backendPath: `/documents/${id}/`,
 		method: "DELETE",
 		apiBaseUrl: process.env.DJANGO_API_URL,
 	})
+	if (response.ok) {
+		void revalidatePublicNextCache("documents")
+	}
+	return response
 }
