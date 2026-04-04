@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common"
-import { getPlayerStartName, getPlayerTeamName } from "@repo/domain/functions"
-import { Course, CompleteClubEvent, RegisteredPlayer } from "@repo/domain/types"
+import { getPlayerTeamName } from "@repo/domain/functions"
+import { Course, CompleteClubEvent, RegisteredPlayer, FeeType } from "@repo/domain/types"
 import { GgRegistrationData } from "../api-data"
 
 export interface TransformationContext {
@@ -51,7 +51,6 @@ export class RosterPlayerTransformer {
 		}
 
 		// Calculate team and start using domain logic
-		const startValue = getPlayerStartName(event, registeredPlayer)
 		const team = getPlayerTeamName(
 			event,
 			registeredPlayer,
@@ -62,10 +61,7 @@ export class RosterPlayerTransformer {
 		const customFields: Record<string, string | null> = {
 			team,
 			course: courseName,
-			start: startValue,
-			ghin: registeredPlayer.player.ghin ?? null,
 			tee: registeredPlayer.player.tee,
-			signed_up_by: registeredPlayer.registration.signedUpBy,
 			player_id: registeredPlayer.player.id.toString(),
 			registration_slot_id: registeredPlayer.slot.id.toString(),
 		}
@@ -77,9 +73,19 @@ export class RosterPlayerTransformer {
 			)
 			const paid = fee?.isPaid
 			const amount = paid ? String(fee?.amount ?? 0) : "0"
-			customFields[fd.feeType.name] = amount
+			const fieldName = this.normalizeFieldName(fd.feeType)
+			customFields[fieldName] = amount
 		}
 
 		return customFields
+	}
+
+	private normalizeFieldName(feeType: FeeType): string {
+		let feeName = "bhmc_" + feeType.name.toLowerCase().replace(" ", "_")
+
+		// Remove special characters . & ( )
+		feeName = feeName.replaceAll(/[.&()]/g, "")
+
+		return feeName
 	}
 }

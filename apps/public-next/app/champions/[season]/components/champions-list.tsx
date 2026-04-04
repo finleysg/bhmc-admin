@@ -8,36 +8,51 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
-import type { MajorChampion } from "@/lib/types"
+import type { ChampionEventGroup } from "../page"
 import { ChampionGroup } from "./champion-group"
 
 interface ChampionsListProps {
-	championsByEvent: [string, MajorChampion[]][]
+	groups: ChampionEventGroup[]
 	seasonSelector: ReactNode
 }
 
-export function ChampionsList({ championsByEvent, seasonSelector }: ChampionsListProps) {
+export function ChampionsList({ groups, seasonSelector }: ChampionsListProps) {
 	const [selectedEvent, setSelectedEvent] = useState("all")
 
+	const lastEventKey = groups[groups.length - 1]?.eventKey
+	const [openEvents, setOpenEvents] = useState<Set<string>>(
+		() => new Set(lastEventKey ? [lastEventKey] : []),
+	)
+
 	const filtered =
-		selectedEvent === "all"
-			? championsByEvent
-			: championsByEvent.filter(([eventName]) => eventName === selectedEvent)
+		selectedEvent === "all" ? groups : groups.filter((g) => g.eventKey === selectedEvent)
+
+	function toggleEvent(eventKey: string, open: boolean) {
+		setOpenEvents((prev) => {
+			const next = new Set(prev)
+			if (open) {
+				next.add(eventKey)
+			} else {
+				next.delete(eventKey)
+			}
+			return next
+		})
+	}
 
 	return (
 		<>
 			<div className="mb-4 flex items-center gap-3">
 				{seasonSelector}
-				{championsByEvent.length > 1 && (
+				{groups.length > 1 && (
 					<Select value={selectedEvent} onValueChange={setSelectedEvent}>
 						<SelectTrigger className="w-48">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value="all">All Events</SelectItem>
-							{championsByEvent.map(([eventName]) => (
-								<SelectItem key={eventName} value={eventName}>
-									{eventName}
+							{groups.map((g) => (
+								<SelectItem key={g.eventKey} value={g.eventKey}>
+									{g.eventName}
 								</SelectItem>
 							))}
 						</SelectContent>
@@ -45,8 +60,15 @@ export function ChampionsList({ championsByEvent, seasonSelector }: ChampionsLis
 				)}
 			</div>
 			<div className="space-y-6">
-				{filtered.map(([eventName, champs]) => (
-					<ChampionGroup key={eventName} eventName={eventName} champions={champs} />
+				{filtered.map((g) => (
+					<ChampionGroup
+						key={g.eventKey}
+						eventName={g.eventName}
+						eventStartDate={g.eventStartDate}
+						champions={g.champions}
+						isOpen={openEvents.has(g.eventKey)}
+						onToggle={(open) => toggleEvent(g.eventKey, open)}
+					/>
 				))}
 			</div>
 		</>

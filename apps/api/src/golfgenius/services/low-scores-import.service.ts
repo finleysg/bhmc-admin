@@ -27,39 +27,25 @@ export class LowScoresImportService {
 				false,
 			)
 			const grossLowScores = await this.core.findLowScores(season, course.name, false)
-			// Calculate total scores per scorecard
-			const scorecardTotals = grossScorecards.map((sc) => ({
-				playerId: sc.playerId,
-				totalScore: sc.scores?.reduce((sum, s) => sum + s.score, 0) ?? 0,
-			}))
-			const grossMinScore = Math.min(...scorecardTotals.map((st) => st.totalScore))
-			const grossCurrentLow = grossLowScores.length > 0 ? grossLowScores[0].score : Infinity
+			// Calculate total scores per scorecard, excluding unsubmitted (all-zero) scorecards
+			const scorecardTotals = grossScorecards
+				.map((sc) => ({
+					playerId: sc.playerId,
+					totalScore: sc.scores?.reduce((sum, s) => sum + s.score, 0) ?? 0,
+				}))
+				.filter((st) => st.totalScore > 0)
 
-			if (grossMinScore < grossCurrentLow) {
-				// New low: delete existing, insert all players with the new score
-				await this.core.deleteLowScores(season, course.name, false)
-				const playersWithLow = scorecardTotals.filter((st) => st.totalScore === grossMinScore)
-				for (const st of playersWithLow) {
-					await this.core.createLowScore({
-						season,
-						courseName: course.name,
-						score: grossMinScore,
-						playerId: st.playerId,
-						isNet: 0,
-					})
-					created++
-				}
-			} else if (grossMinScore === grossCurrentLow) {
-				// Tie: insert all players with the score (avoid duplicates)
-				const playersWithTie = scorecardTotals.filter((st) => st.totalScore === grossMinScore)
-				for (const st of playersWithTie) {
-					const alreadyExists = await this.core.existsLowScore(
-						season,
-						course.name,
-						false,
-						st.playerId,
-					)
-					if (!alreadyExists) {
+			if (scorecardTotals.length > 0) {
+				const grossMinScore = Math.min(...scorecardTotals.map((st) => st.totalScore))
+				// Treat invalid existing low scores (<=0) as nonexistent
+				const validGrossLow = grossLowScores.find((ls) => ls.score > 0)
+				const grossCurrentLow = validGrossLow ? validGrossLow.score : Infinity
+
+				if (grossMinScore < grossCurrentLow) {
+					// New low: delete existing, insert all players with the new score
+					await this.core.deleteLowScores(season, course.name, false)
+					const playersWithLow = scorecardTotals.filter((st) => st.totalScore === grossMinScore)
+					for (const st of playersWithLow) {
 						await this.core.createLowScore({
 							season,
 							courseName: course.name,
@@ -68,6 +54,27 @@ export class LowScoresImportService {
 							isNet: 0,
 						})
 						created++
+					}
+				} else if (grossMinScore === grossCurrentLow) {
+					// Tie: insert all players with the score (avoid duplicates)
+					const playersWithTie = scorecardTotals.filter((st) => st.totalScore === grossMinScore)
+					for (const st of playersWithTie) {
+						const alreadyExists = await this.core.existsLowScore(
+							season,
+							course.name,
+							false,
+							st.playerId,
+						)
+						if (!alreadyExists) {
+							await this.core.createLowScore({
+								season,
+								courseName: course.name,
+								score: grossMinScore,
+								playerId: st.playerId,
+								isNet: 0,
+							})
+							created++
+						}
 					}
 				}
 			}
@@ -79,36 +86,24 @@ export class LowScoresImportService {
 				true,
 			)
 			const netLowScores = await this.core.findLowScores(season, course.name, true)
-			const netScorecardTotals = netScorecards.map((sc) => ({
-				playerId: sc.playerId,
-				totalScore: sc.scores?.reduce((sum, s) => sum + s.score, 0) ?? 0,
-			}))
-			const netMinScore = Math.min(...netScorecardTotals.map((st) => st.totalScore))
-			const netCurrentLow = netLowScores.length > 0 ? netLowScores[0].score : Infinity
+			// Calculate total scores per scorecard, excluding unsubmitted (all-zero/negative) scorecards
+			const netScorecardTotals = netScorecards
+				.map((sc) => ({
+					playerId: sc.playerId,
+					totalScore: sc.scores?.reduce((sum, s) => sum + s.score, 0) ?? 0,
+				}))
+				.filter((st) => st.totalScore > 0)
 
-			if (netMinScore < netCurrentLow) {
-				await this.core.deleteLowScores(season, course.name, true)
-				const playersWithLow = netScorecardTotals.filter((st) => st.totalScore === netMinScore)
-				for (const st of playersWithLow) {
-					await this.core.createLowScore({
-						season,
-						courseName: course.name,
-						score: netMinScore,
-						playerId: st.playerId,
-						isNet: 1,
-					})
-					created++
-				}
-			} else if (netMinScore === netCurrentLow) {
-				const playersWithTie = netScorecardTotals.filter((st) => st.totalScore === netMinScore)
-				for (const st of playersWithTie) {
-					const alreadyExists = await this.core.existsLowScore(
-						season,
-						course.name,
-						true,
-						st.playerId,
-					)
-					if (!alreadyExists) {
+			if (netScorecardTotals.length > 0) {
+				const netMinScore = Math.min(...netScorecardTotals.map((st) => st.totalScore))
+				// Treat invalid existing low scores (<=0) as nonexistent
+				const validNetLow = netLowScores.find((ls) => ls.score > 0)
+				const netCurrentLow = validNetLow ? validNetLow.score : Infinity
+
+				if (netMinScore < netCurrentLow) {
+					await this.core.deleteLowScores(season, course.name, true)
+					const playersWithLow = netScorecardTotals.filter((st) => st.totalScore === netMinScore)
+					for (const st of playersWithLow) {
 						await this.core.createLowScore({
 							season,
 							courseName: course.name,
@@ -117,6 +112,26 @@ export class LowScoresImportService {
 							isNet: 1,
 						})
 						created++
+					}
+				} else if (netMinScore === netCurrentLow) {
+					const playersWithTie = netScorecardTotals.filter((st) => st.totalScore === netMinScore)
+					for (const st of playersWithTie) {
+						const alreadyExists = await this.core.existsLowScore(
+							season,
+							course.name,
+							true,
+							st.playerId,
+						)
+						if (!alreadyExists) {
+							await this.core.createLowScore({
+								season,
+								courseName: course.name,
+								score: netMinScore,
+								playerId: st.playerId,
+								isNet: 1,
+							})
+							created++
+						}
 					}
 				}
 			}

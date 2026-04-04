@@ -19,6 +19,7 @@ import { ClubDocumentsCard } from "./components/home/club-documents-card"
 import { HoleInOneCard } from "./components/home/hole-in-one-card"
 import { LowScoresCard } from "./components/home/low-scores-card"
 import { RandomPhoto } from "./components/home/random-photo"
+import { ScoringBanner } from "./components/home/scoring-banner"
 
 async function fetchStaticDoc(code: string) {
 	try {
@@ -72,35 +73,38 @@ export default async function HomePage() {
 	) as StaticDocument[]
 
 	return (
-		<div className="grid gap-6 lg:grid-cols-12">
-			{/* Left column */}
-			<div className="space-y-6 lg:col-span-6">
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-primary">Club News and Announcements</CardTitle>
-					</CardHeader>
-					<CardContent className="space-y-6">
-						<AnnouncementList announcements={announcements} />
-						<hr className="border-border" />
-						<RandomPhoto photo={photos[0]} />
-						<hr className="border-border" />
-						<ClubDocumentsCard documents={specialOrders} title="Special Order Info" />
-					</CardContent>
-				</Card>
-			</div>
+		<>
+			<ScoringBanner events={events} />
+			<div className="grid gap-6 lg:grid-cols-12">
+				{/* Left column */}
+				<div className="space-y-6 lg:col-span-6">
+					<Card>
+						<CardHeader>
+							<CardTitle className="text-primary">Club News and Announcements</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-6">
+							<AnnouncementList announcements={announcements} />
+							<hr className="border-border" />
+							<RandomPhoto photo={photos[0]} />
+							<hr className="border-border" />
+							<ClubDocumentsCard documents={specialOrders} title="Special Order Info" />
+						</CardContent>
+					</Card>
+				</div>
 
-			{/* Middle column */}
-			<div className="space-y-6 lg:col-span-3">
-				<UpcomingEvents events={events} />
-				<QuickLinks />
-				<ClubDocumentsCard documents={clubDocuments} />
-			</div>
+				{/* Middle column */}
+				<div className="space-y-6 lg:col-span-3">
+					<UpcomingEvents events={events} />
+					<QuickLinks />
+					<ClubDocumentsCard documents={clubDocuments} />
+				</div>
 
-			{/* Right column */}
-			<div className="space-y-6 lg:col-span-3">
-				<HoleInOneCard content={holeInOneContent} aces={aces} />
-				<LowScoresCard lowScores={lowScores} />
+				{/* Right column */}
+				<div className="space-y-6 lg:col-span-3">
+					<HoleInOneCard content={holeInOneContent} aces={aces} />
+					<LowScoresCard lowScores={lowScores} />
+				</div>
 			</div>
-		</div>
+		</>
 	)
 }

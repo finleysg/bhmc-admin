@@ -86,6 +86,8 @@ export class LogIntegrationInterceptor implements NestInterceptor {
 			return "Sync Event"
 		} else if (url.includes("/events/") && url.includes("/export-roster")) {
 			return "Export Roster"
+		} else if (url.includes("/events/") && url.includes("/import-teesheet")) {
+			return "Import Teesheet"
 		} else if (url.includes("/events/") && url.includes("/import-scores")) {
 			return "Import Scores"
 		} else if (url.includes("/events/") && url.includes("/import-points")) {

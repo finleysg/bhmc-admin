@@ -1,12 +1,12 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import CASCADE, DO_NOTHING, UniqueConstraint
-from simple_history.models import HistoricalRecords
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 from content.models import Tag
-from courses.models import Course
-from events.managers import EventManager, EventFeeManager
+from courses.models import Course, Hole, Tee
+from events.managers import EventFeeManager, EventManager
 
 FEE_RESTRICTION_CHOICES = (
     ("Members", "Members"),
@@ -76,6 +76,7 @@ TOURNAMENT_FORMAT_CHOICES = (
     ("Other", "Other"),
 )
 
+
 class Event(models.Model):
     event_type = models.CharField(
         verbose_name="Event type", choices=EVENT_TYPE_CHOICES, max_length=1, default="N"
@@ -127,16 +128,12 @@ class Event(models.Model):
     priority_signup_start = models.DateTimeField(
         verbose_name="Priority signup start", blank=True, null=True
     )
-    signup_start = models.DateTimeField(
-        verbose_name="Signup start", blank=True, null=True
-    )
+    signup_start = models.DateTimeField(verbose_name="Signup start", blank=True, null=True)
     signup_end = models.DateTimeField(verbose_name="Signup end", blank=True, null=True)
     payments_end = models.DateTimeField(
         verbose_name="Online payments deadline", blank=True, null=True
     )
-    registration_maximum = models.IntegerField(
-        verbose_name="Signup maximum", blank=True, null=True
-    )
+    registration_maximum = models.IntegerField(verbose_name="Signup maximum", blank=True, null=True)
     portal_url = models.CharField(
         verbose_name="Golf Genius Portal", max_length=240, blank=True, null=True
     )
@@ -154,13 +151,9 @@ class Event(models.Model):
     default_tag = models.ForeignKey(
         verbose_name="Default tag", to=Tag, on_delete=DO_NOTHING, blank=True, null=True
     )
-    starter_time_interval = models.IntegerField(
-        verbose_name="Starter time interval", default=0
-    )
+    starter_time_interval = models.IntegerField(verbose_name="Starter time interval", default=0)
     team_size = models.IntegerField(verbose_name="Team size", default=1)
-    age_restriction = models.IntegerField(
-        verbose_name="Age restriction", blank=True, null=True
-    )
+    age_restriction = models.IntegerField(verbose_name="Age restriction", blank=True, null=True)
     age_restriction_type = models.CharField(
         verbose_name="Age restriction type",
         max_length=1,
@@ -170,28 +163,24 @@ class Event(models.Model):
     gg_id = models.CharField(
         verbose_name="Golf Genius id: event_id", max_length=22, blank=True, null=True
     )
-    signup_waves = models.IntegerField(
-        verbose_name="Signup waves", blank=True, null=True
-    )
+    signup_waves = models.IntegerField(verbose_name="Signup waves", blank=True, null=True)
 
     class Meta:
         constraints = [
-            UniqueConstraint(
-                fields=["name", "start_date"], name="unique_name_startdate"
-            )
+            UniqueConstraint(fields=["name", "start_date"], name="unique_name_startdate")
         ]
 
     history = HistoricalRecords()
     objects = EventManager()
 
     def __str__(self):
-        return "{} {}".format(self.start_date, self.name)
+        return f"{self.start_date} {self.name}"
 
     @property
     def registration_window(self):
         """
         Determine the current registration window state for the event.
-        
+
         The result is a string representing one of the possible registration states:
         - "n/a": registration is not applicable (registration_type == "N").
         - "past": registration window has passed.
@@ -199,7 +188,7 @@ class Event(models.Model):
         - "registration": the current time is between signup_start and signup_end.
         - "future": signup_start is in the future and no priority window applies.
         - "pending": signup_start is in the future while the code previously considered the window "past" (used as a transitional state).
-        
+
         Returns:
             str: One of "n/a", "past", "priority", "registration", "future", or "pending".
         """
@@ -224,7 +213,7 @@ class Event(models.Model):
     def validate_registration_window(self):
         """
         Validate that signup start and end dates are present and ordered for events that require registration.
-        
+
         Raises:
             ValidationError: if registration_type is not "N" and either `signup_start` or `signup_end` is missing, or if `signup_start` is later than `signup_end`.
         """
@@ -235,14 +224,12 @@ class Event(models.Model):
                     "required"
                 )
             if self.signup_start > self.signup_end:
-                raise ValidationError(
-                    "The signup start must be earlier than signup end"
-                )
+                raise ValidationError("The signup start must be earlier than signup end")
 
     def validate_groups_size(self):
         """
         Ensure a group size is set when players may choose their starting hole or tee time.
-        
+
         Raises:
             ValidationError: If `can_choose` is true and `group_size` is None or zero.
         """
@@ -254,23 +241,17 @@ class Event(models.Model):
     def validate_signup_size(self):
         """
         Validate that both minimum and maximum signup group sizes are set when the event allows registration.
-        
+
         Raises:
             ValidationError: if either `minimum_signup_group_size` or `maximum_signup_group_size` is None or zero while `registration_type` is not "N".
         """
         if self.registration_type != "N":
-            if (
-                self.minimum_signup_group_size is None
-                or self.minimum_signup_group_size == 0
-            ):
+            if self.minimum_signup_group_size is None or self.minimum_signup_group_size == 0:
                 raise ValidationError(
                     "You must have a minimum and maximum signup group size when an event "
                     "includes registration"
                 )
-            if (
-                self.maximum_signup_group_size is None
-                or self.maximum_signup_group_size == 0
-            ):
+            if self.maximum_signup_group_size is None or self.maximum_signup_group_size == 0:
                 raise ValidationError(
                     "You must have a minimum and maximum signup group size when an event "
                     "includes registration"
@@ -279,7 +260,7 @@ class Event(models.Model):
     def validate_total_groups(self):
         """
         Ensure `total_groups` is set when players can choose tee times and start type is "TT".
-        
+
         Raises:
             ValidationError: If `can_choose` is true, `start_type` equals "TT", and `total_groups` is None or zero.
         """
@@ -293,11 +274,11 @@ class Event(models.Model):
     def clean(self):
         """
         Ensure the event's configuration satisfies all business validation rules.
-        
+
         Calls the model's validation helpers to check group size requirements, signup size constraints, total-groups requirements when group selection is enabled, and the registration window timing.
-        
+
         Raises:
-        	django.core.exceptions.ValidationError: If any validation rule is violated.
+            django.core.exceptions.ValidationError: If any validation rule is violated.
         """
         self.validate_groups_size()
         self.validate_signup_size()
@@ -308,7 +289,7 @@ class Event(models.Model):
     def autocomplete_search_fields():
         """
         Provide field lookups used for autocomplete searches.
-        
+
         Returns:
             tuple: Lookup strings for Django ORM filters; e.g., ("name__icontains",) to perform case-insensitive containment matches on the `name` field.
         """
@@ -319,10 +300,8 @@ class FeeType(models.Model):
     name = models.CharField(verbose_name="Fee Name", max_length=30, unique=True)
     code = models.CharField(verbose_name="Fee Code", max_length=3, default="X")
     payout = models.CharField(
-        verbose_name="Payout Type", 
-        max_length=12, 
-        default="Credit", 
-        choices=PAYOUT_TYPE_CHOICES)
+        verbose_name="Payout Type", max_length=12, default="Credit", choices=PAYOUT_TYPE_CHOICES
+    )
     restriction = models.CharField(
         verbose_name="Restrict to",
         max_length=20,
@@ -333,7 +312,7 @@ class FeeType(models.Model):
     def __str__(self):
         """
         Return the model's human-readable name.
-        
+
         Returns:
             str: The instance's `name` value.
         """
@@ -352,20 +331,18 @@ class EventFeeOverride(models.Model):
     def __str__(self):
         """
         Provide a human-readable label for the fee override combining its restriction and amount.
-        
+
         Returns:
             str: The representation in the format "<restriction> ($<amount>)".
         """
-        return "{} (${})".format(self.restriction, self.amount)
+        return f"{self.restriction} (${self.amount})"
 
 
 class EventFee(models.Model):
     event = models.ForeignKey(
         verbose_name="Event", to=Event, on_delete=CASCADE, related_name="fees"
     )
-    fee_type = models.ForeignKey(
-        verbose_name="Fee Type", to=FeeType, on_delete=DO_NOTHING
-    )
+    fee_type = models.ForeignKey(verbose_name="Fee Type", to=FeeType, on_delete=DO_NOTHING)
     amount = models.DecimalField(verbose_name="Amount", max_digits=5, decimal_places=2)
     override_amount = models.DecimalField(
         verbose_name="Override Amount",
@@ -385,9 +362,7 @@ class EventFee(models.Model):
     display_order = models.IntegerField(verbose_name="Display Order")
 
     class Meta:
-        constraints = [
-            UniqueConstraint(fields=["event", "fee_type"], name="unique_event_feetype")
-        ]
+        constraints = [UniqueConstraint(fields=["event", "fee_type"], name="unique_event_feetype")]
         ordering = [
             "display_order",
         ]
@@ -397,11 +372,11 @@ class EventFee(models.Model):
     def __str__(self):
         """
         Human-readable representation of the event fee combining fee type and amount.
-        
+
         Returns:
             str: A string in the format "<fee_type> ($<amount>)".
         """
-        return "{} (${})".format(self.fee_type, self.amount)
+        return f"{self.fee_type} (${self.amount})"
 
 
 class Round(models.Model):
@@ -414,19 +389,17 @@ class Round(models.Model):
 
     class Meta:
         constraints = [
-            UniqueConstraint(
-                fields=["event", "round_number"], name="unique_event_roundnumber"
-            )
+            UniqueConstraint(fields=["event", "round_number"], name="unique_event_roundnumber")
         ]
 
     def __str__(self):
         """
         Return a human-readable label for the round combining the parent event's name and the round number.
-        
+
         Returns:
             str: String in the format "<event name> - Round <round_number>".
         """
-        return "{} - Round {}".format(self.event.name, self.round_number)
+        return f"{self.event.name} - Round {self.round_number}"
 
 
 class Tournament(models.Model):
@@ -441,24 +414,20 @@ class Tournament(models.Model):
         verbose_name="Format", max_length=20, choices=TOURNAMENT_FORMAT_CHOICES
     )
     is_net = models.BooleanField(verbose_name="Is Net", default=False)
-    gg_id = models.CharField(
-        verbose_name="Golf Genius id: tournament_id", max_length=22
-    )
+    gg_id = models.CharField(verbose_name="Golf Genius id: tournament_id", max_length=22)
 
     class Meta:
         constraints = [
-            UniqueConstraint(
-                fields=["event", "name"], name="unique_event_tournamentname"
-            )
+            UniqueConstraint(fields=["event", "name"], name="unique_event_tournamentname")
         ]
 
     def __str__(self):
         """
         Return a human-readable representation combining the parent event name and this tournament's name.
-        
+
         @returns A string in the format "<event name> - <tournament name>".
         """
-        return "{} - {}".format(self.event.name, self.name)
+        return f"{self.event.name} - {self.name}"
 
 
 class TournamentResult(models.Model):
@@ -468,23 +437,17 @@ class TournamentResult(models.Model):
         on_delete=CASCADE,
         related_name="tournament_results",
     )
-    flight = models.CharField(
-        verbose_name="Flight", max_length=20, blank=True, null=True
-    )
+    flight = models.CharField(verbose_name="Flight", max_length=20, blank=True, null=True)
     player = models.ForeignKey(
         verbose_name="Player",
         to="register.Player",
         on_delete=CASCADE,
         related_name="tournament_results",
     )
-    team_id = models.CharField(
-        verbose_name="Team id", max_length=22, blank=True, null=True
-    )
+    team_id = models.CharField(verbose_name="Team id", max_length=22, blank=True, null=True)
     position = models.IntegerField(verbose_name="Position")
     score = models.IntegerField(verbose_name="Score", blank=True, null=True)
-    amount = models.DecimalField(
-        verbose_name="Amount won", max_digits=6, decimal_places=2
-    )
+    amount = models.DecimalField(verbose_name="Amount won", max_digits=6, decimal_places=2)
     payout_type = models.CharField(
         verbose_name="Payout Type",
         max_length=10,
@@ -506,37 +469,27 @@ class TournamentResult(models.Model):
         null=True,
         choices=PAYOUT_STATUS_CHOICES,
     )
-    payout_date = models.DateTimeField(
-        verbose_name="Date and Time Paid", blank=True, null=True
-    )
+    payout_date = models.DateTimeField(verbose_name="Date and Time Paid", blank=True, null=True)
     create_date = models.DateTimeField(
         verbose_name="Date Created", blank=True, null=True, auto_now_add=True
     )
-    summary = models.CharField(
-        verbose_name="Summary", max_length=120, blank=True, null=True
-    )
-    details = models.CharField(
-        verbose_name="Details", max_length=120, blank=True, null=True
-    )
+    summary = models.CharField(verbose_name="Summary", max_length=120, blank=True, null=True)
+    details = models.CharField(verbose_name="Details", max_length=120, blank=True, null=True)
 
     class Meta:
         constraints = [
-            UniqueConstraint(
-                fields=["tournament", "player"], name="unique_tournament_player"
-            )
+            UniqueConstraint(fields=["tournament", "player"], name="unique_tournament_player")
         ]
         ordering = ["tournament", "flight", "position"]
 
     def __str__(self):
         """
         Provide a human-readable representation of this tournament result.
-        
+
         Returns:
             str: A string formatted as "<tournament name> - <player name> (<position>)".
         """
-        return "{} - {} ({})".format(
-            self.tournament.name, self.player.player_name, self.position
-        )
+        return f"{self.tournament.name} - {self.player.player_name} ({self.position})"
 
 
 class TournamentPoints(models.Model):
@@ -559,19 +512,49 @@ class TournamentPoints(models.Model):
     create_date = models.DateTimeField(verbose_name="Date Created", auto_now_add=True)
 
     class Meta:
-        constraints = [
-            UniqueConstraint(
-                fields=["tournament", "player"], name="unique_points"
-            )
-        ]
+        constraints = [UniqueConstraint(fields=["tournament", "player"], name="unique_points")]
 
     def __str__(self):
         """
         Represent the TournamentPoints record as "TournamentName - PlayerName (points)".
-        
+
         Returns:
             str: Formatted string containing the tournament name, player name, and points.
         """
-        return "{} - {} ({})".format(
-            self.tournament.name, self.player.player_name, self.points
-        )
+        return f"{self.tournament.name} - {self.player.player_name} ({self.points})"
+
+
+class EventPairing(models.Model):
+    event = models.ForeignKey(
+        verbose_name="Event", to=Event, on_delete=CASCADE, related_name="pairings"
+    )
+    round = models.ForeignKey(
+        verbose_name="Round", to=Round, on_delete=CASCADE, related_name="pairings"
+    )
+    player = models.ForeignKey(
+        verbose_name="Player",
+        to="register.Player",
+        on_delete=CASCADE,
+        related_name="pairings",
+    )
+    course = models.ForeignKey(
+        verbose_name="Course", to=Course, on_delete=DO_NOTHING, related_name="pairings"
+    )
+    tee = models.ForeignKey(
+        verbose_name="Tee", to=Tee, on_delete=DO_NOTHING, related_name="pairings"
+    )
+    hole = models.ForeignKey(
+        verbose_name="Hole", to=Hole, on_delete=DO_NOTHING, related_name="pairings"
+    )
+    tee_time = models.CharField(verbose_name="Tee time", max_length=20)
+    group_ggid = models.CharField(verbose_name="Golf Genius group id", max_length=10)
+    pairing_group_id = models.CharField(verbose_name="Golf Genius pairing group id", max_length=22)
+
+    class Meta:
+        db_table = "events_eventpairing"
+        constraints = [
+            UniqueConstraint(fields=["round", "player"], name="unique_round_player_pairing")
+        ]
+
+    def __str__(self):
+        return f"{self.event.name} - {self.player.player_name} (Round {self.round.round_number})"

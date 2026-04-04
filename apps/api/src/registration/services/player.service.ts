@@ -488,21 +488,7 @@ export class PlayerService {
 			false,
 		)
 
-		const droppedPlayerNames = playerSlots.map((row) => {
-			const p = row.player
-			return p ? `${p.firstName} ${p.lastName}`.trim() : "Unknown Player"
-		})
-		const currentNotes = registrationRecord.notes || ""
-		const dropDate = new Date().toISOString().split("T")[0]
-		const newNotes =
-			`${currentNotes}\nDropped ${droppedPlayerNames.join(", ")} on ${dropDate}`.trim()
-
 		await this.drizzle.db.transaction(async (tx) => {
-			await tx
-				.update(registration)
-				.set({ notes: newNotes })
-				.where(eq(registration.id, registrationId))
-
 			await tx
 				.update(registrationFee)
 				.set({ registrationSlotId: null })
@@ -585,16 +571,9 @@ export class PlayerService {
 			)
 		}
 
-		// Fetch player and registration records for audit trail
+		// Fetch player records for fee calculation and notifications
 		const originalPlayer = await this.repository.findPlayerById(originalPlayerId)
 		const replacementPlayer = await this.repository.findPlayerById(replacementPlayerId)
-		const registrationRecord = await this.repository.findRegistrationById(slotRow.registrationId!)
-
-		if (!registrationRecord) {
-			throw new BadRequestException(
-				`Registration ${slotRow.registrationId} not found for slot ${slotId}`,
-			)
-		}
 
 		// Calculate green fee difference: TODO - generalize to all fees
 		const eventRecord = await this.events.getCompleteClubEventById(eventId, false)
@@ -608,35 +587,9 @@ export class PlayerService {
 			greenFeeDifference = replacementFee - originalFee
 		}
 
-		// Build audit notes
-		const originalName = `${originalPlayer.firstName} ${originalPlayer.lastName}`.trim()
-		const replacementName = `${replacementPlayer.firstName} ${replacementPlayer.lastName}`.trim()
-		const replaceDate = new Date().toISOString().split("T")[0]
-		const currentNotes = registrationRecord.notes || ""
-
-		let auditNotes = `Replaced ${originalName} with ${replacementName} on ${replaceDate}`
-		if (request.notes) {
-			auditNotes += ` - ${request.notes}`
-		}
-
-		// Add payment difference notes if applicable
-		if (greenFeeDifference !== undefined && greenFeeDifference !== 0) {
-			if (greenFeeDifference > 0) {
-				auditNotes += `\nAdditional amount to collect: $${greenFeeDifference.toFixed(2)}`
-			} else {
-				auditNotes += `\nAmount to refund: $${Math.abs(greenFeeDifference).toFixed(2)}`
-			}
-		}
-
-		const newNotes = `${currentNotes}\n${auditNotes}`.trim()
-
 		// Execute replacement in transaction
 		await this.drizzle.db.transaction(async (tx) => {
 			await this.repository.updateRegistrationSlot(slotId, { playerId: replacementPlayerId }, tx)
-			await tx
-				.update(registration)
-				.set({ notes: newNotes })
-				.where(eq(registration.id, slotRow.registrationId!))
 		})
 
 		// Send notification email to replacement player
@@ -698,7 +651,7 @@ export class PlayerService {
 	 * Move players from source slots to destination slot group.
 	 */
 	async movePlayers(eventId: number, request: MovePlayersRequest): Promise<MovePlayersResponse> {
-		const { sourceSlotIds, destinationStartingHoleId, destinationStartingOrder, notes } = request
+		const { sourceSlotIds, destinationStartingHoleId, destinationStartingOrder } = request
 
 		if (!sourceSlotIds.length) {
 			throw new BadRequestException("At least one source slot ID is required")
@@ -797,17 +750,7 @@ export class PlayerService {
 		// 4. Execute the move in a transaction
 		const playerIds = sourceSlotRows.map((s) => s.playerId!)
 		const isCrossCourseMove = sourceRegistration.courseId !== destinationCourseId
-
-		// Build audit notes
 		const playerRows = await this.repository.findPlayersByIds(playerIds)
-		const playerNames = playerRows.map((p) => `${p.firstName} ${p.lastName}`.trim())
-		const moveDate = new Date().toISOString().split("T")[0]
-		const currentNotes = sourceRegistration.notes || ""
-		let auditNotes = `Moved ${playerNames.join(", ")} on ${moveDate}`
-		if (notes) {
-			auditNotes += ` - ${notes}`
-		}
-		const newNotes = `${currentNotes}\n${auditNotes}`.trim()
 
 		await this.drizzle.db.transaction(async (tx) => {
 			// Determine destination registration
@@ -818,8 +761,9 @@ export class PlayerService {
 				const [result] = await tx.insert(registration).values({
 					eventId,
 					courseId: destinationCourseId,
+					signedUpBy: sourceRegistration.signedUpBy,
+					userId: sourceRegistration.userId,
 					createdDate: toDbString(new Date()),
-					notes: `Created from move on ${moveDate}`,
 				})
 				destinationRegistrationId = Number(result.insertId)
 			} else {
@@ -859,12 +803,6 @@ export class PlayerService {
 					})
 					.where(eq(registrationSlot.id, destSlot.id))
 			}
-
-			// Update source registration notes
-			await tx
-				.update(registration)
-				.set({ notes: newNotes })
-				.where(eq(registration.id, sourceRegistrationId))
 		})
 
 		// Broadcast change
@@ -985,24 +923,6 @@ export class PlayerService {
 		const playerAName = `${playerA.firstName} ${playerA.lastName}`.trim()
 		const playerBName = `${playerB.firstName} ${playerB.lastName}`.trim()
 
-		// Fetch registrations for audit trail
-		const registrationA = await this.repository.findRegistrationById(slotA.registrationId!)
-		const registrationB = await this.repository.findRegistrationById(slotB.registrationId!)
-
-		if (!registrationA || !registrationB) {
-			throw new BadRequestException("One or both registrations not found")
-		}
-
-		// Build audit notes
-		const swapDate = new Date().toISOString().split("T")[0]
-		let auditNotes = `Swapped ${playerAName} with ${playerBName} on ${swapDate}`
-		if (request.notes) {
-			auditNotes += ` - ${request.notes}`
-		}
-
-		const newNotesA = `${registrationA.notes || ""}\n${auditNotes}`.trim()
-		const newNotesB = `${registrationB.notes || ""}\n${auditNotes}`.trim()
-
 		// Execute swap in transaction
 		await this.drizzle.db.transaction(async (tx) => {
 			// Fetch fees for both slots before modification
@@ -1055,17 +975,6 @@ export class PlayerService {
 					.set({ registrationSlotId: slotAId })
 					.where(inArray(registrationFee.id, feeBIds))
 			}
-
-			// Append audit trail to both registrations
-			await tx
-				.update(registration)
-				.set({ notes: newNotesA })
-				.where(eq(registration.id, slotA.registrationId!))
-
-			await tx
-				.update(registration)
-				.set({ notes: newNotesB })
-				.where(eq(registration.id, slotB.registrationId!))
 		})
 
 		// Broadcast change after transaction

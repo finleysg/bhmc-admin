@@ -2,7 +2,14 @@ from rest_framework import serializers
 
 from courses.serializers import CourseSerializer
 
-from .models import Event, EventFee, FeeType, Tournament, TournamentPoints, TournamentResult
+from .models import (
+    Event,
+    EventFee,
+    FeeType,
+    Tournament,
+    TournamentPoints,
+    TournamentResult,
+)
 
 
 class TournamentSerializer(serializers.ModelSerializer):
@@ -131,6 +138,15 @@ class EventSerializer(serializers.ModelSerializer):
             "age_restriction",
             "age_restriction_type",
         )
+
+
+class EventPairingSerializer(serializers.Serializer):
+    round_number = serializers.IntegerField(source="round.round_number")
+    round_date = serializers.DateField(source="round.round_date")
+    course_name = serializers.CharField(source="course.name")
+    hole_number = serializers.IntegerField(source="hole.hole_number")
+    tee_time = serializers.CharField()
+    group_ggid = serializers.CharField()
 
 
 class SimpleEventSerializer(serializers.ModelSerializer):
