@@ -17,6 +17,7 @@ import {
 	PaymentReportRefund,
 	PaymentReportRow,
 	PointsReportRow,
+	SkinsReportRow,
 	TournamentFormatChoices,
 	TournamentFormatValue,
 	RegisteredPlayer,
@@ -1053,6 +1054,85 @@ export class ReportsService {
 			isAdmin: r.isAdmin === 1,
 			details: formatChangeLogDetails(r.action, r.details as Record<string, unknown>),
 		}))
+	}
+
+	async getSkinsReport(eventId: number): Promise<SkinsReportRow[]> {
+		await this.validateEvent(eventId)
+
+		const results = await this.drizzle.db
+			.select({
+				tournamentName: tournament.name,
+				amount: tournamentResult.amount,
+				summary: tournamentResult.summary,
+				position: tournamentResult.position,
+				firstName: player.firstName,
+				lastName: player.lastName,
+				playerId: player.id,
+			})
+			.from(tournamentResult)
+			.innerJoin(tournament, eq(tournamentResult.tournamentId, tournament.id))
+			.innerJoin(player, eq(tournamentResult.playerId, player.id))
+			.where(
+				and(eq(tournament.eventId, eventId), eq(tournament.format, TournamentFormatChoices.SKINS)),
+			)
+			.orderBy(player.lastName, player.firstName, tournament.name)
+
+		const playerMap = new Map<
+			number,
+			{ firstName: string; lastName: string; entries: string[]; total: number }
+		>()
+
+		for (const result of results) {
+			let entry = playerMap.get(result.playerId)
+			if (!entry) {
+				entry = {
+					firstName: result.firstName,
+					lastName: result.lastName,
+					entries: [],
+					total: 0,
+				}
+				playerMap.set(result.playerId, entry)
+			}
+
+			const detail = result.summary || `${result.position} skin${result.position === 1 ? "" : "s"}`
+			entry.entries.push(`${result.tournamentName}: ${detail}`)
+			entry.total += parseFloat(result.amount)
+		}
+
+		const rows: SkinsReportRow[] = Array.from(playerMap.values()).map((entry) => ({
+			playerName: `${entry.lastName}, ${entry.firstName}`,
+			skinsSummary: entry.entries.join(" | "),
+			totalAmount: Math.round(entry.total * 100) / 100,
+		}))
+
+		rows.sort((a, b) => a.playerName.localeCompare(b.playerName))
+
+		return rows
+	}
+
+	async generateSkinsReportExcel(eventId: number): Promise<Buffer> {
+		const rows = await this.getSkinsReport(eventId)
+
+		const workbook = createWorkbook()
+		const worksheet = workbook.addWorksheet("Skins Report")
+
+		const fixedColumns = [
+			{ header: "Player Name", key: "playerName", width: 25 },
+			{ header: "Skins Summary", key: "skinsSummary", width: 60 },
+			{ header: "Total Amount", key: "totalAmount", width: 15 },
+		]
+
+		addFixedColumns(worksheet, fixedColumns)
+		styleHeaderRow(worksheet, 1)
+		addDataRows(worksheet, 2, rows as unknown as Record<string, unknown>[], fixedColumns)
+
+		// Apply currency format to Total Amount column
+		const amountColIndex = 3
+		for (let i = 2; i <= rows.length + 1; i++) {
+			worksheet.getRow(i).getCell(amountColIndex).numFmt = "$#,##0.00"
+		}
+
+		return generateBuffer(workbook)
 	}
 
 	async generateChangeLogReportExcel(eventId: number): Promise<Buffer> {

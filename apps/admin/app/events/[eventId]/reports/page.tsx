@@ -54,6 +54,11 @@ export default function EventReportsPage() {
 			href: `/events/${eventId}/reports/payments`,
 		},
 		{
+			title: "Skins Report",
+			description: "Skins winnings summary by player for printing payout labels",
+			href: `/events/${eventId}/reports/skins`,
+		},
+		{
 			title: "Change Log",
 			description: "History of registration changes and admin actions",
 			href: `/events/${eventId}/reports/changelog`,
