@@ -6,7 +6,16 @@ from django.db.models import QuerySet
 from core.util import current_season
 from register.admin import CurrentSeasonFilter
 
-from .models import Event, EventFee, FeeType, Round, Tournament, TournamentResult
+from .models import (
+    Event,
+    EventFee,
+    EventPairing,
+    FeeType,
+    Round,
+    Tournament,
+    TournamentPoints,
+    TournamentResult,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -25,7 +34,7 @@ class TournamentResultEventFilter(SimpleListFilter):
     def _get_events_with_results(self, current_season_year: int) -> QuerySet[Event]:
         """
         Retrieve events in the specified season that have at least one tournament result.
-        
+
         Returns:
             QuerySet[Event]: Events in the given season that have one or more associated tournament results, ordered by start_date then name.
         """
@@ -38,28 +47,24 @@ class TournamentResultEventFilter(SimpleListFilter):
             .order_by("start_date", "name")
         )
 
-    def _get_all_current_season_events(
-        self, current_season_year: int
-    ) -> QuerySet[Event]:
+    def _get_all_current_season_events(self, current_season_year: int) -> QuerySet[Event]:
         """
         Return all events for the given season ordered by start date and name.
-        
+
         Parameters:
             current_season_year (int): Year of the season to filter events by.
-        
+
         Returns:
             QuerySet[Event]: Events in the specified season ordered by `start_date`, then `name`.
         """
-        return Event.objects.filter(season=current_season_year).order_by(
-            "start_date", "name"
-        )
+        return Event.objects.filter(season=current_season_year).order_by("start_date", "name")
 
     def lookups(self, request, model_admin):
         """
         Builds the admin filter choices for current-season events that have associated tournament results.
-        
+
         If retrieving events with results fails, falls back to all events in the current season; if that also fails, returns an empty list.
-        
+
         Returns:
             list[tuple[int, str]]: Tuples of (event_id, "start_date - event_name") suitable for Django admin filter choices, or an empty list if no events could be retrieved.
         """
@@ -85,7 +90,7 @@ class TournamentResultEventFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         """
         Filter the provided queryset to tournament results belonging to the selected event.
-        
+
         Returns:
             QuerySet: TournamentResult queryset filtered to the event whose id matches the current filter value, or the original queryset if no event is selected.
         """
@@ -108,12 +113,12 @@ class TournamentByEventFilter(SimpleListFilter):
     def lookups(self, request, model_admin):
         """
         Provide tournament choices for the admin filter based on the "event" GET parameter.
-        
+
         Reads the "event" parameter from the provided request and returns a list of tuples suitable for Django admin filter lookups. Each tuple is (tournament_id_as_str, display), where display is formatted as "<Round or 'No Round'> - <tournament name>". If the "event" parameter is missing or an error occurs while fetching tournaments, an empty list is returned.
-        
+
         Parameters:
             request (HttpRequest): The incoming request used to read the "event" GET parameter.
-        
+
         Returns:
             list[tuple[str, str]]: A list of (tournament id, display string) tuples for the given event, or an empty list.
         """
@@ -128,9 +133,7 @@ class TournamentByEventFilter(SimpleListFilter):
                 .order_by("round__round_date", "name")
             )
         except Exception as e:
-            logger.error(
-                "Failed to get tournaments for event", event_id=event_id, exc_info=e
-            )
+            logger.error("Failed to get tournaments for event", event_id=event_id, exc_info=e)
             return []
 
         choices = []
@@ -144,7 +147,7 @@ class TournamentByEventFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         """
         Filter the provided queryset to the tournament selected by the admin filter.
-        
+
         @returns Filtered queryset limited to the selected tournament when a value is set, the original queryset otherwise.
         """
         if self.value():
@@ -232,15 +235,15 @@ class EventAdmin(admin.ModelAdmin):
                         "payments_end",
                         "priority_signup_start",
                     ),
-            (
-                "group_size",
-                "team_size",
-                "total_groups",
-                "registration_maximum",
-                "signup_waves",
-                "minimum_signup_group_size",
-                "maximum_signup_group_size",
-            ),
+                    (
+                        "group_size",
+                        "team_size",
+                        "total_groups",
+                        "registration_maximum",
+                        "signup_waves",
+                        "minimum_signup_group_size",
+                        "maximum_signup_group_size",
+                    ),
                     (
                         "ghin_required",
                         "can_choose",
@@ -276,10 +279,10 @@ class EventAdmin(admin.ModelAdmin):
     def event_type_display(self, obj):
         """
         Return the human-readable label for the event's type.
-        
+
         Parameters:
             obj (Event): The Event model instance whose event type label to retrieve.
-        
+
         Returns:
             label (str): Human-readable label for the event's type.
         """
@@ -320,14 +323,51 @@ class RoundAdmin(admin.ModelAdmin):
     actions = ["import_scores_from_golf_genius"]
 
 
+class TournamentFormatByEventFilter(SimpleListFilter):
+    title = "format"
+    parameter_name = "format"
+    format_field = "format"
+
+    def lookups(self, request, model_admin):
+        event_id = request.GET.get("event")
+        if not event_id:
+            return []
+
+        try:
+            formats = (
+                Tournament.objects.filter(event_id=event_id)
+                .values_list("format", flat=True)
+                .distinct()
+                .order_by("format")
+            )
+        except Exception as e:
+            logger.error("Failed to get formats for event", event_id=event_id, exc_info=e)
+            return []
+
+        return [(f, f) for f in formats]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(**{self.format_field: self.value()})
+        return queryset
+
+
+class ResultFormatByEventFilter(TournamentFormatByEventFilter):
+    format_field = "tournament__format"
+
+
 class TournamentAdmin(admin.ModelAdmin):
     fields = ["event", "round", "name", "format", "is_net", "gg_id"]
-    list_display = ["event", "round", "name", "format", "is_net", "gg_id"]
+    list_display = ["event", "round", "name", "raw_format", "is_net", "gg_id"]
     list_display_links = ("name",)
-    list_filter = (CurrentSeasonFilter, "is_net", "format")
+    list_filter = (CurrentSeasonFilter, TournamentFormatByEventFilter, "is_net")
     ordering = ["event", "round", "name"]
     search_fields = ["event__name", "name", "gg_id"]
     save_on_top = True
+
+    @admin.display(description="Format")
+    def raw_format(self, obj):
+        return obj.format
 
 
 class TournamentResultAdmin(admin.ModelAdmin):
@@ -339,6 +379,8 @@ class TournamentResultAdmin(admin.ModelAdmin):
         "position",
         "score",
         "amount",
+        "payout_status",
+        "summary",
         "details",
     ]
     list_display = [
@@ -348,9 +390,106 @@ class TournamentResultAdmin(admin.ModelAdmin):
         "position",
         "score",
         "amount",
+        "payout_status",
     ]
     list_display_links = ("tournament",)
-    list_filter = (TournamentResultEventFilter, TournamentByEventFilter, "flight")
+    list_filter = (
+        TournamentResultEventFilter,
+        TournamentByEventFilter,
+        ResultFormatByEventFilter,
+        "flight",
+    )
+    ordering = ["tournament", "position"]
+    search_fields = ["tournament__name", "player__first_name", "player__last_name"]
+    save_on_top = True
+
+
+class TournamentPointsEventFilter(SimpleListFilter):
+    title = "current season event"
+    parameter_name = "event"
+
+    def lookups(self, request, model_admin):
+        current_season_year = current_season()
+        try:
+            events_qs = (
+                Event.objects.filter(
+                    season=current_season_year,
+                    gg_tournaments__season_long_points__isnull=False,
+                )
+                .distinct()
+                .order_by("start_date", "name")
+            )
+        except Exception as e:
+            logger.warning("Failed to get events with points", exc_info=e)
+            try:
+                events_qs = Event.objects.filter(season=current_season_year).order_by(
+                    "start_date", "name"
+                )
+            except Exception as e:
+                logger.error("Failed to get current season events", exc_info=e)
+                return []
+
+        return [(event.id, f"{event.start_date} - {event.name}") for event in events_qs]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(tournament__event__id=self.value())
+        return queryset
+
+
+class PointsTournamentByEventFilter(SimpleListFilter):
+    title = "tournament"
+    parameter_name = "tournament"
+
+    def lookups(self, request, model_admin):
+        event_id = request.GET.get("event")
+        if not event_id:
+            return []
+
+        try:
+            tournaments = (
+                Tournament.objects.filter(event_id=event_id, format="points")
+                .select_related("round")
+                .order_by("round__round_date", "name")
+            )
+        except Exception as e:
+            logger.error(
+                "Failed to get points tournaments for event", event_id=event_id, exc_info=e
+            )
+            return []
+
+        choices = []
+        for tournament in tournaments:
+            round_display = str(tournament.round) if tournament.round else "No Round"
+            display = f"{round_display} - {tournament.name}"
+            choices.append((str(tournament.id), display))
+
+        return choices
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(tournament__id=self.value())
+        return queryset
+
+
+class TournamentPointsAdmin(admin.ModelAdmin):
+    fields = [
+        "tournament",
+        "player",
+        "position",
+        "score",
+        "points",
+        "details",
+    ]
+    list_display = [
+        "tournament",
+        "player",
+        "position",
+        "score",
+        "points",
+    ]
+    list_display_links = ("tournament",)
+    list_filter = (TournamentPointsEventFilter, PointsTournamentByEventFilter)
     ordering = ["tournament", "position"]
     search_fields = ["tournament__name", "player__first_name", "player__last_name"]
     save_on_top = True
@@ -361,3 +500,34 @@ admin.site.register(Event, EventAdmin)
 admin.site.register(Round, RoundAdmin)
 admin.site.register(Tournament, TournamentAdmin)
 admin.site.register(TournamentResult, TournamentResultAdmin)
+admin.site.register(TournamentPoints, TournamentPointsAdmin)
+
+
+class EventPairingAdmin(admin.ModelAdmin):
+    fields = [
+        "event",
+        "round",
+        "player",
+        "course",
+        "tee",
+        "hole",
+        "tee_time",
+        "group_ggid",
+        "pairing_group_id",
+    ]
+    list_display = [
+        "event",
+        "round",
+        "player",
+        "course",
+        "hole",
+        "tee_time",
+    ]
+    list_display_links = ("event",)
+    list_filter = (CurrentSeasonFilter, "round")
+    ordering = ["event", "round", "tee_time", "hole"]
+    search_fields = ["event__name", "player__first_name", "player__last_name", "tee_time"]
+    save_on_top = True
+
+
+admin.site.register(EventPairing, EventPairingAdmin)
