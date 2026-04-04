@@ -761,6 +761,8 @@ export class PlayerService {
 				const [result] = await tx.insert(registration).values({
 					eventId,
 					courseId: destinationCourseId,
+					signedUpBy: sourceRegistration.signedUpBy,
+					userId: sourceRegistration.userId,
 					createdDate: toDbString(new Date()),
 				})
 				destinationRegistrationId = Number(result.insertId)

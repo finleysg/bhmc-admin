@@ -1046,6 +1046,87 @@ describe("PlayerService.movePlayers wave validation", () => {
 		).resolves.toEqual({ movedCount: 2 })
 	})
 
+	test("cross-course move copies signedUpBy and userId to new registration", async () => {
+		const event = createClubEvent({
+			signupWaves: null,
+			totalGroups: 12,
+			signupStart: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+			signupEnd: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+		})
+		const { service, drizzle, repository, eventsService, broadcastService } = createService()
+
+		eventsService.getEventById.mockResolvedValue(event)
+
+		const sourceSlot = createRegistrationSlotRow({
+			id: 101,
+			eventId: 100,
+			registrationId: 1,
+			playerId: 1,
+			holeId: 10,
+			startingOrder: 0,
+		})
+		repository.findRegistrationSlotById.mockResolvedValueOnce(sourceSlot)
+		repository.findRegistrationById.mockResolvedValue(
+			createRegistrationRow({
+				id: 1,
+				courseId: 1,
+				signedUpBy: "John Doe",
+				userId: 42,
+			}),
+		)
+		repository.findPlayersByIds.mockResolvedValue([createPlayerRow({ id: 1 })])
+
+		// Destination hole on a DIFFERENT course (courseId: 2)
+		let selectCallCount = 0
+		drizzle.db.select = jest.fn().mockImplementation(() => {
+			selectCallCount++
+			if (selectCallCount === 1) {
+				return {
+					from: jest.fn().mockReturnValue({
+						where: jest.fn().mockReturnValue({
+							limit: jest.fn().mockResolvedValue([{ id: 200, courseId: 2, holeNumber: 9, par: 4 }]),
+						}),
+					}),
+				}
+			}
+			return {
+				from: jest.fn().mockReturnValue({
+					where: jest
+						.fn()
+						.mockResolvedValue([
+							{ id: 201, eventId: 100, holeId: 200, startingOrder: 0, slot: 0, status: "A" },
+						]),
+				}),
+			}
+		})
+
+		const insertValues = jest.fn().mockResolvedValue([{ insertId: 99 }])
+		const mockInsert = jest.fn().mockReturnValue({ values: insertValues })
+		const mockUpdate = jest.fn().mockReturnValue({
+			set: jest.fn().mockReturnValue({
+				where: jest.fn().mockResolvedValue(undefined),
+			}),
+		})
+
+		drizzle.db.transaction.mockImplementation((fn: any) => {
+			return fn({ insert: mockInsert, update: mockUpdate })
+		})
+		broadcastService.notifyChange.mockReturnValue(undefined)
+
+		await service.movePlayers(100, {
+			sourceSlotIds: [101],
+			destinationStartingHoleId: 200,
+			destinationStartingOrder: 0,
+		})
+
+		expect(insertValues).toHaveBeenCalledWith(
+			expect.objectContaining({
+				signedUpBy: "John Doe",
+				userId: 42,
+			}),
+		)
+	})
+
 	test("allows move when event has no waves", async () => {
 		const event = createClubEvent({
 			signupWaves: null,
