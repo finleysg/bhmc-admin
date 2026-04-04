@@ -43,7 +43,7 @@ class MajorChampionViewSet(viewsets.ModelViewSet):
     serializer_class = MajorChampionSerializer
 
     def get_queryset(self):
-        queryset = MajorChampion.objects.all()
+        queryset = MajorChampion.objects.select_related("event").all()
         season = self.request.query_params.get("season", None)
         event_id = self.request.query_params.get("event", None)
         player_id = self.request.query_params.get("player", None)

@@ -219,6 +219,8 @@ export interface MajorChampion {
 	season: number
 	event: number | null
 	event_name: string
+	event_display_name: string | null
+	event_start_date: string | null
 	flight: string
 	player: PlayerSummary
 	team_id: string | null

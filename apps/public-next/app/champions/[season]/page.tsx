@@ -4,6 +4,13 @@ import { CHAMPIONS_START_YEAR } from "@/lib/constants"
 import type { MajorChampion } from "@/lib/types"
 import { ChampionsList } from "./components/champions-list"
 
+export interface ChampionEventGroup {
+	eventKey: string
+	eventName: string
+	eventStartDate: string | null
+	champions: MajorChampion[]
+}
+
 interface ChampionsPageProps {
 	params: Promise<{ season: string }>
 }
@@ -16,19 +23,26 @@ export default async function ChampionsPage({ params }: ChampionsPageProps) {
 		revalidate: 3600,
 	})
 
-	const championsByEvent = new Map<string, MajorChampion[]>()
+	const groupMap = new Map<string, ChampionEventGroup>()
 	for (const c of champions) {
-		if (!championsByEvent.has(c.event_name)) {
-			championsByEvent.set(c.event_name, [])
+		const key = c.event != null ? String(c.event) : c.event_name
+		const existing = groupMap.get(key)
+		if (existing) {
+			existing.champions.push(c)
+		} else {
+			groupMap.set(key, {
+				eventKey: key,
+				eventName: c.event_display_name ?? c.event_name,
+				eventStartDate: c.event_start_date,
+				champions: [c],
+			})
 		}
-		championsByEvent.get(c.event_name)!.push(c)
 	}
-
-	const entries = [...championsByEvent.entries()]
+	const groups = [...groupMap.values()]
 
 	return (
 		<div>
-			{entries.length === 0 ? (
+			{groups.length === 0 ? (
 				<>
 					<div className="mb-4">
 						<SeasonSelector
@@ -41,7 +55,7 @@ export default async function ChampionsPage({ params }: ChampionsPageProps) {
 				</>
 			) : (
 				<ChampionsList
-					championsByEvent={entries}
+					groups={groups}
 					seasonSelector={
 						<SeasonSelector
 							basePath="/champions"
