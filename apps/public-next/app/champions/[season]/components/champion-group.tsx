@@ -3,7 +3,14 @@
 import { ChevronDown, Trophy } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table"
 import { PlayerLink } from "@/components/player-link"
 import { dayAndDateFormat, parseApiDate } from "@/lib/date-utils"
 import type { MajorChampion, PlayerSummary } from "@/lib/types"

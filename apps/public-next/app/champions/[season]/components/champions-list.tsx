@@ -25,9 +25,7 @@ export function ChampionsList({ groups, seasonSelector }: ChampionsListProps) {
 	)
 
 	const filtered =
-		selectedEvent === "all"
-			? groups
-			: groups.filter((g) => g.eventKey === selectedEvent)
+		selectedEvent === "all" ? groups : groups.filter((g) => g.eventKey === selectedEvent)
 
 	function toggleEvent(eventKey: string, open: boolean) {
 		setOpenEvents((prev) => {

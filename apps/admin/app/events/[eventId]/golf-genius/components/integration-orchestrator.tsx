@@ -24,7 +24,7 @@ const PHASES: Phase[] = [
 	{
 		number: 1,
 		title: "Setup Tasks",
-		actions: ["Sync Event", "Export Roster"],
+		actions: ["Sync Event", "Export Roster", "Import Teesheet"],
 	},
 	{
 		number: 2,
@@ -43,8 +43,11 @@ function determinePhase(logs: IntegrationLog[]): PhaseInfo {
 	const hasSuccessfulRun = (action: IntegrationActionName) =>
 		logs.some((log) => log.actionName === action && log.isSuccessful)
 
-	// Phase 1: Setup (Sync Event, Export Roster)
-	const phase1Complete = hasSuccessfulRun("Sync Event") && hasSuccessfulRun("Export Roster")
+	// Phase 1: Setup (Sync Event, Export Roster, Import Teesheet)
+	const phase1Complete =
+		hasSuccessfulRun("Sync Event") &&
+		hasSuccessfulRun("Export Roster") &&
+		hasSuccessfulRun("Import Teesheet")
 
 	// Phase 2: Import Results
 	const phase2Complete =
@@ -64,7 +67,11 @@ function determinePhase(logs: IntegrationLog[]): PhaseInfo {
 			currentPhase: 1,
 			isPhaseComplete: false,
 			canAdvanceToNext: false,
-			nextActionToRun: !hasSuccessfulRun("Sync Event") ? "Sync Event" : "Export Roster",
+			nextActionToRun: !hasSuccessfulRun("Sync Event")
+				? "Sync Event"
+				: !hasSuccessfulRun("Export Roster")
+					? "Export Roster"
+					: "Import Teesheet",
 		}
 	}
 
@@ -157,7 +164,10 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 		// When overriding phase for navigation, recalculate completion status
 		// for the overridden phase
 		if (phaseOverride === 1) {
-			const phase1Complete = hasSuccessfulRun("Sync Event") && hasSuccessfulRun("Export Roster")
+			const phase1Complete =
+				hasSuccessfulRun("Sync Event") &&
+				hasSuccessfulRun("Export Roster") &&
+				hasSuccessfulRun("Import Teesheet")
 			return {
 				currentPhase: 1,
 				isPhaseComplete: phase1Complete,
@@ -269,7 +279,9 @@ function PhasePanel({
 
 						const isEnabled =
 							phase.number === 1
-								? actualActionName === "Sync Event" || hasSuccessfulRun("Sync Event")
+								? actualActionName === "Sync Event" ||
+									(actualActionName === "Export Roster" && hasSuccessfulRun("Sync Event")) ||
+									(actualActionName === "Import Teesheet" && hasSuccessfulRun("Export Roster"))
 								: true // Phase 2 and 3 actions are all enabled
 						const phaseLogs = logs.filter((l) => l.actionName === actualActionName)
 						return (

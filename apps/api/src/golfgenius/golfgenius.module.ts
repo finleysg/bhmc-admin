@@ -21,7 +21,9 @@ import { PointsImportService } from "./services/points-import.service"
 import { ProgressTracker } from "./services/progress-tracker"
 import { RosterExportService } from "./services/roster-export.service"
 import { RosterPlayerTransformer } from "./services/roster-player-transformer"
+import { PairingRepository } from "./services/pairing.repository"
 import { ScoresImportService } from "./services/scores-import.service"
+import { TeesheetImportService } from "./services/teesheet-import.service"
 
 @Module({
 	imports: [
@@ -51,6 +53,8 @@ import { ScoresImportService } from "./services/scores-import.service"
 		ScoresImportService,
 		ImportAllResultsService,
 		ImportChampionsService,
+		PairingRepository,
+		TeesheetImportService,
 	],
 })
 export class GolfgeniusModule {}
