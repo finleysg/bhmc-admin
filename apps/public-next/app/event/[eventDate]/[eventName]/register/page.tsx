@@ -55,7 +55,7 @@ export default function RegisterPage() {
 	} = useRegistration()
 
 	const { data: myPlayer } = useMyPlayer()
-	const { mutate: addFriendMutation } = useAddFriend(myPlayer?.id)
+	const { mutate: addFriendMutation } = useAddFriend()
 
 	const [notes, setNotes] = useState(registration?.notes ?? "")
 	const [showPriorityDialog, setShowPriorityDialog] = useState(false)

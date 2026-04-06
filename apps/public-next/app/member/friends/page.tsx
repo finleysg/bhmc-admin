@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
 import { useMyFriends, useAddFriend, useRemoveFriend } from "@/lib/hooks/use-my-friends"
@@ -11,8 +12,8 @@ import { FriendSearch } from "./components/friend-search"
 export default function FriendsPage() {
 	const { data: player } = useMyPlayer()
 	const { data: friends, isLoading } = useMyFriends(player?.id)
-	const { mutate: addFriend } = useAddFriend(player?.id)
-	const { mutate: removeFriend } = useRemoveFriend(player?.id)
+	const { mutate: addFriend } = useAddFriend()
+	const { mutate: removeFriend } = useRemoveFriend()
 
 	const friendIds = new Set(friends?.map((f) => f.id) ?? [])
 
@@ -38,7 +39,10 @@ export default function FriendsPage() {
 					))}
 				</div>
 			) : (
-				<FriendList friends={friends ?? []} onRemove={(id) => removeFriend(id)} />
+				<FriendList
+					friends={friends ?? []}
+					onRemove={(id, name) => removeFriend(id, { onSuccess: () => toast.success(`${name} removed`) })}
+				/>
 			)}
 		</div>
 	)

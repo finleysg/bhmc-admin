@@ -14,15 +14,13 @@ export function useMyFriends(playerId: number | undefined) {
 	})
 }
 
-export function useAddFriend(playerId: number | undefined) {
+export function useAddFriend() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
 		mutationFn: async (friendId: number) => {
-			const response = await fetch(`/api/players/${playerId}/add-friend`, {
+			const response = await fetch(`/api/players/${friendId}/add-friend`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ friend_id: friendId }),
 			})
 			if (!response.ok) throw new Error("Failed to add friend")
 		},
@@ -32,15 +30,13 @@ export function useAddFriend(playerId: number | undefined) {
 	})
 }
 
-export function useRemoveFriend(playerId: number | undefined) {
+export function useRemoveFriend() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
 		mutationFn: async (friendId: number) => {
-			const response = await fetch(`/api/players/${playerId}/remove-friend`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ friend_id: friendId }),
+			const response = await fetch(`/api/players/${friendId}/remove-friend`, {
+				method: "DELETE",
 			})
 			if (!response.ok) throw new Error("Failed to remove friend")
 		},
