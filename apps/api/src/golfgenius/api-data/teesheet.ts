@@ -50,6 +50,7 @@ export const GgPlayerSchema = z.object({
 	score_array: z.array(z.number().nullable()),
 	handicap_dots_by_hole: z.array(z.number()),
 	tee: GgTeesheetTeeSchema,
+	custom_fields: z.record(z.string(), z.string().nullable()).optional(),
 })
 
 export type GgPlayer = z.infer<typeof GgPlayerSchema>

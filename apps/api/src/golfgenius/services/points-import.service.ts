@@ -458,7 +458,7 @@ export class PointsImportService {
 
 		// Build details string
 		const positionDetails = PointsResultParser.formatPositionDetails(playerData.position)
-		const details = `${tournamentData.name}${flightName ? " - " : ""}${flightName ?? ""}: ${positionDetails}`
+		const details = positionDetails
 
 		// Return prepared data instead of inserting
 		return {

@@ -42,3 +42,56 @@ Use the `playwright cli` skill to validate your work directly:
 
 - Admin site: http://localhost:3100
 - Public site: http://localhost:3200
+
+## Commit Message Convention
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/). All commit messages are validated by commitlint via a husky `commit-msg` hook.
+
+### Format
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Types
+
+| Type       | When to use                                             |
+| ---------- | ------------------------------------------------------- |
+| `feat`     | A new feature or capability                             |
+| `fix`      | A bug fix                                               |
+| `docs`     | Documentation-only changes                              |
+| `style`    | Formatting, whitespace, missing semicolons, etc.        |
+| `refactor` | Code change that neither fixes a bug nor adds a feature |
+| `perf`     | Performance improvement                                 |
+| `test`     | Adding or updating tests                                |
+| `ci`       | CI/CD pipeline changes                                  |
+| `chore`    | Maintenance (dependencies, configs, tooling)            |
+| `revert`   | Reverting a previous commit                             |
+
+### Scopes (optional)
+
+Use one of: `api`, `admin`, `public`, `public-next`, `domain`, `eslint-config`, `e2e`, `deps`
+
+Omit the scope when a change spans multiple packages or is repo-wide.
+
+### Examples
+
+```
+feat(admin): add player search to event registration
+fix(api): handle null handicap in scorecard endpoint
+chore(deps): update turbo to v2.9
+docs: update README with deployment instructions
+ci: add typecheck to GitHub Actions workflow
+```
+
+### Changelog
+
+Generate a changelog on demand:
+
+```sh
+pnpm changelog
+```

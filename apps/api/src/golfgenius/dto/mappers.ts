@@ -53,16 +53,21 @@ export function mapPreparedPointsToTournamentPointsInsert(
 
 /**
  * Maps Tournament and ClubEvent domain objects to TournamentData for Golf Genius integration.
- * Asserts that the event has exactly one eventRound.
+ * Finds the event round matching the tournament's roundId.
  */
 export function toTournamentData(tournament: Tournament, event: ClubEvent): TournamentData {
-	if (!event.eventRounds || event.eventRounds.length !== 1) {
+	if (!event.eventRounds || event.eventRounds.length === 0) {
 		throw new Error(
-			`toTournamentData mapping requires exactly one event round, but event ${event.id} has ${event.eventRounds?.length ?? 0} rounds`,
+			`toTournamentData mapping requires at least one event round, but event ${event.id} has ${event.eventRounds?.length ?? 0} rounds`,
 		)
 	}
 
-	const round = event.eventRounds[0]
+	const round = event.eventRounds.find((r) => r.id === tournament.roundId)
+	if (!round) {
+		throw new Error(
+			`toTournamentData mapping could not find round ${tournament.roundId} for tournament ${tournament.id} in event ${event.id}`,
+		)
+	}
 
 	if (tournament.id === undefined) {
 		throw new Error("Tournament id is required")

@@ -5,7 +5,7 @@ from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
 from content.models import Tag
-from courses.models import Course
+from courses.models import Course, Hole, Tee
 from events.managers import EventFeeManager, EventManager
 
 FEE_RESTRICTION_CHOICES = (
@@ -560,3 +560,39 @@ class TournamentPoints(models.Model):
             str: Formatted string containing the tournament name, player name, and points.
         """
         return f"{self.tournament.name} - {self.player.player_name} ({self.points})"
+
+
+class EventPairing(models.Model):
+    event = models.ForeignKey(
+        verbose_name="Event", to=Event, on_delete=CASCADE, related_name="pairings"
+    )
+    round = models.ForeignKey(
+        verbose_name="Round", to=Round, on_delete=CASCADE, related_name="pairings"
+    )
+    player = models.ForeignKey(
+        verbose_name="Player",
+        to="register.Player",
+        on_delete=CASCADE,
+        related_name="pairings",
+    )
+    course = models.ForeignKey(
+        verbose_name="Course", to=Course, on_delete=DO_NOTHING, related_name="pairings"
+    )
+    tee = models.ForeignKey(
+        verbose_name="Tee", to=Tee, on_delete=DO_NOTHING, related_name="pairings"
+    )
+    hole = models.ForeignKey(
+        verbose_name="Hole", to=Hole, on_delete=DO_NOTHING, related_name="pairings"
+    )
+    tee_time = models.CharField(verbose_name="Tee time", max_length=20)
+    group_ggid = models.CharField(verbose_name="Golf Genius group id", max_length=10)
+    pairing_group_id = models.CharField(verbose_name="Golf Genius pairing group id", max_length=22)
+
+    class Meta:
+        db_table = "events_eventpairing"
+        constraints = [
+            UniqueConstraint(fields=["round", "player"], name="unique_round_player_pairing")
+        ]
+
+    def __str__(self):
+        return f"{self.event.name} - {self.player.player_name} (Round {self.round.round_number})"

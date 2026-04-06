@@ -1,10 +1,11 @@
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from register.models import Player
 from register.serializers import SimplePlayerSerializer
-from .models import BoardMember, MajorChampion, LowScore, Ace, SeasonSettings
-from rest_framework import serializers
+
+from .models import Ace, BoardMember, LowScore, MajorChampion, SeasonSettings
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -19,9 +20,27 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id", "username", "first_name", "last_name", "email", "player_id",
-                  "is_authenticated", "is_staff", "is_active", "groups", "is_superuser", )
-        read_only_fields = ("id", "is_authenticated", "is_staff", "is_active", "is_superuser", "player_id", )
+        fields = (
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "player_id",
+            "is_authenticated",
+            "is_staff",
+            "is_active",
+            "groups",
+            "is_superuser",
+        )
+        read_only_fields = (
+            "id",
+            "is_authenticated",
+            "is_staff",
+            "is_active",
+            "is_superuser",
+            "player_id",
+        )
 
     def get_player_id(self, obj):
         player = obj.player_set.first()
@@ -52,7 +71,13 @@ class UserCreateSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=128)
 
     class Meta:
-        fields = ("email", "password", "first_name", "last_name", "ghin", )
+        fields = (
+            "email",
+            "password",
+            "first_name",
+            "last_name",
+            "ghin",
+        )
 
     def create(self, validated_data):
         email = validated_data["email"]
@@ -77,49 +102,90 @@ class UserCreateSerializer(serializers.Serializer):
             is_active=False,
         )
 
-        Player.objects.create(user_id=user.id, first_name=user.first_name, last_name=user.last_name, email=user.email, ghin=ghin)
+        Player.objects.create(
+            user_id=user.id,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            email=user.email,
+            ghin=ghin,
+        )
 
         return user
 
 
 class BoardMemberSerializer(serializers.ModelSerializer):
-
     player = SimplePlayerSerializer()
 
     class Meta:
         model = BoardMember
-        fields = ("id", "player", "role", "term_expires", )
+        fields = (
+            "id",
+            "player",
+            "role",
+            "term_expires",
+        )
 
 
 class MajorChampionSerializer(serializers.ModelSerializer):
-
     player = SimplePlayerSerializer()
+    event_display_name = serializers.CharField(source="event.name", read_only=True, default=None)
+    event_start_date = serializers.DateField(
+        source="event.start_date", read_only=True, default=None
+    )
 
     class Meta:
         model = MajorChampion
-        fields = ("id", "season", "event", "event_name", "flight", "player", "team_id", "score", "is_net", )
+        fields = (
+            "id",
+            "season",
+            "event",
+            "event_name",
+            "event_display_name",
+            "event_start_date",
+            "flight",
+            "player",
+            "team_id",
+            "score",
+            "is_net",
+        )
 
 
 class LowScoreSerializer(serializers.ModelSerializer):
-
     player = SimplePlayerSerializer()
 
     class Meta:
         model = LowScore
-        fields = ("id", "season", "course_name", "player", "score", "is_net", )
+        fields = (
+            "id",
+            "season",
+            "course_name",
+            "player",
+            "score",
+            "is_net",
+        )
 
 
 class AceSerializer(serializers.ModelSerializer):
-
     player = SimplePlayerSerializer()
 
     class Meta:
         model = Ace
-        fields = ("id", "season", "hole_name", "player", "shot_date", )
+        fields = (
+            "id",
+            "season",
+            "hole_name",
+            "player",
+            "shot_date",
+        )
 
 
 class SeasonSettingsSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = SeasonSettings
-        fields = ("id", "season", "member_event", "match_play_event", "is_active", )
+        fields = (
+            "id",
+            "season",
+            "member_event",
+            "match_play_event",
+            "is_active",
+        )

@@ -156,4 +156,21 @@ export class ReportsController {
 		res.setHeader("Content-Disposition", `attachment; filename="changelog-${eventId}.xlsx"`)
 		res.send(buffer)
 	}
+
+	@Get("events/:eventId/skins")
+	async getSkinsReport(@Param("eventId", ParseIntPipe) eventId: number) {
+		return this.reports.getSkinsReport(eventId)
+	}
+
+	@Get("events/:eventId/skins/excel")
+	async getSkinsReportExcel(@Param("eventId", ParseIntPipe) eventId: number, @Res() res: Response) {
+		const buffer = await this.reports.generateSkinsReportExcel(eventId)
+
+		res.setHeader(
+			"Content-Type",
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		)
+		res.setHeader("Content-Disposition", `attachment; filename="skins-report-${eventId}.xlsx"`)
+		res.send(buffer)
+	}
 }

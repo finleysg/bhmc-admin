@@ -19,8 +19,9 @@ from register.serializers import (
     get_starting_wave,
 )
 
-from .models import Event, FeeType, TournamentPoints, TournamentResult
+from .models import Event, EventPairing, FeeType, TournamentPoints, TournamentResult
 from .serializers import (
+    EventPairingSerializer,
     EventSerializer,
     FeeTypeSerializer,
     TournamentPointsSerializer,
@@ -284,6 +285,21 @@ class EventViewSet(viewsets.ModelViewSet):
         )
 
         return Response(result)
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def pairings(self, request, pk):
+        player_id = _get_int_param(request, "player_id")
+        if player_id is None:
+            raise ValidationError({"player_id": "This parameter is required."})
+
+        pairings = (
+            EventPairing.objects.filter(event_id=pk, player_id=player_id)
+            .select_related("round", "course", "hole")
+            .order_by("round__round_number")
+        )
+
+        serializer = EventPairingSerializer(pairings, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=["delete"], permission_classes=[IsAdminUser])
     def force_delete(self, request, pk):

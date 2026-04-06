@@ -11,6 +11,7 @@ import {
 	document,
 	event,
 	eventFee,
+	eventPairing,
 	eventScore,
 	eventScorecard,
 	eventSession,
@@ -47,6 +48,7 @@ export type TournamentResultRow = typeof tournamentResult.$inferSelect
 export type EventSessionRow = typeof eventSession.$inferSelect
 export type EventSessionFeeRow = typeof eventSessionFee.$inferSelect
 export type TournamentPointsRow = typeof tournamentPoints.$inferSelect
+export type EventPairingRow = typeof eventPairing.$inferSelect
 
 // Courses
 export type CourseRow = typeof course.$inferSelect
@@ -95,6 +97,7 @@ export type TournamentResultInsert = typeof tournamentResult.$inferInsert
 export type EventSessionInsert = typeof eventSession.$inferInsert
 export type EventSessionFeeInsert = typeof eventSessionFee.$inferInsert
 export type TournamentPointsInsert = typeof tournamentPoints.$inferInsert
+export type EventPairingInsert = typeof eventPairing.$inferInsert
 
 // Courses
 export type CourseInsert = typeof course.$inferInsert

@@ -11,7 +11,7 @@ import {
 	varchar,
 } from "drizzle-orm/mysql-core"
 
-import { course } from "./courses.schema"
+import { course, hole, tee } from "./courses.schema"
 import { player } from "./registration.schema"
 
 export const event = mysqlTable(
@@ -248,5 +248,37 @@ export const tournamentPoints = mysqlTable(
 	(table) => [
 		primaryKey({ columns: [table.id], name: "events_tournamentpoints_id" }),
 		unique("unique_points").on(table.tournamentId, table.playerId),
+	],
+)
+
+export const eventPairing = mysqlTable(
+	"events_eventpairing",
+	{
+		id: int().autoincrement().notNull(),
+		eventId: int("event_id")
+			.notNull()
+			.references(() => event.id),
+		roundId: int("round_id")
+			.notNull()
+			.references(() => round.id),
+		playerId: int("player_id")
+			.notNull()
+			.references(() => player.id),
+		courseId: int("course_id")
+			.notNull()
+			.references(() => course.id),
+		teeId: int("tee_id")
+			.notNull()
+			.references(() => tee.id),
+		holeId: int("hole_id")
+			.notNull()
+			.references(() => hole.id),
+		teeTime: varchar("tee_time", { length: 20 }).notNull(),
+		groupGgid: varchar("group_ggid", { length: 10 }).notNull(),
+		pairingGroupId: varchar("pairing_group_id", { length: 22 }).notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.id], name: "events_eventpairing_id" }),
+		unique("unique_round_player_pairing").on(table.roundId, table.playerId),
 	],
 )

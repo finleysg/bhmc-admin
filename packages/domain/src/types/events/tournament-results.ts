@@ -21,4 +21,5 @@ export interface PayoutSummary {
 	playerEmail: string
 	totalAmount: number
 	payoutType: string
+	payoutStatus: string
 }

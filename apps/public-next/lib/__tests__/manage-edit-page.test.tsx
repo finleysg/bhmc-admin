@@ -42,7 +42,18 @@ function makeClubEvent(overrides: Partial<ClubEventDetail> = {}): ClubEventDetai
 		payments_end: null,
 		registration_maximum: null,
 		courses: [],
-		fees: [],
+		fees: [
+			{
+				id: 10,
+				event: 1,
+				amount: "5.00",
+				is_required: true,
+				display_order: 1,
+				override_amount: null,
+				override_restriction: null,
+				fee_type: { id: 1, name: "Event Fee", code: "EF", restriction: "" },
+			},
+		],
 		sessions: [],
 		default_tag: null,
 		starter_time_interval: 8,
@@ -52,6 +63,19 @@ function makeClubEvent(overrides: Partial<ClubEventDetail> = {}): ClubEventDetai
 		...overrides,
 	}
 }
+
+const makeSlotPlayer = (id: number, firstName: string, lastName: string) => ({
+	id,
+	firstName,
+	lastName,
+	email: `${firstName.toLowerCase()}@example.com`,
+	ghin: null,
+	birthDate: null,
+	phoneNumber: null,
+	tee: null,
+	isMember: true,
+	lastSeason: null,
+})
 
 function makeRegistration(overrides: Partial<ServerRegistration> = {}): ServerRegistration {
 	return {
@@ -68,18 +92,7 @@ function makeRegistration(overrides: Partial<ServerRegistration> = {}): ServerRe
 				eventId: 1,
 				registrationId: 42,
 				holeId: 100,
-				player: {
-					id: 1,
-					firstName: "Alice",
-					lastName: "Smith",
-					email: "alice@example.com",
-					ghin: null,
-					birthDate: null,
-					phoneNumber: null,
-					tee: null,
-					isMember: true,
-					lastSeason: null,
-				},
+				player: makeSlotPlayer(1, "Alice", "Smith"),
 				startingOrder: 0,
 				slot: 0,
 				status: "R",
@@ -88,6 +101,35 @@ function makeRegistration(overrides: Partial<ServerRegistration> = {}): ServerRe
 		],
 		...overrides,
 	}
+}
+
+function makeGroupRegistration(): ServerRegistration {
+	return makeRegistration({
+		slots: [
+			{
+				id: 101,
+				eventId: 1,
+				registrationId: 42,
+				holeId: 100,
+				player: makeSlotPlayer(1, "Alice", "Smith"),
+				startingOrder: 0,
+				slot: 0,
+				status: "R",
+				fees: [],
+			},
+			{
+				id: 102,
+				eventId: 1,
+				registrationId: 42,
+				holeId: 100,
+				player: makeSlotPlayer(2, "Bob", "Jones"),
+				startingOrder: 0,
+				slot: 1,
+				status: "R",
+				fees: [],
+			},
+		],
+	})
 }
 
 // --- Mocks ---
@@ -102,13 +144,16 @@ const mockPlayer = jest.fn<{ id: number; email: string } | null, []>(() => ({
 const mockStartEditRegistration = jest.fn()
 const mockInitiateStripeSession = jest.fn()
 const mockReplace = jest.fn()
+const mockRemovePlayer = jest.fn()
 
 jest.mock("../registration/registration-context", () => ({
 	useRegistration: () => ({
 		clubEvent: mockClubEvent(),
 		registration: mockContextRegistration(),
-		payment: null,
+		payment: { id: 0, details: [] },
 		error: null,
+		existingFees: new Map(),
+		mode: "edit",
 		startEditRegistration: mockStartEditRegistration,
 		initiateStripeSession: mockInitiateStripeSession,
 		cancelRegistration: jest.fn(),
@@ -116,6 +161,10 @@ jest.mock("../registration/registration-context", () => ({
 		setError: jest.fn(),
 		updateRegistrationNotes: jest.fn(),
 		updateStep: jest.fn(),
+		addFee: jest.fn(),
+		removeFee: jest.fn(),
+		removePlayer: mockRemovePlayer,
+		addPlayer: jest.fn(),
 	}),
 }))
 
@@ -147,6 +196,7 @@ beforeEach(() => {
 	mockStartEditRegistration.mockReset()
 	mockInitiateStripeSession.mockReset()
 	mockReplace.mockReset()
+	mockRemovePlayer.mockReset()
 	mockFetch.mockReset()
 	global.fetch = mockFetch
 })
@@ -222,4 +272,20 @@ test("does not initiate when clubEvent is null", async () => {
 
 	expect(mockStartEditRegistration).not.toHaveBeenCalled()
 	expect(mockInitiateStripeSession).not.toHaveBeenCalled()
+})
+
+test("does not render remove-player buttons in edit mode", async () => {
+	const groupReg = makeGroupRegistration()
+	mockContextRegistration.mockImplementation(() => groupReg)
+
+	const { default: EditPage } = await import("@/app/event/[eventDate]/[eventName]/manage/edit/page")
+
+	render(<EditPage />)
+
+	// Both players should be visible (horizontal layout renders names for mobile + desktop)
+	expect(screen.getAllByText("Alice Smith").length).toBeGreaterThan(0)
+	expect(screen.getAllByText("Bob Jones").length).toBeGreaterThan(0)
+
+	// No remove buttons should be rendered (readOnly hides them)
+	expect(screen.queryByLabelText("Remove player")).toBeNull()
 })

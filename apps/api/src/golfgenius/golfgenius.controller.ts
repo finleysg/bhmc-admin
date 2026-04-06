@@ -28,6 +28,7 @@ import { MemberSyncService } from "./services/member-sync.service"
 import { PointsImportService } from "./services/points-import.service"
 import { RosterExportService } from "./services/roster-export.service"
 import { ScoresImportService } from "./services/scores-import.service"
+import { TeesheetImportService } from "./services/teesheet-import.service"
 
 @Controller("golfgenius")
 @Admin()
@@ -44,6 +45,7 @@ export class GolfgeniusController {
 		@Inject(ImportChampionsService) private readonly champions: ImportChampionsService,
 		@Inject(LowScoresImportService) private readonly lowScoresImport: LowScoresImportService,
 		@Inject(IntegrationLogRepository) private readonly integrationLog: IntegrationLogRepository,
+		@Inject(TeesheetImportService) private readonly teesheetImport: TeesheetImportService,
 		@Inject(EventsService) private readonly events: EventsService,
 	) {}
 
@@ -108,6 +110,34 @@ export class GolfgeniusController {
 		// Start new export and return progress stream
 		try {
 			const subject = this.rosterExport.exportEventRoster(eid)
+
+			return subject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		} catch (error) {
+			return new Observable<{ data: string }>((subscriber) => {
+				subscriber.error(error)
+			})
+		}
+	}
+
+	@Sse("/events/:id/import-teesheet")
+	importTeesheet(@Param("id") id: string): Observable<{ data: string }> {
+		const eid = parseInt(id, 10)
+
+		const existingSubject = this.teesheetImport.getProgressObservable(eid)
+		if (existingSubject) {
+			return existingSubject.pipe(
+				map((progress) => ({
+					data: JSON.stringify(progress),
+				})),
+			)
+		}
+
+		try {
+			const subject = this.teesheetImport.importTeesheet(eid)
 
 			return subject.pipe(
 				map((progress) => ({

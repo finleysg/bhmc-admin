@@ -7,7 +7,7 @@ import type { PlayerSummary } from "@/lib/types"
 
 interface FriendListProps {
 	friends: PlayerSummary[]
-	onRemove: (friendId: number) => void
+	onRemove: (friendId: number, friendName: string) => void
 }
 
 export function FriendList({ friends, onRemove }: FriendListProps) {
@@ -28,7 +28,7 @@ export function FriendList({ friends, onRemove }: FriendListProps) {
 					<Button
 						variant="ghost"
 						size="icon"
-						onClick={() => onRemove(friend.id)}
+						onClick={() => onRemove(friend.id, `${friend.first_name} ${friend.last_name}`)}
 						title="Remove friend"
 						className="size-8"
 					>

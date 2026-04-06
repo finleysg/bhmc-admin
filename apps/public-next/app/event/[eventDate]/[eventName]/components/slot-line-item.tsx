@@ -21,6 +21,7 @@ interface SlotLineItemProps {
 	team: number
 	onPickPlayer: (slot: ServerRegistrationSlot) => void
 	layout?: "horizontal" | "vertical"
+	readOnly?: boolean
 }
 
 export function SlotLineItem({
@@ -29,6 +30,7 @@ export function SlotLineItem({
 	team,
 	onPickPlayer,
 	layout = "vertical",
+	readOnly = false,
 }: SlotLineItemProps) {
 	const { payment, existingFees, addFee, removeFee, removePlayer, clubEvent } = useRegistration()
 	const skinsType = clubEvent?.skins_type ?? null
@@ -87,7 +89,7 @@ export function SlotLineItem({
 			<span className="truncate text-sm font-medium text-emerald-600 dark:text-emerald-400">
 				{player.firstName} {player.lastName}
 			</span>
-			{slot.slot !== 0 && (
+			{slot.slot !== 0 && !readOnly && (
 				<Button
 					variant="ghost"
 					size="icon-xs"
@@ -99,6 +101,8 @@ export function SlotLineItem({
 				</Button>
 			)}
 		</>
+	) : readOnly ? (
+		<span className="text-sm text-muted-foreground">Empty</span>
 	) : (
 		<button
 			type="button"
@@ -163,6 +167,8 @@ export function SlotLineItem({
 						<span className="font-medium">
 							{player.firstName} {player.lastName}
 						</span>
+					) : readOnly ? (
+						<span className="text-sm text-muted-foreground">Empty</span>
 					) : (
 						<button
 							type="button"
@@ -173,7 +179,7 @@ export function SlotLineItem({
 						</button>
 					)}
 				</div>
-				{player && slot.slot !== 0 && (
+				{player && slot.slot !== 0 && !readOnly && (
 					<Button
 						variant="ghost"
 						size="icon-xs"

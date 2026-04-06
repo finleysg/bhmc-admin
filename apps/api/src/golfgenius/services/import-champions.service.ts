@@ -1,5 +1,7 @@
 import { Inject, Injectable, Logger } from "@nestjs/common"
 
+import { EventTypeChoices } from "@repo/domain/types"
+
 import { CoreService, mapTournamentWinnerToChampionInsert } from "../../core"
 import { EventsService } from "../../events"
 
@@ -44,6 +46,11 @@ export class ImportChampionsService {
 			this.logger.log(`Processing ${format} tournament: ${localTournament.name}`)
 
 			try {
+				// For weeknight 9-hole events, use the tournament name (e.g. "Net LG/LN - East")
+				// instead of the generic event name (e.g. "Individual LG/LN")
+				const championEventName =
+					event.eventType === EventTypeChoices.WEEKNIGHT ? localTournament.name : event.name
+
 				// Find first place winners from local tournament results
 				const winners = await this.eventsService.findTournamentWinners(localTournament.id)
 				for (const winner of winners) {
@@ -52,7 +59,7 @@ export class ImportChampionsService {
 						localTournament.isNet,
 						eventId,
 						event.season,
-						event.name,
+						championEventName,
 					)
 					await this.coreRepository.createChampion(champion)
 					this.logger.log(

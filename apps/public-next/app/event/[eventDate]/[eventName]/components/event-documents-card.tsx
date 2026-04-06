@@ -10,7 +10,9 @@ interface EventDocumentsCardProps {
 export async function EventDocumentsCard({ eventId }: EventDocumentsCardProps) {
 	let documents: Document[] = []
 	try {
-		documents = await fetchDjango<Document[]>(`/documents/?event_id=${eventId}`)
+		documents = await fetchDjango<Document[]>(`/documents/?event_id=${eventId}`, {
+			tags: ["documents"],
+		})
 	} catch {
 		return null
 	}

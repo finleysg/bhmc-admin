@@ -8,6 +8,7 @@
 export type IntegrationActionName =
 	| "Sync Event"
 	| "Export Roster"
+	| "Import Teesheet"
 	| "Import Scores"
 	| "Import Points"
 	| "Import Results"

@@ -9,9 +9,15 @@ interface SlotGroupProps {
 	eventFees: EventFee[]
 	onPickPlayer: (slot: ServerRegistrationSlot) => void
 	layout?: "horizontal" | "vertical"
+	readOnly?: boolean
 }
 
-export function SlotGroup({ eventFees, onPickPlayer, layout = "vertical" }: SlotGroupProps) {
+export function SlotGroup({
+	eventFees,
+	onPickPlayer,
+	layout = "vertical",
+	readOnly,
+}: SlotGroupProps) {
 	const { registration, clubEvent } = useRegistration()
 
 	if (!registration || !clubEvent) return null
@@ -59,6 +65,7 @@ export function SlotGroup({ eventFees, onPickPlayer, layout = "vertical" }: Slot
 								team={team}
 								onPickPlayer={onPickPlayer}
 								layout="horizontal"
+								readOnly={readOnly}
 							/>
 						</div>
 					)
@@ -83,6 +90,7 @@ export function SlotGroup({ eventFees, onPickPlayer, layout = "vertical" }: Slot
 							eventFees={eventFees}
 							team={team}
 							onPickPlayer={onPickPlayer}
+							readOnly={readOnly}
 						/>
 					</div>
 				)

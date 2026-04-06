@@ -159,6 +159,10 @@ export class EventsService {
 				),
 				playerEmail: player.email,
 				totalAmount: sql<number>`sum(${tournamentResult.amount})`.as("total_amount"),
+				statusRank:
+					sql<number>`min(case ${tournamentResult.payoutStatus} when 'Pending' then 1 when 'Confirmed' then 2 when 'Paid' then 3 else 0 end)`.as(
+						"status_rank",
+					),
 			})
 			.from(tournamentResult)
 			.innerJoin(tournament, eq(tournamentResult.tournamentId, tournament.id))
@@ -172,12 +176,15 @@ export class EventsService {
 			)
 			.groupBy(player.id, player.firstName, player.lastName, player.email)
 
+		const statusMap: Record<number, string> = { 1: "Pending", 2: "Confirmed", 3: "Paid" }
+
 		return rows.map((r) => ({
 			playerId: r.playerId,
 			playerName: r.playerName,
 			playerEmail: r.playerEmail,
 			totalAmount: parseFloat(r.totalAmount.toString()),
 			payoutType,
+			payoutStatus: statusMap[r.statusRank] ?? "Pending",
 		}))
 	}
 

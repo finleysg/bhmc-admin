@@ -7,6 +7,7 @@ import { IntegrationActionName } from "@repo/domain/types"
 export const INTEGRATION_ACTION_ENDPOINTS: Record<IntegrationActionName, string> = {
 	"Sync Event": "sync-event",
 	"Export Roster": "export-roster",
+	"Import Teesheet": "import-teesheet",
 	"Import Scores": "import-scores",
 	"Import Points": "import-points",
 	"Import Results": "import-results",
@@ -20,6 +21,7 @@ export const INTEGRATION_ACTION_ENDPOINTS: Record<IntegrationActionName, string>
  */
 export const STREAMING_ACTIONS: Set<IntegrationActionName> = new Set([
 	"Export Roster",
+	"Import Teesheet",
 	"Import Scores",
 	"Import Points",
 	"Import Results",

@@ -125,6 +125,7 @@ export default function CashPayoutPage() {
 								<th className="text-left text-xs">#</th>
 								<th className="text-left text-xs">Player Name</th>
 								<th className="text-left text-xs">Total Amount</th>
+								<th className="text-left text-xs">Status</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -139,6 +140,19 @@ export default function CashPayoutPage() {
 										<td>{index + 1}</td>
 										<td>{payout.playerName}</td>
 										<td>{formatCurrency(payout.totalAmount)}</td>
+										<td>
+											<span
+												className={`badge badge-sm ${
+													payout.payoutStatus === "Paid"
+														? "badge-success"
+														: payout.payoutStatus === "Confirmed"
+															? "badge-info"
+															: "badge-warning"
+												}`}
+											>
+												{payout.payoutStatus}
+											</span>
+										</td>
 									</tr>
 								))}
 						</tbody>

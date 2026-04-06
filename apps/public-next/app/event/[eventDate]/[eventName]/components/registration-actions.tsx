@@ -155,7 +155,7 @@ function ManageButton({
 	hasSignedUp: boolean
 	eventUrl: string
 }) {
-	if (!hasSignedUp || event.registration_window === "past") return null
+	if (!hasSignedUp) return null
 
 	const paymentsOpen = event.payments_end
 		? isBefore(new Date(), new Date(event.payments_end))

@@ -147,7 +147,7 @@ export default function EditRegistrationPage() {
 					)}
 
 					{/* Fee grid */}
-					<SlotGroup layout={layout} eventFees={fees} onPickPlayer={handlePickPlayer} />
+					<SlotGroup layout={layout} eventFees={fees} onPickPlayer={handlePickPlayer} readOnly />
 
 					{/* Amount due */}
 					<AmountDue amountDue={amountDue} />
