@@ -8,4 +8,5 @@ export default registerAs("golfGenius", () => ({
 	retryDelayBase: parseInt(process.env.GOLF_GENIUS_RETRY_DELAY_BASE || "1000", 10),
 	categoryId: process.env.GOLF_GENIUS_CATEGORY_ID || "4788194574457686575",
 	lookback: parseInt(process.env.GOLF_GENIUS_LOOKBACK || "0", 10),
+	concurrencyLimit: parseInt(process.env.GOLF_GENIUS_CONCURRENCY_LIMIT || "3", 10),
 }))

@@ -7,4 +7,5 @@ export const validationSchema = Joi.object({
 	GOLF_GENIUS_MAX_RETRIES: Joi.number().default(3),
 	GOLF_GENIUS_RETRY_DELAY_BASE: Joi.number().default(1000),
 	GOLF_GENIUS_LOOKBACK: Joi.number().integer().default(0),
+	GOLF_GENIUS_CONCURRENCY_LIMIT: Joi.number().integer().min(1).default(3),
 })

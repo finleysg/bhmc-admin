@@ -1,6 +1,7 @@
 import { Subject } from "rxjs"
 
 import { Inject, Injectable, Logger } from "@nestjs/common"
+import { ConfigService } from "@nestjs/config"
 import { PlayerProgressEvent, CompleteClubEvent, RegisteredPlayer } from "@repo/domain/types"
 
 import { EventsService } from "../../events/events.service"
@@ -26,6 +27,7 @@ export class RosterExportService {
 		@Inject(ApiClient) private readonly apiClient: ApiClient,
 		@Inject(ProgressTracker) private readonly progressTracker: ProgressTracker,
 		@Inject(RosterPlayerTransformer) private readonly playerTransformer: RosterPlayerTransformer,
+		@Inject(ConfigService) private readonly configService: ConfigService,
 	) {}
 
 	getProgressObservable(eventId: number): Subject<PlayerProgressEvent> | null {
@@ -214,7 +216,7 @@ export class RosterExportService {
 			})
 
 			// 4. Process players in parallel batches
-			const CONCURRENCY_LIMIT = 10 // Tune this based on API rate limits
+			const CONCURRENCY_LIMIT = this.configService.get<number>("golfGenius.concurrencyLimit") ?? 3
 			const playerTasks: Array<
 				Promise<{
 					success: boolean
