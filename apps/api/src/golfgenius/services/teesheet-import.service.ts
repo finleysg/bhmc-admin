@@ -102,7 +102,7 @@ export class TeesheetImportService {
 	): Promise<void> {
 		for (const group of groups) {
 			for (const player of group.players) {
-				const playerId = player.custom_fields?.player_id
+				const playerId = player.custom_fields?.bhmc_player_id
 				if (!playerId) {
 					result.errors.push({
 						itemName: player.name,

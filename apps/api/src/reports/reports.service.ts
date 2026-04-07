@@ -390,8 +390,13 @@ export class ReportsService {
 		const workbook = createWorkbook()
 		const worksheet = workbook.addWorksheet("ClubEvent Report")
 
-		// Define fixed columns
-		const fixedKeys = [
+		// Determine if course/start columns have meaningful data
+		const hasCourseDummy =
+			rows.length > 0 && rows.every((r) => r.course === "dummy" || r.course === "N/A")
+		const hasStartNA = rows.length > 0 && rows.every((r) => r.start === "N/A")
+
+		// Define fixed columns, excluding empty course/start when not applicable
+		let fixedKeys = [
 			"teamId",
 			"course",
 			"start",
@@ -405,7 +410,7 @@ export class ReportsService {
 			"signedUpBy",
 			"signupDate",
 		]
-		const fixedColumns = [
+		let fixedColumns = [
 			{ header: "Team", key: "teamId", width: 15 },
 			{ header: "Course", key: "course", width: 20 },
 			{ header: "Start", key: "start", width: 15 },
@@ -419,6 +424,15 @@ export class ReportsService {
 			{ header: "Signed Up By", key: "signedUpBy", width: 15 },
 			{ header: "Signup Date", key: "signupDate", width: 12 },
 		]
+
+		if (hasCourseDummy) {
+			fixedKeys = fixedKeys.filter((k) => k !== "course")
+			fixedColumns = fixedColumns.filter((c) => c.key !== "course")
+		}
+		if (hasStartNA) {
+			fixedKeys = fixedKeys.filter((k) => k !== "start")
+			fixedColumns = fixedColumns.filter((c) => c.key !== "start")
+		}
 
 		// Add dynamic fee columns
 		const dynamicColumns = deriveDynamicColumns(rows, fixedKeys)

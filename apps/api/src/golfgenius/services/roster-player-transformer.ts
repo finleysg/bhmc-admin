@@ -59,11 +59,15 @@ export class RosterPlayerTransformer {
 
 		// Base custom fields
 		const customFields: Record<string, string | null> = {
-			team,
-			course: courseName,
-			tee: registeredPlayer.player.tee,
-			player_id: registeredPlayer.player.id.toString(),
-			registration_slot_id: registeredPlayer.slot.id.toString(),
+			bhmc_team: team,
+			bhmc_course: courseName,
+			bhmc_tee: registeredPlayer.player.tee,
+			bhmc_player_id: registeredPlayer.player.id.toString(),
+		}
+
+		// Session, if available
+		if (registeredPlayer.slot.sessionId) {
+			customFields["bhmc_session"] = registeredPlayer.slot.sessionId.toString()
 		}
 
 		// Add dynamic skins fee columns

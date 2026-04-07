@@ -289,3 +289,19 @@ test("does not render remove-player buttons in edit mode", async () => {
 	// No remove buttons should be rendered (readOnly hides them)
 	expect(screen.queryByLabelText("Remove player")).toBeNull()
 })
+
+test("does not fetch from API when context registration is already loaded", async () => {
+	const reg = makeRegistration()
+	mockContextRegistration.mockImplementation(() => reg)
+	mockRegistration.mockImplementation(() => reg)
+
+	const { default: EditPage } = await import("@/app/event/[eventDate]/[eventName]/manage/edit/page")
+
+	render(<EditPage />)
+
+	// Wait a tick to ensure any async effects have run
+	await new Promise((r) => setTimeout(r, 0))
+
+	expect(mockFetch).not.toHaveBeenCalled()
+	expect(mockStartEditRegistration).not.toHaveBeenCalled()
+})

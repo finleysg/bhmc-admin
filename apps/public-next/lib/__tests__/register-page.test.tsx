@@ -1,8 +1,10 @@
 /**
  * @jest-environment jsdom
  */
-import { render, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import React from "react"
+
+import type { EventFee } from "../types"
 
 // --- Mocks ---
 
@@ -24,7 +26,7 @@ const mockRegistrationContext = jest.fn(() => ({
 		registration_type: "O",
 		registration_window: "registration",
 		status: "S",
-		fees: [],
+		fees: [] as EventFee[],
 		maximum_signup_group_size: 1,
 		minimum_signup_group_size: 1,
 	},
@@ -244,4 +246,102 @@ test("calls createRegistration for returning member on returning-members-only ev
 	await waitFor(() => {
 		expect(mockCreateRegistration).toHaveBeenCalled()
 	})
+})
+
+test("skips canRegister check in edit mode", async () => {
+	const mockCanRegister = jest.fn(() => false)
+	const mockUpdateRegistrationNotes = jest.fn(() => Promise.resolve())
+	const mockUpdateStep = jest.fn()
+	mockRegistrationContext.mockImplementation(
+		() =>
+			({
+				clubEvent: {
+					id: 667,
+					name: "2026 Season Registration",
+					start_date: "2026-01-18",
+					event_type: "R",
+					can_choose: false,
+					registration_type: "O",
+					registration_window: "registration",
+					status: "S",
+					fees: [] as EventFee[],
+					maximum_signup_group_size: 1,
+					minimum_signup_group_size: 1,
+				},
+				registration: {
+					id: 42,
+					eventId: 667,
+					courseId: null,
+					signedUpBy: "test@example.com",
+					expires: new Date(Date.now() + 300000).toISOString(),
+					notes: null,
+					createdDate: "2026-01-18T00:00:00",
+					slots: [
+						{
+							id: 101,
+							eventId: 667,
+							registrationId: 42,
+							holeId: null,
+							player: {
+								id: 1,
+								firstName: "Alice",
+								lastName: "Smith",
+								email: "alice@example.com",
+								ghin: null,
+								birthDate: null,
+								phoneNumber: null,
+								tee: null,
+								isMember: true,
+								lastSeason: null,
+							},
+							startingOrder: 0,
+							slot: 0,
+							status: "R",
+							fees: [],
+						},
+					],
+				},
+				payment: {
+					id: 0,
+					eventId: 667,
+					userId: 1,
+					paymentCode: "",
+					paymentKey: null,
+					paymentAmount: null,
+					transactionFee: null,
+					notificationType: null,
+					confirmed: false,
+					details: [],
+				},
+				mode: "edit",
+				error: null,
+				selectedStart: null,
+				selectedSession: null,
+				addPlayer: jest.fn(),
+				canRegister: mockCanRegister,
+				cancelRegistration: jest.fn(),
+				createRegistration: mockCreateRegistration,
+				savePayment: jest.fn(),
+				setError: jest.fn(),
+				updateRegistrationNotes: mockUpdateRegistrationNotes,
+				selectSession: jest.fn(),
+				updateStep: mockUpdateStep,
+			}) as unknown as ReturnType<typeof mockRegistrationContext>,
+	)
+
+	const { default: RegisterPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/register/page"
+	)
+
+	render(<RegisterPage />)
+
+	const continueButton = screen.getByRole("button", { name: "Continue" })
+	fireEvent.click(continueButton)
+
+	await waitFor(() => {
+		expect(mockUpdateRegistrationNotes).toHaveBeenCalled()
+	})
+
+	expect(mockCanRegister).not.toHaveBeenCalled()
+	expect(mockReplace).toHaveBeenCalledWith("/event/2026-01-18/2026-season-registration/review")
 })

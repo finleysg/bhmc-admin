@@ -176,6 +176,12 @@ class EventSessionFeeInline(admin.TabularInline):
         "amount",
     ]
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "event_fee" and request.resolver_match.kwargs.get("object_id"):
+            session = EventSession.objects.get(pk=request.resolver_match.kwargs["object_id"])
+            kwargs["queryset"] = EventFee.objects.filter(event=session.event)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 class EventSessionAdmin(admin.ModelAdmin):
     fields = [
@@ -196,6 +202,13 @@ class EventSessionAdmin(admin.ModelAdmin):
     search_fields = ["event__name", "name"]
     save_on_top = True
     inlines = [EventSessionFeeInline]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "event":
+            kwargs["queryset"] = Event.objects.filter(season=current_season()).order_by(
+                "start_date", "name"
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class EventSessionsInline(admin.TabularInline):

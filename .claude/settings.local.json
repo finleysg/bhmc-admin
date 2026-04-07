@@ -65,7 +65,8 @@
 			"Bash(uv sync:*)",
 			"Bash(uv run:*)",
 			"Bash(bash /tmp/test-hook.sh 2>&1)",
-			"Bash(/Users/stuartfinley/code/bhmc/.claude/skills/chrome-cdp/scripts/cdp.mjs list:*)"
+			"Bash(/Users/stuartfinley/code/bhmc/.claude/skills/chrome-cdp/scripts/cdp.mjs list:*)",
+			"Bash(ruff check:*)"
 		]
 	},
 	"enabledMcpjsonServers": ["bhmc-db"],

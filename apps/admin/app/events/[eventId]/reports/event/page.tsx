@@ -121,6 +121,12 @@ const EventTable = ({ data }: { data: EventReportRow[] | null }) => {
 		// Columns hidden on screen (still in Excel export)
 		const screenHiddenColumns = ["teamId", "fullName"]
 
+		// Hide Course/Start when they contain no meaningful data (non-choose events)
+		const allCourseDummy = data.every((row) => row.course === "dummy" || row.course === "N/A")
+		const allStartNA = data.every((row) => row.start === "N/A")
+		if (allCourseDummy) screenHiddenColumns.push("course")
+		if (allStartNA) screenHiddenColumns.push("start")
+
 		// Define mobile-visible columns
 		const mobileVisibleColumns = ["ghin", "tee", "firstName", "lastName"]
 

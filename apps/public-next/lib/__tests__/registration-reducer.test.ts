@@ -189,6 +189,46 @@ describe("registrationReducer", () => {
 			expect(result.currentStep).toBe(RegisterStep)
 			expect(result.existingFees?.get("10-1")).toBe(fee)
 		})
+
+		it("populates selectedSession when slots have a sessionId matching an event session", () => {
+			const event = makeEvent({
+				sessions: [
+					{
+						id: 5,
+						event: 1,
+						name: "Morning",
+						registration_limit: 20,
+						display_order: 1,
+						fee_overrides: [{ id: 1, session: 5, event_fee: 1, amount: "3.00" }],
+					},
+				],
+			})
+			const state = makeState({ clubEvent: event })
+			const slot = makeSlot({ sessionId: 5 })
+			const registration = makeRegistration({ slots: [slot] })
+			const payment = makePayment()
+
+			const result = registrationReducer(state, {
+				type: "load-registration",
+				payload: { registration, payment, existingFees: [] },
+			})
+			expect(result.selectedSession).not.toBeNull()
+			expect(result.selectedSession?.id).toBe(5)
+			expect(result.selectedSession?.name).toBe("Morning")
+			expect(result.selectedSession?.feeOverrides).toEqual([{ eventFeeId: 1, amount: 3 }])
+		})
+
+		it("leaves selectedSession null when slots have no sessionId", () => {
+			const state = makeState({ clubEvent: makeEvent() })
+			const registration = makeRegistration({ slots: [makeSlot()] })
+			const payment = makePayment()
+
+			const result = registrationReducer(state, {
+				type: "load-registration",
+				payload: { registration, payment, existingFees: [] },
+			})
+			expect(result.selectedSession).toBeNull()
+		})
 	})
 
 	describe("cancel-registration", () => {
@@ -341,6 +381,62 @@ describe("registrationReducer", () => {
 			})
 			expect(result.payment?.details).toHaveLength(1)
 			expect(result.payment?.details[0].amount).toBe(28)
+		})
+
+		it("uses session fee override amount when selectedSession has matching feeOverride", () => {
+			const slot = makeSlot({ id: 10 })
+			const requiredFee = makeEventFee({ id: 1, is_required: true, amount: "5.00" })
+			const event = makeEvent({ fees: [requiredFee] })
+			const state = makeState({
+				clubEvent: event,
+				registration: makeRegistration({ slots: [slot] }),
+				payment: makePayment(),
+				selectedSession: {
+					id: 5,
+					name: "Morning",
+					registrationLimit: 20,
+					feeOverrides: [{ eventFeeId: 1, amount: 3 }],
+				},
+			})
+			const result = registrationReducer(state, {
+				type: "add-player",
+				payload: {
+					slot,
+					playerId: 42,
+					playerName: "John Doe",
+					player: makeFeePlayer(),
+				},
+			})
+			expect(result.payment?.details).toHaveLength(1)
+			expect(result.payment?.details[0].amount).toBe(3)
+		})
+
+		it("uses base fee amount when selectedSession has no override for that fee", () => {
+			const slot = makeSlot({ id: 10 })
+			const requiredFee = makeEventFee({ id: 1, is_required: true, amount: "5.00" })
+			const event = makeEvent({ fees: [requiredFee] })
+			const state = makeState({
+				clubEvent: event,
+				registration: makeRegistration({ slots: [slot] }),
+				payment: makePayment(),
+				selectedSession: {
+					id: 5,
+					name: "Morning",
+					registrationLimit: 20,
+					feeOverrides: [{ eventFeeId: 99, amount: 3 }],
+				},
+			})
+			const result = registrationReducer(state, {
+				type: "add-player",
+				payload: {
+					slot,
+					playerId: 42,
+					playerName: "John Doe",
+					player: makeFeePlayer(),
+				},
+			})
+			expect(result.payment?.details).toHaveLength(1)
+			expect(result.payment?.details[0].amount).toBe(5)
 		})
 	})
 

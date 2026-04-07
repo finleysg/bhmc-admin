@@ -51,7 +51,6 @@ export default function RegisterPage() {
 		cancelRegistration,
 		createRegistration,
 		selectSession,
-		savePayment,
 		setError,
 		updateRegistrationNotes,
 		updateStep,
@@ -181,14 +180,13 @@ export default function RegisterPage() {
 
 	// Handle continue
 	const handleContinue = useCallback(async () => {
-		if (!canRegister()) {
+		if (mode === "new" && !canRegister()) {
 			setShowPriorityDialog(true)
 			return
 		}
 		setIsContinuing(true)
 		try {
 			await updateRegistrationNotes(notes)
-			await savePayment()
 			updateStep(ReviewStep)
 			router.replace(`${getEventUrl(clubEvent!)}/review`)
 		} catch {
@@ -196,7 +194,7 @@ export default function RegisterPage() {
 		} finally {
 			setIsContinuing(false)
 		}
-	}, [canRegister, notes, updateRegistrationNotes, savePayment, updateStep, router])
+	}, [canRegister, notes, updateRegistrationNotes, updateStep, router])
 
 	// Handle expiration
 	const handleExpired = useCallback(() => {

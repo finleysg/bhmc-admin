@@ -36,6 +36,7 @@ export function RegistrationActions({
 	const { isAuthenticated } = useAuth()
 	const { data: player } = useMyPlayer()
 	const { data: registrationData } = usePlayerRegistration(event.id, player?.id)
+	const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null)
 
 	const hasSignedUp = !!registrationData?.registration?.slots.some(
 		(s) => s.status === RegistrationStatus.Reserved || s.status === RegistrationStatus.Processing,
@@ -48,10 +49,22 @@ export function RegistrationActions({
 
 	return (
 		<div className="flex flex-col gap-2">
+			{showSessionPicker && (
+				<SessionCards
+					event={event}
+					sessionSpots={sessionSpots ?? []}
+					player={player}
+					isEventFull={isEventFull}
+					selectedSessionId={selectedSessionId}
+					onSelectSession={setSelectedSessionId}
+				/>
+			)}
 			<div className="flex gap-2">
 				<PortalButton event={event} />
 				<PlayersButton event={event} eventUrl={eventUrl} />
-				{!showSessionPicker && (
+				{showSessionPicker ? (
+					<SessionSignUpButton eventUrl={eventUrl} selectedSessionId={selectedSessionId} />
+				) : (
 					<SignUpButton
 						event={event}
 						hasSignedUp={hasSignedUp}
@@ -64,15 +77,6 @@ export function RegistrationActions({
 					<ManageButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} />
 				)}
 			</div>
-			{showSessionPicker && (
-				<SessionPicker
-					event={event}
-					eventUrl={eventUrl}
-					sessionSpots={sessionSpots ?? []}
-					player={player}
-					isEventFull={isEventFull}
-				/>
-			)}
 		</div>
 	)
 }
@@ -170,21 +174,22 @@ function ManageButton({
 	)
 }
 
-function SessionPicker({
+function SessionCards({
 	event,
-	eventUrl,
 	sessionSpots,
 	player,
 	isEventFull,
+	selectedSessionId,
+	onSelectSession,
 }: {
 	event: ClubEventDetail
-	eventUrl: string
 	sessionSpots: SessionSpots[]
 	player?: { last_season?: number | null }
 	isEventFull?: boolean
+	selectedSessionId: number | null
+	onSelectSession: (id: number) => void
 }) {
 	const { isAuthenticated } = useAuth()
-	const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null)
 
 	if (isEventFull || !isAuthenticated || !shouldShowSignUpButton(event, new Date())) {
 		return null
@@ -198,7 +203,7 @@ function SessionPicker({
 	}
 
 	return (
-		<div className="space-y-3">
+		<div className="space-y-2">
 			<p className="text-sm font-medium text-muted-foreground">Choose a session:</p>
 			<div className="grid gap-2 sm:grid-cols-2">
 				{sessionSpots.map((session) => {
@@ -209,7 +214,7 @@ function SessionPicker({
 							key={session.sessionId}
 							type="button"
 							disabled={isFull}
-							onClick={() => setSelectedSessionId(session.sessionId)}
+							onClick={() => onSelectSession(session.sessionId)}
 							className={cn(
 								"flex flex-col items-start gap-1 rounded-lg border p-3 text-left text-sm transition-colors",
 								isSelected
@@ -229,19 +234,25 @@ function SessionPicker({
 					)
 				})}
 			</div>
-			<Button
-				variant="accent"
-				size="sm"
-				disabled={!selectedSessionId}
-				asChild={!!selectedSessionId}
-			>
-				{selectedSessionId ? (
-					<Link href={`${eventUrl}/register?session=${selectedSessionId}`}>Sign Up</Link>
-				) : (
-					<span>Sign Up</span>
-				)}
-			</Button>
 		</div>
+	)
+}
+
+function SessionSignUpButton({
+	eventUrl,
+	selectedSessionId,
+}: {
+	eventUrl: string
+	selectedSessionId: number | null
+}) {
+	return (
+		<Button variant="accent" size="sm" disabled={!selectedSessionId} asChild={!!selectedSessionId}>
+			{selectedSessionId ? (
+				<Link href={`${eventUrl}/register?session=${selectedSessionId}`}>Sign Up</Link>
+			) : (
+				<span>Sign Up</span>
+			)}
+		</Button>
 	)
 }
 

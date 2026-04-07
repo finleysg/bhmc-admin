@@ -165,6 +165,23 @@ export const registrationReducer = produce(
 					]),
 				)
 				draft.payment = action.payload.payment
+
+				// Auto-detect session from registration slots
+				const slotSessionId = action.payload.registration.slots.find((s) => s.sessionId)?.sessionId
+				if (slotSessionId && draft.clubEvent?.sessions) {
+					const eventSession = draft.clubEvent.sessions.find((s) => s.id === slotSessionId)
+					if (eventSession) {
+						draft.selectedSession = {
+							id: eventSession.id,
+							name: eventSession.name,
+							registrationLimit: eventSession.registration_limit,
+							feeOverrides: eventSession.fee_overrides.map((o) => ({
+								eventFeeId: o.event_fee,
+								amount: parseFloat(o.amount),
+							})),
+						}
+					}
+				}
 				return
 			}
 			case "create-registration": {

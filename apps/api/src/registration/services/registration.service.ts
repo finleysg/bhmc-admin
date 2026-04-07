@@ -214,6 +214,9 @@ export class RegistrationService {
 				}
 			}
 
+			// Inherit session from existing slots
+			const existingSessionId = regWithSlots.slots.find((s) => s.sessionId)?.sessionId ?? null
+
 			if (event.canChoose) {
 				// For canChoose events, find available slots on the same hole/starting_order
 				const existingSlot = regWithSlots.slots[0]
@@ -243,6 +246,7 @@ export class RegistrationService {
 							playerId: playerIds[i],
 							registrationId,
 							status: RegistrationStatusChoices.PENDING,
+							sessionId: existingSessionId,
 						})
 						.where(eq(registrationSlot.id, availableSlots[i].id))
 				}
@@ -265,7 +269,7 @@ export class RegistrationService {
 				for (; i < Math.min(playerIds.length, emptySlots.length); i++) {
 					await this.repository.updateRegistrationSlot(
 						emptySlots[i].id,
-						{ playerId: playerIds[i] },
+						{ playerId: playerIds[i], sessionId: existingSessionId },
 						tx,
 					)
 				}
@@ -279,6 +283,7 @@ export class RegistrationService {
 							playerId: playerIds[j],
 							registrationId,
 							status: RegistrationStatusChoices.PENDING,
+							sessionId: existingSessionId,
 							startingOrder: maxSlot + 1 + (j - i),
 							slot: maxSlot + 1 + (j - i),
 						})
