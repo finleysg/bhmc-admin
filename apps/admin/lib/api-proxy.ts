@@ -153,12 +153,41 @@ export async function fetchSSEWithAuth({
 			return new Response(`Backend error: ${response.status}`, { status: response.status })
 		}
 
-		// Stream the response back to client
-		return new Response(response.body, {
+		// Manually pipe chunks to ensure each SSE event is forwarded immediately.
+		// Node.js undici fetch may buffer the readable stream internally;
+		// explicit read-and-enqueue forces per-chunk forwarding.
+		const upstream = response.body
+		const stream = new ReadableStream({
+			async start(controller) {
+				if (!upstream) {
+					controller.close()
+					return
+				}
+				const reader = upstream.getReader()
+				try {
+					while (true) {
+						const { done, value } = await reader.read()
+						if (done) {
+							controller.close()
+							break
+						}
+						controller.enqueue(value)
+					}
+				} catch (err) {
+					controller.error(err)
+				}
+			},
+			cancel() {
+				void upstream?.cancel()
+			},
+		})
+
+		return new Response(stream, {
 			headers: {
 				"Content-Type": "text/event-stream",
 				"Cache-Control": "no-cache",
 				Connection: "keep-alive",
+				"X-Accel-Buffering": "no",
 			},
 		})
 	} catch (error) {

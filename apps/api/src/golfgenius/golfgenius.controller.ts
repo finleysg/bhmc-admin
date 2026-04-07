@@ -4,6 +4,7 @@ import { map } from "rxjs/operators"
 import {
 	Controller,
 	Get,
+	Header,
 	Inject,
 	Logger,
 	Param,
@@ -94,6 +95,8 @@ export class GolfgeniusController {
 	}
 
 	@Sse("/events/:id/export-roster")
+	@Header("Cache-Control", "no-cache")
+	@Header("X-Accel-Buffering", "no")
 	exportRoster(@Param("id") id: string): Observable<{ data: string }> {
 		const eid = parseInt(id, 10)
 
@@ -124,6 +127,8 @@ export class GolfgeniusController {
 	}
 
 	@Sse("/events/:id/import-teesheet")
+	@Header("Cache-Control", "no-cache")
+	@Header("X-Accel-Buffering", "no")
 	importTeesheet(@Param("id") id: string): Observable<{ data: string }> {
 		const eid = parseInt(id, 10)
 
@@ -152,6 +157,8 @@ export class GolfgeniusController {
 	}
 
 	@Sse("/events/:id/import-scores")
+	@Header("Cache-Control", "no-cache")
+	@Header("X-Accel-Buffering", "no")
 	async importScoresStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
 		const eid = parseInt(id, 10)
 
@@ -182,6 +189,8 @@ export class GolfgeniusController {
 	}
 
 	@Sse("/events/:id/import-points")
+	@Header("Cache-Control", "no-cache")
+	@Header("X-Accel-Buffering", "no")
 	async importPointsStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
 		const eid = parseInt(id, 10)
 
@@ -212,6 +221,8 @@ export class GolfgeniusController {
 	}
 
 	@Sse("/events/:id/import-results")
+	@Header("Cache-Control", "no-cache")
+	@Header("X-Accel-Buffering", "no")
 	async importAllResultsStream(@Param("id") id: string): Promise<Observable<{ data: string }>> {
 		const eid = parseInt(id, 10)
 
