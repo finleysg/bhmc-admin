@@ -41,7 +41,9 @@ export default function FriendsPage() {
 			) : (
 				<FriendList
 					friends={friends ?? []}
-					onRemove={(id, name) => removeFriend(id, { onSuccess: () => toast.success(`${name} removed`) })}
+					onRemove={(id, name) =>
+						removeFriend(id, { onSuccess: () => toast.success(`${name} removed`) })
+					}
 				/>
 			)}
 		</div>

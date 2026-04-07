@@ -29,7 +29,6 @@ export default function EditRegistrationPage() {
 		error,
 		startEditRegistration,
 		initiateStripeSession,
-		savePayment,
 		setError,
 		updateRegistrationNotes,
 		updateStep,
@@ -42,9 +41,10 @@ export default function EditRegistrationPage() {
 
 	// Initialize edit mode: fetch full registration (with fees) from NestJS API,
 	// then load into context. The usePlayerRegistration hook fetches from Django
-	// which does not include fees per slot.
+	// which does not include fees per slot. Skip if context already has the
+	// registration loaded (e.g. navigating back from the review page).
 	useEffect(() => {
-		if (!clubEvent || !registrationId || initiated.current) return
+		if (!clubEvent || !registrationId || initiated.current || contextRegistration) return
 		initiated.current = true
 
 		fetch(`/api/registration/${registrationId}`)
@@ -59,7 +59,14 @@ export default function EditRegistrationPage() {
 			.catch((err) => {
 				setError((err as Error).message)
 			})
-	}, [clubEvent, registrationId, startEditRegistration, initiateStripeSession, setError])
+	}, [
+		clubEvent,
+		registrationId,
+		contextRegistration,
+		startEditRegistration,
+		initiateStripeSession,
+		setError,
+	])
 
 	const [notes, setNotes] = useState(contextRegistration?.notes ?? "")
 	const [isContinuing, setIsContinuing] = useState(false)
@@ -98,7 +105,6 @@ export default function EditRegistrationPage() {
 		setIsContinuing(true)
 		try {
 			await updateRegistrationNotes(notes)
-			await savePayment()
 			updateStep(ReviewStep)
 			router.replace(`${getEventUrl(clubEvent!)}/review`)
 		} catch {
@@ -106,7 +112,7 @@ export default function EditRegistrationPage() {
 		} finally {
 			setIsContinuing(false)
 		}
-	}, [notes, updateRegistrationNotes, savePayment, updateStep, router, clubEvent])
+	}, [notes, updateRegistrationNotes, updateStep, router, clubEvent])
 
 	const handleCanceled = useCallback(() => {
 		router.replace(clubEvent ? `${getEventUrl(clubEvent)}/manage` : "../")

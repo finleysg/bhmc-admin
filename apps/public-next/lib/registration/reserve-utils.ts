@@ -144,6 +144,7 @@ export function transformSSESlots(sseSlots: SSESlotData[]): RegistrationSlot[] {
 		starting_order: slot.startingOrder,
 		slot: slot.slot,
 		status: slot.status,
+		session: slot.sessionId ?? null,
 		player: slot.player ? transformPlayer(slot.player) : null,
 	}))
 }

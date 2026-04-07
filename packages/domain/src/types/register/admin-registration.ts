@@ -2,6 +2,7 @@ export interface AdminRegistration {
 	userId: number
 	signedUpBy: string
 	courseId?: number | null
+	sessionId?: number | null
 	startingHoleId: number
 	startingOrder: number
 	expires: number

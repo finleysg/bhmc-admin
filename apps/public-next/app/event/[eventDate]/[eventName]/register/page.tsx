@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 
@@ -37,6 +37,7 @@ import { SlotGroup } from "../components/slot-group"
 
 export default function RegisterPage() {
 	const router = useRouter()
+	const searchParams = useSearchParams()
 	const {
 		clubEvent,
 		registration,
@@ -44,11 +45,12 @@ export default function RegisterPage() {
 		mode,
 		error,
 		selectedStart,
+		selectedSession,
 		addPlayer,
 		canRegister,
 		cancelRegistration,
 		createRegistration,
-		savePayment,
+		selectSession,
 		setError,
 		updateRegistrationNotes,
 		updateStep,
@@ -61,11 +63,40 @@ export default function RegisterPage() {
 	const [showPriorityDialog, setShowPriorityDialog] = useState(false)
 	const [isContinuing, setIsContinuing] = useState(false)
 
+	// Select the session from the query param before creating the registration
+	const sessionParam = searchParams.get("session")
+	const sessionSelectedRef = useRef(false)
+	useEffect(() => {
+		if (!clubEvent || sessionSelectedRef.current || selectedSession) return
+		if (!sessionParam) return
+
+		const sessionId = parseInt(sessionParam, 10)
+		if (isNaN(sessionId)) return
+
+		const sessions = clubEvent.sessions ?? []
+		const session = sessions.find((s) => s.id === sessionId)
+		if (session) {
+			sessionSelectedRef.current = true
+			selectSession({
+				id: session.id,
+				name: session.name,
+				registrationLimit: session.registration_limit,
+				feeOverrides: session.fee_overrides.map((o) => ({
+					eventFeeId: o.event_fee,
+					amount: Number(o.amount),
+				})),
+			})
+		}
+	}, [clubEvent, sessionParam, selectSession, selectedSession])
+
 	// For non-choice events (e.g. season registration), auto-create the registration
 	// since there is no reserve step. For choice events, redirect back (user skipped reserve).
 	const creatingRef = useRef(false)
 	useEffect(() => {
 		if (registration || !clubEvent) return
+
+		// If a session param is specified but not yet selected, wait for the session selection
+		if (sessionParam && !selectedSession) return
 
 		if (!clubEvent.can_choose) {
 			if (
@@ -83,7 +114,16 @@ export default function RegisterPage() {
 		} else {
 			router.replace(getEventUrl(clubEvent))
 		}
-	}, [registration, clubEvent, router, createRegistration, myPlayer, setError])
+	}, [
+		registration,
+		clubEvent,
+		router,
+		createRegistration,
+		myPlayer,
+		setError,
+		sessionParam,
+		selectedSession,
+	])
 
 	// Auto-dismiss error after 5 seconds
 	const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -140,14 +180,13 @@ export default function RegisterPage() {
 
 	// Handle continue
 	const handleContinue = useCallback(async () => {
-		if (!canRegister()) {
+		if (mode === "new" && !canRegister()) {
 			setShowPriorityDialog(true)
 			return
 		}
 		setIsContinuing(true)
 		try {
 			await updateRegistrationNotes(notes)
-			await savePayment()
 			updateStep(ReviewStep)
 			router.replace(`${getEventUrl(clubEvent!)}/review`)
 		} catch {
@@ -155,7 +194,7 @@ export default function RegisterPage() {
 		} finally {
 			setIsContinuing(false)
 		}
-	}, [canRegister, notes, updateRegistrationNotes, savePayment, updateStep, router])
+	}, [canRegister, notes, updateRegistrationNotes, updateStep, router])
 
 	// Handle expiration
 	const handleExpired = useCallback(() => {

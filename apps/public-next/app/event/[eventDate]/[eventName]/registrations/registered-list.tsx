@@ -16,17 +16,18 @@ import {
 } from "@/components/ui/table"
 import type { Reservation } from "./page"
 
-type SortField = "sortName" | "signupDate" | "signedUpBy"
+type SortField = "sortName" | "signupDate" | "signedUpBy" | "sessionName"
 type SortDir = "asc" | "desc"
 
 interface RegisteredListProps {
 	reservations: Reservation[]
 	eventName: string
+	hasSessions?: boolean
 }
 
 const PAGE_SIZE = 25
 
-export function RegisteredList({ reservations, eventName }: RegisteredListProps) {
+export function RegisteredList({ reservations, eventName, hasSessions }: RegisteredListProps) {
 	const [search, setSearch] = useState("")
 	const [sortField, setSortField] = useState<SortField>("sortName")
 	const [sortDir, setSortDir] = useState<SortDir>("asc")
@@ -43,8 +44,8 @@ export function RegisteredList({ reservations, eventName }: RegisteredListProps)
 	const sorted = useMemo(() => {
 		const copy = [...filtered]
 		copy.sort((a, b) => {
-			const aVal = a[sortField]
-			const bVal = b[sortField]
+			const aVal = a[sortField] ?? ""
+			const bVal = b[sortField] ?? ""
 			const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0
 			return sortDir === "asc" ? cmp : -cmp
 		})
@@ -75,6 +76,17 @@ export function RegisteredList({ reservations, eventName }: RegisteredListProps)
 		return sortDir === "asc" ? " \u25B2" : " \u25BC"
 	}
 
+	// Session summary counts
+	const sessionCounts = useMemo(() => {
+		if (!hasSessions) return null
+		const counts = new Map<string, number>()
+		for (const r of reservations) {
+			const name = r.sessionName ?? "Unassigned"
+			counts.set(name, (counts.get(name) ?? 0) + 1)
+		}
+		return Array.from(counts.entries()).sort((a, b) => a[0].localeCompare(b[0]))
+	}, [reservations, hasSessions])
+
 	if (reservations.length === 0) {
 		return (
 			<Card>
@@ -94,6 +106,19 @@ export function RegisteredList({ reservations, eventName }: RegisteredListProps)
 				<CardTitle className="text-lg text-primary">{eventName}</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
+				{sessionCounts && sessionCounts.length > 0 && (
+					<div className="flex flex-wrap gap-3 text-sm">
+						{sessionCounts.map(([name, count]) => (
+							<span key={name} className="rounded bg-muted px-2 py-1">
+								{name}: <span className="font-semibold">{count}</span>
+							</span>
+						))}
+						<span className="rounded bg-muted px-2 py-1">
+							Total: <span className="font-semibold">{reservations.length}</span>
+						</span>
+					</div>
+				)}
+
 				<Input
 					type="text"
 					placeholder="Search by player name..."
@@ -112,6 +137,14 @@ export function RegisteredList({ reservations, eventName }: RegisteredListProps)
 								>
 									Player{sortIndicator("sortName")}
 								</TableHead>
+								{hasSessions && (
+									<TableHead
+										className="cursor-pointer select-none"
+										onClick={() => handleSort("sessionName")}
+									>
+										Session{sortIndicator("sessionName")}
+									</TableHead>
+								)}
 								<TableHead
 									className="cursor-pointer select-none"
 									onClick={() => handleSort("signupDate")}
@@ -130,6 +163,9 @@ export function RegisteredList({ reservations, eventName }: RegisteredListProps)
 							{paged.map((r) => (
 								<TableRow key={r.slotId}>
 									<TableCell className="text-secondary font-medium text-sm">{r.sortName}</TableCell>
+									{hasSessions && (
+										<TableCell className="text-sm">{r.sessionName ?? "\u2014"}</TableCell>
+									)}
 									<TableCell>{format(new Date(r.signupDate), "MM/dd/yyyy h:mm aaaa")}</TableCell>
 									<TableCell>{r.signedUpBy}</TableCell>
 								</TableRow>
@@ -146,6 +182,9 @@ export function RegisteredList({ reservations, eventName }: RegisteredListProps)
 							className={cn("border-b py-2 px-2", idx % 2 !== 0 && "bg-muted/30")}
 						>
 							<div className="font-bold text-secondary text-sm">{r.sortName}</div>
+							{hasSessions && r.sessionName && (
+								<div className="text-muted-foreground text-sm">{r.sessionName}</div>
+							)}
 							<div className="text-muted-foreground text-sm">
 								{format(new Date(r.signupDate), "MM/dd/yyyy h:mm aaaa")}
 							</div>

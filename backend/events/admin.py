@@ -10,6 +10,8 @@ from .models import (
     Event,
     EventFee,
     EventPairing,
+    EventSession,
+    EventSessionFee,
     FeeType,
     Round,
     Tournament,
@@ -164,6 +166,63 @@ class CoursesInline(admin.TabularInline):
     ]
 
 
+class EventSessionFeeInline(admin.TabularInline):
+    model = EventSessionFee
+    can_delete = True
+    extra = 0
+    verbose_name_plural = "Fee Overrides"
+    fields = [
+        "event_fee",
+        "amount",
+    ]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "event_fee" and request.resolver_match.kwargs.get("object_id"):
+            session = EventSession.objects.get(pk=request.resolver_match.kwargs["object_id"])
+            kwargs["queryset"] = EventFee.objects.filter(event=session.event)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+class EventSessionAdmin(admin.ModelAdmin):
+    fields = [
+        "event",
+        "name",
+        "registration_limit",
+        "display_order",
+    ]
+    list_display = [
+        "event",
+        "name",
+        "registration_limit",
+        "display_order",
+    ]
+    list_display_links = ("name",)
+    list_filter = (CurrentSeasonFilter,)
+    ordering = ["event", "display_order"]
+    search_fields = ["event__name", "name"]
+    save_on_top = True
+    inlines = [EventSessionFeeInline]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "event":
+            kwargs["queryset"] = Event.objects.filter(season=current_season()).order_by(
+                "start_date", "name"
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+class EventSessionsInline(admin.TabularInline):
+    model = EventSession
+    can_delete = True
+    extra = 0
+    verbose_name_plural = "Sessions"
+    fields = [
+        "name",
+        "registration_limit",
+        "display_order",
+    ]
+
+
 class EventFeesInline(admin.TabularInline):
     model = EventFee
     can_delete = True
@@ -274,6 +333,7 @@ class EventAdmin(admin.ModelAdmin):
     )
     inlines = [
         EventFeesInline,
+        EventSessionsInline,
     ]
 
     def event_type_display(self, obj):
@@ -497,6 +557,7 @@ class TournamentPointsAdmin(admin.ModelAdmin):
 
 admin.site.register(FeeType, FeeTypeAdmin)
 admin.site.register(Event, EventAdmin)
+admin.site.register(EventSession, EventSessionAdmin)
 admin.site.register(Round, RoundAdmin)
 admin.site.register(Tournament, TournamentAdmin)
 admin.site.register(TournamentResult, TournamentResultAdmin)

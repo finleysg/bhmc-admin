@@ -62,6 +62,7 @@ function makeEvent(overrides: Partial<ClubEventDetail> = {}): ClubEventDetail {
 		registration_maximum: null,
 		courses: [makeCourse()],
 		fees: [],
+		sessions: [],
 		default_tag: null,
 		starter_time_interval: 8,
 		team_size: 1,
@@ -80,6 +81,7 @@ function makeSlot(overrides: Partial<RegistrationSlot> = {}): RegistrationSlot {
 		starting_order: 0,
 		slot: 0,
 		status: "A",
+		session: null,
 		player: null,
 		...overrides,
 	}

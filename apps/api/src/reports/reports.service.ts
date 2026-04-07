@@ -70,6 +70,7 @@ interface EventPlayerFee {
 interface EventPlayerSlot {
 	playerId: number
 	team: string
+	session: string
 	course: string
 	start: string
 	ghin?: string | null
@@ -237,6 +238,12 @@ export class ReportsService {
 			}),
 		)
 
+		// Build session name lookup
+		const sessionNameMap = new Map<number, string>()
+		for (const session of event.sessions ?? []) {
+			sessionNameMap.set(session.id, session.name)
+		}
+
 		const transformed = registeredPlayers.map((registeredPlayer): EventPlayerSlot => {
 			const player = registeredPlayer.player
 			const registration = registeredPlayer.registration
@@ -263,9 +270,13 @@ export class ReportsService {
 				}
 			})
 
+			const sessionId = registeredPlayer.slot.sessionId
+			const sessionName = sessionId ? (sessionNameMap.get(sessionId) ?? "") : ""
+
 			return {
 				playerId: player.id,
 				team,
+				session: sessionName,
 				course: courseName,
 				start: startValue,
 				ghin: player.ghin,
@@ -316,6 +327,7 @@ export class ReportsService {
 		const rows = registeredPlayers.map((slot) => {
 			const row: EventReportRow = {
 				teamId: slot.team,
+				session: slot.session,
 				course: slot.course,
 				start: slot.start,
 				ghin: slot.ghin || "",
@@ -378,8 +390,13 @@ export class ReportsService {
 		const workbook = createWorkbook()
 		const worksheet = workbook.addWorksheet("ClubEvent Report")
 
-		// Define fixed columns
-		const fixedKeys = [
+		// Determine if course/start columns have meaningful data
+		const hasCourseDummy =
+			rows.length > 0 && rows.every((r) => r.course === "dummy" || r.course === "N/A")
+		const hasStartNA = rows.length > 0 && rows.every((r) => r.start === "N/A")
+
+		// Define fixed columns, excluding empty course/start when not applicable
+		let fixedKeys = [
 			"teamId",
 			"course",
 			"start",
@@ -393,7 +410,7 @@ export class ReportsService {
 			"signedUpBy",
 			"signupDate",
 		]
-		const fixedColumns = [
+		let fixedColumns = [
 			{ header: "Team", key: "teamId", width: 15 },
 			{ header: "Course", key: "course", width: 20 },
 			{ header: "Start", key: "start", width: 15 },
@@ -407,6 +424,15 @@ export class ReportsService {
 			{ header: "Signed Up By", key: "signedUpBy", width: 15 },
 			{ header: "Signup Date", key: "signupDate", width: 12 },
 		]
+
+		if (hasCourseDummy) {
+			fixedKeys = fixedKeys.filter((k) => k !== "course")
+			fixedColumns = fixedColumns.filter((c) => c.key !== "course")
+		}
+		if (hasStartNA) {
+			fixedKeys = fixedKeys.filter((k) => k !== "start")
+			fixedColumns = fixedColumns.filter((c) => c.key !== "start")
+		}
 
 		// Add dynamic fee columns
 		const dynamicColumns = deriveDynamicColumns(rows, fixedKeys)

@@ -23,7 +23,17 @@ export function isFeeApplicable(eventFee: EventFee, feePlayer?: FeePlayer): bool
 	return false
 }
 
-export function calculateFeeAmount(fee: EventFee, player?: FeePlayer): number {
+export function calculateFeeAmount(
+	fee: EventFee,
+	player?: FeePlayer,
+	sessionFeeOverrides?: Array<{ eventFeeId: number; amount: number }>,
+): number {
+	// Session override takes precedence
+	const sessionOverride = sessionFeeOverrides?.find((o) => o.eventFeeId === fee.id)
+	if (sessionOverride) {
+		return sessionOverride.amount
+	}
+
 	const amount = Number(fee.amount)
 	const overrideAmount = fee.override_amount ? Number(fee.override_amount) : null
 	if (player && fee.override_restriction && overrideAmount !== null) {

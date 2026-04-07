@@ -1,5 +1,6 @@
 export interface EventReportRow {
 	teamId: string
+	session: string
 	course: string
 	start: string
 	ghin: string

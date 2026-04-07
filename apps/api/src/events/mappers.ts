@@ -3,6 +3,9 @@ import {
 	ClubEvent,
 	EventFee,
 	EventFeeWithType,
+	EventSession,
+	EventSessionFee,
+	EventSessionWithFees,
 	EventStatusValue,
 	EventTypeValue,
 	FeeRestrictionValue,
@@ -25,6 +28,8 @@ import { toCourse } from "../courses/mappers"
 import type {
 	EventRow,
 	EventFeeRow,
+	EventSessionRow,
+	EventSessionFeeRow,
 	FeeTypeRow,
 	RoundRow,
 	TournamentRow,
@@ -83,6 +88,7 @@ export function toEventWithCompositions(
 	compositions: {
 		courses?: ReturnType<typeof toCourse>[]
 		eventFees?: EventFee[]
+		sessions?: EventSessionWithFees[]
 		eventRounds?: Round[]
 		tournaments?: Tournament[]
 	},
@@ -91,6 +97,7 @@ export function toEventWithCompositions(
 		...toEvent(row),
 		courses: compositions.courses,
 		eventFees: compositions.eventFees,
+		sessions: compositions.sessions ?? [],
 		eventRounds: compositions.eventRounds ?? [],
 		tournaments: compositions.tournaments ?? [],
 	}
@@ -185,6 +192,44 @@ export function toTournamentResults(
 		payoutType: row.payoutType as PayoutTypeValue,
 		payoutTo: row.payoutTo as PayoutValue,
 		player,
+	}
+}
+
+/**
+ * Maps EventSessionRow to EventSession domain type
+ */
+export function toEventSession(row: EventSessionRow): EventSession {
+	return {
+		id: row.id,
+		eventId: row.eventId,
+		name: row.name,
+		registrationLimit: row.registrationLimit,
+		displayOrder: row.displayOrder,
+	}
+}
+
+/**
+ * Maps EventSessionFeeRow to EventSessionFee domain type
+ */
+export function toEventSessionFee(row: EventSessionFeeRow): EventSessionFee {
+	return {
+		id: row.id,
+		sessionId: row.sessionId,
+		eventFeeId: row.eventFeeId,
+		amount: parseFloat(row.amount),
+	}
+}
+
+/**
+ * Maps EventSessionRow with fee override rows to EventSessionWithFees domain type
+ */
+export function toEventSessionWithFees(
+	row: EventSessionRow,
+	feeRows: EventSessionFeeRow[],
+): EventSessionWithFees {
+	return {
+		...toEventSession(row),
+		feeOverrides: feeRows.filter((f) => f.sessionId === row.id).map(toEventSessionFee),
 	}
 }
 

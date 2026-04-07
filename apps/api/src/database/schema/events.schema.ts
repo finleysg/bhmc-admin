@@ -125,6 +125,42 @@ export const feeType = mysqlTable(
 	],
 )
 
+export const eventSession = mysqlTable(
+	"events_eventsession",
+	{
+		id: int().autoincrement().notNull(),
+		eventId: int("event_id")
+			.notNull()
+			.references(() => event.id),
+		name: varchar({ length: 60 }).notNull(),
+		registrationLimit: int("registration_limit").notNull(),
+		displayOrder: int("display_order").notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.id], name: "events_eventsession_id" }),
+		unique("unique_event_session_name").on(table.eventId, table.name),
+		unique("unique_event_session_order").on(table.eventId, table.displayOrder),
+	],
+)
+
+export const eventSessionFee = mysqlTable(
+	"events_eventsessionfee",
+	{
+		id: int().autoincrement().notNull(),
+		sessionId: int("session_id")
+			.notNull()
+			.references(() => eventSession.id),
+		eventFeeId: int("event_fee_id")
+			.notNull()
+			.references(() => eventFee.id),
+		amount: decimal({ precision: 5, scale: 2 }).notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.id], name: "events_eventsessionfee_id" }),
+		unique("unique_session_eventfee").on(table.sessionId, table.eventFeeId),
+	],
+)
+
 export const round = mysqlTable(
 	"events_round",
 	{

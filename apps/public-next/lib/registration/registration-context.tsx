@@ -4,7 +4,7 @@ import { createContext, useContext } from "react"
 
 import type { Course, EventFee } from "../types"
 import type { FeePlayer } from "./fee-utils"
-import type { RegistrationStep } from "./registration-reducer"
+import type { RegistrationStep, SelectedSession } from "./registration-reducer"
 import type {
 	RegistrationMode,
 	ServerPayment,
@@ -23,6 +23,7 @@ export interface IRegistrationContext {
 	mode: RegistrationMode
 	payment: ServerPayment | null
 	registration: ServerRegistration | null
+	selectedSession: SelectedSession | null
 	selectedStart: string | null
 	sseConnected: boolean
 	sseCurrentWave: number | null
@@ -51,11 +52,12 @@ export interface IRegistrationContext {
 	editRegistration: (registrationId: number, playerIds: number[]) => Promise<void>
 	initiateStripeSession: () => void
 	loadRegistration: (playerId: number) => Promise<void>
+	selectSession: (session: SelectedSession) => void
 	startEditRegistration: (registration: ServerRegistration) => void
 	removeFee: (slot: ServerRegistrationSlot, eventFee: EventFee) => void
 	removePlayer: (slot: ServerRegistrationSlot) => void
 	requestNavigation: (href: string) => void
-	savePayment: () => Promise<void>
+	savePayment: () => Promise<ServerPayment | undefined>
 	suppressBeforeUnload: () => void
 	setError: (error: string | null) => void
 	updateRegistrationNotes: (notes: string) => Promise<void>

@@ -1,9 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { isBefore } from "date-fns"
 
-import { Info } from "lucide-react"
+import { Info, Users } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -13,41 +14,69 @@ import {
 	getSignUpUnavailableReason,
 	RegistrationType,
 	shouldShowSignUpButton,
+	type SessionSpots,
 } from "@/lib/event-utils"
 import { RegistrationStatus } from "@/lib/registration/types"
 import { useMyPlayer } from "@/lib/hooks/use-my-player"
 import { usePlayerRegistration } from "@/lib/hooks/use-player-registration"
 import type { ClubEventDetail } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 interface RegistrationActionsProps {
 	event: ClubEventDetail
 	isEventFull?: boolean
+	sessionSpots?: SessionSpots[]
 }
 
-export function RegistrationActions({ event, isEventFull }: RegistrationActionsProps) {
+export function RegistrationActions({
+	event,
+	isEventFull,
+	sessionSpots,
+}: RegistrationActionsProps) {
 	const { isAuthenticated } = useAuth()
 	const { data: player } = useMyPlayer()
 	const { data: registrationData } = usePlayerRegistration(event.id, player?.id)
+	const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null)
 
 	const hasSignedUp = !!registrationData?.registration?.slots.some(
 		(s) => s.status === RegistrationStatus.Reserved || s.status === RegistrationStatus.Processing,
 	)
 	const eventUrl = getEventUrl(event)
 
+	const sessions = event.sessions ?? []
+	const showSessionPicker =
+		!event.can_choose && sessions.length > 0 && !hasSignedUp && isAuthenticated
+
 	return (
-		<div className="flex gap-2">
-			<PortalButton event={event} />
-			<PlayersButton event={event} eventUrl={eventUrl} />
-			<SignUpButton
-				event={event}
-				hasSignedUp={hasSignedUp}
-				eventUrl={eventUrl}
-				player={player}
-				isEventFull={isEventFull}
-			/>
-			{isAuthenticated && (
-				<ManageButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} />
+		<div className="flex flex-col gap-2">
+			{showSessionPicker && (
+				<SessionCards
+					event={event}
+					sessionSpots={sessionSpots ?? []}
+					player={player}
+					isEventFull={isEventFull}
+					selectedSessionId={selectedSessionId}
+					onSelectSession={setSelectedSessionId}
+				/>
 			)}
+			<div className="flex gap-2">
+				<PortalButton event={event} />
+				<PlayersButton event={event} eventUrl={eventUrl} />
+				{showSessionPicker ? (
+					<SessionSignUpButton eventUrl={eventUrl} selectedSessionId={selectedSessionId} />
+				) : (
+					<SignUpButton
+						event={event}
+						hasSignedUp={hasSignedUp}
+						eventUrl={eventUrl}
+						player={player}
+						isEventFull={isEventFull}
+					/>
+				)}
+				{isAuthenticated && (
+					<ManageButton event={event} hasSignedUp={hasSignedUp} eventUrl={eventUrl} />
+				)}
+			</div>
 		</div>
 	)
 }
@@ -141,6 +170,88 @@ function ManageButton({
 	return (
 		<Button variant="accent" size="sm" asChild>
 			<Link href={`${eventUrl}/manage`}>Manage</Link>
+		</Button>
+	)
+}
+
+function SessionCards({
+	event,
+	sessionSpots,
+	player,
+	isEventFull,
+	selectedSessionId,
+	onSelectSession,
+}: {
+	event: ClubEventDetail
+	sessionSpots: SessionSpots[]
+	player?: { last_season?: number | null }
+	isEventFull?: boolean
+	selectedSessionId: number | null
+	onSelectSession: (id: number) => void
+}) {
+	const { isAuthenticated } = useAuth()
+
+	if (isEventFull || !isAuthenticated || !shouldShowSignUpButton(event, new Date())) {
+		return null
+	}
+
+	if (
+		event.registration_type === RegistrationType.ReturningMembersOnly &&
+		player?.last_season !== event.season - 1
+	) {
+		return null
+	}
+
+	return (
+		<div className="space-y-2">
+			<p className="text-sm font-medium text-muted-foreground">Choose a session:</p>
+			<div className="grid gap-2 sm:grid-cols-2">
+				{sessionSpots.map((session) => {
+					const isFull = session.availableSpots <= 0
+					const isSelected = selectedSessionId === session.sessionId
+					return (
+						<button
+							key={session.sessionId}
+							type="button"
+							disabled={isFull}
+							onClick={() => onSelectSession(session.sessionId)}
+							className={cn(
+								"flex flex-col items-start gap-1 rounded-lg border p-3 text-left text-sm transition-colors",
+								isSelected
+									? "border-primary bg-primary/5 ring-1 ring-primary"
+									: "border-border hover:border-primary/50",
+								isFull && "cursor-not-allowed opacity-50",
+							)}
+						>
+							<span className="font-medium">{session.sessionName}</span>
+							<span className="flex items-center gap-1 text-xs text-muted-foreground">
+								<Users className="size-3" />
+								{isFull
+									? "Full"
+									: `${session.availableSpots} of ${session.totalSpots} spots available`}
+							</span>
+						</button>
+					)
+				})}
+			</div>
+		</div>
+	)
+}
+
+function SessionSignUpButton({
+	eventUrl,
+	selectedSessionId,
+}: {
+	eventUrl: string
+	selectedSessionId: number | null
+}) {
+	return (
+		<Button variant="accent" size="sm" disabled={!selectedSessionId} asChild={!!selectedSessionId}>
+			{selectedSessionId ? (
+				<Link href={`${eventUrl}/register?session=${selectedSessionId}`}>Sign Up</Link>
+			) : (
+				<span>Sign Up</span>
+			)}
 		</Button>
 	)
 }

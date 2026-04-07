@@ -8,10 +8,11 @@ import {
 	getEventUrl,
 	findEventBySlug,
 	computeOpenSpots,
+	computeSessionSpots,
 	shouldShowSignUpButton,
 	getSignUpUnavailableReason,
 } from "../event-utils"
-import type { ClubEvent, ClubEventDetail, RegistrationSlot } from "../types"
+import type { ClubEvent, ClubEventDetail, EventSession, RegistrationSlot } from "../types"
 
 function makeEvent(overrides: Partial<ClubEventDetail> = {}): ClubEventDetail {
 	return {
@@ -46,6 +47,7 @@ function makeEvent(overrides: Partial<ClubEventDetail> = {}): ClubEventDetail {
 		registration_maximum: null,
 		courses: [],
 		fees: [],
+		sessions: [],
 		default_tag: null,
 		starter_time_interval: 8,
 		team_size: null,
@@ -64,7 +66,20 @@ function makeSlot(overrides: Partial<RegistrationSlot> = {}): RegistrationSlot {
 		starting_order: 0,
 		slot: 0,
 		status: "R",
+		session: null,
 		player: null,
+		...overrides,
+	}
+}
+
+function makeSession(overrides: Partial<EventSession> = {}): EventSession {
+	return {
+		id: 1,
+		event: 1,
+		name: "Morning",
+		registration_limit: 20,
+		display_order: 0,
+		fee_overrides: [],
 		...overrides,
 	}
 }
@@ -590,5 +605,63 @@ describe("getSignUpUnavailableReason", () => {
 				"This event is restricted to returning members.",
 			)
 		})
+	})
+})
+
+describe("computeSessionSpots", () => {
+	it("returns spots per session based on slot counts", () => {
+		const sessions = [
+			makeSession({ id: 1, name: "Morning", registration_limit: 20, display_order: 0 }),
+			makeSession({ id: 2, name: "Afternoon", registration_limit: 20, display_order: 1 }),
+		]
+		const slots = [
+			makeSlot({ id: 1, session: 1, status: "R" }),
+			makeSlot({ id: 2, session: 1, status: "R" }),
+			makeSlot({ id: 3, session: 2, status: "R" }),
+		]
+		const result = computeSessionSpots(slots, sessions)
+		expect(result).toEqual([
+			{ sessionId: 1, sessionName: "Morning", availableSpots: 18, totalSpots: 20 },
+			{ sessionId: 2, sessionName: "Afternoon", availableSpots: 19, totalSpots: 20 },
+		])
+	})
+
+	it("returns full spots when no slots are reserved", () => {
+		const sessions = [makeSession({ id: 1, name: "Morning", registration_limit: 10 })]
+		const result = computeSessionSpots([], sessions)
+		expect(result).toEqual([
+			{ sessionId: 1, sessionName: "Morning", availableSpots: 10, totalSpots: 10 },
+		])
+	})
+
+	it("returns 0 available when session is full", () => {
+		const sessions = [makeSession({ id: 1, name: "Morning", registration_limit: 2 })]
+		const slots = [
+			makeSlot({ id: 1, session: 1, status: "R" }),
+			makeSlot({ id: 2, session: 1, status: "R" }),
+		]
+		const result = computeSessionSpots(slots, sessions)
+		expect(result[0].availableSpots).toBe(0)
+	})
+
+	it("sorts sessions by display_order", () => {
+		const sessions = [
+			makeSession({ id: 2, name: "Afternoon", display_order: 1 }),
+			makeSession({ id: 1, name: "Morning", display_order: 0 }),
+		]
+		const result = computeSessionSpots([], sessions)
+		expect(result[0].sessionName).toBe("Morning")
+		expect(result[1].sessionName).toBe("Afternoon")
+	})
+
+	it("only counts 'R' status as filled", () => {
+		const sessions = [makeSession({ id: 1, name: "Morning", registration_limit: 10 })]
+		const slots = [
+			makeSlot({ id: 1, session: 1, status: "R" }),
+			makeSlot({ id: 2, session: 1, status: "A" }),
+			makeSlot({ id: 3, session: 1, status: "P" }),
+		]
+		const result = computeSessionSpots(slots, sessions)
+		expect(result[0].availableSpots).toBe(9)
 	})
 })

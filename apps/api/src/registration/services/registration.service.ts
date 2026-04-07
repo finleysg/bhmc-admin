@@ -17,7 +17,14 @@ import {
 	ReserveRequest,
 } from "@repo/domain/types"
 
-import { player, registration, registrationSlot, toDbString, DrizzleService } from "../../database"
+import {
+	eventSession,
+	player,
+	registration,
+	registrationSlot,
+	toDbString,
+	DrizzleService,
+} from "../../database"
 import { and, eq, inArray } from "drizzle-orm"
 import { EventsService } from "../../events"
 
@@ -29,6 +36,7 @@ import {
 	EventRegistrationWaveError,
 	PlayerConflictError,
 	ReturningMembersOnlyError,
+	SessionFullError,
 	SlotConflictError,
 	SlotOverflowError,
 } from "../errors/registration.errors"
@@ -103,6 +111,7 @@ export class RegistrationService {
 				event,
 				signedUpBy,
 				expires,
+				request.sessionId ?? null,
 			)
 		}
 
@@ -205,6 +214,9 @@ export class RegistrationService {
 				}
 			}
 
+			// Inherit session from existing slots
+			const existingSessionId = regWithSlots.slots.find((s) => s.sessionId)?.sessionId ?? null
+
 			if (event.canChoose) {
 				// For canChoose events, find available slots on the same hole/starting_order
 				const existingSlot = regWithSlots.slots[0]
@@ -234,6 +246,7 @@ export class RegistrationService {
 							playerId: playerIds[i],
 							registrationId,
 							status: RegistrationStatusChoices.PENDING,
+							sessionId: existingSessionId,
 						})
 						.where(eq(registrationSlot.id, availableSlots[i].id))
 				}
@@ -256,7 +269,7 @@ export class RegistrationService {
 				for (; i < Math.min(playerIds.length, emptySlots.length); i++) {
 					await this.repository.updateRegistrationSlot(
 						emptySlots[i].id,
-						{ playerId: playerIds[i] },
+						{ playerId: playerIds[i], sessionId: existingSessionId },
 						tx,
 					)
 				}
@@ -270,6 +283,7 @@ export class RegistrationService {
 							playerId: playerIds[j],
 							registrationId,
 							status: RegistrationStatusChoices.PENDING,
+							sessionId: existingSessionId,
 							startingOrder: maxSlot + 1 + (j - i),
 							slot: maxSlot + 1 + (j - i),
 						})
@@ -452,30 +466,57 @@ export class RegistrationService {
 		event: ClubEvent,
 		signedUpBy: string,
 		expires: Date,
+		sessionId: number | null = null,
 	): Promise<number> {
 		const slotCount = event.maximumSignupGroupSize ?? 1
 
 		return await this.drizzle.db.transaction(async (tx) => {
-			// Lock all reserved/pending/awaiting slots for this event
-			const lockedSlots = await tx
-				.select({ id: registrationSlot.id })
-				.from(registrationSlot)
-				.where(
-					and(
-						eq(registrationSlot.eventId, event.id),
-						inArray(registrationSlot.status, [
-							RegistrationStatusChoices.PENDING,
-							RegistrationStatusChoices.AWAITING_PAYMENT,
-							RegistrationStatusChoices.RESERVED,
-						]),
-					),
-				)
-				.for("update")
+			// Lock all reserved/pending/awaiting slots for capacity check
+			const statusFilter = inArray(registrationSlot.status, [
+				RegistrationStatusChoices.PENDING,
+				RegistrationStatusChoices.AWAITING_PAYMENT,
+				RegistrationStatusChoices.RESERVED,
+			])
 
-			// Capacity check inside transaction (uses locked row count)
-			if (event.registrationMaximum) {
-				if (lockedSlots.length + 1 > event.registrationMaximum) {
-					throw new EventFullError()
+			if (sessionId) {
+				// Session-based capacity check
+				const lockedSessionSlots = await tx
+					.select({ id: registrationSlot.id })
+					.from(registrationSlot)
+					.where(
+						and(
+							eq(registrationSlot.eventId, event.id),
+							eq(registrationSlot.sessionId, sessionId),
+							statusFilter,
+						),
+					)
+					.for("update")
+
+				const [session] = await tx
+					.select()
+					.from(eventSession)
+					.where(eq(eventSession.id, sessionId))
+					.limit(1)
+
+				if (!session) {
+					throw new BadRequestException(`Session ${sessionId} not found`)
+				}
+
+				if (lockedSessionSlots.length + 1 > session.registrationLimit) {
+					throw new SessionFullError(session.name)
+				}
+			} else {
+				// Legacy: event-level capacity check
+				const lockedSlots = await tx
+					.select({ id: registrationSlot.id })
+					.from(registrationSlot)
+					.where(and(eq(registrationSlot.eventId, event.id), statusFilter))
+					.for("update")
+
+				if (event.registrationMaximum) {
+					if (lockedSlots.length + 1 > event.registrationMaximum) {
+						throw new EventFullError()
+					}
 				}
 			}
 
@@ -523,6 +564,7 @@ export class RegistrationService {
 				const [result] = await tx.insert(registrationSlot).values({
 					eventId: event.id,
 					playerId: pid,
+					sessionId,
 					registrationId,
 					status: RegistrationStatusChoices.PENDING,
 					startingOrder: i,

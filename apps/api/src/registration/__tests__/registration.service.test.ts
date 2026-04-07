@@ -114,6 +114,7 @@ const createRegistrationSlotRow = (
 	eventId: 100,
 	registrationId: 1,
 	playerId: 1,
+	sessionId: null,
 	holeId: 1,
 	startingOrder: 0,
 	slot: 0,
@@ -186,6 +187,7 @@ const createMockDrizzleService = () => {
 				select: jest.fn(() => chain),
 				from: jest.fn(() => chain),
 				where: jest.fn(() => chain),
+				orderBy: jest.fn(() => chain),
 				for: jest.fn().mockResolvedValue(defaultValue),
 				insert: jest.fn(() => chain),
 				values: jest.fn().mockResolvedValue([{ insertId: 1 }]),
@@ -711,6 +713,109 @@ describe("RegistrationService", () => {
 			repository.findRegistrationFullById.mockResolvedValue(regFull)
 
 			await expect(service.addPlayersToRegistration(1, [2], 1)).rejects.toThrow(ForbiddenException)
+		})
+
+		it("inherits sessionId from existing slots when creating new slots (non-canChoose)", async () => {
+			const { service, repository, eventsService, mockTx } = createService()
+
+			// 2 occupied slots with sessionId: 7, no empty slots
+			const regFull = createRegistrationFull({
+				slots: [
+					createRegistrationSlotFull({ id: 1, playerId: 1, slot: 0, sessionId: 7 }),
+					createRegistrationSlotFull({ id: 2, playerId: 2, slot: 1, sessionId: 7 }),
+				],
+			})
+
+			repository.findRegistrationFullById.mockResolvedValue(regFull)
+			eventsService.getEventById.mockResolvedValue({
+				canChoose: false,
+				maximumSignupGroupSize: 4,
+				groupSize: 4,
+			})
+
+			await service.addPlayersToRegistration(1, [3, 4], 1)
+
+			// Should have inserted 2 new slots with sessionId: 7
+			expect(mockTx.insert).toHaveBeenCalledTimes(2)
+			expect(mockTx.values).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 7 }))
+		})
+
+		it("inherits sessionId from existing slots when filling empty slots (non-canChoose)", async () => {
+			const { service, repository, eventsService } = createService()
+
+			// 1 occupied slot (sessionId: 7) + 1 empty slot (no player, sessionId: null)
+			const regFull = createRegistrationFull({
+				slots: [
+					createRegistrationSlotFull({ id: 1, playerId: 1, slot: 0, sessionId: 7 }),
+					createRegistrationSlotFull({
+						id: 2,
+						playerId: undefined as any,
+						slot: 1,
+						sessionId: null,
+					}),
+				],
+			})
+
+			repository.findRegistrationFullById.mockResolvedValue(regFull)
+			eventsService.getEventById.mockResolvedValue({
+				canChoose: false,
+				maximumSignupGroupSize: 4,
+				groupSize: 4,
+			})
+
+			await service.addPlayersToRegistration(1, [3], 1)
+
+			// Should have updated the empty slot with sessionId: 7
+			expect(repository.updateRegistrationSlot).toHaveBeenCalledWith(
+				2,
+				expect.objectContaining({ sessionId: 7 }),
+				expect.anything(),
+			)
+		})
+
+		it("inherits sessionId from existing slots when claiming available slots (canChoose)", async () => {
+			const { service, repository, eventsService, mockTx } = createService()
+
+			// 2 occupied slots with sessionId: 7
+			const regFull = createRegistrationFull({
+				slots: [
+					createRegistrationSlotFull({
+						id: 1,
+						playerId: 1,
+						slot: 0,
+						holeId: 10,
+						startingOrder: 0,
+						sessionId: 7,
+					}),
+					createRegistrationSlotFull({
+						id: 2,
+						playerId: 2,
+						slot: 1,
+						holeId: 10,
+						startingOrder: 0,
+						sessionId: 7,
+					}),
+				],
+			})
+
+			repository.findRegistrationFullById.mockResolvedValue(regFull)
+			eventsService.getEventById.mockResolvedValue({ canChoose: true })
+
+			// Mock available slots query to return available slots on the same hole
+			mockTx.for.mockResolvedValue([
+				createRegistrationSlotRow({
+					id: 10,
+					holeId: 10,
+					startingOrder: 0,
+					slot: 2,
+					status: RegistrationStatusChoices.AVAILABLE,
+				}),
+			])
+
+			await service.addPlayersToRegistration(1, [3], 1)
+
+			// Should have updated the available slot with sessionId: 7
+			expect(mockTx.set).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 7 }))
 		})
 	})
 

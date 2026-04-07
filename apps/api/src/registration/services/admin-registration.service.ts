@@ -463,6 +463,7 @@ export class AdminRegistrationService {
 				const [result] = await tx.insert(registrationSlot).values({
 					eventId: event.id,
 					playerId: slot.playerId,
+					sessionId: dto.sessionId ?? null,
 					registrationId,
 					status: dto.collectPayment
 						? RegistrationStatusChoices.PENDING

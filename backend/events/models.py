@@ -379,6 +379,44 @@ class EventFee(models.Model):
         return f"{self.fee_type} (${self.amount})"
 
 
+class EventSession(models.Model):
+    event = models.ForeignKey(
+        verbose_name="Event", to=Event, on_delete=CASCADE, related_name="sessions"
+    )
+    name = models.CharField(verbose_name="Session name", max_length=60)
+    registration_limit = models.IntegerField(verbose_name="Registration limit")
+    display_order = models.IntegerField(verbose_name="Display order")
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=["event", "name"], name="unique_event_session_name"),
+            UniqueConstraint(fields=["event", "display_order"], name="unique_event_session_order"),
+        ]
+        ordering = ["display_order"]
+
+    def __str__(self):
+        return f"{self.event.name} - {self.name}"
+
+
+class EventSessionFee(models.Model):
+    session = models.ForeignKey(
+        verbose_name="Session",
+        to=EventSession,
+        on_delete=CASCADE,
+        related_name="fee_overrides",
+    )
+    event_fee = models.ForeignKey(verbose_name="Event Fee", to=EventFee, on_delete=CASCADE)
+    amount = models.DecimalField(verbose_name="Amount", max_digits=5, decimal_places=2)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=["session", "event_fee"], name="unique_session_eventfee")
+        ]
+
+    def __str__(self):
+        return f"{self.session.name} - {self.event_fee.fee_type} (${self.amount})"
+
+
 class Round(models.Model):
     event = models.ForeignKey(
         verbose_name="Event", to=Event, on_delete=CASCADE, related_name="gg_rounds"

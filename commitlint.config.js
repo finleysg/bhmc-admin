@@ -1,5 +1,6 @@
 export default {
 	extends: ["@commitlint/config-conventional"],
+	ignores: [(commit) => /^Merge /.test(commit)],
 	rules: {
 		"type-enum": [
 			2,

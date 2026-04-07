@@ -36,6 +36,7 @@ const createRegistrationSlotRow = (
 	eventId: 100,
 	registrationId: 1,
 	playerId: 1,
+	sessionId: null,
 	holeId: 1,
 	startingOrder: 0,
 	slot: 0,

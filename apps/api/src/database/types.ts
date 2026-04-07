@@ -14,6 +14,8 @@ import {
 	eventPairing,
 	eventScore,
 	eventScorecard,
+	eventSession,
+	eventSessionFee,
 	feeType,
 	hole,
 	integrationLog,
@@ -43,6 +45,8 @@ export type FeeTypeRow = typeof feeType.$inferSelect
 export type RoundRow = typeof round.$inferSelect
 export type TournamentRow = typeof tournament.$inferSelect
 export type TournamentResultRow = typeof tournamentResult.$inferSelect
+export type EventSessionRow = typeof eventSession.$inferSelect
+export type EventSessionFeeRow = typeof eventSessionFee.$inferSelect
 export type TournamentPointsRow = typeof tournamentPoints.$inferSelect
 export type EventPairingRow = typeof eventPairing.$inferSelect
 
@@ -90,6 +94,8 @@ export type FeeTypeInsert = typeof feeType.$inferInsert
 export type RoundInsert = typeof round.$inferInsert
 export type TournamentInsert = typeof tournament.$inferInsert
 export type TournamentResultInsert = typeof tournamentResult.$inferInsert
+export type EventSessionInsert = typeof eventSession.$inferInsert
+export type EventSessionFeeInsert = typeof eventSessionFee.$inferInsert
 export type TournamentPointsInsert = typeof tournamentPoints.$inferInsert
 export type EventPairingInsert = typeof eventPairing.$inferInsert
 

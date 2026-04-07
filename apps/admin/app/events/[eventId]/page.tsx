@@ -1,6 +1,8 @@
 "use client"
 
+import { useCallback, useEffect, useState } from "react"
 import { useParams } from "next/navigation"
+import type { ClubEvent } from "@repo/domain/types"
 
 import LinkCard from "@/components/link-card"
 import { useAuth } from "@/lib/auth-context"
@@ -11,6 +13,25 @@ export default function EventHubPage() {
 	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
 	const params = useParams()
 	const eventId = params.eventId as string
+	const [event, setEvent] = useState<ClubEvent | null>(null)
+
+	const fetchEvent = useCallback(async () => {
+		try {
+			const res = await fetch(`/api/events/${eventId}`)
+			if (res.ok) {
+				const data = (await res.json()) as ClubEvent
+				setEvent(data)
+			}
+		} catch {
+			// Event data is optional for the hub — cards still render
+		}
+	}, [eventId])
+
+	useEffect(() => {
+		if (signedIn && eventId) {
+			void fetchEvent()
+		}
+	}, [signedIn, eventId, fetchEvent])
 
 	if (isPending) {
 		return <LoadingSpinner size="lg" />
@@ -78,6 +99,16 @@ export default function EventHubPage() {
 					disabled={false}
 					icon={"📋"}
 				/>
+
+				{event && !event.canChoose && (
+					<LinkCard
+						title="Session Configuration"
+						description="Configure sessions and fee overrides for this event."
+						href={`/events/${eventId}/sessions`}
+						disabled={false}
+						icon={"📅"}
+					/>
+				)}
 			</div>
 		</PageLayout>
 	)

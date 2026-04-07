@@ -32,6 +32,7 @@ import {
 	defaultRegistrationState,
 	registrationReducer,
 	type RegistrationStep,
+	type SelectedSession,
 } from "./registration-reducer"
 import { RegistrationContext } from "./registration-context"
 import { getWaveUnlockTimes, transformSSESlots } from "./reserve-utils"
@@ -364,6 +365,7 @@ export function RegistrationProvider({
 					eventId: state.clubEvent?.id,
 					courseId: course?.id,
 					slotIds: slots?.map((s) => s.id),
+					sessionId: state.selectedSession?.id ?? undefined,
 				}),
 				correlationId: state.correlationId,
 			})
@@ -405,6 +407,7 @@ export function RegistrationProvider({
 			lastSeason: null,
 		}
 
+		const sessionOverrides = state.selectedSession?.feeOverrides
 		state.clubEvent.fees
 			.filter((f) => f.is_required)
 			.forEach((fee) => {
@@ -413,7 +416,7 @@ export function RegistrationProvider({
 					paymentId: 0,
 					eventFeeId: fee.id,
 					registrationSlotId: firstSlot.id,
-					amount: calculateFeeAmount(fee, feePlayer),
+					amount: calculateFeeAmount(fee, feePlayer, sessionOverrides),
 					isPaid: false,
 				})
 			})
@@ -532,6 +535,17 @@ export function RegistrationProvider({
 				if (registration) {
 					const fees: ServerRegistrationFee[] = registration.slots.flatMap((slot) => slot.fees)
 					const playerIdSet = new Set(playerIds)
+
+					// Resolve session fee overrides from the registration's session
+					const slotSessionId = registration.slots.find((s) => s.sessionId)?.sessionId
+					const eventSession = slotSessionId
+						? state.clubEvent?.sessions?.find((s) => s.id === slotSessionId)
+						: undefined
+					const sessionOverrides = eventSession?.fee_overrides.map((o) => ({
+						eventFeeId: o.event_fee,
+						amount: parseFloat(o.amount),
+					}))
+
 					const requiredFeeDetails = registration.slots
 						.filter((slot) => slot.player && playerIdSet.has(slot.player.id))
 						.flatMap((slot) => {
@@ -548,7 +562,7 @@ export function RegistrationProvider({
 									paymentId: 0,
 									eventFeeId: fee.id,
 									registrationSlotId: slot.id,
-									amount: calculateFeeAmount(fee, feePlayer),
+									amount: calculateFeeAmount(fee, feePlayer, sessionOverrides),
 									isPaid: false,
 								}))
 						})
@@ -605,6 +619,7 @@ export function RegistrationProvider({
 			if (mode === "new") {
 				return cancelRegistrationMutation({ reason }).then(() => {})
 			}
+			dispatch({ type: "cancel-registration" })
 			void queryClient.invalidateQueries({ queryKey: ["registration"] })
 			return Promise.resolve()
 		},
@@ -660,9 +675,9 @@ export function RegistrationProvider({
 			return Promise.reject(new Error("No payment to save"))
 		}
 		if (state.payment.id) {
-			return updatePaymentMutation(state.payment).then(() => {})
+			return updatePaymentMutation(state.payment).then(() => undefined)
 		}
-		return createPaymentMutation(state.payment).then(() => {})
+		return createPaymentMutation(state.payment)
 	}, [createPaymentMutation, updatePaymentMutation, state.payment])
 
 	const addPlayer = useCallback(
@@ -739,6 +754,10 @@ export function RegistrationProvider({
 		return false
 	}, [state.clubEvent, state.registration])
 
+	const selectSession = useCallback((session: SelectedSession) => {
+		dispatch({ type: "select-session", payload: { session } })
+	}, [])
+
 	const setError = useCallback((error: string | null) => {
 		dispatch({ type: "update-error", payload: { error } })
 	}, [])
@@ -772,6 +791,7 @@ export function RegistrationProvider({
 			editRegistration,
 			initiateStripeSession,
 			loadRegistration,
+			selectSession,
 			startEditRegistration,
 			removeFee,
 			removePlayer,
@@ -794,6 +814,7 @@ export function RegistrationProvider({
 			editRegistration,
 			initiateStripeSession,
 			loadRegistration,
+			selectSession,
 			startEditRegistration,
 			removeFee,
 			removePlayer,

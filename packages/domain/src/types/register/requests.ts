@@ -6,6 +6,7 @@ import { EventTypeValue } from "../events"
 export interface ReserveRequest {
 	eventId: number
 	courseId?: number | null
+	sessionId?: number | null
 	slotIds: number[]
 }
 

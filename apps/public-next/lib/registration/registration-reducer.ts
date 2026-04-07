@@ -47,6 +47,18 @@ export const CompleteStep: RegistrationStep = {
 	title: "Registration Complete",
 }
 
+export interface SessionFeeOverride {
+	eventFeeId: number
+	amount: number
+}
+
+export interface SelectedSession {
+	id: number
+	name: string
+	registrationLimit: number
+	feeOverrides: SessionFeeOverride[]
+}
+
 export interface RegistrationState {
 	mode: RegistrationMode
 	clubEvent: ClubEventDetail | null
@@ -56,6 +68,7 @@ export interface RegistrationState {
 	error: string | null
 	currentStep: RegistrationStep
 	selectedStart: string | null
+	selectedSession: SelectedSession | null
 	stripeClientSession?: string
 	correlationId: string
 	sseCurrentWave: number | null
@@ -103,6 +116,7 @@ export type RegistrationAction =
 	  }
 	| { type: "remove-fee"; payload: { slotId: number; eventFeeId: number } }
 	| { type: "initiate-stripe-session"; payload: { clientSessionKey: string } }
+	| { type: "select-session"; payload: { session: SelectedSession } }
 	| { type: "update-sse-wave"; payload: { wave: number } }
 	| { type: "update-sse-connected"; payload: { connected: boolean } }
 
@@ -115,6 +129,7 @@ export const defaultRegistrationState: RegistrationState = {
 	error: null,
 	currentStep: PendingStep,
 	selectedStart: null,
+	selectedSession: null,
 	stripeClientSession: undefined,
 	correlationId: "",
 	sseCurrentWave: null,
@@ -150,6 +165,23 @@ export const registrationReducer = produce(
 					]),
 				)
 				draft.payment = action.payload.payment
+
+				// Auto-detect session from registration slots
+				const slotSessionId = action.payload.registration.slots.find((s) => s.sessionId)?.sessionId
+				if (slotSessionId && draft.clubEvent?.sessions) {
+					const eventSession = draft.clubEvent.sessions.find((s) => s.id === slotSessionId)
+					if (eventSession) {
+						draft.selectedSession = {
+							id: eventSession.id,
+							name: eventSession.name,
+							registrationLimit: eventSession.registration_limit,
+							feeOverrides: eventSession.fee_overrides.map((o) => ({
+								eventFeeId: o.event_fee,
+								amount: parseFloat(o.amount),
+							})),
+						}
+					}
+				}
 				return
 			}
 			case "create-registration": {
@@ -177,6 +209,7 @@ export const registrationReducer = produce(
 				draft.existingFees = null
 				draft.error = null
 				draft.selectedStart = null
+				draft.selectedSession = null
 				draft.mode = "idle"
 				draft.currentStep = PendingStep
 				return
@@ -187,6 +220,7 @@ export const registrationReducer = produce(
 				draft.existingFees = null
 				draft.error = null
 				draft.selectedStart = null
+				draft.selectedSession = null
 				draft.mode = "idle"
 				draft.currentStep = CompleteStep
 				return
@@ -214,6 +248,7 @@ export const registrationReducer = produce(
 					}
 				}
 				// Auto-add required fees for this slot
+				const sessionOverrides = draft.selectedSession?.feeOverrides
 				draft.clubEvent?.fees
 					.filter((f) => f.is_required)
 					.forEach((fee) => {
@@ -223,7 +258,7 @@ export const registrationReducer = produce(
 								paymentId: draft.payment.id,
 								eventFeeId: fee.id,
 								registrationSlotId: slot.id,
-								amount: calculateFeeAmount(fee, player),
+								amount: calculateFeeAmount(fee, player, sessionOverrides),
 								isPaid: false,
 							})
 						}
@@ -250,7 +285,11 @@ export const registrationReducer = produce(
 						paymentId: draft.payment.id,
 						eventFeeId: action.payload.eventFee.id,
 						registrationSlotId: action.payload.slotId,
-						amount: calculateFeeAmount(action.payload.eventFee, action.payload.player),
+						amount: calculateFeeAmount(
+							action.payload.eventFee,
+							action.payload.player,
+							draft.selectedSession?.feeOverrides,
+						),
 						isPaid: false,
 					})
 				}
@@ -277,6 +316,10 @@ export const registrationReducer = produce(
 				draft.stripeClientSession = action.payload.clientSessionKey
 				return
 			}
+			case "select-session": {
+				draft.selectedSession = action.payload.session
+				return
+			}
 			case "update-sse-wave": {
 				draft.sseCurrentWave = action.payload.wave
 				return
@@ -292,6 +335,7 @@ export const registrationReducer = produce(
 				draft.existingFees = null
 				draft.error = null
 				draft.selectedStart = null
+				draft.selectedSession = null
 				draft.mode = "idle"
 				draft.currentStep = PendingStep
 				return

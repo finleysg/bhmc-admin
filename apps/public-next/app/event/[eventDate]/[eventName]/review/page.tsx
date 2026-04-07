@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AlertCircle } from "lucide-react"
 import { toast } from "sonner"
@@ -30,6 +30,7 @@ export default function ReviewPage() {
 		selectedStart,
 		setError,
 		updateStep,
+		savePayment,
 		completeRegistration,
 	} = useRegistration()
 
@@ -66,22 +67,34 @@ export default function ReviewPage() {
 	const handleBack = useCallback(() => {
 		updateStep(RegisterStep)
 		if (mode === "edit") {
-			router.replace(`${getEventUrl(clubEvent!)}/edit`)
+			router.replace(`${getEventUrl(clubEvent!)}/manage/edit`)
 		} else {
 			router.replace(`${getEventUrl(clubEvent!)}/register`)
 		}
 	}, [updateStep, mode, router, clubEvent])
 
-	const handleContinue = useCallback(() => {
-		if (amountDue.total > 0) {
-			updateStep(PaymentStep)
-			router.replace(`${getEventUrl(clubEvent!)}/${payment?.id}/payment`)
-		} else {
-			updateStep(CompleteStep)
-			completeRegistration()
-			router.replace(getEventUrl(clubEvent!))
+	const [isContinuing, setIsContinuing] = useState(false)
+
+	const handleContinue = useCallback(async () => {
+		setIsContinuing(true)
+		try {
+			if (amountDue.total > 0) {
+				const result = await savePayment()
+				const paymentId = result?.id ?? payment?.id
+				updateStep(PaymentStep)
+				router.replace(`${getEventUrl(clubEvent!)}/${paymentId}/payment`)
+			} else {
+				await savePayment()
+				updateStep(CompleteStep)
+				completeRegistration()
+				router.replace(getEventUrl(clubEvent!))
+			}
+		} catch {
+			// Error already dispatched by mutation onError in the provider
+		} finally {
+			setIsContinuing(false)
 		}
-	}, [amountDue, updateStep, router, clubEvent, payment, completeRegistration])
+	}, [amountDue, updateStep, router, clubEvent, payment, completeRegistration, savePayment])
 
 	const handleExpired = useCallback(() => {
 		toast.error("Registration expired. Please try again.")
@@ -157,7 +170,9 @@ export default function ReviewPage() {
 					<Button variant="outline" onClick={handleBack}>
 						Back
 					</Button>
-					<Button onClick={handleContinue}>Continue</Button>
+					<Button onClick={() => void handleContinue()} disabled={isContinuing}>
+						{isContinuing ? "Saving..." : "Continue"}
+					</Button>
 				</div>
 			</CardFooter>
 		</Card>
