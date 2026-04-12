@@ -395,18 +395,27 @@ describe("RegistrationService", () => {
 
 		describe("non-choosable events", () => {
 			it("routes to non-choosable flow when event.canChoose is false", async () => {
-				const { service, eventsService, repository } = createService()
+				const { service, eventsService, repository, mockTx } = createService()
 				const user = createDjangoUser()
 				const event = createClubEvent({ canChoose: false, maximumSignupGroupSize: 2 })
 				const request = createReserveRequest({ slotIds: [], courseId: undefined })
 
 				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(null)
 				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+				// Mock capacity count + no existing registration in tx
+				let queryCount = 0
+				mockTx.then = (resolve: (val: unknown) => void) => {
+					queryCount++
+					if (queryCount === 1) return Promise.resolve([{ count: 0 }]).then(resolve)
+					return Promise.resolve([]).then(resolve)
+				}
 
 				await service.createAndReserve(user, request)
 
-				// Non-choosable flow doesn't call findRegistrationByUserAndEvent outside transaction
-				expect(repository.findRegistrationByUserAndEvent).not.toHaveBeenCalled()
+				// Non-choosable flow now calls findRegistrationByUserAndEvent for pre-tx cleanup
+				expect(repository.findRegistrationByUserAndEvent).toHaveBeenCalledWith(user.id, event.id)
 			})
 
 			it("creates correct number of slots from maximumSignupGroupSize", async () => {
@@ -419,7 +428,16 @@ describe("RegistrationService", () => {
 				const request = createReserveRequest({ slotIds: [], courseId: undefined })
 
 				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(null)
 				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+				// Mock capacity count + no existing registration in tx
+				let queryCount = 0
+				mockTx.then = (resolve: (val: unknown) => void) => {
+					queryCount++
+					if (queryCount === 1) return Promise.resolve([{ count: 0 }]).then(resolve)
+					return Promise.resolve([]).then(resolve)
+				}
 
 				await service.createAndReserve(user, request)
 
@@ -429,7 +447,7 @@ describe("RegistrationService", () => {
 			})
 
 			it("throws EventFullError when capacity exceeded", async () => {
-				const { service, eventsService, mockTx } = createService()
+				const { service, eventsService, repository, mockTx } = createService()
 				const user = createDjangoUser()
 				const event = createClubEvent({
 					canChoose: false,
@@ -438,8 +456,11 @@ describe("RegistrationService", () => {
 				const request = createReserveRequest({ slotIds: [], courseId: undefined })
 
 				eventsService.getCompleteClubEventById.mockResolvedValue(event)
-				// Return 10 locked slots (at capacity)
-				mockTx.for.mockResolvedValue(Array(10).fill({ id: 1 }))
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(null)
+
+				// Return count of 10 (at capacity)
+				mockTx.then = (resolve: (val: unknown) => void) =>
+					Promise.resolve([{ count: 10 }]).then(resolve)
 
 				await expect(service.createAndReserve(user, request)).rejects.toThrow(EventFullError)
 			})
@@ -453,70 +474,56 @@ describe("RegistrationService", () => {
 
 				eventsService.getCompleteClubEventById.mockResolvedValue(event)
 
-				// Mock the transaction's select query for existing registration
-				// The non-choosable flow queries inside the transaction
-				const existingReg = createRegistrationRow({ id: 60 })
-				mockTx.then = (resolve: (val: unknown) => void) =>
-					Promise.resolve([existingReg]).then(resolve)
+				// Pre-tx: existing registration with only PENDING slots
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(
+					createRegistrationWithSlots({
+						id: 60,
+						slots: [
+							createRegistrationSlotRow({
+								status: RegistrationStatusChoices.PENDING,
+								registrationId: 60,
+							}),
+						],
+					}),
+				)
+				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
 
-				// Mock slot query for reserved check — return only PENDING slots
-				mockTx.for.mockResolvedValueOnce([]) // capacity check (locked slots)
-
-				// After the first `then` (existing reg query), the code queries for reserved slots
-				// We need to handle the second query returning no reserved slots
+				// In-tx: capacity count + no existing registration (already cleaned up)
 				let queryCount = 0
-				const originalThen = mockTx.then
 				mockTx.then = (resolve: (val: unknown) => void) => {
 					queryCount++
-					if (queryCount === 1) {
-						// First query: find existing registration
-						return Promise.resolve([existingReg]).then(resolve)
-					}
-					if (queryCount === 2) {
-						// Second query: find reserved slots (none — only PENDING)
-						return Promise.resolve([]).then(resolve)
-					}
-					return originalThen(resolve)
+					if (queryCount === 1) return Promise.resolve([{ count: 0 }]).then(resolve)
+					return Promise.resolve([]).then(resolve)
 				}
-
-				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
 
 				await service.createAndReserve(user, request)
 
-				// Old registration should be cleaned up
+				// Old registration should be cleaned up before the transaction
 				expect(paymentsService.deletePaymentsForRegistration).toHaveBeenCalledWith(60)
 				expect(slotCleanupService.releaseSlotsByRegistration).toHaveBeenCalledWith(60, false)
 				expect(repository.deleteRegistration).toHaveBeenCalledWith(60)
 			})
 
 			it("throws AlreadyRegisteredError when non-choosable existing registration has RESERVED slots", async () => {
-				const { service, eventsService, mockTx } = createService()
+				const { service, eventsService, repository } = createService()
 				const user = createDjangoUser()
 				const event = createClubEvent({ canChoose: false, maximumSignupGroupSize: 2 })
 				const request = createReserveRequest({ slotIds: [], courseId: undefined })
 
 				eventsService.getCompleteClubEventById.mockResolvedValue(event)
 
-				const existingReg = createRegistrationRow({ id: 60 })
-				mockTx.for.mockResolvedValueOnce([]) // capacity check
-
-				let queryCount = 0
-				mockTx.then = (resolve: (val: unknown) => void) => {
-					queryCount++
-					if (queryCount === 1) {
-						return Promise.resolve([existingReg]).then(resolve)
-					}
-					if (queryCount === 2) {
-						// Reserved slots exist
-						return Promise.resolve([
+				// Pre-tx: existing registration with RESERVED slots
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(
+					createRegistrationWithSlots({
+						id: 60,
+						slots: [
 							createRegistrationSlotRow({
 								status: RegistrationStatusChoices.RESERVED,
 								registrationId: 60,
 							}),
-						]).then(resolve)
-					}
-					return Promise.resolve([]).then(resolve)
-				}
+						],
+					}),
+				)
 
 				await expect(service.createAndReserve(user, request)).rejects.toThrow(
 					AlreadyRegisteredError,
@@ -543,7 +550,7 @@ describe("RegistrationService", () => {
 			})
 
 			it("allows returning member on returning-members-only event", async () => {
-				const { service, eventsService, repository } = createService()
+				const { service, eventsService, repository, mockTx } = createService()
 				const user = createDjangoUser()
 				const event = createClubEvent({
 					registrationType: RegistrationTypeChoices.RETURNING_MEMBER,
@@ -554,7 +561,16 @@ describe("RegistrationService", () => {
 
 				eventsService.getCompleteClubEventById.mockResolvedValue(event)
 				repository.findPlayerByUserId.mockResolvedValue(createPlayerRow({ lastSeason: 2024 }))
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(null)
 				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+				// Mock capacity count + no existing registration in tx
+				let queryCount = 0
+				mockTx.then = (resolve: (val: unknown) => void) => {
+					queryCount++
+					if (queryCount === 1) return Promise.resolve([{ count: 0 }]).then(resolve)
+					return Promise.resolve([]).then(resolve)
+				}
 
 				await expect(service.createAndReserve(user, request)).resolves.toBeDefined()
 			})

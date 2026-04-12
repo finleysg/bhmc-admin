@@ -25,7 +25,7 @@ import {
 	toDbString,
 	DrizzleService,
 } from "../../database"
-import { and, eq, inArray, isNotNull } from "drizzle-orm"
+import { and, eq, inArray, isNotNull, sql } from "drizzle-orm"
 import { EventsService } from "../../events"
 
 import {
@@ -470,8 +470,26 @@ export class RegistrationService {
 	): Promise<number> {
 		const slotCount = event.maximumSignupGroupSize ?? 1
 
+		// Clean up any stale (non-reserved) registration BEFORE the main transaction.
+		// This keeps the transaction short and avoids holding row locks during cleanup.
+		const existing = await this.repository.findRegistrationByUserAndEvent(userId, event.id)
+		if (existing) {
+			const hasReservedSlots = existing.slots.some(
+				(s) => s.status === RegistrationStatusChoices.RESERVED,
+			)
+			if (hasReservedSlots) {
+				throw new AlreadyRegisteredError(signedUpBy)
+			}
+			this.logger.log(
+				`Cleaning up stale non-choosable registration ${existing.id} for user ${userId}`,
+			)
+			await this.cleanupStaleRegistration(existing.id, false)
+		}
+
+		// Minimal transaction: capacity check + create registration + create slots.
+		// Uses COUNT instead of FOR UPDATE to avoid row-level locking that caused
+		// lock wait timeouts during concurrent registration.
 		return await this.drizzle.db.transaction(async (tx) => {
-			// Lock all reserved/pending/awaiting slots for capacity check
 			const statusFilter = inArray(registrationSlot.status, [
 				RegistrationStatusChoices.PENDING,
 				RegistrationStatusChoices.AWAITING_PAYMENT,
@@ -479,9 +497,8 @@ export class RegistrationService {
 			])
 
 			if (sessionId) {
-				// Session-based capacity check — count actual players, not raw slots
-				const lockedSessionSlots = await tx
-					.select({ id: registrationSlot.id })
+				const [countResult] = await tx
+					.select({ count: sql<number>`COUNT(*)` })
 					.from(registrationSlot)
 					.where(
 						and(
@@ -491,7 +508,6 @@ export class RegistrationService {
 							statusFilter,
 						),
 					)
-					.for("update")
 
 				const [session] = await tx
 					.select()
@@ -503,13 +519,12 @@ export class RegistrationService {
 					throw new BadRequestException(`Session ${sessionId} not found`)
 				}
 
-				if (lockedSessionSlots.length + 1 > session.registrationLimit) {
+				if (Number(countResult.count) + 1 > session.registrationLimit) {
 					throw new SessionFullError(session.name)
 				}
 			} else {
-				// Event-level capacity check — count actual players, not raw slots
-				const lockedPlayerSlots = await tx
-					.select({ id: registrationSlot.id })
+				const [countResult] = await tx
+					.select({ count: sql<number>`COUNT(*)` })
 					.from(registrationSlot)
 					.where(
 						and(
@@ -518,41 +533,37 @@ export class RegistrationService {
 							statusFilter,
 						),
 					)
-					.for("update")
 
 				if (event.registrationMaximum) {
-					if (lockedPlayerSlots.length + 1 > event.registrationMaximum) {
+					if (Number(countResult.count) + 1 > event.registrationMaximum) {
 						throw new EventFullError()
 					}
 				}
 			}
 
-			// Ensure no existing confirmed registration
-			const [existing] = await tx
+			// Safety check: handle race where a registration appeared after pre-tx cleanup
+			const [existingInTx] = await tx
 				.select()
 				.from(registration)
 				.where(and(eq(registration.userId, userId), eq(registration.eventId, event.id)))
 
-			if (existing) {
-				// Check for reserved slots
+			if (existingInTx) {
 				const reservedSlots = await tx
 					.select()
 					.from(registrationSlot)
 					.where(
 						and(
-							eq(registrationSlot.registrationId, existing.id),
+							eq(registrationSlot.registrationId, existingInTx.id),
 							eq(registrationSlot.status, RegistrationStatusChoices.RESERVED),
 						),
 					)
 				if (reservedSlots.length > 0) {
 					throw new AlreadyRegisteredError(signedUpBy)
 				}
-
-				// Only PENDING slots remain — fully clean up the stale registration
 				this.logger.log(
-					`Cleaning up stale non-choosable registration ${existing.id} for user ${userId}`,
+					`Cleaning up stale non-choosable registration ${existingInTx.id} for user ${userId} (in-tx fallback)`,
 				)
-				await this.cleanupStaleRegistration(existing.id, false)
+				await this.cleanupStaleRegistration(existingInTx.id, false)
 			}
 
 			const [result] = await tx.insert(registration).values({
