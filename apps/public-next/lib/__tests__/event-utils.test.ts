@@ -12,7 +12,7 @@ import {
 	shouldShowSignUpButton,
 	getSignUpUnavailableReason,
 } from "../event-utils"
-import type { ClubEvent, ClubEventDetail, EventSession, RegistrationSlot } from "../types"
+import type { ClubEvent, ClubEventDetail, EventSession, RegistrationSlot, RegistrationSlotPlayer } from "../types"
 
 function makeEvent(overrides: Partial<ClubEventDetail> = {}): ClubEventDetail {
 	return {
@@ -53,6 +53,22 @@ function makeEvent(overrides: Partial<ClubEventDetail> = {}): ClubEventDetail {
 		team_size: null,
 		age_restriction: null,
 		age_restriction_type: "",
+		...overrides,
+	}
+}
+
+function makePlayer(overrides: Partial<RegistrationSlotPlayer> = {}): RegistrationSlotPlayer {
+	return {
+		id: 1,
+		first_name: "Test",
+		last_name: "Player",
+		email: null,
+		phone_number: null,
+		ghin: null,
+		tee: null,
+		birth_date: null,
+		is_member: true,
+		last_season: null,
 		...overrides,
 	}
 }
@@ -232,26 +248,36 @@ describe("computeOpenSpots", () => {
 	})
 
 	describe("when can_choose is false (no tee time selection)", () => {
-		it("uses registration_maximum minus filled slots", () => {
+		it("uses registration_maximum minus player-filled slots", () => {
 			const event = makeEvent({ can_choose: false, registration_maximum: 40 })
 			const slots = [
-				makeSlot({ status: "R" }),
-				makeSlot({ status: "R" }),
-				makeSlot({ status: "R" }),
+				makeSlot({ status: "R", player: makePlayer({ id: 1 }) }),
+				makeSlot({ status: "R", player: makePlayer({ id: 2 }) }),
+				makeSlot({ status: "R", player: makePlayer({ id: 3 }) }),
 			]
 			expect(computeOpenSpots(event, slots)).toBe(37)
 		})
 
+		it("does not count reserved slots without a player", () => {
+			const event = makeEvent({ can_choose: false, registration_maximum: 40 })
+			const slots = [
+				makeSlot({ status: "R", player: makePlayer({ id: 1 }) }),
+				makeSlot({ status: "R", player: null }),
+				makeSlot({ status: "R", player: null }),
+			]
+			expect(computeOpenSpots(event, slots)).toBe(39)
+		})
+
 		it("returns -1 when no registration_maximum", () => {
 			const event = makeEvent({ can_choose: false, registration_maximum: null })
-			const slots = [makeSlot({ status: "R" })]
+			const slots = [makeSlot({ status: "R", player: makePlayer() })]
 			expect(computeOpenSpots(event, slots)).toBe(-1)
 		})
 
-		it("only counts status 'R' as filled", () => {
+		it("only counts status 'R' with a player as filled", () => {
 			const event = makeEvent({ can_choose: false, registration_maximum: 10 })
 			const slots = [
-				makeSlot({ status: "R" }),
+				makeSlot({ status: "R", player: makePlayer() }),
 				makeSlot({ status: "A" }),
 				makeSlot({ status: "P" }),
 			]
@@ -609,21 +635,31 @@ describe("getSignUpUnavailableReason", () => {
 })
 
 describe("computeSessionSpots", () => {
-	it("returns spots per session based on slot counts", () => {
+	it("returns spots per session based on player-filled slot counts", () => {
 		const sessions = [
 			makeSession({ id: 1, name: "Morning", registration_limit: 20, display_order: 0 }),
 			makeSession({ id: 2, name: "Afternoon", registration_limit: 20, display_order: 1 }),
 		]
 		const slots = [
-			makeSlot({ id: 1, session: 1, status: "R" }),
-			makeSlot({ id: 2, session: 1, status: "R" }),
-			makeSlot({ id: 3, session: 2, status: "R" }),
+			makeSlot({ id: 1, session: 1, status: "R", player: makePlayer({ id: 1 }) }),
+			makeSlot({ id: 2, session: 1, status: "R", player: makePlayer({ id: 2 }) }),
+			makeSlot({ id: 3, session: 2, status: "R", player: makePlayer({ id: 3 }) }),
 		]
 		const result = computeSessionSpots(slots, sessions)
 		expect(result).toEqual([
 			{ sessionId: 1, sessionName: "Morning", availableSpots: 18, totalSpots: 20 },
 			{ sessionId: 2, sessionName: "Afternoon", availableSpots: 19, totalSpots: 20 },
 		])
+	})
+
+	it("does not count reserved slots without a player", () => {
+		const sessions = [makeSession({ id: 1, name: "Morning", registration_limit: 20 })]
+		const slots = [
+			makeSlot({ id: 1, session: 1, status: "R", player: makePlayer({ id: 1 }) }),
+			makeSlot({ id: 2, session: 1, status: "R", player: null }),
+		]
+		const result = computeSessionSpots(slots, sessions)
+		expect(result[0].availableSpots).toBe(19)
 	})
 
 	it("returns full spots when no slots are reserved", () => {
@@ -637,8 +673,8 @@ describe("computeSessionSpots", () => {
 	it("returns 0 available when session is full", () => {
 		const sessions = [makeSession({ id: 1, name: "Morning", registration_limit: 2 })]
 		const slots = [
-			makeSlot({ id: 1, session: 1, status: "R" }),
-			makeSlot({ id: 2, session: 1, status: "R" }),
+			makeSlot({ id: 1, session: 1, status: "R", player: makePlayer({ id: 1 }) }),
+			makeSlot({ id: 2, session: 1, status: "R", player: makePlayer({ id: 2 }) }),
 		]
 		const result = computeSessionSpots(slots, sessions)
 		expect(result[0].availableSpots).toBe(0)
@@ -654,10 +690,10 @@ describe("computeSessionSpots", () => {
 		expect(result[1].sessionName).toBe("Afternoon")
 	})
 
-	it("only counts 'R' status as filled", () => {
+	it("only counts 'R' status with a player as filled", () => {
 		const sessions = [makeSession({ id: 1, name: "Morning", registration_limit: 10 })]
 		const slots = [
-			makeSlot({ id: 1, session: 1, status: "R" }),
+			makeSlot({ id: 1, session: 1, status: "R", player: makePlayer() }),
 			makeSlot({ id: 2, session: 1, status: "A" }),
 			makeSlot({ id: 3, session: 1, status: "P" }),
 		]

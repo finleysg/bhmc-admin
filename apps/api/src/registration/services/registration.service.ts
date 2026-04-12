@@ -25,7 +25,7 @@ import {
 	toDbString,
 	DrizzleService,
 } from "../../database"
-import { and, eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, isNotNull } from "drizzle-orm"
 import { EventsService } from "../../events"
 
 import {
@@ -314,9 +314,9 @@ export class RegistrationService {
 			return { availableSpots, totalSpots }
 		}
 
-		// Non-canChoose: total is registrationMaximum, available is total minus used slots
+		// Non-canChoose: total is registrationMaximum, available is total minus actual players
 		const totalSpots = event.registrationMaximum ?? 0
-		const usedCount = await this.repository.countSlotsByEventAndStatus(eventId, [
+		const usedCount = await this.repository.countPlayerSlotsByEventAndStatus(eventId, [
 			RegistrationStatusChoices.PENDING,
 			RegistrationStatusChoices.AWAITING_PAYMENT,
 			RegistrationStatusChoices.RESERVED,
@@ -479,7 +479,7 @@ export class RegistrationService {
 			])
 
 			if (sessionId) {
-				// Session-based capacity check
+				// Session-based capacity check — count actual players, not raw slots
 				const lockedSessionSlots = await tx
 					.select({ id: registrationSlot.id })
 					.from(registrationSlot)
@@ -487,6 +487,7 @@ export class RegistrationService {
 						and(
 							eq(registrationSlot.eventId, event.id),
 							eq(registrationSlot.sessionId, sessionId),
+							isNotNull(registrationSlot.playerId),
 							statusFilter,
 						),
 					)
@@ -506,15 +507,21 @@ export class RegistrationService {
 					throw new SessionFullError(session.name)
 				}
 			} else {
-				// Legacy: event-level capacity check
-				const lockedSlots = await tx
+				// Event-level capacity check — count actual players, not raw slots
+				const lockedPlayerSlots = await tx
 					.select({ id: registrationSlot.id })
 					.from(registrationSlot)
-					.where(and(eq(registrationSlot.eventId, event.id), statusFilter))
+					.where(
+						and(
+							eq(registrationSlot.eventId, event.id),
+							isNotNull(registrationSlot.playerId),
+							statusFilter,
+						),
+					)
 					.for("update")
 
 				if (event.registrationMaximum) {
-					if (lockedSlots.length + 1 > event.registrationMaximum) {
+					if (lockedPlayerSlots.length + 1 > event.registrationMaximum) {
 						throw new EventFullError()
 					}
 				}

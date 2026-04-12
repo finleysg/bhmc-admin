@@ -164,6 +164,7 @@ const createMockRegistrationRepository = () => ({
 	updateRegistration: jest.fn(),
 	createRegistration: jest.fn(),
 	countSlotsByEventAndStatus: jest.fn(),
+	countPlayerSlotsByEventAndStatus: jest.fn(),
 	countSlotsByEvent: jest.fn(),
 })
 
@@ -974,18 +975,18 @@ describe("RegistrationService", () => {
 		})
 
 		describe("non-canChoose events", () => {
-			it("returns available based on registrationMaximum minus used slots", async () => {
+			it("returns available based on registrationMaximum minus players", async () => {
 				const { service, eventsService, repository } = createService()
 
 				eventsService.getEventById.mockResolvedValue(
 					createClubEvent({ canChoose: false, registrationMaximum: 100 }),
 				)
-				repository.countSlotsByEventAndStatus.mockResolvedValue(25) // 25 used
+				repository.countPlayerSlotsByEventAndStatus.mockResolvedValue(25) // 25 players
 
 				const result = await service.getAvailableSpots(100)
 
 				expect(result).toEqual({ availableSpots: 75, totalSpots: 100 })
-				expect(repository.countSlotsByEventAndStatus).toHaveBeenCalledWith(100, [
+				expect(repository.countPlayerSlotsByEventAndStatus).toHaveBeenCalledWith(100, [
 					RegistrationStatusChoices.PENDING,
 					RegistrationStatusChoices.AWAITING_PAYMENT,
 					RegistrationStatusChoices.RESERVED,
@@ -998,7 +999,7 @@ describe("RegistrationService", () => {
 				eventsService.getEventById.mockResolvedValue(
 					createClubEvent({ canChoose: false, registrationMaximum: 50 }),
 				)
-				repository.countSlotsByEventAndStatus.mockResolvedValue(50)
+				repository.countPlayerSlotsByEventAndStatus.mockResolvedValue(50)
 
 				const result = await service.getAvailableSpots(100)
 
@@ -1011,7 +1012,7 @@ describe("RegistrationService", () => {
 				eventsService.getEventById.mockResolvedValue(
 					createClubEvent({ canChoose: false, registrationMaximum: 50 }),
 				)
-				repository.countSlotsByEventAndStatus.mockResolvedValue(55) // overbooked
+				repository.countPlayerSlotsByEventAndStatus.mockResolvedValue(55) // overbooked
 
 				const result = await service.getAvailableSpots(100)
 
@@ -1024,7 +1025,7 @@ describe("RegistrationService", () => {
 				eventsService.getEventById.mockResolvedValue(
 					createClubEvent({ canChoose: false, registrationMaximum: null }),
 				)
-				repository.countSlotsByEventAndStatus.mockResolvedValue(10)
+				repository.countPlayerSlotsByEventAndStatus.mockResolvedValue(10)
 
 				const result = await service.getAvailableSpots(100)
 

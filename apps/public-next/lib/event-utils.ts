@@ -319,7 +319,7 @@ export function computeOpenSpots(event: ClubEventDetail, slots: RegistrationSlot
 		const filled = slots.filter((s) => s.status !== "A").length
 		return slots.length - filled
 	}
-	const filled = slots.filter((s) => s.status === "R").length
+	const filled = slots.filter((s) => s.status === "R" && s.player !== null).length
 	if (event.registration_maximum) {
 		return event.registration_maximum - filled
 	}
@@ -342,7 +342,7 @@ export function computeSessionSpots(
 		.sort((a, b) => a.display_order - b.display_order)
 		.map((session) => {
 			const sessionSlots = slots.filter((s) => s.session === session.id)
-			const filled = sessionSlots.filter((s) => s.status === "R").length
+			const filled = sessionSlots.filter((s) => s.status === "R" && s.player !== null).length
 			return {
 				sessionId: session.id,
 				sessionName: session.name,
