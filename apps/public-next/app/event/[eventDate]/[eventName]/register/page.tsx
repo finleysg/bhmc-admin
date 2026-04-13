@@ -217,7 +217,26 @@ export default function RegisterPage() {
 		})
 	}, [cancelRegistration, clubEvent, router])
 
-	if (!registration || !clubEvent) return null
+	if (!clubEvent) return null
+
+	if (!registration) {
+		if (error) {
+			return (
+				<Card>
+					<CardContent className="space-y-4 pt-6">
+						<Alert variant="destructive">
+							<AlertCircle className="size-4" />
+							<AlertDescription>{error}</AlertDescription>
+						</Alert>
+						<Button variant="outline" onClick={() => router.replace(getEventUrl(clubEvent))}>
+							Back to Event
+						</Button>
+					</CardContent>
+				</Card>
+			)
+		}
+		return null
+	}
 
 	const minGroup = clubEvent.minimum_signup_group_size ?? 1
 	const maxGroup = clubEvent.maximum_signup_group_size ?? 1

@@ -248,6 +248,55 @@ test("calls createRegistration for returning member on returning-members-only ev
 	})
 })
 
+test("shows error with back button when registration creation fails", async () => {
+	mockRegistrationContext.mockImplementation(
+		() =>
+			({
+				clubEvent: {
+					id: 667,
+					name: "2026 Season Registration",
+					start_date: "2026-01-18",
+					event_type: "R",
+					can_choose: false,
+					registration_type: "O",
+					registration_window: "registration",
+					status: "S",
+					fees: [] as EventFee[],
+					maximum_signup_group_size: 1,
+					minimum_signup_group_size: 1,
+				},
+				registration: null,
+				payment: null,
+				mode: "new" as const,
+				error: "The server is busy, please try again in a moment",
+				selectedStart: null,
+				selectedSession: null,
+				addPlayer: jest.fn(),
+				canRegister: jest.fn(() => false),
+				cancelRegistration: jest.fn(),
+				createRegistration: mockCreateRegistration,
+				selectSession: jest.fn(),
+				savePayment: jest.fn(),
+				setError: jest.fn(),
+				updateRegistrationNotes: jest.fn(),
+				updateStep: jest.fn(),
+			}) as unknown as ReturnType<typeof mockRegistrationContext>,
+	)
+
+	const { default: RegisterPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/register/page"
+	)
+
+	render(<RegisterPage />)
+
+	expect(screen.getByText("The server is busy, please try again in a moment")).toBeDefined()
+
+	const backButton = screen.getByRole("button", { name: "Back to Event" })
+	fireEvent.click(backButton)
+
+	expect(mockReplace).toHaveBeenCalledWith("/event/2026-01-18/2026-season-registration")
+})
+
 test("skips canRegister check in edit mode", async () => {
 	const mockCanRegister = jest.fn(() => false)
 	const mockUpdateRegistrationNotes = jest.fn(() => Promise.resolve())

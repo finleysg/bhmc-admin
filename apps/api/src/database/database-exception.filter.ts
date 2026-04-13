@@ -51,26 +51,39 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
 			return
 		}
 
-		// MySQL / mysql2 error shape handling (also covers errors surfaced by Drizzle)
-		if (error && (error.code || error.errno || error.sql)) {
+		// MySQL / mysql2 error shape handling (also covers errors surfaced by Drizzle).
+		// Drizzle wraps MySQL errors in DrizzleQueryError where the actual MySQL error
+		// lives in .cause — unwrap it so we can detect error codes.
+		let dbError = error
+		if (error && !error.code && !error.errno && error.cause) {
+			const cause = error.cause
+			if (cause.code || cause.errno) {
+				dbError = cause
+			}
+		}
+
+		if (dbError && (dbError.code || dbError.errno || dbError.sql)) {
 			// Map common MySQL error numbers / codes to HTTP statuses and friendly messages
-			if (error.errno === 1451 || error.code === "ER_ROW_IS_REFERENCED_2") {
+			if (dbError.errno === 1451 || dbError.code === "ER_ROW_IS_REFERENCED_2") {
 				// FK constraint prevents delete/update
 				status = HttpStatus.CONFLICT
 				message = "Foreign key constraint prevents operation"
-			} else if (error.errno === 1062 || error.code === "ER_DUP_ENTRY") {
+			} else if (dbError.errno === 1062 || dbError.code === "ER_DUP_ENTRY") {
 				// Duplicate entry
 				status = HttpStatus.CONFLICT
 				message = "Duplicate entry"
-			} else if (error.errno === 1452 || error.code === "ER_NO_REFERENCED_ROW_2") {
+			} else if (dbError.errno === 1452 || dbError.code === "ER_NO_REFERENCED_ROW_2") {
 				status = HttpStatus.BAD_REQUEST
 				message = "Missing referenced record"
+			} else if (dbError.errno === 1205 || dbError.code === "ER_LOCK_WAIT_TIMEOUT") {
+				status = HttpStatus.SERVICE_UNAVAILABLE
+				message = "The server is busy, please try again in a moment"
 			} else {
 				// Fallback to original message when available
-				message = JSON.stringify(error)
+				message = JSON.stringify(dbError)
 				this.posthog?.captureException(
 					new Error(
-						`Unhandled MySQL error: ${error.code ?? error.errno ?? "unknown"} – ${error.sqlMessage ?? message}`,
+						`Unhandled MySQL error: ${dbError.code ?? dbError.errno ?? "unknown"} – ${dbError.sqlMessage ?? message}`,
 					),
 					undefined,
 					{ app: "api" },
@@ -79,11 +92,11 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
 
 			// Collect details for logging and (in dev) for the response body
 			const details: Record<string, unknown> = {
-				code: error.code ?? null,
-				errno: error.errno ?? null,
-				sqlMessage: error.sqlMessage ?? null,
-				sql: error.sql ?? null,
-				params: error.parameters ?? error?.params ?? null,
+				code: dbError.code ?? null,
+				errno: dbError.errno ?? null,
+				sqlMessage: dbError.sqlMessage ?? null,
+				sql: dbError.sql ?? null,
+				params: dbError.parameters ?? dbError?.params ?? null,
 			}
 
 			// Log full error for debugging (includes stack)
