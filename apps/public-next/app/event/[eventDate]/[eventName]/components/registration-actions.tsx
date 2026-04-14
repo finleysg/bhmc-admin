@@ -103,7 +103,7 @@ function SignUpButton({
 	event: ClubEventDetail
 	hasSignedUp: boolean
 	eventUrl: string
-	player?: { last_season?: number | null }
+	player?: { is_member?: boolean; last_season?: number | null }
 	isEventFull?: boolean
 }) {
 	const { isAuthenticated } = useAuth()
@@ -114,6 +114,10 @@ function SignUpButton({
 		isEventFull ||
 		!shouldShowSignUpButton(event, new Date())
 	) {
+		return null
+	}
+
+	if (event.registration_type === RegistrationType.MembersOnly && player?.is_member === false) {
 		return null
 	}
 
@@ -184,7 +188,7 @@ function SessionCards({
 }: {
 	event: ClubEventDetail
 	sessionSpots: SessionSpots[]
-	player?: { last_season?: number | null }
+	player?: { is_member?: boolean; last_season?: number | null }
 	isEventFull?: boolean
 	selectedSessionId: number | null
 	onSelectSession: (id: number) => void
@@ -192,6 +196,10 @@ function SessionCards({
 	const { isAuthenticated } = useAuth()
 
 	if (isEventFull || !isAuthenticated || !shouldShowSignUpButton(event, new Date())) {
+		return null
+	}
+
+	if (event.registration_type === RegistrationType.MembersOnly && player?.is_member === false) {
 		return null
 	}
 
@@ -274,6 +282,7 @@ export function RegistrationBanner({
 		event,
 		isAuthenticated,
 		hasSignedUp,
+		playerIsMember: player?.is_member,
 		playerLastSeason: player?.last_season,
 		isEventFull,
 	})

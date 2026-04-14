@@ -610,6 +610,22 @@ describe("getSignUpUnavailableReason", () => {
 			expect(getSignUpUnavailableReason({ event, ...defaults, isEventFull: false })).toBeNull()
 		})
 
+		it("returns message for members only when not a member", () => {
+			const event = openEvent({
+				registration_type: RegistrationType.MembersOnly,
+			})
+			expect(getSignUpUnavailableReason({ event, ...defaults, playerIsMember: false })).toBe(
+				"This event is restricted to members.",
+			)
+		})
+
+		it("returns null for members only when player is a member", () => {
+			const event = openEvent({
+				registration_type: RegistrationType.MembersOnly,
+			})
+			expect(getSignUpUnavailableReason({ event, ...defaults, playerIsMember: true })).toBeNull()
+		})
+
 		it("returns message for returning members only when not eligible", () => {
 			const event = openEvent({
 				registration_type: RegistrationType.ReturningMembersOnly,

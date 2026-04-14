@@ -60,9 +60,25 @@ export class CourseRequiredError extends HttpException {
 	}
 }
 
+export class MembersOnlyError extends HttpException {
+	constructor(playerName?: string) {
+		super(
+			playerName
+				? `${playerName} is not a member and cannot be added to this event`
+				: "This event is restricted to members",
+			HttpStatus.FORBIDDEN,
+		)
+	}
+}
+
 export class ReturningMembersOnlyError extends HttpException {
-	constructor() {
-		super("This event is restricted to returning members", HttpStatus.FORBIDDEN)
+	constructor(playerName?: string) {
+		super(
+			playerName
+				? `${playerName} is not a returning member and cannot be added to this event`
+				: "This event is restricted to returning members",
+			HttpStatus.FORBIDDEN,
+		)
 	}
 }
 

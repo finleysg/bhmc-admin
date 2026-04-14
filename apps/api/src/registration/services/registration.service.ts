@@ -34,6 +34,7 @@ import {
 	EventFullError,
 	EventRegistrationNotOpenError,
 	EventRegistrationWaveError,
+	MembersOnlyError,
 	PlayerConflictError,
 	ReturningMembersOnlyError,
 	SessionFullError,
@@ -77,11 +78,21 @@ export class RegistrationService {
 		const signedUpBy = `${user.firstName} ${user.lastName}`
 		const event = await this.events.getCompleteClubEventById(request.eventId, false)
 
-		// Check returning member restriction
-		if (event.registrationType === RegistrationTypeChoices.RETURNING_MEMBER) {
+		// Check membership restrictions
+		if (
+			event.registrationType === RegistrationTypeChoices.MEMBER ||
+			event.registrationType === RegistrationTypeChoices.RETURNING_MEMBER
+		) {
 			const playerRow = await this.repository.findPlayerByUserId(user.id)
-			if (!playerRow || playerRow.lastSeason !== event.season - 1) {
-				throw new ReturningMembersOnlyError()
+			if (event.registrationType === RegistrationTypeChoices.MEMBER) {
+				if (!playerRow || !playerRow.isMember) {
+					throw new MembersOnlyError()
+				}
+			}
+			if (event.registrationType === RegistrationTypeChoices.RETURNING_MEMBER) {
+				if (!playerRow || playerRow.lastSeason !== event.season - 1) {
+					throw new ReturningMembersOnlyError()
+				}
 			}
 		}
 
@@ -195,12 +206,34 @@ export class RegistrationService {
 
 		// Atomic duplicate check + slot assignment with row locks
 		await this.drizzle.db.transaction(async (tx) => {
-			// Look up player names for error messages
+			// Look up player details for validation and error messages
 			const players = await tx
-				.select({ id: player.id, firstName: player.firstName, lastName: player.lastName })
+				.select({
+					id: player.id,
+					firstName: player.firstName,
+					lastName: player.lastName,
+					isMember: player.isMember,
+					lastSeason: player.lastSeason,
+				})
 				.from(player)
 				.where(inArray(player.id, playerIds))
 			const playerNameMap = new Map(players.map((p) => [p.id, `${p.firstName} ${p.lastName}`]))
+
+			// Validate membership restrictions
+			if (event.registrationType === RegistrationTypeChoices.MEMBER) {
+				for (const p of players) {
+					if (!p.isMember) {
+						throw new MembersOnlyError(playerNameMap.get(p.id))
+					}
+				}
+			}
+			if (event.registrationType === RegistrationTypeChoices.RETURNING_MEMBER) {
+				for (const p of players) {
+					if (p.lastSeason !== event.season - 1) {
+						throw new ReturningMembersOnlyError(playerNameMap.get(p.id))
+					}
+				}
+			}
 
 			// Check no players are already registered for this event (with row lock)
 			for (const pid of playerIds) {

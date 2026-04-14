@@ -11,6 +11,7 @@ import {
 	CourseRequiredError,
 	EventFullError,
 	EventRegistrationNotOpenError,
+	MembersOnlyError,
 	PlayerConflictError,
 	ReturningMembersOnlyError,
 	SlotConflictError,
@@ -53,7 +54,7 @@ const createClubEvent = (overrides: Partial<ClubEvent> = {}): ClubEvent => ({
 	id: 100,
 	eventType: EventTypeChoices.WEEKNIGHT,
 	name: "Test Event",
-	registrationType: RegistrationTypeChoices.MEMBER,
+	registrationType: RegistrationTypeChoices.OPEN,
 	canChoose: true,
 	ghinRequired: false,
 	startDate: "2025-06-15",
@@ -570,6 +571,48 @@ describe("RegistrationService", () => {
 			})
 		})
 
+		describe("members only", () => {
+			it("rejects non-member on members-only event", async () => {
+				const { service, eventsService, repository } = createService()
+				const user = createDjangoUser()
+				const event = createClubEvent({
+					registrationType: RegistrationTypeChoices.MEMBER,
+					canChoose: false,
+				})
+				const request = createReserveRequest({ slotIds: [], courseId: undefined })
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findPlayerByUserId.mockResolvedValue(createPlayerRow({ isMember: 0 }))
+
+				await expect(service.createAndReserve(user, request)).rejects.toThrow(MembersOnlyError)
+			})
+
+			it("allows member on members-only event", async () => {
+				const { service, eventsService, repository, mockTx } = createService()
+				const user = createDjangoUser()
+				const event = createClubEvent({
+					registrationType: RegistrationTypeChoices.MEMBER,
+					canChoose: false,
+				})
+				const request = createReserveRequest({ slotIds: [], courseId: undefined })
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findPlayerByUserId.mockResolvedValue(createPlayerRow({ isMember: 1 }))
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(null)
+				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+				// Mock capacity count + no existing registration in tx
+				let queryCount = 0
+				mockTx.then = (resolve: (val: unknown) => void) => {
+					queryCount++
+					if (queryCount === 1) return Promise.resolve([{ count: 0 }]).then(resolve)
+					return Promise.resolve([]).then(resolve)
+				}
+
+				await expect(service.createAndReserve(user, request)).resolves.toBeDefined()
+			})
+		})
+
 		describe("returning members only", () => {
 			it("rejects non-returning member on returning-members-only event", async () => {
 				const { service, eventsService, repository } = createService()
@@ -872,6 +915,58 @@ describe("RegistrationService", () => {
 
 			// Should have updated the available slot with sessionId: 7
 			expect(mockTx.set).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 7 }))
+		})
+
+		it("rejects non-member player on members-only event", async () => {
+			const { service, repository, eventsService, mockTx } = createService()
+
+			const regFull = createRegistrationFull({
+				slots: [createRegistrationSlotFull({ id: 1, playerId: 1, slot: 0 })],
+			})
+
+			repository.findRegistrationFullById.mockResolvedValue(regFull)
+			eventsService.getEventById.mockResolvedValue({
+				canChoose: false,
+				maximumSignupGroupSize: 4,
+				groupSize: 4,
+				registrationType: RegistrationTypeChoices.MEMBER,
+				season: 2025,
+			})
+
+			// Mock tx.select().from().where() to return a non-member player
+			mockTx.then = (resolve: (val: unknown) => void) =>
+				Promise.resolve([
+					{ id: 3, firstName: "Guest", lastName: "Player", isMember: 0, lastSeason: null },
+				]).then(resolve)
+
+			await expect(service.addPlayersToRegistration(1, [3], 1)).rejects.toThrow(MembersOnlyError)
+		})
+
+		it("rejects non-returning player on returning-members-only event", async () => {
+			const { service, repository, eventsService, mockTx } = createService()
+
+			const regFull = createRegistrationFull({
+				slots: [createRegistrationSlotFull({ id: 1, playerId: 1, slot: 0 })],
+			})
+
+			repository.findRegistrationFullById.mockResolvedValue(regFull)
+			eventsService.getEventById.mockResolvedValue({
+				canChoose: false,
+				maximumSignupGroupSize: 4,
+				groupSize: 4,
+				registrationType: RegistrationTypeChoices.RETURNING_MEMBER,
+				season: 2025,
+			})
+
+			// Mock tx.select().from().where() to return a player with wrong lastSeason
+			mockTx.then = (resolve: (val: unknown) => void) =>
+				Promise.resolve([
+					{ id: 3, firstName: "Old", lastName: "Member", isMember: 1, lastSeason: 2023 },
+				]).then(resolve)
+
+			await expect(service.addPlayersToRegistration(1, [3], 1)).rejects.toThrow(
+				ReturningMembersOnlyError,
+			)
 		})
 	})
 

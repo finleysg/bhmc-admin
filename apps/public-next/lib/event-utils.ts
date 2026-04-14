@@ -224,6 +224,7 @@ interface SignUpReasonContext {
 	>
 	isAuthenticated: boolean
 	hasSignedUp: boolean
+	playerIsMember?: boolean
 	playerLastSeason?: number | null
 	isEventFull?: boolean
 }
@@ -232,6 +233,7 @@ export function getSignUpUnavailableReason({
 	event,
 	isAuthenticated,
 	hasSignedUp,
+	playerIsMember,
 	playerLastSeason,
 	isEventFull,
 }: SignUpReasonContext): string | null {
@@ -264,6 +266,10 @@ export function getSignUpUnavailableReason({
 
 	if (isEventFull) {
 		return "The event is full."
+	}
+
+	if (event.registration_type === RegistrationType.MembersOnly && playerIsMember === false) {
+		return "This event is restricted to members."
 	}
 
 	if (

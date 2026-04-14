@@ -100,6 +100,14 @@ export default function RegisterPage() {
 
 		if (!clubEvent.can_choose) {
 			if (
+				clubEvent.registration_type === RegistrationType.MembersOnly &&
+				myPlayer &&
+				!myPlayer.is_member
+			) {
+				setError("This event is restricted to members.")
+				return
+			}
+			if (
 				clubEvent.registration_type === RegistrationType.ReturningMembersOnly &&
 				myPlayer &&
 				myPlayer.last_season !== clubEvent.season - 1
