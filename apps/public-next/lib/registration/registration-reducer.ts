@@ -247,20 +247,25 @@ export const registrationReducer = produce(
 						lastSeason: player.lastSeason,
 					}
 				}
-				// Auto-add required fees for this slot
+				// Auto-add required fees for this slot (skip if already present)
 				const sessionOverrides = draft.selectedSession?.feeOverrides
 				draft.clubEvent?.fees
 					.filter((f) => f.is_required)
 					.forEach((fee) => {
 						if (draft.payment) {
-							draft.payment.details.push({
-								id: 0,
-								paymentId: draft.payment.id,
-								eventFeeId: fee.id,
-								registrationSlotId: slot.id,
-								amount: calculateFeeAmount(fee, player, sessionOverrides),
-								isPaid: false,
-							})
+							const alreadyExists = draft.payment.details.some(
+								(d) => d.eventFeeId === fee.id && d.registrationSlotId === slot.id,
+							)
+							if (!alreadyExists) {
+								draft.payment.details.push({
+									id: 0,
+									paymentId: draft.payment.id,
+									eventFeeId: fee.id,
+									registrationSlotId: slot.id,
+									amount: calculateFeeAmount(fee, player, sessionOverrides),
+									isPaid: false,
+								})
+							}
 						}
 					})
 				return

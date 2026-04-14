@@ -443,8 +443,9 @@ export class RegistrationService {
 			registrationId = Number(result.insertId)
 
 			// Assign requesting player to lowest numbered slot
+			const lowestSlotId = Math.min(...slots.map((s) => s.id))
 			for (const slot of slots) {
-				const pid = slot.id === slotIds[0] ? playerId : null
+				const pid = slot.id === lowestSlotId ? playerId : null
 				await tx
 					.update(registrationSlot)
 					.set({ playerId: pid, status: RegistrationStatusChoices.PENDING, registrationId })

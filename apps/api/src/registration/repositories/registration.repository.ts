@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, or, like, lt, sql } from "drizzle-orm"
+import { and, asc, eq, inArray, isNotNull, or, like, lt, sql } from "drizzle-orm"
 import type { MySql2Database } from "drizzle-orm/mysql2"
 
 import { Inject, Injectable, Logger } from "@nestjs/common"
@@ -426,6 +426,7 @@ export class RegistrationRepository {
 			.leftJoin(player, eq(registrationSlot.playerId, player.id))
 			.leftJoin(registrationFee, eq(registrationFee.registrationSlotId, registrationSlot.id))
 			.where(eq(registration.id, registrationId))
+			.orderBy(asc(registrationSlot.slot))
 
 		if (results.length === 0) throw new Error(`No registration for id ${registrationId}`)
 

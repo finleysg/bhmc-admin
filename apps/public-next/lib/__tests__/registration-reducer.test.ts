@@ -438,6 +438,40 @@ describe("registrationReducer", () => {
 			expect(result.payment?.details).toHaveLength(1)
 			expect(result.payment?.details[0].amount).toBe(5)
 		})
+
+		it("does not duplicate required fee if one already exists for the slot", () => {
+			const slot = makeSlot({ id: 10 })
+			const requiredFee = makeEventFee({ id: 1, is_required: true, amount: "5.00" })
+			const event = makeEvent({ fees: [requiredFee] })
+			const state = makeState({
+				clubEvent: event,
+				registration: makeRegistration({ slots: [slot] }),
+				payment: makePayment({
+					details: [
+						{
+							id: 0,
+							paymentId: 0,
+							eventFeeId: 1,
+							registrationSlotId: 10,
+							amount: 5,
+							isPaid: false,
+						},
+					],
+				}),
+			})
+			const result = registrationReducer(state, {
+				type: "add-player",
+				payload: {
+					slot,
+					playerId: 42,
+					playerName: "John Doe",
+					player: makeFeePlayer(),
+				},
+			})
+			expect(result.payment?.details).toHaveLength(1)
+			expect(result.payment?.details[0].eventFeeId).toBe(1)
+			expect(result.payment?.details[0].registrationSlotId).toBe(10)
+		})
 	})
 
 	describe("remove-player", () => {

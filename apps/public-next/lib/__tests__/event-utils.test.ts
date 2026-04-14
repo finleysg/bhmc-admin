@@ -12,7 +12,13 @@ import {
 	shouldShowSignUpButton,
 	getSignUpUnavailableReason,
 } from "../event-utils"
-import type { ClubEvent, ClubEventDetail, EventSession, RegistrationSlot, RegistrationSlotPlayer } from "../types"
+import type {
+	ClubEvent,
+	ClubEventDetail,
+	EventSession,
+	RegistrationSlot,
+	RegistrationSlotPlayer,
+} from "../types"
 
 function makeEvent(overrides: Partial<ClubEventDetail> = {}): ClubEventDetail {
 	return {

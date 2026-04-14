@@ -397,7 +397,9 @@ export function RegistrationProvider({
 		if (!registration.slots?.length) {
 			throw new Error("Cannot create an initial payment record without registration slots.")
 		}
-		const firstSlot = registration.slots[0]
+		// Find the slot assigned to the registering user (don't rely on array position)
+		const userSlot =
+			registration.slots.find((s) => s.player?.id === user.playerId) ?? registration.slots[0]
 		const details: ServerPayment["details"] = []
 
 		// Build a FeePlayer from the current user for fee calculation
@@ -415,7 +417,7 @@ export function RegistrationProvider({
 					id: 0,
 					paymentId: 0,
 					eventFeeId: fee.id,
-					registrationSlotId: firstSlot.id,
+					registrationSlotId: userSlot.id,
 					amount: calculateFeeAmount(fee, feePlayer, sessionOverrides),
 					isPaid: false,
 				})

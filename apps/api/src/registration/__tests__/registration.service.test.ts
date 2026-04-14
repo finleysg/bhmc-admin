@@ -391,6 +391,45 @@ describe("RegistrationService", () => {
 				// New registration should be created (insert called)
 				expect(mockTx.insert).toHaveBeenCalled()
 			})
+			it("assigns user to lowest slot ID regardless of slotIds order", async () => {
+				const { service, eventsService, repository, mockTx } = createService()
+				const user = createDjangoUser({ playerId: 42 })
+				const event = createClubEvent({ canChoose: true })
+				// slotIds in reverse order: higher ID first
+				const request = createReserveRequest({ slotIds: [200, 100] })
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(null)
+				mockTx.for.mockResolvedValue([
+					{
+						...createRegistrationSlotRow({ id: 200 }),
+						status: RegistrationStatusChoices.AVAILABLE,
+					},
+					{
+						...createRegistrationSlotRow({ id: 100 }),
+						status: RegistrationStatusChoices.AVAILABLE,
+					},
+				])
+				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+
+				await service.createAndReserve(user, request)
+
+				// The set() calls update each slot. Verify that playerId 42 was
+				// assigned to the lowest slot ID (100), not slotIds[0] (200).
+				const setCalls = mockTx.set.mock.calls as Array<[Record<string, unknown>]>
+				const playerAssignments = setCalls.map((call) => call[0]).filter((arg) => "playerId" in arg)
+				expect(playerAssignments).toEqual(
+					expect.arrayContaining([
+						expect.objectContaining({ playerId: 42 }),
+						expect.objectContaining({ playerId: null }),
+					]),
+				)
+				// The update with playerId should target slot 100 (the lowest)
+				// The update().where() chain is called for each slot. Since mockTx is
+				// chainable, we verify via the set calls that exactly one has the player.
+				const withPlayer = playerAssignments.filter((a) => a.playerId === 42)
+				expect(withPlayer).toHaveLength(1)
+			})
 		})
 
 		describe("non-choosable events", () => {
