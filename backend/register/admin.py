@@ -1,23 +1,25 @@
 import structlog
-
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 
 from core.util import current_season
 from events.models import Event
-from .models import Registration, RegistrationSlot, Player, RegistrationFee, PlayerHandicap
+
+from .models import Player, PlayerHandicap, Registration, RegistrationFee, RegistrationSlot
 
 logger = structlog.getLogger(__name__)
 
 
 class CurrentSeasonFilter(SimpleListFilter):
     season = current_season()
-    title = "{} events".format(season)
+    title = f"{season} events"
     parameter_name = "event"
 
     def lookups(self, request, model_admin):
         year = current_season()
-        events = set([event for event in Event.objects.filter(season=year).exclude(registration_type="N")])
+        events = set(
+            [event for event in Event.objects.filter(season=year).exclude(registration_type="N")]
+        )
         return [(e.id, e.name) for e in events]
 
     def queryset(self, request, queryset):
@@ -32,8 +34,14 @@ class RegistrationFeeInline(admin.TabularInline):
     extra = 0
     show_change_link = False
     verbose_name_plural = "Registration fees"
-    fields = ["event_fee", "amount", "is_paid", ]
-    readonly_fields = ["event_fee", ]
+    fields = [
+        "event_fee",
+        "amount",
+        "is_paid",
+    ]
+    readonly_fields = [
+        "event_fee",
+    ]
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -45,7 +53,14 @@ class RegistrationSlotInline(admin.TabularInline):
     extra = 0
     show_change_link = True
     verbose_name_plural = "Registration details (slots)"
-    fields = ["player", "hole", "starting_order", "slot", "status", ]
+    fields = [
+        "player",
+        "session",
+        "hole",
+        "starting_order",
+        "slot",
+        "status",
+    ]
 
 
 class PlayerHandicapInline(admin.TabularInline):
@@ -54,22 +69,55 @@ class PlayerHandicapInline(admin.TabularInline):
     extra = 0
     show_change_link = True
     verbose_name_plural = "Year End Handicap Index"
-    fields = ["season", "handicap", ]
+    fields = [
+        "season",
+        "handicap",
+    ]
 
 
 class PlayerAdmin(admin.ModelAdmin):
     model = Player
     can_delete = True
     save_on_top = True
-    fields = ["email", "first_name", "last_name", "ghin", "tee", "birth_date", "profile_picture", "stripe_customer_id",
-              "is_member", "last_season", ]
-    inlines = [PlayerHandicapInline, ]
-    list_display = ["email", "first_name", "last_name", "ghin", "tee", "birth_date", "is_member", ]
-    list_display_links = ("email", )
-    list_filter = ("is_member", "last_season",)
+    fields = [
+        "email",
+        "first_name",
+        "last_name",
+        "ghin",
+        "tee",
+        "birth_date",
+        "profile_picture",
+        "stripe_customer_id",
+        "is_member",
+        "last_season",
+    ]
+    inlines = [
+        PlayerHandicapInline,
+    ]
+    list_display = [
+        "email",
+        "first_name",
+        "last_name",
+        "ghin",
+        "tee",
+        "birth_date",
+        "is_member",
+    ]
+    list_display_links = ("email",)
+    list_filter = (
+        "is_member",
+        "last_season",
+    )
 
-    ordering = ["last_name", "first_name", ]
-    search_fields = ("first_name", "last_name", "email", )
+    ordering = [
+        "last_name",
+        "first_name",
+    ]
+    search_fields = (
+        "first_name",
+        "last_name",
+        "email",
+    )
 
 
 class RegistrationAdmin(admin.ModelAdmin):
@@ -77,27 +125,63 @@ class RegistrationAdmin(admin.ModelAdmin):
     save_on_top = True
 
     fieldsets = (
-        (None, {
-            "fields": (("event", "course", ), )
-        }),
-        (None, {
-            "fields": (("user", "signed_up_by", "created_date", "expires", ), )
-        }),
-        ("Notes", {
-            "fields": ("notes", )
-        })
+        (
+            None,
+            {
+                "fields": (
+                    (
+                        "event",
+                        "course",
+                    ),
+                )
+            },
+        ),
+        (
+            None,
+            {
+                "fields": (
+                    (
+                        "user",
+                        "signed_up_by",
+                        "created_date",
+                        "expires",
+                    ),
+                )
+            },
+        ),
+        ("Notes", {"fields": ("notes",)}),
     )
 
-    inlines = [RegistrationSlotInline, ]
-    readonly_fields = ["created_date", "expires", ]
+    inlines = [
+        RegistrationSlotInline,
+    ]
+    readonly_fields = [
+        "created_date",
+        "expires",
+    ]
 
-    list_display = ["id", "event", "created_date", "user", "signed_up_by", "notes", ]
-    list_display_links = ("id", )
-    list_select_related = ("event", )
+    list_display = [
+        "id",
+        "event",
+        "created_date",
+        "user",
+        "signed_up_by",
+        "notes",
+    ]
+    list_display_links = ("id",)
+    list_select_related = ("event",)
     date_hierarchy = "event__start_date"
-    ordering = ["event", "created_date", ]
-    search_fields = ("signed_up_by", "user__email", "user__first_name", "user__last_name", )
-    list_filter = (CurrentSeasonFilter, )
+    ordering = [
+        "event",
+        "created_date",
+    ]
+    search_fields = (
+        "signed_up_by",
+        "user__email",
+        "user__first_name",
+        "user__last_name",
+    )
+    list_filter = (CurrentSeasonFilter,)
 
     def has_delete_permission(self, request, obj=None):
         if request.user.id == 1:
@@ -134,35 +218,76 @@ class RegistrationSlotAdmin(admin.ModelAdmin):
     save_on_top = True
 
     fieldsets = (
-        ("Event", {
-            "fields": ("event", "registration", "hole", "starting_order", )
-        }),
-        ("Player", {
-            "fields": ("player", "status", )
-        }),
+        (
+            "Event",
+            {
+                "fields": (
+                    "event",
+                    "registration",
+                    "session",
+                    "hole",
+                    "starting_order",
+                )
+            },
+        ),
+        (
+            "Player",
+            {
+                "fields": (
+                    "player",
+                    "status",
+                )
+            },
+        ),
     )
-    list_display = ["id", "registration", "player", "hole", "starting_order", "status", ]
-    list_display_links = ("id", )
-    list_filter = (CurrentSeasonFilter, )
-    list_select_related = ("player", "hole", )
+    list_display = [
+        "id",
+        "registration",
+        "player",
+        "session",
+        "hole",
+        "starting_order",
+        "status",
+    ]
+    list_display_links = ("id",)
+    list_filter = (CurrentSeasonFilter,)
+    list_select_related = (
+        "player",
+        "hole",
+    )
     date_hierarchy = "event__start_date"
     search_fields = ("player__first_name", "player__last_name", "player__email")
-    inlines = [RegistrationFeeInline, ]
-    ordering = ["id", ]
+    inlines = [
+        RegistrationFeeInline,
+    ]
+    ordering = [
+        "id",
+    ]
 
     def get_form(self, request, obj=None, **kwargs):
-        form = super(RegistrationSlotAdmin, self).get_form(request, obj, **kwargs)
-        form.base_fields["registration"].queryset = Registration.objects.filter(event__id=obj.event_id)
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields["registration"].queryset = Registration.objects.filter(
+            event__id=obj.event_id
+        )
         return form
 
 
 class RegistrationFeeAdmin(admin.ModelAdmin):
-
     model = RegistrationFee
     show_change_link = False
     verbose_name_plural = "Registration fees"
-    fields = ["registration_slot", "event_fee", "payment", "amount", "is_paid", ]
-    readonly_fields = ["registration_slot", "event_fee", "payment", ]
+    fields = [
+        "registration_slot",
+        "event_fee",
+        "payment",
+        "amount",
+        "is_paid",
+    ]
+    readonly_fields = [
+        "registration_slot",
+        "event_fee",
+        "payment",
+    ]
 
 
 admin.site.register(Player, PlayerAdmin)
