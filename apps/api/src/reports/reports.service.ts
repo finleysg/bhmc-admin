@@ -626,9 +626,7 @@ export class ReportsService {
 			feeTypeSums.push({ feeTypeName, amount: gross - refunded })
 		}
 
-		const totalCollectedOnline = feeTypeSums.reduce((a, b) => a + b.amount, 0)
 		const collectedCash = 0
-		const totalCollected = totalCollectedOnline + collectedCash
 
 		// Get payouts by type (Credit vs Cash)
 		const outflows = await this.drizzle.db
@@ -652,14 +650,32 @@ export class ReportsService {
 
 		const totalPayouts = proShopPayouts + cashPayouts
 
-		// Get pass-through fees (Greens Fee and Cart Fee)
+		// Stripe does not return processing fees on refunds (US policy since 2019),
+		// so the club's Stripe cost is the full sum of transaction fees on confirmed
+		// payments — refunds do not reduce it.
+		const stripeFeeRows = await this.drizzle.db
+			.select({
+				total: sql<number>`coalesce(sum(${payment.transactionFee}), 0)`.as("total"),
+			})
+			.from(payment)
+			.where(and(eq(payment.eventId, eventId), eq(payment.confirmed, 1)))
+
+		const stripeFees = parseFloat((stripeFeeRows[0]?.total ?? 0).toString())
+
+		// Fee-type sums (registration_fee.amount) are base amounts — the Stripe
+		// fee was charged on top of them and is stored separately in payment.transaction_fee.
+		// Gross total collected = base fees + Stripe markup that players paid.
+		const totalCollectedOnline = feeTypeSums.reduce((a, b) => a + b.amount, 0) + stripeFees
+		const totalCollected = totalCollectedOnline + collectedCash
+
+		// Get pass-through fees (Greens Fee and Cart Fee) — base amounts owed to the course.
 		const greenFeeSum = feeTypeSums.find((f) => f.feeTypeName === "Greens Fee")
 		const cartFeeSum = feeTypeSums.find((f) => f.feeTypeName === "Cart Fee")
 		const greenFees = greenFeeSum?.amount || 0
 		const cartFees = cartFeeSum?.amount || 0
 		const totalPassThrough = greenFees + cartFees
 
-		const balance = totalCollected - (totalPayouts + totalPassThrough)
+		const balance = totalCollected - (totalPayouts + stripeFees + totalPassThrough)
 
 		return {
 			eventId,
@@ -670,6 +686,7 @@ export class ReportsService {
 			proShopPayouts,
 			cashPayouts,
 			totalPayouts,
+			stripeFees,
 			greenFees,
 			cartFees,
 			totalPassThrough,
@@ -719,6 +736,12 @@ export class ReportsService {
 			row++
 		}
 
+		// Stripe fees charged to players (added on top of base fees)
+		worksheet.getRow(row).getCell(1).value = "Stripe fees"
+		worksheet.getRow(row).getCell(2).value = report.stripeFees
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		row++
+
 		// Collection totals
 		worksheet.getRow(row).getCell(1).value = "Total collected online"
 		worksheet.getRow(row).getCell(2).value = report.totalCollectedOnline
@@ -752,6 +775,16 @@ export class ReportsService {
 
 		worksheet.getRow(row).getCell(1).value = "Total payouts"
 		worksheet.getRow(row).getCell(2).value = report.totalPayouts
+		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
+		worksheet.getRow(row).font = { bold: true }
+		row++
+
+		// Divider
+		row++
+
+		// Processing fees
+		worksheet.getRow(row).getCell(1).value = "Stripe fees"
+		worksheet.getRow(row).getCell(2).value = report.stripeFees
 		worksheet.getRow(row).getCell(2).numFmt = "$#,##0.00"
 		worksheet.getRow(row).font = { bold: true }
 		row++

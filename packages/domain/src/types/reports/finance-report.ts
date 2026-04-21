@@ -12,6 +12,7 @@ export interface FinanceReportSummary {
 	proShopPayouts: number
 	cashPayouts: number
 	totalPayouts: number
+	stripeFees: number
 	greenFees: number
 	cartFees: number
 	totalPassThrough: number

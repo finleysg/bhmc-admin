@@ -20,6 +20,12 @@ const FinanceSummary = ({ data }: { data: FinanceReportSummary | null }) => {
 					</div>
 				))}
 
+				{/* Stripe fees charged to players (added on top of base fees) */}
+				<div className="flex justify-between">
+					<span>Stripe fees</span>
+					<span>{formatCurrency(data.stripeFees)}</span>
+				</div>
+
 				{/* Collection totals */}
 				<div className="flex justify-between">
 					<span>Total collected online</span>
@@ -48,6 +54,14 @@ const FinanceSummary = ({ data }: { data: FinanceReportSummary | null }) => {
 				<div className="flex justify-between font-bold">
 					<span>Total payouts</span>
 					<span>{formatCurrency(data.totalPayouts)}</span>
+				</div>
+
+				<div className="divider my-1"></div>
+
+				{/* Processing fees */}
+				<div className="flex justify-between font-bold">
+					<span>Stripe fees</span>
+					<span>{formatCurrency(data.stripeFees)}</span>
 				</div>
 
 				<div className="divider my-1"></div>
