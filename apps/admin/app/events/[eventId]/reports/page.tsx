@@ -63,6 +63,11 @@ export default function EventReportsPage() {
 			description: "History of registration changes and admin actions",
 			href: `/events/${eventId}/reports/changelog`,
 		},
+		{
+			title: "Notes Report",
+			description: "Registrations that include notes or player requests",
+			href: `/events/${eventId}/reports/notes`,
+		},
 	]
 
 	return (

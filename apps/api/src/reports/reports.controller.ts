@@ -137,6 +137,23 @@ export class ReportsController {
 		res.send(buffer)
 	}
 
+	@Get("events/:eventId/notes")
+	async getNotesReport(@Param("eventId", ParseIntPipe) eventId: number) {
+		return this.reports.getNotesReport(eventId)
+	}
+
+	@Get("events/:eventId/notes/excel")
+	async getNotesReportExcel(@Param("eventId", ParseIntPipe) eventId: number, @Res() res: Response) {
+		const buffer = await this.reports.generateNotesReportExcel(eventId)
+
+		res.setHeader(
+			"Content-Type",
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		)
+		res.setHeader("Content-Disposition", `attachment; filename="notes-report-${eventId}.xlsx"`)
+		res.send(buffer)
+	}
+
 	@Get("events/:eventId/changelog")
 	async getChangeLogReport(@Param("eventId", ParseIntPipe) eventId: number) {
 		return this.reports.getChangeLogReport(eventId)

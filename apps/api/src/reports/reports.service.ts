@@ -13,6 +13,7 @@ import {
 	FinanceReportSummary,
 	Hole,
 	MembershipReportRow,
+	NotesReportRow,
 	PaymentReportDetail,
 	PaymentReportRefund,
 	PaymentReportRow,
@@ -34,6 +35,7 @@ import {
 	payment,
 	player,
 	refund,
+	registration,
 	registrationChangeLog,
 	registrationFee,
 	registrationSlot,
@@ -1085,6 +1087,57 @@ export class ReportsService {
 			{ width: 10 }, // Column 5
 			{ width: 15 }, // Column 6
 		]
+
+		return generateBuffer(workbook)
+	}
+
+	async getNotesReport(eventId: number): Promise<NotesReportRow[]> {
+		await this.validateEvent(eventId)
+
+		const rows = await this.drizzle.db
+			.select({
+				createdDate: registration.createdDate,
+				signedUpBy: registration.signedUpBy,
+				firstName: authUser.firstName,
+				lastName: authUser.lastName,
+				notes: registration.notes,
+			})
+			.from(registration)
+			.leftJoin(authUser, eq(registration.userId, authUser.id))
+			.where(
+				and(
+					eq(registration.eventId, eventId),
+					isNotNull(registration.notes),
+					sql`${registration.notes} <> ''`,
+				),
+			)
+			.orderBy(desc(registration.createdDate))
+
+		return rows.map((r) => {
+			const authName = r.firstName && r.lastName ? `${r.firstName} ${r.lastName}`.trim() : ""
+			return {
+				createdDate: r.createdDate ? toLocalDatetime(r.createdDate) : "",
+				userName: authName || r.signedUpBy || "",
+				notes: r.notes ?? "",
+			}
+		})
+	}
+
+	async generateNotesReportExcel(eventId: number): Promise<Buffer> {
+		const rows = await this.getNotesReport(eventId)
+
+		const workbook = createWorkbook()
+		const worksheet = workbook.addWorksheet("Notes")
+
+		const fixedColumns = [
+			{ header: "Signup Date", key: "createdDate", width: 20 },
+			{ header: "User", key: "userName", width: 25 },
+			{ header: "Notes", key: "notes", width: 80 },
+		]
+
+		addFixedColumns(worksheet, fixedColumns)
+		styleHeaderRow(worksheet, 1)
+		addDataRows(worksheet, 2, rows as unknown as Record<string, unknown>[], fixedColumns)
 
 		return generateBuffer(workbook)
 	}

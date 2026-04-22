@@ -1,14 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { useParams } from "next/navigation"
 
 import { Pagination } from "@/components/pagination"
 import { ReportPage } from "@/components/report-page"
-import { useIsMobile } from "@/lib/use-is-mobile"
 import { ArrowDownIcon, ArrowsUpDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline"
-import { ChangeLogReportRow } from "@repo/domain/types"
+import { NotesReportRow } from "@repo/domain/types"
 import {
 	ColumnDef,
 	flexRender,
@@ -20,87 +19,31 @@ import {
 	useReactTable,
 } from "@tanstack/react-table"
 
-const ACTION_BADGE: Record<string, string> = {
-	add_players: "badge-success",
-	admin_create: "badge-success",
-	drop: "badge-error",
-	cancel: "badge-error",
-	expired: "badge-warning",
-	refund: "badge-warning",
-	replace: "badge-info",
-	move: "badge-info",
-	swap: "badge-info",
-	add_notes: "badge-ghost",
-	update_notes: "badge-ghost",
-	update_fees: "badge-accent",
-}
-
-function formatAction(action: string): string {
-	return action.replace(/_/g, " ")
-}
-
-const ChangeLogTable = ({ data }: { data: ChangeLogReportRow[] | null }) => {
-	const isMobile = useIsMobile()
+const NotesTable = ({ data }: { data: NotesReportRow[] | null }) => {
 	const [sorting, setSorting] = useState<SortingState>([{ id: "createdDate", desc: true }])
 	const [globalFilter, setGlobalFilter] = useState("")
 	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 })
-	const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({})
 
-	const columns: ColumnDef<ChangeLogReportRow>[] = [
+	const columns: ColumnDef<NotesReportRow>[] = [
 		{
 			accessorKey: "createdDate",
-			header: "Time",
+			header: "Signup Date",
 			enableSorting: true,
-			cell: ({ getValue }) => {
-				const utc = getValue<string>()
-				const date = new Date(utc.replace(" ", "T") + "Z")
-				return date.toLocaleString()
-			},
+			cell: ({ getValue }) => <span className="whitespace-nowrap">{getValue<string>()}</span>,
 		},
 		{
-			accessorKey: "action",
-			header: "Action",
+			accessorKey: "userName",
+			header: "User",
 			enableSorting: true,
-			cell: ({ getValue }) => {
-				const action = getValue<string>()
-				const badgeClass = ACTION_BADGE[action] ?? "badge-ghost"
-				return (
-					<span className={`badge badge-sm whitespace-nowrap ${badgeClass}`}>
-						{formatAction(action)}
-					</span>
-				)
-			},
+			cell: ({ getValue }) => <span className="whitespace-nowrap">{getValue<string>()}</span>,
 		},
 		{
-			accessorKey: "actor",
-			header: "Actor",
-			enableSorting: true,
-		},
-		{
-			accessorKey: "isAdmin",
-			header: "Admin",
-			enableSorting: true,
-			cell: ({ getValue }) => (getValue<boolean>() ? "Yes" : ""),
-		},
-		{
-			accessorKey: "details",
-			header: "Details",
+			accessorKey: "notes",
+			header: "Notes",
 			enableSorting: false,
+			cell: ({ getValue }) => <span className="whitespace-pre-wrap">{getValue<string>()}</span>,
 		},
 	]
-
-	useEffect(() => {
-		if (!data || data.length === 0) return
-
-		const mobileVisibleColumns = ["createdDate", "action", "details"]
-		const allColumnKeys = ["createdDate", "action", "actor", "isAdmin", "details"]
-
-		const visibility: Record<string, boolean> = {}
-		allColumnKeys.forEach((key) => {
-			visibility[key] = !isMobile || mobileVisibleColumns.includes(key)
-		})
-		setColumnVisibility(visibility)
-	}, [isMobile, data])
 
 	const table = useReactTable({
 		data: data || [],
@@ -109,12 +52,10 @@ const ChangeLogTable = ({ data }: { data: ChangeLogReportRow[] | null }) => {
 			sorting,
 			globalFilter,
 			pagination,
-			columnVisibility,
 		},
 		onSortingChange: setSorting,
 		onGlobalFilterChange: setGlobalFilter,
 		onPaginationChange: setPagination,
-		onColumnVisibilityChange: setColumnVisibility,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
@@ -169,7 +110,9 @@ const ChangeLogTable = ({ data }: { data: ChangeLogReportRow[] | null }) => {
 						{table.getRowModel().rows.map((row) => (
 							<tr key={row.id}>
 								{row.getVisibleCells().map((cell) => (
-									<td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+									<td key={cell.id} className="align-top">
+										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+									</td>
 								))}
 							</tr>
 						))}
@@ -183,19 +126,19 @@ const ChangeLogTable = ({ data }: { data: ChangeLogReportRow[] | null }) => {
 	)
 }
 
-export default function ChangeLogReportPage() {
+export default function NotesReportPage() {
 	const params = useParams()
 	const eventId = params.eventId as string
 
 	return (
-		<ReportPage<ChangeLogReportRow[]>
-			title="Change Log"
+		<ReportPage<NotesReportRow[]>
+			title="Notes"
 			eventId={eventId}
-			fetchPath={`/api/events/${eventId}/reports/changelog`}
-			excelPath={`/api/events/${eventId}/reports/changelog/excel`}
-			filenamePrefix="changelog"
+			fetchPath={`/api/events/${eventId}/reports/notes`}
+			excelPath={`/api/events/${eventId}/reports/notes/excel`}
+			filenamePrefix="notes"
 		>
-			{(data) => <ChangeLogTable data={data} />}
+			{(data) => <NotesTable data={data} />}
 		</ReportPage>
 	)
 }
