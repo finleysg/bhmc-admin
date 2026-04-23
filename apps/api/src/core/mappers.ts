@@ -59,12 +59,14 @@ export function mapTournamentWinnerToChampionInsert(
 	eventId: number,
 	eventSeason: number,
 	eventName: string,
+	defaultFlight?: string,
 ): ChampionInsert {
 	if (!winner) {
 		throw new Error(`Winner result is null or undefined`)
 	}
 
-	if (!winner.flight) {
+	const flight = winner.flight || defaultFlight
+	if (!flight) {
 		throw new Error(
 			`Winner (ID: ${winner.id}) has missing flight information for tournament ${winner.tournamentId}`,
 		)
@@ -79,7 +81,7 @@ export function mapTournamentWinnerToChampionInsert(
 	return {
 		season: eventSeason,
 		eventName: eventName,
-		flight: winner.flight,
+		flight,
 		score: winner.score,
 		playerId: winner.playerId,
 		isNet: isNet ? 1 : 0,
