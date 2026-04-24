@@ -86,6 +86,14 @@ export function mapTournamentWinnerToChampionInsert(
 		playerId: winner.playerId,
 		isNet: isNet ? 1 : 0,
 		eventId,
-		teamId: winner.teamId,
+		teamId: truncateTeamId(winner.teamId),
 	}
+}
+
+// core_majorchampion.team_id is varchar(8); Golf Genius team ids (aggregate.id_str)
+// can be much longer (e.g. 20-digit numeric). Keep the last 8 chars so rows for
+// the same team still share a stable key.
+function truncateTeamId(teamId: string | undefined): string | undefined {
+	if (!teamId) return teamId
+	return teamId.length <= 8 ? teamId : teamId.slice(-8)
 }

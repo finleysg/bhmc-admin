@@ -45,15 +45,23 @@ export class ImportChampionsService {
 
 			this.logger.log(`Processing ${format} tournament: ${localTournament.name}`)
 
-			try {
-				// For weeknight 9-hole events, use the tournament name (e.g. "Net LG/LN - East")
-				// instead of the generic event name (e.g. "Individual LG/LN")
-				const championEventName =
-					event.eventType === EventTypeChoices.WEEKNIGHT ? localTournament.name : event.name
+			// For weeknight 9-hole events, use the tournament name (e.g. "Net LG/LN - East")
+			// instead of the generic event name (e.g. "Individual LG/LN")
+			const championEventName =
+				event.eventType === EventTypeChoices.WEEKNIGHT ? localTournament.name : event.name
 
-				// Find first place winners from local tournament results
-				const winners = await this.eventsService.findTournamentWinners(localTournament.id)
-				for (const winner of winners) {
+			let winners: Awaited<ReturnType<EventsService["findTournamentWinners"]>>
+			try {
+				winners = await this.eventsService.findTournamentWinners(localTournament.id)
+			} catch (error) {
+				const errorMessage = `Error loading winners for tournament ${localTournament.name} (ID: ${localTournament.id}): ${error instanceof Error ? error.message : String(error)}`
+				this.logger.error(errorMessage)
+				errors.push(errorMessage)
+				continue
+			}
+
+			for (const winner of winners) {
+				try {
 					const champion = mapTournamentWinnerToChampionInsert(
 						winner,
 						localTournament.isNet,
@@ -67,12 +75,12 @@ export class ImportChampionsService {
 						`Created champion for player ${winner.player?.firstName} ${winner.player?.lastName} in flight ${champion.flight}`,
 					)
 					championsCreated += 1
+				} catch (error) {
+					const errorMessage = `Error processing tournament ${localTournament.name} (ID: ${localTournament.id}) for player ${winner.player?.firstName} ${winner.player?.lastName}: ${error instanceof Error ? error.message : String(error)}`
+					this.logger.error(errorMessage)
+					errors.push(errorMessage)
+					// Continue with other winners
 				}
-			} catch (error) {
-				const errorMessage = `Error processing tournament ${localTournament.name} (ID: ${localTournament.id}): ${error instanceof Error ? error.message : String(error)}`
-				this.logger.error(errorMessage)
-				errors.push(errorMessage)
-				// Continue with other tournaments
 			}
 		}
 
