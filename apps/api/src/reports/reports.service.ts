@@ -563,8 +563,12 @@ export class ReportsService {
 	async getFinanceReport(eventId: number): Promise<FinanceReportSummary> {
 		await this.validateEvent(eventId)
 
-		// Get gross inflows by fee type
-		const grossByFeeType = await this.drizzle.db
+		// Net inflows by fee type — sum unrefunded fees on confirmed payments.
+		// registration_fee.is_paid is set to 0 when a refund is processed for that
+		// specific fee, so this gives the correct net per fee type without
+		// proportional allocation (which smeared fractional cents across buckets
+		// and misattributed partial refunds to the wrong fee types).
+		const netByFeeType = await this.drizzle.db
 			.select({
 				feeTypeName: feeType.name,
 				total: sql<number>`sum(${registrationFee.amount})`.as("total"),
@@ -573,60 +577,15 @@ export class ReportsService {
 			.innerJoin(registrationFee, eq(payment.id, registrationFee.paymentId))
 			.innerJoin(eventFee, eq(registrationFee.eventFeeId, eventFee.id))
 			.innerJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
-			.where(eq(payment.eventId, eventId))
+			.where(
+				and(eq(payment.eventId, eventId), eq(payment.confirmed, 1), eq(registrationFee.isPaid, 1)),
+			)
 			.groupBy(feeType.name)
 
-		// Build fee type -> gross amount map
-		const grossByFeeTypeMap = new Map<string, number>()
-		for (const row of grossByFeeType) {
-			grossByFeeTypeMap.set(row.feeTypeName, parseFloat(row.total.toString()))
-		}
-
-		// Get refunds and allocate proportionally by fee type
-		const refunds = await this.drizzle.db
-			.select({
-				paymentId: refund.paymentId,
-				refundAmount: refund.refundAmount,
-			})
-			.from(refund)
-			.innerJoin(payment, eq(refund.paymentId, payment.id))
-			.where(and(eq(payment.eventId, eventId), eq(refund.confirmed, 1)))
-
-		const refundByFeeTypeMap = new Map<string, number>()
-
-		for (const r of refunds) {
-			const fees = await this.drizzle.db
-				.select({
-					feeTypeName: feeType.name,
-					amount: registrationFee.amount,
-				})
-				.from(registrationFee)
-				.innerJoin(eventFee, eq(registrationFee.eventFeeId, eventFee.id))
-				.innerJoin(feeType, eq(eventFee.feeTypeId, feeType.id))
-				.innerJoin(payment, eq(registrationFee.paymentId, payment.id))
-				.where(eq(payment.id, r.paymentId))
-
-			let totalFees = 0
-			for (const f of fees) {
-				totalFees += parseFloat(f.amount.toString())
-			}
-
-			if (totalFees > 0) {
-				for (const f of fees) {
-					const proportion = parseFloat(f.amount.toString()) / totalFees
-					const allocated = parseFloat(r.refundAmount.toString()) * proportion
-					const prev = refundByFeeTypeMap.get(f.feeTypeName) || 0
-					refundByFeeTypeMap.set(f.feeTypeName, prev + allocated)
-				}
-			}
-		}
-
-		// Build feeTypeSums (net = gross - refund)
-		const feeTypeSums: FeeTypeSum[] = []
-		for (const [feeTypeName, gross] of grossByFeeTypeMap) {
-			const refunded = refundByFeeTypeMap.get(feeTypeName) || 0
-			feeTypeSums.push({ feeTypeName, amount: gross - refunded })
-		}
+		const feeTypeSums: FeeTypeSum[] = netByFeeType.map((row) => ({
+			feeTypeName: row.feeTypeName,
+			amount: parseFloat(row.total.toString()),
+		}))
 
 		const collectedCash = 0
 

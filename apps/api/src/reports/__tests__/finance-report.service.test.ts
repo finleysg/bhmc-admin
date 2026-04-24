@@ -61,20 +61,14 @@ function createService(queue: QueryResult[]) {
 // =============================================================================
 
 interface FinanceQueueParts {
-	grossByFeeType?: { feeTypeName: string; total: string }[]
-	refunds?: { paymentId: number; refundAmount: string }[]
-	refundFees?: { feeTypeName: string; amount: string }[][]
+	netByFeeType?: { feeTypeName: string; total: string }[]
 	outflows?: { payoutType: string; total: string }[]
 	stripeFees?: { total: string }[]
 }
 
 function buildQueue(parts: FinanceQueueParts): QueryResult[] {
 	const queue: QueryResult[] = []
-	queue.push(parts.grossByFeeType ?? [])
-	queue.push(parts.refunds ?? [])
-	for (const feesForRefund of parts.refundFees ?? []) {
-		queue.push(feesForRefund)
-	}
+	queue.push(parts.netByFeeType ?? [])
 	queue.push(parts.outflows ?? [])
 	queue.push(parts.stripeFees ?? [{ total: "0" }])
 	return queue
@@ -123,7 +117,7 @@ describe("ReportsService.getFinanceReport", () => {
 	test("sums base fees by fee type", async () => {
 		const { service } = createService(
 			buildQueue({
-				grossByFeeType: [
+				netByFeeType: [
 					{ feeTypeName: "Event Fee", total: "1475.00" },
 					{ feeTypeName: "Greens Fee", total: "1866.00" },
 					{ feeTypeName: "Cart Fee", total: "294.00" },
@@ -144,7 +138,7 @@ describe("ReportsService.getFinanceReport", () => {
 	test("includes Stripe fees in gross total collected online", async () => {
 		const { service } = createService(
 			buildQueue({
-				grossByFeeType: [
+				netByFeeType: [
 					{ feeTypeName: "Event Fee", total: "1475.00" },
 					{ feeTypeName: "Greens Fee", total: "1866.00" },
 					{ feeTypeName: "Cart Fee", total: "294.00" },
@@ -167,7 +161,7 @@ describe("ReportsService.getFinanceReport", () => {
 		// Expected balance: $5,030 - $2,160 - $1,000 = $1,870.
 		const { service } = createService(
 			buildQueue({
-				grossByFeeType: [
+				netByFeeType: [
 					{ feeTypeName: "Event Fee", total: "1475.00" },
 					{ feeTypeName: "Gross Skins", total: "600.00" },
 					{ feeTypeName: "Net Skins", total: "795.00" },
@@ -194,7 +188,7 @@ describe("ReportsService.getFinanceReport", () => {
 	test("pass-through uses only base Greens Fee + Cart Fee", async () => {
 		const { service } = createService(
 			buildQueue({
-				grossByFeeType: [
+				netByFeeType: [
 					{ feeTypeName: "Event Fee", total: "500.00" },
 					{ feeTypeName: "Greens Fee", total: "1866.00" },
 					{ feeTypeName: "Cart Fee", total: "294.00" },
@@ -214,7 +208,7 @@ describe("ReportsService.getFinanceReport", () => {
 	test("pass-through is zero when no Greens/Cart fees present", async () => {
 		const { service } = createService(
 			buildQueue({
-				grossByFeeType: [
+				netByFeeType: [
 					{ feeTypeName: "Member Dues", total: "75450.00" },
 					{ feeTypeName: "Patron Card", total: "17885.04" },
 				],
@@ -229,31 +223,34 @@ describe("ReportsService.getFinanceReport", () => {
 		expect(report.totalPassThrough).toBe(0)
 	})
 
-	test("allocates refunds proportionally across fee types", async () => {
+	test("fee totals are whole dollars — refunded fees are excluded via is_paid, not allocated proportionally", async () => {
+		// Refund processing flips registration_fee.is_paid to 0 on the specific
+		// fees being refunded. The query filters on is_paid=1, so the per-fee-type
+		// totals stay whole-dollar (matching what was actually charged and kept).
+		// A Skins refund must NOT bleed cents into Event Fee or Greens Fee.
 		const { service } = createService(
 			buildQueue({
-				grossByFeeType: [
-					{ feeTypeName: "Event Fee", total: "100.00" },
-					{ feeTypeName: "Greens Fee", total: "300.00" },
+				netByFeeType: [
+					// Originally $1,800 Event Fee + $2,400 Skins + $3,000 Greens Fee.
+					// One Skins entry refunded ($36.52); is_paid=0 → that row drops out.
+					{ feeTypeName: "Event Fee", total: "1800.00" },
+					{ feeTypeName: "Skins", total: "2363.48" },
+					{ feeTypeName: "Greens Fee", total: "3000.00" },
 				],
-				refunds: [{ paymentId: 10, refundAmount: "80.00" }],
-				refundFees: [
-					[
-						// $100 refund payment had $25 event + $75 greens = $100 total.
-						// $80 refund: $20 event fee, $60 greens fee.
-						{ feeTypeName: "Event Fee", amount: "25.00" },
-						{ feeTypeName: "Greens Fee", amount: "75.00" },
-					],
-				],
+				stripeFees: [{ total: "286.73" }],
 			}),
 		)
 
 		const report = await service.getFinanceReport(1)
 
-		const eventFee = report.feeTypeSums.find((f) => f.feeTypeName === "Event Fee")!
-		const greensFee = report.feeTypeSums.find((f) => f.feeTypeName === "Greens Fee")!
-		expect(eventFee.amount).toBeCloseTo(80, 2) // 100 - 20
-		expect(greensFee.amount).toBeCloseTo(240, 2) // 300 - 60
+		const event = report.feeTypeSums.find((f) => f.feeTypeName === "Event Fee")!
+		const greens = report.feeTypeSums.find((f) => f.feeTypeName === "Greens Fee")!
+		expect(event.amount).toBe(1800)
+		expect(greens.amount).toBe(3000)
+		// Skins reflects the underlying decimal — no proportional smearing onto
+		// other buckets, which is what introduced the $1,777.19 / $2,972.33 bug.
+		expect(Number.isInteger(event.amount)).toBe(true)
+		expect(Number.isInteger(greens.amount)).toBe(true)
 	})
 
 	test("Stripe fees are not reduced by refunds (Stripe keeps fees on refund)", async () => {
@@ -261,9 +258,7 @@ describe("ReportsService.getFinanceReport", () => {
 		// transaction fees on confirmed payments.
 		const { service } = createService(
 			buildQueue({
-				grossByFeeType: [{ feeTypeName: "Event Fee", total: "500.00" }],
-				refunds: [{ paymentId: 10, refundAmount: "200.00" }],
-				refundFees: [[{ feeTypeName: "Event Fee", amount: "500.00" }]],
+				netByFeeType: [{ feeTypeName: "Event Fee", total: "300.00" }],
 				stripeFees: [{ total: "15.00" }],
 			}),
 		)
@@ -306,21 +301,6 @@ describe("ReportsService.getFinanceReport", () => {
 		expect(report.cashPayouts).toBe(0)
 		expect(report.totalPayouts).toBe(100)
 	})
-
-	test("skips refund allocation when matched fees sum to zero", async () => {
-		const { service } = createService(
-			buildQueue({
-				grossByFeeType: [{ feeTypeName: "Event Fee", total: "100.00" }],
-				refunds: [{ paymentId: 10, refundAmount: "50.00" }],
-				refundFees: [[]], // no matching fees — shouldn't throw, refund ignored
-			}),
-		)
-
-		const report = await service.getFinanceReport(1)
-
-		const eventFee = report.feeTypeSums.find((f) => f.feeTypeName === "Event Fee")!
-		expect(eventFee.amount).toBe(100)
-	})
 })
 
 describe("ReportsService.generateFinanceReportExcel", () => {
@@ -345,7 +325,7 @@ describe("ReportsService.generateFinanceReportExcel", () => {
 	test("renders Stripe fees line in the collected section, before total collected online", async () => {
 		const { service } = createService(
 			buildQueue({
-				grossByFeeType: [
+				netByFeeType: [
 					{ feeTypeName: "Event Fee", total: "1475.00" },
 					{ feeTypeName: "Greens Fee", total: "1866.00" },
 				],
@@ -374,7 +354,7 @@ describe("ReportsService.generateFinanceReportExcel", () => {
 	test("total collected online equals sum of base fees plus Stripe fees", async () => {
 		const { service } = createService(
 			buildQueue({
-				grossByFeeType: [
+				netByFeeType: [
 					{ feeTypeName: "Event Fee", total: "1475.00" },
 					{ feeTypeName: "Greens Fee", total: "1866.00" },
 				],
@@ -394,7 +374,7 @@ describe("ReportsService.generateFinanceReportExcel", () => {
 	test("pass-through section uses base greens + cart fees only", async () => {
 		const { service } = createService(
 			buildQueue({
-				grossByFeeType: [
+				netByFeeType: [
 					{ feeTypeName: "Event Fee", total: "500.00" },
 					{ feeTypeName: "Greens Fee", total: "1866.00" },
 					{ feeTypeName: "Cart Fee", total: "294.00" },
