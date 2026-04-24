@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm"
+import { and, eq, sql } from "drizzle-orm"
 
 import { Inject, Injectable } from "@nestjs/common"
 
@@ -22,6 +22,15 @@ export class CoursesRepository {
 	// Courses
 	async findCourseByGgId(ggId: string): Promise<CourseRow | null> {
 		const [c] = await this.drizzle.db.select().from(course).where(eq(course.ggId, ggId)).limit(1)
+		return c ?? null
+	}
+
+	async findCourseByName(name: string): Promise<CourseRow | null> {
+		const [c] = await this.drizzle.db
+			.select()
+			.from(course)
+			.where(sql`lower(${course.name}) = lower(${name})`)
+			.limit(1)
 		return c ?? null
 	}
 

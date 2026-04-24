@@ -14,6 +14,11 @@ export class CoursesService {
 		return course ? toCourse(course) : null
 	}
 
+	async findCourseByName(name: string): Promise<Course | null> {
+		const course = await this.repository.findCourseByName(name)
+		return course ? toCourse(course) : null
+	}
+
 	async findCoursesByEventId({
 		eventId,
 		includeHoles = false,

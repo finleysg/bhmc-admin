@@ -135,21 +135,23 @@ export class EventSyncService {
 		if (!localEvent) throw new Error(`Local event not found: ${eventId}`)
 		if (!localEvent.ggId) throw new Error(`Event ${eventId} has no ggId - run syncEvent first`)
 
-		// Get courses for this event
-		const localCourses = await this.courses.findCoursesByEventId({ eventId })
-		if (localCourses.length === 0) {
-			this.logger.warn(`No courses found for event ${eventId}`)
-			return summary
-		}
+		// Get courses linked to this event (may be empty for non-choose events
+		// that don't pre-assign courses via the event_courses junction table).
+		const linkedCourses = await this.courses.findCoursesByEventId({ eventId })
 
 		// Fetch GG courses
 		const ggCourses = await this.apiClient.getEventCourses(localEvent.ggId)
 
 		for (const ggCourse of ggCourses) {
-			// Find matching local course by case-insensitive name
-			const localCourse = localCourses.find(
+			// Prefer an event-linked match; fall back to a global name lookup
+			// so non-choose events still sync course/tee/hole data.
+			let localCourse = linkedCourses.find(
 				(c) => c.name.toLowerCase() === ggCourse.name.toLowerCase(),
 			)
+			if (!localCourse) {
+				const fallback = await this.courses.findCourseByName(ggCourse.name)
+				if (fallback) localCourse = fallback
+			}
 			if (!localCourse) {
 				this.logger.warn(`No local course matches GG course "${ggCourse.name}"`)
 				continue
