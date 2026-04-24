@@ -51,9 +51,6 @@ export class ImportChampionsService {
 				const championEventName =
 					event.eventType === EventTypeChoices.WEEKNIGHT ? localTournament.name : event.name
 
-				// Team events commonly have no flights; fall back to a single default flight
-				const defaultFlight = format === "team" ? "Overall" : undefined
-
 				// Find first place winners from local tournament results
 				const winners = await this.eventsService.findTournamentWinners(localTournament.id)
 				for (const winner of winners) {
@@ -63,7 +60,7 @@ export class ImportChampionsService {
 						eventId,
 						event.season,
 						championEventName,
-						defaultFlight,
+						"Overall",
 					)
 					await this.coreRepository.createChampion(champion)
 					this.logger.log(
