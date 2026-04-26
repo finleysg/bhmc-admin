@@ -20,6 +20,7 @@ interface ChampionRow {
 	eventName: string
 	flight: string
 	score: number
+	isNet: boolean
 	players: PlayerSummary[]
 }
 
@@ -52,6 +53,7 @@ export function ChampionGroup({
 				eventName: c.event_name,
 				flight: c.flight,
 				score: c.score,
+				isNet: c.is_net,
 				players: [c.player],
 			})
 		}
@@ -83,6 +85,7 @@ export function ChampionGroup({
 									<TableHead>Player(s)</TableHead>
 									<TableHead>Event Name</TableHead>
 									<TableHead>Flight</TableHead>
+									<TableHead>Net/Gross</TableHead>
 									<TableHead className="text-right">Score</TableHead>
 								</TableRow>
 							</TableHeader>
@@ -104,6 +107,7 @@ export function ChampionGroup({
 										</TableCell>
 										<TableCell>{row.eventName}</TableCell>
 										<TableCell>{row.flight}</TableCell>
+										<TableCell>{row.isNet ? "Net" : "Gross"}</TableCell>
 										<TableCell className="text-right">{row.score}</TableCell>
 									</TableRow>
 								))}
