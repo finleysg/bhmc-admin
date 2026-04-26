@@ -201,7 +201,7 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 	const currentPhaseConfig = PHASES[phaseInfo.currentPhase - 1]
 
 	const handleNextPhase = () => {
-		if (phaseInfo.canAdvanceToNext && phaseInfo.isPhaseComplete) {
+		if (phaseInfo.currentPhase < 3) {
 			setPhaseOverride((phaseInfo.currentPhase + 1) as 1 | 2 | 3)
 		}
 	}
@@ -239,7 +239,6 @@ export default function IntegrationOrchestrator({ selectedEvent }: Props) {
 
 			{/* Navigation */}
 			<PhaseNavigation
-				canAdvance={phaseInfo.canAdvanceToNext}
 				currentPhase={phaseInfo.currentPhase}
 				totalPhases={3}
 				onNext={handleNextPhase}
@@ -302,13 +301,11 @@ function PhasePanel({
 }
 
 function PhaseNavigation({
-	canAdvance,
 	currentPhase,
 	totalPhases,
 	onNext,
 	onBack,
 }: {
-	canAdvance: boolean
 	currentPhase: number
 	totalPhases: number
 	onNext: () => void
@@ -328,11 +325,7 @@ function PhaseNavigation({
 			</div>
 			<div className="flex justify-end">
 				{currentPhase < totalPhases && (
-					<button
-						className="btn btn-primary text-primary-content"
-						disabled={!canAdvance}
-						onClick={onNext}
-					>
+					<button className="btn btn-primary text-primary-content" onClick={onNext}>
 						Next
 					</button>
 				)}
