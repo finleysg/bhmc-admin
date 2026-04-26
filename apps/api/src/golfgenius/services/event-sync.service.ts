@@ -1,14 +1,15 @@
 import { Inject, Injectable, Logger } from "@nestjs/common"
 
 import { CoursesService } from "../../courses"
-import { TournamentRow } from "../../database"
 import { EventsRepository } from "../../events"
 import { ApiClient } from "../api-client"
 
 interface EventSyncSummary {
 	eventUpdated: boolean
 	roundsCreated: number
+	roundsUpdated: number
 	tournamentsCreated: number
+	tournamentsUpdated: number
 }
 
 interface CourseSyncSummary {
@@ -32,17 +33,18 @@ export class EventSyncService {
 	 * Returns a summary of created/updated records.
 	 */
 	async syncEvent(eventId: number): Promise<EventSyncSummary> {
-		const summary = {
+		const summary: EventSyncSummary = {
 			eventUpdated: false,
 			roundsCreated: 0,
+			roundsUpdated: 0,
 			tournamentsCreated: 0,
+			tournamentsUpdated: 0,
 		}
 
 		// 1) Load our event
-		let localEventId: number
 		const localEvent = await this.events.findEventById(eventId)
 		if (!localEvent) throw new Error(`Local event not found: ${eventId}`)
-		localEventId = localEvent.id
+		const localEventId = localEvent.id
 
 		// 2) Find matching GG event
 		const ggEvent = await this.apiClient.findMatchingEventByStartDate(
@@ -53,21 +55,8 @@ export class EventSyncService {
 
 		const ggEventId = ggEvent.id
 
-		// 3) Delete existing tournaments and rounds by event id (bulk deletes to respect FK)
-		// First delete child records (results & points) for each tournament to avoid FK constraint errors.
-		const existingTournaments = await this.events.findTournamentsByEventId(localEventId)
-		for (const t of existingTournaments) {
-			if (t && t.id) {
-				// Ensure child rows removed before deleting parent tournament
-				await this.events.deleteTournamentResults(t.id)
-				await this.events.deleteTournamentPoints(t.id)
-			}
-		}
-		await this.events.deleteTournamentsByEventId(localEventId)
-		await this.events.deleteRoundsByEventId(localEventId)
-
-		// 4) Update our event with gg_id and portal_url (prepend https:// if missing)
-		const portal = ggEvent.website ?? ggEvent.website ?? null
+		// 3) Update our event with gg_id and portal_url (prepend https:// if missing)
+		const portal = ggEvent.website ?? null
 		const portalUrl =
 			portal && !portal.toString().startsWith("http")
 				? `https://${portal.toString().replace(/^\/+/, "")}`
@@ -79,20 +68,39 @@ export class EventSyncService {
 
 		summary.eventUpdated = true
 
+		// 4) Upsert rounds by ggId so child rows (event_pairings, results, points) survive a re-sync.
+		const existingRounds = await this.events.findRoundsByEventId(localEventId)
+		const existingRoundsByGgId = new Map(existingRounds.map((r) => [r.ggId, r]))
+
 		const ggRounds = await this.apiClient.getEventRounds(ggEventId)
 		const ggRoundIdToLocalId: Record<string, number> = {}
 		for (const gr of ggRounds) {
-			const created = await this.events.createRound({
-				roundNumber: gr.index,
-				roundDate: gr.date,
-				ggId: gr.id,
-				eventId: localEventId,
-			})
-			if (created && created.id) {
-				ggRoundIdToLocalId[gr.id] = created.id
-				summary.roundsCreated += 1
+			const existing = existingRoundsByGgId.get(gr.id)
+			if (existing) {
+				await this.events.updateRound(existing.id, {
+					roundNumber: gr.index,
+					roundDate: gr.date,
+					ggId: gr.id,
+				})
+				ggRoundIdToLocalId[gr.id] = existing.id
+				summary.roundsUpdated += 1
+			} else {
+				const created = await this.events.createRound({
+					roundNumber: gr.index,
+					roundDate: gr.date,
+					ggId: gr.id,
+					eventId: localEventId,
+				})
+				if (created && created.id) {
+					ggRoundIdToLocalId[gr.id] = created.id
+					summary.roundsCreated += 1
+				}
 			}
 		}
+
+		// 5) Upsert tournaments by ggId.
+		const existingTournaments = await this.events.findTournamentsByEventId(localEventId)
+		const existingTournamentsByGgId = new Map(existingTournaments.map((t) => [t.ggId, t]))
 
 		for (const gr of ggRounds) {
 			const localRoundId = ggRoundIdToLocalId[String(gr.id)]
@@ -104,15 +112,22 @@ export class EventSyncService {
 			for (const gt of ggTournaments) {
 				const isNet = gt.handicap_format.toLowerCase().includes("net")
 				const isPoints = gt.name.toLowerCase().includes("points")
-				const created = await this.events.createTournament({
-					name: gt.name ?? undefined,
+				const data = {
+					name: gt.name,
 					format: isPoints ? "points" : gt.score_format.toLowerCase(),
 					isNet: isNet ? 1 : 0,
 					ggId: gt.id,
 					eventId: localEventId,
 					roundId: localRoundId,
-				} as TournamentRow)
-				if (created && created.id) summary.tournamentsCreated += 1
+				}
+				const existing = existingTournamentsByGgId.get(gt.id)
+				if (existing) {
+					await this.events.updateTournament(existing.id, data)
+					summary.tournamentsUpdated += 1
+				} else {
+					await this.events.createTournament(data)
+					summary.tournamentsCreated += 1
+				}
 			}
 		}
 

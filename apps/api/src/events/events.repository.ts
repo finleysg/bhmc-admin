@@ -92,6 +92,11 @@ export class EventsRepository {
 		return this.findRoundById(Number(result.insertId))
 	}
 
+	async updateRound(id: number, data: Partial<RoundInsert>): Promise<RoundRow> {
+		await this.drizzle.db.update(round).set(data).where(eq(round.id, id))
+		return this.findRoundById(id)
+	}
+
 	async findRoundById(id: number): Promise<RoundRow> {
 		const [rnd] = await this.drizzle.db.select().from(round).where(eq(round.id, id)).limit(1)
 		if (!rnd) {
@@ -110,6 +115,11 @@ export class EventsRepository {
 		return this.findTournamentById(Number(result.insertId))
 	}
 
+	async updateTournament(id: number, data: Partial<TournamentInsert>): Promise<TournamentRow> {
+		await this.drizzle.db.update(tournament).set(data).where(eq(tournament.id, id))
+		return this.findTournamentById(id)
+	}
+
 	async findTournamentById(id: number): Promise<TournamentRow> {
 		const [tourney] = await this.drizzle.db
 			.select()
@@ -124,18 +134,6 @@ export class EventsRepository {
 
 	async findTournamentsByEventId(eventId: number): Promise<TournamentRow[]> {
 		return this.drizzle.db.select().from(tournament).where(eq(tournament.eventId, eventId))
-	}
-
-	async deleteTournamentsByEventId(eventId: number): Promise<number> {
-		const res = await this.drizzle.db.delete(tournament).where(eq(tournament.eventId, eventId))
-		const r = res as unknown as { affectedRows?: number; affected_rows?: number }
-		return r.affectedRows ?? r.affected_rows ?? 0
-	}
-
-	async deleteRoundsByEventId(eventId: number): Promise<number> {
-		const res = await this.drizzle.db.delete(round).where(eq(round.eventId, eventId))
-		const r = res as unknown as { affectedRows?: number; affected_rows?: number }
-		return r.affectedRows ?? r.affected_rows ?? 0
 	}
 
 	async deleteTournamentResults(tournamentId: number): Promise<void> {
