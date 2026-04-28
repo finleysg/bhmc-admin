@@ -457,6 +457,13 @@ export class RegistrationService {
 				.where(inArray(registrationSlot.id, slotIds))
 				.for("update") // Row-level lock
 
+			// Defensive: if any requested slot is missing (deleted by an event sync,
+			// for example) we must not silently create a registration with fewer slots
+			// than the user asked for. Treat it as a conflict so the caller retries.
+			if (slots.length !== slotIds.length) {
+				throw new SlotConflictError()
+			}
+
 			// Validate all slots are AVAILABLE
 			for (const slot of slots) {
 				if (slot.status !== RegistrationStatusChoices.AVAILABLE) {
@@ -633,8 +640,17 @@ export class RegistrationService {
 		registrationId: number,
 		canChoose: boolean,
 	): Promise<void> {
+		// Resolve eventId before deletion so we can broadcast after the rows are gone.
+		const reg = await this.repository.findRegistrationFullById(registrationId).catch(() => null)
 		await this.payments.deletePaymentsForRegistration(registrationId)
 		await this.slotCleanup.releaseSlotsByRegistration(registrationId, canChoose)
 		await this.repository.deleteRegistration(registrationId)
+
+		// For can-choose events, releasing slots is a visible state change for every
+		// other client browsing the tee sheet. Broadcast so they see slots come back
+		// to AVAILABLE — even if a subsequent reserve attempt for this user fails.
+		if (canChoose && reg?.eventId) {
+			this.broadcast.notifyChange(reg.eventId)
+		}
 	}
 }

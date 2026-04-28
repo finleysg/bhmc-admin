@@ -292,7 +292,14 @@ describe("RegistrationService", () => {
 				eventsService.getCompleteClubEventById.mockResolvedValue(event)
 				repository.findRegistrationByUserAndEvent.mockResolvedValue(null)
 				mockTx.for.mockResolvedValue([
-					{ ...createRegistrationSlotRow(), status: RegistrationStatusChoices.AVAILABLE },
+					{
+						...createRegistrationSlotRow({ id: 1 }),
+						status: RegistrationStatusChoices.AVAILABLE,
+					},
+					{
+						...createRegistrationSlotRow({ id: 2 }),
+						status: RegistrationStatusChoices.AVAILABLE,
+					},
 				])
 				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
 
@@ -315,6 +322,82 @@ describe("RegistrationService", () => {
 				])
 
 				await expect(service.createAndReserve(user, request)).rejects.toThrow(SlotConflictError)
+			})
+
+			it("throws SlotConflictError when fewer slots returned than requested", async () => {
+				const { service, eventsService, repository, mockTx } = createService()
+				const user = createDjangoUser()
+				const event = createClubEvent({ canChoose: true })
+				// Request 2 slots
+				const request = createReserveRequest({ slotIds: [1, 2] })
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(null)
+				// SELECT...FOR UPDATE only finds 1 slot (the other was deleted, e.g. by an
+				// event sync). Without the defensive check the service would silently
+				// create a registration with only 1 slot — the user would see an FK or
+				// "no empty slots" error when trying to add a player.
+				mockTx.for.mockResolvedValue([
+					{ ...createRegistrationSlotRow({ id: 1 }), status: RegistrationStatusChoices.AVAILABLE },
+				])
+
+				await expect(service.createAndReserve(user, request)).rejects.toThrow(SlotConflictError)
+				expect(mockTx.insert).not.toHaveBeenCalled()
+			})
+
+			it("broadcasts slot change after cleaning up a stale can-choose registration", async () => {
+				const {
+					service,
+					eventsService,
+					repository,
+					paymentsService,
+					mockTx,
+					slotCleanupService,
+					broadcastService,
+				} = createService()
+				const user = createDjangoUser()
+				const event = createClubEvent({ canChoose: true })
+				const request = createReserveRequest()
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(
+					createRegistrationWithSlots({
+						id: 50,
+						slots: [
+							createRegistrationSlotRow({
+								id: 101,
+								status: RegistrationStatusChoices.PENDING,
+								registrationId: 50,
+							}),
+						],
+					}),
+				)
+				// findRegistrationFullById is called twice: once inside cleanup to
+				// resolve eventId for broadcast, then again at the end of createAndReserve
+				// to return the new registration.
+				repository.findRegistrationFullById
+					.mockResolvedValueOnce(createRegistrationFull({ id: 50, eventId: 100 }))
+					.mockResolvedValueOnce(createRegistrationFull())
+				mockTx.for.mockResolvedValue([
+					{
+						...createRegistrationSlotRow({ id: 1 }),
+						status: RegistrationStatusChoices.AVAILABLE,
+					},
+					{
+						...createRegistrationSlotRow({ id: 2 }),
+						status: RegistrationStatusChoices.AVAILABLE,
+					},
+				])
+
+				await service.createAndReserve(user, request)
+
+				expect(paymentsService.deletePaymentsForRegistration).toHaveBeenCalledWith(50)
+				expect(slotCleanupService.releaseSlotsByRegistration).toHaveBeenCalledWith(50, true)
+				// Two broadcasts: one from cleanup (slots released to AVAILABLE), one from
+				// successful reservation (slots claimed to PENDING). Both are visible
+				// state changes that other clients on the tee sheet must see immediately.
+				expect(broadcastService.notifyChange).toHaveBeenCalledWith(100)
+				expect(broadcastService.notifyChange).toHaveBeenCalledTimes(2)
 			})
 
 			it("throws AlreadyRegisteredError when user has RESERVED slots", async () => {
@@ -378,7 +461,14 @@ describe("RegistrationService", () => {
 					}),
 				)
 				mockTx.for.mockResolvedValue([
-					{ ...createRegistrationSlotRow(), status: RegistrationStatusChoices.AVAILABLE },
+					{
+						...createRegistrationSlotRow({ id: 1 }),
+						status: RegistrationStatusChoices.AVAILABLE,
+					},
+					{
+						...createRegistrationSlotRow({ id: 2 }),
+						status: RegistrationStatusChoices.AVAILABLE,
+					},
 				])
 				repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
 

@@ -48,7 +48,7 @@ export interface IRegistrationContext {
 		course?: Course,
 		slots?: { id: number }[],
 		selectedStart?: string,
-	) => Promise<void>
+	) => Promise<ServerRegistration>
 	editRegistration: (registrationId: number, playerIds: number[]) => Promise<void>
 	initiateStripeSession: () => void
 	loadRegistration: (playerId: number) => Promise<void>

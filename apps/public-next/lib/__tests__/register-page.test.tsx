@@ -15,6 +15,15 @@ jest.mock("next/navigation", () => ({
 	useSearchParams: () => mockSearchParams,
 }))
 
+const mockToastError = jest.fn()
+jest.mock("sonner", () => ({
+	toast: {
+		error: (msg: string) => {
+			mockToastError(msg)
+		},
+	},
+}))
+
 const mockCreateRegistration = jest.fn(() => Promise.resolve())
 const mockRegistrationContext = jest.fn(() => ({
 	clubEvent: {
@@ -110,6 +119,58 @@ test("calls createRegistration for non-choice events when registration is null",
 		expect(mockCreateRegistration).toHaveBeenCalled()
 	})
 	expect(mockReplace).not.toHaveBeenCalled()
+})
+
+test("redirects with a toast when can_choose registration is null and an error is set", async () => {
+	const mockSetError = jest.fn()
+	mockRegistrationContext.mockImplementation(
+		() =>
+			({
+				clubEvent: {
+					id: 1,
+					name: "Weeknight",
+					start_date: "2026-03-01",
+					event_type: "N",
+					can_choose: true,
+					registration_type: "M",
+					registration_window: "registration",
+					status: "S",
+					fees: [],
+					maximum_signup_group_size: 5,
+					minimum_signup_group_size: 1,
+				},
+				registration: null,
+				payment: null,
+				mode: "new" as const,
+				error: "One or more of the slots you requested have already been reserved",
+				selectedStart: null,
+				selectedSession: null,
+				addPlayer: jest.fn(),
+				canRegister: jest.fn(() => false),
+				cancelRegistration: jest.fn(),
+				createRegistration: mockCreateRegistration,
+				selectSession: jest.fn(),
+				savePayment: jest.fn(),
+				setError: mockSetError,
+				updateRegistrationNotes: jest.fn(),
+				updateStep: jest.fn(),
+			}) as unknown as ReturnType<typeof mockRegistrationContext>,
+	)
+
+	const { default: RegisterPage } = await import(
+		"@/app/event/[eventDate]/[eventName]/register/page"
+	)
+
+	render(<RegisterPage />)
+
+	await waitFor(() => {
+		expect(mockReplace).toHaveBeenCalledWith("/event/2026-01-18/2026-season-registration")
+	})
+	expect(mockToastError).toHaveBeenCalledWith(
+		"One or more of the slots you requested have already been reserved",
+	)
+	expect(mockSetError).toHaveBeenCalledWith(null)
+	expect(mockCreateRegistration).not.toHaveBeenCalled()
 })
 
 test("redirects to event page for can_choose events when registration is null", async () => {

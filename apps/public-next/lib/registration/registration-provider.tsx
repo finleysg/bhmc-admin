@@ -384,7 +384,14 @@ export function RegistrationProvider({
 					queryKey: ["event-registration-slots", state.clubEvent?.id],
 				})
 			}
+			// A failed createAndReserve on the API may have already cleaned up the
+			// user's prior stale registration before the slot lock failed. That means
+			// any registration we currently hold in client state is now invalid (its
+			// slots have been released and the registration row deleted). Clear it so
+			// the user cannot land on /register pointing at a phantom registration.
+			dispatch({ type: "cancel-registration" })
 			dispatch({ type: "update-error", payload: { error: error.message } })
+			void queryClient.invalidateQueries({ queryKey: ["registration"] })
 		},
 	})
 
@@ -445,7 +452,7 @@ export function RegistrationProvider({
 
 	const createRegistration = useCallback(
 		(course?: Course, slots?: { id: number }[], selectedStart?: string) => {
-			return createRegistrationMutation({ course, slots, selectedStart }).then(() => {})
+			return createRegistrationMutation({ course, slots, selectedStart })
 		},
 		[createRegistrationMutation],
 	)

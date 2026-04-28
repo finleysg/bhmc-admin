@@ -90,7 +90,9 @@ export default function RegisterPage() {
 	}, [clubEvent, sessionParam, selectSession, selectedSession])
 
 	// For non-choice events (e.g. season registration), auto-create the registration
-	// since there is no reserve step. For choice events, redirect back (user skipped reserve).
+	// since there is no reserve step. For choice events, redirect back (user skipped
+	// reserve, or — critically — their slot hold lost the race at the database level
+	// and we must never let them stay on this screen with no valid registration).
 	const creatingRef = useRef(false)
 	useEffect(() => {
 		if (registration || !clubEvent) return
@@ -117,9 +119,15 @@ export default function RegisterPage() {
 			}
 			if (!creatingRef.current) {
 				creatingRef.current = true
-				void createRegistration()
+				void createRegistration().catch(() => {
+					// Error surfaces via provider state; render path will handle it.
+				})
 			}
 		} else {
+			if (error) {
+				toast.error(error)
+				setError(null)
+			}
 			router.replace(getEventUrl(clubEvent))
 		}
 	}, [
@@ -131,6 +139,7 @@ export default function RegisterPage() {
 		setError,
 		sessionParam,
 		selectedSession,
+		error,
 	])
 
 	// Auto-dismiss error after 5 seconds
