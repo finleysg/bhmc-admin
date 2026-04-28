@@ -97,6 +97,7 @@ describe("useRegistrationSSE", () => {
 				timestamp: "2026-02-18T00:00:00Z",
 				slots: [],
 				currentWave: 1,
+				version: 1,
 			}
 			es.simulateEvent("update", sseData)
 

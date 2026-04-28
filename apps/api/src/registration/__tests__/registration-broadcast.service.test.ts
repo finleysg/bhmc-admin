@@ -1,6 +1,16 @@
-import { RegistrationBroadcastService } from "../services/registration-broadcast.service"
+import {
+	RegistrationBroadcastService,
+	type RegistrationUpdateEvent,
+} from "../services/registration-broadcast.service"
 import { firstValueFrom, take } from "rxjs"
 import { ClubEvent } from "@repo/domain/types"
+
+// Flush queued microtasks so async operators (from(promise), catchError) settle.
+async function flushMicrotasks(rounds = 5) {
+	for (let i = 0; i < rounds; i++) {
+		await Promise.resolve()
+	}
+}
 
 // Mock services
 const createMockDataService = () => ({
@@ -92,6 +102,62 @@ describe("RegistrationBroadcastService", () => {
 			service.notifyChange(999)
 
 			expect(dataService.getSlotsWithWaveInfo).not.toHaveBeenCalled()
+		})
+	})
+
+	describe("version", () => {
+		it("increments monotonically across successful emissions", async () => {
+			const { service } = createService()
+			activeService = service
+
+			const events: RegistrationUpdateEvent[] = []
+			const sub = service.subscribe(1).subscribe((e) => events.push(e))
+
+			// First emission (from startWith) — trailing-edge fires after THROTTLE_MS.
+			jest.advanceTimersByTime(600)
+			await flushMicrotasks()
+
+			service.notifyChange(1)
+			jest.advanceTimersByTime(600)
+			await flushMicrotasks()
+
+			service.notifyChange(1)
+			jest.advanceTimersByTime(600)
+			await flushMicrotasks()
+
+			sub.unsubscribe()
+			expect(events.map((e) => e.version)).toEqual([1, 2, 3])
+		})
+
+		it("does not increment version when build fails, and stream survives", async () => {
+			const { service, dataService } = createService()
+			activeService = service
+
+			// First call fails; subsequent calls succeed.
+			dataService.getSlotsWithWaveInfo
+				.mockRejectedValueOnce(new Error("db blew up"))
+				.mockResolvedValue([{ id: 1, status: "A", player: null }])
+
+			const events: RegistrationUpdateEvent[] = []
+			const sub = service.subscribe(1).subscribe((e) => events.push(e))
+
+			// Trigger the first (failing) build.
+			jest.advanceTimersByTime(600)
+			await flushMicrotasks()
+
+			// Stream is still alive; trigger two more successful builds.
+			service.notifyChange(1)
+			jest.advanceTimersByTime(600)
+			await flushMicrotasks()
+
+			service.notifyChange(1)
+			jest.advanceTimersByTime(600)
+			await flushMicrotasks()
+
+			sub.unsubscribe()
+			// First successful build is version 1 (failed build did not increment),
+			// and the stream kept emitting after the catchError → EMPTY recovery.
+			expect(events.map((e) => e.version)).toEqual([1, 2])
 		})
 	})
 

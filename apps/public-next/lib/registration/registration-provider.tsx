@@ -45,6 +45,7 @@ import type {
 	SSEUpdateEvent,
 } from "./types"
 import { getCorrelationId } from "./correlation"
+import { recordSSEVersion, resetSSEVersion } from "./sse-version-tracker"
 import { BACK_NAVIGATION, useRegistrationGuard } from "./use-registration-guard"
 
 interface RegistrationProviderProps {
@@ -137,6 +138,10 @@ export function RegistrationProvider({
 
 	const handleSSEUpdate = useCallback(
 		(data: SSEUpdateEvent) => {
+			// Drop out-of-order or replayed events. recordSSEVersion returns false
+			// if data.version is not strictly greater than the last applied version.
+			if (!recordSSEVersion(clubEvent.id, data.version)) return
+
 			const transformed = transformSSESlots(data.slots)
 			queryClient.setQueryData(["event-registration-slots", clubEvent.id], transformed)
 			void queryClient.invalidateQueries({
@@ -156,7 +161,15 @@ export function RegistrationProvider({
 	// Sync SSE connected state into reducer
 	useEffect(() => {
 		dispatch({ type: "update-sse-connected", payload: { connected: sseConnected } })
-	}, [sseConnected])
+		// When SSE drops, clear the version tracker so the polling fallback in
+		// useRegistrationSlots is allowed to repopulate the cache. On reconnect
+		// the server's version sequence will start from where it left off (or
+		// from 1 if the server stream was rebuilt) — either way the next event
+		// will exceed the cleared tracker value.
+		if (!sseConnected) {
+			resetSSEVersion(clubEvent.id)
+		}
+	}, [sseConnected, clubEvent.id])
 
 	// --- Client-side wave computation (immediate, SSE overrides when available) ---
 	const waveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)

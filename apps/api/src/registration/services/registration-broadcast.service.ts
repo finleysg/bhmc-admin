@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleDestroy } from "@nestjs/common"
-import { Subject, Observable, Subscription, interval, asyncScheduler } from "rxjs"
-import { throttleTime, share, startWith, switchMap, finalize } from "rxjs/operators"
+import { Subject, Observable, Subscription, interval, asyncScheduler, from, EMPTY } from "rxjs"
+import { catchError, throttleTime, share, startWith, switchMap, finalize } from "rxjs/operators"
 import { ClubEvent, RegistrationSlotWithPlayerAndWave } from "@repo/domain/types"
 
 import { EventsService } from "../../events"
@@ -12,6 +12,7 @@ export interface RegistrationUpdateEvent {
 	slots: RegistrationSlotWithPlayerAndWave[]
 	currentWave: number
 	timestamp: string
+	version: number
 }
 
 interface EventStreamState {
@@ -22,7 +23,7 @@ interface EventStreamState {
 	subscriberCount: number
 	lastWave: number
 	cachedEvent?: ClubEvent
-	lastSuccessfulEvent?: RegistrationUpdateEvent
+	version: number
 }
 
 const THROTTLE_MS = 500
@@ -89,12 +90,27 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 			stream$: null!, // Set after state is created
 			subscriberCount: 0,
 			lastWave: 0,
+			version: 0,
 		}
 
+		// leading: false / trailing: true so each emission reflects the post-commit
+		// snapshot. A leading-edge emission can fire after one of several near-simultaneous
+		// commits (e.g. cleanup-then-reserve) and capture an intermediate "AVAILABLE" state
+		// that observers see as a flicker before the trailing edge corrects it.
 		state.stream$ = trigger$.pipe(
 			startWith(undefined),
-			throttleTime(THROTTLE_MS, asyncScheduler, { leading: true, trailing: true }),
-			switchMap(() => this.buildUpdateEvent(eventId, state)),
+			throttleTime(THROTTLE_MS, asyncScheduler, { leading: false, trailing: true }),
+			switchMap(() =>
+				from(this.buildUpdateEvent(eventId, state)).pipe(
+					catchError((error: unknown) => {
+						this.logger.error(`Failed to build update event for ${eventId}`, error)
+						// Skip this emission rather than ending the stream or shipping stale
+						// data labeled as fresh. The next notify or wave timer tick will
+						// retry; clients retain their last cached snapshot in the meantime.
+						return EMPTY
+					}),
+				),
+			),
 			share(),
 		)
 
@@ -105,33 +121,20 @@ export class RegistrationBroadcastService implements OnModuleDestroy {
 		eventId: number,
 		state: EventStreamState,
 	): Promise<RegistrationUpdateEvent> {
-		try {
-			if (!state.cachedEvent) {
-				state.cachedEvent = await this.events.getEventById(eventId)
-			}
-			const slots = await this.dataService.getSlotsWithWaveInfo(eventId, state.cachedEvent)
-			const currentWave = getCurrentWave(state.cachedEvent)
-			state.lastWave = currentWave
+		if (!state.cachedEvent) {
+			state.cachedEvent = await this.events.getEventById(eventId)
+		}
+		const slots = await this.dataService.getSlotsWithWaveInfo(eventId, state.cachedEvent)
+		const currentWave = getCurrentWave(state.cachedEvent)
+		state.lastWave = currentWave
+		state.version += 1
 
-			const event: RegistrationUpdateEvent = {
-				eventId,
-				slots,
-				currentWave,
-				timestamp: new Date().toISOString(),
-			}
-			state.lastSuccessfulEvent = event
-			return event
-		} catch (error) {
-			this.logger.error(`Failed to build update event for ${eventId}`, error)
-			if (state.lastSuccessfulEvent) {
-				return { ...state.lastSuccessfulEvent, timestamp: new Date().toISOString() }
-			}
-			return {
-				eventId,
-				slots: [],
-				currentWave: state.lastWave,
-				timestamp: new Date().toISOString(),
-			}
+		return {
+			eventId,
+			slots,
+			currentWave,
+			timestamp: new Date().toISOString(),
+			version: state.version,
 		}
 	}
 

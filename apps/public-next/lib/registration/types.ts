@@ -139,4 +139,5 @@ export interface SSEUpdateEvent {
 	timestamp: string
 	slots: SSESlotData[]
 	currentWave: number
+	version: number
 }
