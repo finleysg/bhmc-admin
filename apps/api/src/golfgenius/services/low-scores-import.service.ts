@@ -19,6 +19,7 @@ export class LowScoresImportService {
 
 		for (const course of event.courses ?? []) {
 			let created = 0
+			const numberOfHoles = course.numberOfHoles
 
 			// Process Gross (isNet = false)
 			const grossScorecards = await this.scores.findScorecardsByEventAndCourse(
@@ -26,14 +27,25 @@ export class LowScoresImportService {
 				course.id,
 				false,
 			)
+			// A round is complete only if the player has a gross score for every
+			// hole and every gross score is > 0. Partial rounds (DNF) are excluded
+			// from low-score consideration. Gross is the source of truth here —
+			// net = gross - dots, so a hole with no gross was not played.
+			const completePlayerIds = new Set(
+				grossScorecards
+					.filter(
+						(sc) => sc.scores?.length === numberOfHoles && sc.scores.every((s) => s.score > 0),
+					)
+					.map((sc) => sc.playerId),
+			)
+
 			const grossLowScores = await this.core.findLowScores(season, course.name, false)
-			// Calculate total scores per scorecard, excluding unsubmitted (all-zero) scorecards
 			const scorecardTotals = grossScorecards
+				.filter((sc) => completePlayerIds.has(sc.playerId))
 				.map((sc) => ({
 					playerId: sc.playerId,
-					totalScore: sc.scores?.reduce((sum, s) => sum + s.score, 0) ?? 0,
+					totalScore: sc.scores.reduce((sum, s) => sum + s.score, 0),
 				}))
-				.filter((st) => st.totalScore > 0)
 
 			if (scorecardTotals.length > 0) {
 				const grossMinScore = Math.min(...scorecardTotals.map((st) => st.totalScore))
@@ -86,13 +98,12 @@ export class LowScoresImportService {
 				true,
 			)
 			const netLowScores = await this.core.findLowScores(season, course.name, true)
-			// Calculate total scores per scorecard, excluding unsubmitted (all-zero/negative) scorecards
 			const netScorecardTotals = netScorecards
+				.filter((sc) => completePlayerIds.has(sc.playerId))
 				.map((sc) => ({
 					playerId: sc.playerId,
-					totalScore: sc.scores?.reduce((sum, s) => sum + s.score, 0) ?? 0,
+					totalScore: sc.scores.reduce((sum, s) => sum + s.score, 0),
 				}))
-				.filter((st) => st.totalScore > 0)
 
 			if (netScorecardTotals.length > 0) {
 				const netMinScore = Math.min(...netScorecardTotals.map((st) => st.totalScore))

@@ -162,6 +162,40 @@ describe("LowScoresImportService", () => {
 			)
 		})
 
+		it("excludes scorecards with fewer scores than the course has holes (DNF, missing rows)", async () => {
+			const { service, core, scores } = createMocks()
+			const completeScorecard = createScorecard(1, [5, 4, 3, 5, 4, 5, 3, 4, 4]) // 9 holes, total = 37
+			// Player walked off after 5 holes — only 5 score rows exist for the scorecard
+			const partialScorecard = createScorecard(2, [3, 4, 3, 4, 3]) // 5 holes, total = 17
+
+			scores.findScorecardsByEventAndCourse.mockResolvedValue([completeScorecard, partialScorecard])
+
+			await service.importLowScores(1)
+
+			// The complete scorecard wins, not the partial one with the lower total
+			expect(core.createLowScore).toHaveBeenCalledWith(
+				expect.objectContaining({ score: 37, playerId: 1 }),
+			)
+			expect(core.createLowScore).not.toHaveBeenCalledWith(expect.objectContaining({ playerId: 2 }))
+			expect(core.createLowScore).not.toHaveBeenCalledWith(expect.objectContaining({ score: 17 }))
+		})
+
+		it("excludes scorecards with zero-score holes (DNF, full row count but unplayed holes)", async () => {
+			const { service, core, scores } = createMocks()
+			const completeScorecard = createScorecard(1, [5, 4, 3, 5, 4, 5, 3, 4, 4]) // total = 37
+			// Player walked off — scorecard has 9 rows but unplayed holes stored as 0
+			const partialScorecard = createScorecard(2, [3, 4, 3, 4, 3, 0, 0, 0, 0]) // total = 17
+
+			scores.findScorecardsByEventAndCourse.mockResolvedValue([completeScorecard, partialScorecard])
+
+			await service.importLowScores(1)
+
+			expect(core.createLowScore).toHaveBeenCalledWith(
+				expect.objectContaining({ score: 37, playerId: 1 }),
+			)
+			expect(core.createLowScore).not.toHaveBeenCalledWith(expect.objectContaining({ playerId: 2 }))
+		})
+
 		it("does not create low scores when current scores are higher", async () => {
 			const { service, core, scores } = createMocks()
 			const scorecard = createScorecard(1, [5, 5, 4, 5, 5, 5, 4, 5, 5]) // total = 43
