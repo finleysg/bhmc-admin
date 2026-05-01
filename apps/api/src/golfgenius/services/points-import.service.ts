@@ -320,7 +320,7 @@ export class PointsImportService {
 			flightName: string,
 			result: PointsImportSummary,
 			playerMap: PlayerMap,
-		) => PreparedTournamentPoints | null,
+		) => PreparedTournamentPoints | PreparedTournamentPoints[] | null,
 		onPlayerProcessed?: (success: boolean, playerName?: string) => void,
 	): Promise<void> {
 		// Validate response structure
@@ -354,8 +354,13 @@ export class PointsImportService {
 						playerMap,
 					)
 					if (preparedRecord) {
-						preparedRecords.push(preparedRecord)
-						success = true
+						if (Array.isArray(preparedRecord)) {
+							preparedRecords.push(...preparedRecord)
+							success = preparedRecord.length > 0
+						} else {
+							preparedRecords.push(preparedRecord)
+							success = true
+						}
 					}
 				} catch (error) {
 					const errorMessage = error instanceof Error ? error.message : String(error)
@@ -404,71 +409,85 @@ export class PointsImportService {
 		flightName: string,
 		result: PointsImportSummary,
 		playerMap: PlayerMap,
-	): PreparedTournamentPoints | null {
-		// Extract member cards and get first member card
+	): PreparedTournamentPoints[] | null {
 		const memberCards = PointsResultParser.extractMemberCards(aggregate as GgAggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return null
 		}
-		const memberId = memberCards[0].member_id_str
 
-		// Parse player data using parser
-		const playerData = PointsResultParser.parsePlayerData(aggregate, memberCards[0])
-
-		// Resolve player using pre-fetched player map
-		const player = this.resolvePlayerFromMap(memberId, playerMap, result)
-		if (!player) {
-			this.logger.warn("No player found for member ID", { memberId })
+		// Points are awarded at the aggregate (team) level — skip if none.
+		const points = Math.round(parseFloat(aggregate.points || "0"))
+		if (points <= 0) {
+			this.logger.log("No points awarded, skipping aggregate", {
+				aggregateName: aggregate.name,
+			})
 			return null
 		}
 
-		// Parse points - skip if no points awarded
-		const points = Math.round(parseFloat(playerData.points || "0"))
-		if (points <= 0) {
-			this.logger.log("No points awarded to player, skipping", {
-				playerId: player.id,
-				playerData: JSON.stringify(playerData),
-			})
-			return null // Skip players who didn't earn points
-		}
-
-		// Parse position from rank attribute
-		const rankStr = playerData.rank
+		const rankStr = aggregate.rank || ""
 		let position = 0
 		try {
-			position = rankStr && rankStr.trim() !== "" ? parseInt(rankStr, 10) : 0
+			position = rankStr.trim() !== "" ? parseInt(rankStr, 10) : 0
 		} catch {
 			position = 0
 		}
 
-		// Parse score (total strokes) if available
-		const totalStr = playerData.total
+		const totalStr = aggregate.total || ""
 		let score: number | null = null
 		try {
-			score = totalStr && totalStr.trim() !== "" ? parseInt(totalStr, 10) : null
+			score = totalStr.trim() !== "" ? parseInt(totalStr, 10) : null
 		} catch (e: unknown) {
-			this.logger.warn("Failed to parse score for player", {
-				playerId: player.id,
+			this.logger.warn("Failed to parse score for aggregate", {
+				aggregateName: aggregate.name,
 				totalStr,
 				error: String(e),
 			})
 			score = null
 		}
 
-		// Build details string
-		const positionDetails = PointsResultParser.formatPositionDetails(playerData.position)
-		const details = positionDetails
+		const details = PointsResultParser.formatPositionDetails(aggregate.position || "")
 
-		// Return prepared data instead of inserting
-		return {
-			tournamentId: tournamentData.id,
-			playerId: player.id,
-			position,
-			score,
-			points,
-			details,
-			createDate: toDbString(new Date()),
+		// Identify blind players in the team name (e.g. "Bl[Tim Ley]") so they don't earn points.
+		const blindNames = new Set<string>()
+		const teamName = aggregate.name || ""
+		for (const entry of teamName.split("+").map((e) => e.trim())) {
+			if (entry.startsWith("Bl[")) {
+				const match = entry.match(/Bl\[(.*?)\]/)
+				if (match) {
+					blindNames.add(match[1].toLowerCase())
+				}
+			}
 		}
+
+		// Award the team's points to every real member of the aggregate.
+		const records: PreparedTournamentPoints[] = []
+		for (const card of memberCards) {
+			const player = this.resolvePlayerFromMap(card.member_id_str, playerMap, result)
+			if (!player) {
+				this.logger.warn("No player found for member ID", { memberId: card.member_id_str })
+				continue
+			}
+
+			const playerFullName = `${player.firstName} ${player.lastName}`.toLowerCase()
+			if (blindNames.has(playerFullName)) {
+				this.logger.log(
+					`Skipping blind player: ${player.firstName} ${player.lastName} (team: ${teamName})`,
+				)
+				continue
+			}
+
+			records.push({
+				tournamentId: tournamentData.id,
+				playerId: player.id,
+				position,
+				score,
+				points,
+				details,
+				createDate: toDbString(new Date()),
+			})
+		}
+
+		return records.length > 0 ? records : null
 	}
 }
