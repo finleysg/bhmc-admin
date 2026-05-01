@@ -477,7 +477,12 @@ describe("RegistrationService", () => {
 				// Old registration should be cleaned up
 				expect(paymentsService.deletePaymentsForRegistration).toHaveBeenCalledWith(50)
 				expect(slotCleanupService.releaseSlotsByRegistration).toHaveBeenCalledWith(50, true)
-				expect(repository.deleteRegistration).toHaveBeenCalledWith(50)
+				// Registration row is preserved (changelog FK) but disassociated from the user
+				expect(repository.deleteRegistration).not.toHaveBeenCalled()
+				expect(repository.updateRegistration).toHaveBeenCalledWith(50, {
+					userId: null,
+					expires: null,
+				})
 
 				// New registration should be created (insert called)
 				expect(mockTx.insert).toHaveBeenCalled()
@@ -631,7 +636,12 @@ describe("RegistrationService", () => {
 				// Old registration should be cleaned up before the transaction
 				expect(paymentsService.deletePaymentsForRegistration).toHaveBeenCalledWith(60)
 				expect(slotCleanupService.releaseSlotsByRegistration).toHaveBeenCalledWith(60, false)
-				expect(repository.deleteRegistration).toHaveBeenCalledWith(60)
+				// Registration row is preserved (changelog FK) but disassociated from the user
+				expect(repository.deleteRegistration).not.toHaveBeenCalled()
+				expect(repository.updateRegistration).toHaveBeenCalledWith(60, {
+					userId: null,
+					expires: null,
+				})
 			})
 
 			it("throws AlreadyRegisteredError when non-choosable existing registration has RESERVED slots", async () => {
@@ -1070,12 +1080,15 @@ describe("RegistrationService", () => {
 
 			repository.findRegistrationFullById.mockResolvedValue(regFull)
 			eventsService.isCanChooseHolesEvent.mockResolvedValue(true)
-			repository.deleteRegistration.mockResolvedValue(undefined)
 
 			await service.cancelRegistration(1, 1)
 
 			expect(slotCleanupService.releaseSlotsByRegistration).toHaveBeenCalledWith(1, true)
-			expect(repository.deleteRegistration).toHaveBeenCalledWith(1)
+			expect(repository.deleteRegistration).not.toHaveBeenCalled()
+			expect(repository.updateRegistration).toHaveBeenCalledWith(1, {
+				userId: null,
+				expires: null,
+			})
 		})
 
 		it("releases slots for non-choosable events", async () => {
@@ -1085,12 +1098,15 @@ describe("RegistrationService", () => {
 
 			repository.findRegistrationFullById.mockResolvedValue(regFull)
 			eventsService.isCanChooseHolesEvent.mockResolvedValue(false)
-			repository.deleteRegistration.mockResolvedValue(undefined)
 
 			await service.cancelRegistration(1, 1)
 
 			expect(slotCleanupService.releaseSlotsByRegistration).toHaveBeenCalledWith(1, false)
-			expect(repository.deleteRegistration).toHaveBeenCalledWith(1)
+			expect(repository.deleteRegistration).not.toHaveBeenCalled()
+			expect(repository.updateRegistration).toHaveBeenCalledWith(1, {
+				userId: null,
+				expires: null,
+			})
 		})
 
 		it("deletes payment when paymentId provided", async () => {

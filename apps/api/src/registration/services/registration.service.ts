@@ -378,7 +378,10 @@ export class RegistrationService {
 
 		const canChoose = await this.events.isCanChooseHolesEvent(reg.eventId)
 		await this.slotCleanup.releaseSlotsByRegistration(registrationId, canChoose)
-		await this.repository.deleteRegistration(registrationId)
+		// Null out userId/expires instead of hard-deleting. The changelog table has
+		// a NOT NULL FK to registration.id, so deletes fail (errno 1451) once any
+		// audit row has been written for this registration.
+		await this.repository.updateRegistration(registrationId, { userId: null, expires: null })
 
 		if (canChoose) {
 			this.broadcast.notifyChange(reg.eventId)
@@ -640,11 +643,18 @@ export class RegistrationService {
 		registrationId: number,
 		canChoose: boolean,
 	): Promise<void> {
-		// Resolve eventId before deletion so we can broadcast after the rows are gone.
+		// Resolve eventId before mutating so we can broadcast after the rows are gone.
 		const reg = await this.repository.findRegistrationFullById(registrationId).catch(() => null)
 		await this.payments.deletePaymentsForRegistration(registrationId)
 		await this.slotCleanup.releaseSlotsByRegistration(registrationId, canChoose)
-		await this.repository.deleteRegistration(registrationId)
+		// Null out userId/expires instead of deleting the registration row. The
+		// changelog table has a NOT NULL FK to registration.id, so a hard delete
+		// fails with errno 1451 once any changelog entry has been written for
+		// this registration (e.g. an `add_players` audit row from a teammate
+		// invite). Nulling userId makes findRegistrationByUserAndEvent skip the
+		// row, so the user can sign up again, while preserving the audit trail.
+		// This mirrors the behavior of CleanupService.cleanUpExpired.
+		await this.repository.updateRegistration(registrationId, { userId: null, expires: null })
 
 		// For can-choose events, releasing slots is a visible state change for every
 		// other client browsing the tee sheet. Broadcast so they see slots come back
