@@ -23,7 +23,6 @@ export interface UpdateSlotPlayerRequest {
  */
 export interface CancelRegistrationRequest {
 	reason: string
-	paymentId?: number | null
 }
 
 /**

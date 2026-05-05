@@ -37,10 +37,16 @@ export interface IRegistrationContext {
 		playerName: string,
 		player: FeePlayer,
 	) => void
+	/**
+	 * Cancel an in-progress registration. Resolves to `true` if the cancel
+	 * succeeded (or no API call was needed), `false` if the API refused with
+	 * 409 (payment in flight or already captured — the registration must be
+	 * preserved). Callers that navigate after cancel should branch on the result.
+	 */
 	cancelRegistration: (
 		reason: "user" | "timeout" | "navigation" | "violation",
 		mode: RegistrationMode,
-	) => Promise<void>
+	) => Promise<boolean>
 	canRegister: () => boolean
 	completeRegistration: () => void
 	createPaymentIntent: () => Promise<{ client_secret: string }>

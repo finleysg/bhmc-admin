@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from "@nestjs/common"
+import { ConfigService } from "@nestjs/config"
 import Stripe from "stripe"
 
 import {
@@ -15,6 +16,7 @@ import { MailService } from "../mail"
 import {
 	AdminRegistrationService,
 	ChangeLogService,
+	OrphanedRegistrationError,
 	PaymentsService,
 	RefundService,
 } from "../registration"
@@ -31,6 +33,7 @@ export class StripeWebhookService {
 		@Inject(DjangoAuthService) private djangoAuthService: DjangoAuthService,
 		@Inject(EventsService) private eventsService: EventsService,
 		@Inject(MailService) private mailService: MailService,
+		@Inject(ConfigService) private configService: ConfigService,
 	) {}
 
 	async handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent): Promise<void> {
@@ -60,9 +63,39 @@ export class StripeWebhookService {
 			return
 		}
 
-		await this.paymentsService.paymentConfirmed(registrationId, paymentRecord.id)
+		try {
+			await this.paymentsService.paymentConfirmed(registrationId, paymentRecord.id)
+		} catch (error) {
+			if (error instanceof OrphanedRegistrationError) {
+				// Best-effort admin alert. Re-throw so Stripe retries the webhook;
+				// don't let an email failure mask the underlying problem.
+				await this.alertOrphanedPayment(registrationId, paymentRecord.id, paymentIntentId)
+			}
+			throw error
+		}
 
 		await this.sendConfirmationEmail(registrationId, paymentRecord.id)
+	}
+
+	private async alertOrphanedPayment(
+		registrationId: number,
+		paymentId: number,
+		paymentCode: string,
+	): Promise<void> {
+		try {
+			const adminEmail = this.configService.getOrThrow<string>("ADMIN_NOTIFICATION_EMAIL")
+			await this.mailService.sendOrphanedPaymentAlert([adminEmail], {
+				registrationId,
+				paymentId,
+				paymentCode,
+			})
+		} catch (error) {
+			const wrapped = wrapError(
+				error,
+				`alertOrphanedPayment for registration ${registrationId} payment ${paymentId}`,
+			)
+			this.logger.error({ message: wrapped.message, cause: wrapped.cause, stack: wrapped.stack })
+		}
 	}
 
 	handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent): void {

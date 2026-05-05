@@ -11,7 +11,7 @@ import type {
 	PaymentDetailRequest,
 } from "@repo/domain/types"
 
-import { PaymentNotFoundError } from "../errors/registration.errors"
+import { OrphanedRegistrationError, PaymentNotFoundError } from "../errors/registration.errors"
 import { PaymentsService } from "../services/payments.service"
 import type {
 	PaymentRow,
@@ -1112,6 +1112,71 @@ describe("PaymentsService", () => {
 			await service.paymentConfirmed(1, 5)
 
 			expect(broadcastService.notifyChange).not.toHaveBeenCalled()
+		})
+
+		describe("orphaned-registration tripwire", () => {
+			it("throws OrphanedRegistrationError when no AWAITING_PAYMENT slots and userId is null", async () => {
+				const { service, registrationRepo, paymentsRepo } = createService()
+				const reg = createRegistrationRow({ id: 1, eventId: 100, userId: null as never })
+
+				registrationRepo.findRegistrationById.mockResolvedValue(reg)
+				registrationRepo.findRegistrationSlotsByRegistrationId.mockResolvedValue([])
+
+				await expect(service.paymentConfirmed(1, 5)).rejects.toThrow(OrphanedRegistrationError)
+
+				// Critically, the payment must NOT be marked confirmed in the orphan branch.
+				// Silently confirming is the duplicate-payment failure mode this guards.
+				expect(paymentsRepo.updatePayment).not.toHaveBeenCalled()
+				expect(paymentsRepo.updatePaymentDetailStatus).not.toHaveBeenCalled()
+			})
+
+			it("confirms normally when zero slots but userId is non-null (over-select scenario)", async () => {
+				// Pre-existing behavior: a user can over-select fees that aren't
+				// tied to a populated AWAITING_PAYMENT slot. As long as the
+				// registration is still attached to a user, confirm the payment.
+				const { service, registrationRepo, paymentsRepo, eventsService } = createService()
+				const reg = createRegistrationRow({ id: 1, eventId: 100, userId: 10 })
+
+				registrationRepo.findRegistrationById.mockResolvedValue(reg)
+				registrationRepo.findRegistrationSlotsByRegistrationId.mockResolvedValue([])
+				paymentsRepo.findPaymentDetailsByPayment.mockResolvedValue([])
+				eventsService.getEventById.mockResolvedValue(createClubEvent({ canChoose: false }))
+
+				await service.paymentConfirmed(1, 5)
+
+				expect(paymentsRepo.updatePayment).toHaveBeenCalledWith(5, {
+					confirmed: 1,
+					confirmDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}/),
+				})
+			})
+		})
+	})
+
+	describe("findPaymentsForRegistration", () => {
+		it("delegates to repository and maps rows to domain Payment", async () => {
+			const { service, paymentsRepo } = createService()
+			paymentsRepo.findPaymentsForRegistration.mockResolvedValue([
+				{
+					id: 7,
+					eventId: 100,
+					userId: 10,
+					paymentAmount: "60.00",
+					transactionFee: "0.00",
+					notificationType: "C",
+					confirmed: 1,
+					confirmDate: null,
+					paymentCode: "pi_test",
+					paymentKey: null,
+					paymentDate: "2026-04-01 12:00:00",
+				},
+			])
+
+			const result = await service.findPaymentsForRegistration(42)
+
+			expect(paymentsRepo.findPaymentsForRegistration).toHaveBeenCalledWith(42)
+			expect(result).toHaveLength(1)
+			expect(result[0].confirmed).toBe(true)
+			expect(result[0].paymentCode).toBe("pi_test")
 		})
 	})
 })

@@ -12,6 +12,7 @@ import {
 	EventFullError,
 	EventRegistrationNotOpenError,
 	MembersOnlyError,
+	PaymentInFlightError,
 	PlayerConflictError,
 	ReturningMembersOnlyError,
 	SlotConflictError,
@@ -178,6 +179,7 @@ const createMockEventsService = () => ({
 const createMockPaymentsService = () => ({
 	deletePaymentAndFees: jest.fn(),
 	deletePaymentsForRegistration: jest.fn(),
+	findPaymentsForRegistration: jest.fn().mockResolvedValue([]),
 })
 
 const createMockDrizzleService = () => {
@@ -438,6 +440,46 @@ describe("RegistrationService", () => {
 				await expect(service.createAndReserve(user, request)).rejects.toThrow(
 					AlreadyRegisteredError,
 				)
+			})
+
+			it("refuses stale cleanup when prior registration has confirmed payment", async () => {
+				const { service, eventsService, repository, paymentsService, slotCleanupService } =
+					createService()
+				const user = createDjangoUser()
+				const event = createClubEvent({ canChoose: true })
+				const request = createReserveRequest()
+
+				eventsService.getCompleteClubEventById.mockResolvedValue(event)
+				repository.findRegistrationByUserAndEvent.mockResolvedValue(
+					createRegistrationWithSlots({
+						id: 50,
+						slots: [
+							createRegistrationSlotRow({
+								id: 101,
+								status: RegistrationStatusChoices.PENDING,
+								registrationId: 50,
+							}),
+						],
+					}),
+				)
+				repository.findRegistrationFullById.mockResolvedValue(
+					createRegistrationFull({ id: 50, eventId: 100 }),
+				)
+				paymentsService.findPaymentsForRegistration.mockResolvedValue([
+					{ id: 999, confirmed: true, paymentCode: "pi_already_captured" },
+				])
+
+				await expect(service.createAndReserve(user, request)).rejects.toThrow(PaymentInFlightError)
+
+				// The captured payment must NOT be deleted, slots must NOT be released, and
+				// the registration must NOT be orphaned. Letting any of these proceed is
+				// what produces the duplicate-payment bug.
+				expect(paymentsService.deletePaymentsForRegistration).not.toHaveBeenCalled()
+				expect(slotCleanupService.releaseSlotsByRegistration).not.toHaveBeenCalled()
+				expect(repository.updateRegistration).not.toHaveBeenCalledWith(50, {
+					userId: null,
+					expires: null,
+				})
 			})
 
 			it("cleans up stale PENDING registration and creates new one", async () => {
@@ -1071,8 +1113,9 @@ describe("RegistrationService", () => {
 	})
 
 	describe("cancelRegistration", () => {
-		it("releases slots for choosable events", async () => {
-			const { service, repository, eventsService, slotCleanupService } = createService()
+		it("releases slots for choosable events when no payment is in flight", async () => {
+			const { service, repository, eventsService, paymentsService, slotCleanupService } =
+				createService()
 
 			const regFull = createRegistrationFull({
 				slots: [createRegistrationSlotFull({ id: 1 }), createRegistrationSlotFull({ id: 2 })],
@@ -1080,6 +1123,7 @@ describe("RegistrationService", () => {
 
 			repository.findRegistrationFullById.mockResolvedValue(regFull)
 			eventsService.isCanChooseHolesEvent.mockResolvedValue(true)
+			paymentsService.findPaymentsForRegistration.mockResolvedValue([])
 
 			await service.cancelRegistration(1, 1)
 
@@ -1091,13 +1135,15 @@ describe("RegistrationService", () => {
 			})
 		})
 
-		it("releases slots for non-choosable events", async () => {
-			const { service, repository, eventsService, slotCleanupService } = createService()
+		it("releases slots for non-choosable events when no payment is in flight", async () => {
+			const { service, repository, eventsService, paymentsService, slotCleanupService } =
+				createService()
 
 			const regFull = createRegistrationFull()
 
 			repository.findRegistrationFullById.mockResolvedValue(regFull)
 			eventsService.isCanChooseHolesEvent.mockResolvedValue(false)
+			paymentsService.findPaymentsForRegistration.mockResolvedValue([])
 
 			await service.cancelRegistration(1, 1)
 
@@ -1109,19 +1155,50 @@ describe("RegistrationService", () => {
 			})
 		})
 
-		it("deletes payment when paymentId provided", async () => {
+		it("deletes pending payments enumerated server-side", async () => {
 			const { service, repository, eventsService, paymentsService } = createService()
 
-			const regFull = createRegistrationFull()
-
-			repository.findRegistrationFullById.mockResolvedValue(regFull)
+			repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
 			eventsService.isCanChooseHolesEvent.mockResolvedValue(true)
-			repository.deleteRegistration.mockResolvedValue(undefined)
+			paymentsService.findPaymentsForRegistration.mockResolvedValue([
+				{ id: 100, confirmed: false, paymentCode: "pending" },
+				{ id: 101, confirmed: false, paymentCode: "pending" },
+			])
 			paymentsService.deletePaymentAndFees.mockResolvedValue(undefined)
 
-			await service.cancelRegistration(1, 1, 123)
+			await service.cancelRegistration(1, 1)
 
-			expect(paymentsService.deletePaymentAndFees).toHaveBeenCalledWith(123)
+			expect(paymentsService.deletePaymentAndFees).toHaveBeenCalledWith(100)
+			expect(paymentsService.deletePaymentAndFees).toHaveBeenCalledWith(101)
+		})
+
+		it("throws PaymentInFlightError when any payment is confirmed", async () => {
+			const { service, repository, paymentsService, slotCleanupService } = createService()
+
+			repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+			paymentsService.findPaymentsForRegistration.mockResolvedValue([
+				{ id: 200, confirmed: true, paymentCode: "pi_test" },
+			])
+
+			await expect(service.cancelRegistration(1, 1)).rejects.toThrow(PaymentInFlightError)
+
+			expect(paymentsService.deletePaymentAndFees).not.toHaveBeenCalled()
+			expect(slotCleanupService.releaseSlotsByRegistration).not.toHaveBeenCalled()
+			expect(repository.updateRegistration).not.toHaveBeenCalled()
+		})
+
+		it("throws PaymentInFlightError when paymentCode != 'pending' (Stripe PI attached)", async () => {
+			const { service, repository, paymentsService, slotCleanupService } = createService()
+
+			repository.findRegistrationFullById.mockResolvedValue(createRegistrationFull())
+			paymentsService.findPaymentsForRegistration.mockResolvedValue([
+				{ id: 201, confirmed: false, paymentCode: "pi_in_flight" },
+			])
+
+			await expect(service.cancelRegistration(1, 1)).rejects.toThrow(PaymentInFlightError)
+
+			expect(slotCleanupService.releaseSlotsByRegistration).not.toHaveBeenCalled()
+			expect(repository.updateRegistration).not.toHaveBeenCalled()
 		})
 
 		// TODO: fix the service to convert TypeError to NotFoundException in this case

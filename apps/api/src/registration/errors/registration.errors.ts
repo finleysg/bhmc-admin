@@ -90,3 +90,23 @@ export class PaymentNotFoundError extends HttpException {
 		)
 	}
 }
+
+export class PaymentInFlightError extends HttpException {
+	constructor(registrationId: number, paymentId: number) {
+		super(
+			`Cannot cancel registration ${registrationId}: payment ${paymentId} is in flight or already captured. Please wait for confirmation, or contact an administrator if you need a refund.`,
+			HttpStatus.CONFLICT,
+		)
+	}
+}
+
+export class OrphanedRegistrationError extends HttpException {
+	constructor(registrationId: number, paymentId: number) {
+		// Why 500: thrown from the Stripe webhook so Stripe retries delivery
+		// (giving any concurrent slot/registration mutation a chance to settle).
+		super(
+			`Cannot confirm payment ${paymentId} against orphaned registration ${registrationId}. The registration was released before the webhook arrived.`,
+			HttpStatus.INTERNAL_SERVER_ERROR,
+		)
+	}
+}

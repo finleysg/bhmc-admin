@@ -35,6 +35,7 @@ import {
 	EventRegistrationNotOpenError,
 	EventRegistrationWaveError,
 	MembersOnlyError,
+	PaymentInFlightError,
 	PlayerConflictError,
 	ReturningMembersOnlyError,
 	SessionFullError,
@@ -360,20 +361,34 @@ export class RegistrationService {
 
 	/**
 	 * Cancel a registration and release slots.
+	 *
+	 * Refuses to cancel when any payment for this registration has been captured
+	 * or has a Stripe PaymentIntent attached (paymentCode != "pending"). Releasing
+	 * slots in that window orphans the captured payment and lets the user re-register
+	 * for the same slots — the duplicate-payment bug fixed here.
 	 */
-	async cancelRegistration(
-		registrationId: number,
-		playerId: number,
-		paymentId?: number | null,
-	): Promise<void> {
+	async cancelRegistration(registrationId: number, playerId: number): Promise<void> {
 		const reg = await this.findRegistrationById(registrationId, playerId)
 		if (!reg) {
 			this.logger.warn(`Registration ${registrationId} not found for cancel`)
 			return
 		}
 
-		if (paymentId) {
-			await this.payments.deletePaymentAndFees(paymentId)
+		// Server-side enumeration: do NOT trust a client-supplied paymentId hint —
+		// the React state can be reset (provider remount after navigating back from
+		// /complete), and we'd silently skip the payment delete and orphan the row.
+		const payments = await this.payments.findPaymentsForRegistration(registrationId)
+		const blocking = payments.find((p) => p.confirmed || p.paymentCode !== "pending")
+		if (blocking) {
+			this.logger.warn(
+				`Refusing cancel of registration ${registrationId}: payment ${blocking.id} ` +
+					`has confirmed=${blocking.confirmed}, paymentCode=${blocking.paymentCode}`,
+			)
+			throw new PaymentInFlightError(registrationId, blocking.id)
+		}
+
+		for (const p of payments) {
+			await this.payments.deletePaymentAndFees(p.id)
 		}
 
 		const canChoose = await this.events.isCanChooseHolesEvent(reg.eventId)
@@ -645,6 +660,21 @@ export class RegistrationService {
 	): Promise<void> {
 		// Resolve eventId before mutating so we can broadcast after the rows are gone.
 		const reg = await this.repository.findRegistrationFullById(registrationId).catch(() => null)
+
+		// Same guard as cancelRegistration. deletePaymentsForRegistration would skip
+		// a confirmed/in-flight payment but we'd still release the slots and null
+		// userId — handing the user a fresh duplicate-able registration. Refuse
+		// outright so the caller surfaces the problem instead of masking it.
+		const payments = await this.payments.findPaymentsForRegistration(registrationId)
+		const blocking = payments.find((p) => p.confirmed || p.paymentCode !== "pending")
+		if (blocking) {
+			this.logger.warn(
+				`Refusing stale cleanup of registration ${registrationId}: payment ${blocking.id} ` +
+					`has confirmed=${blocking.confirmed}, paymentCode=${blocking.paymentCode}`,
+			)
+			throw new PaymentInFlightError(registrationId, blocking.id)
+		}
+
 		await this.payments.deletePaymentsForRegistration(registrationId)
 		await this.slotCleanup.releaseSlotsByRegistration(registrationId, canChoose)
 		// Null out userId/expires instead of deleting the registration row. The

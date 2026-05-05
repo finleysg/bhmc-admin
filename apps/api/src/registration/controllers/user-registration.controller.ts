@@ -107,14 +107,8 @@ export class UserRegistrationController {
 		@Param("id", ParseIntPipe) registrationId: number,
 		@Body() dto: CancelRegistrationRequest,
 	): Promise<{ success: boolean }> {
-		this.logger.log(
-			`Canceling registration ${registrationId} and payment ${dto.paymentId}: ${dto.reason}`,
-		)
-		await this.flowService.cancelRegistration(
-			registrationId,
-			req.user.playerId,
-			dto.paymentId ?? null,
-		)
+		this.logger.log(`Canceling registration ${registrationId}: ${dto.reason}`)
+		await this.flowService.cancelRegistration(registrationId, req.user.playerId)
 
 		return { success: true }
 	}

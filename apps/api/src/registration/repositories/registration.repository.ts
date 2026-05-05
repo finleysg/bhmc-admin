@@ -155,6 +155,14 @@ export class RegistrationRepository {
 		return results
 	}
 
+	async findRegistrationSlotsByIds(slotIds: number[]): Promise<RegistrationSlotRow[]> {
+		if (slotIds.length === 0) return []
+		return await this.drizzle.db
+			.select()
+			.from(registrationSlot)
+			.where(inArray(registrationSlot.id, slotIds))
+	}
+
 	async findRegistrationSlotByGgId(ggId: string): Promise<RegistrationSlotRow | null> {
 		const [slot] = await this.drizzle.db
 			.select()

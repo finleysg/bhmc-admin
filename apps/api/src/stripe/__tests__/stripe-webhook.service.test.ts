@@ -6,6 +6,7 @@ import {
 import type { ClubEvent, RegistrationWithSlots, CompletePayment } from "@repo/domain/types"
 import type Stripe from "stripe"
 
+import { OrphanedRegistrationError } from "../../registration/errors/registration.errors"
 import { StripeWebhookService } from "../stripe-webhook.service"
 
 // =============================================================================
@@ -138,6 +139,11 @@ const createMockMailService = () => ({
 	sendRegistrationUpdate: jest.fn(),
 	sendRegistrationConfirmation: jest.fn(),
 	sendRefundNotification: jest.fn(),
+	sendOrphanedPaymentAlert: jest.fn(),
+})
+
+const createMockConfigService = () => ({
+	getOrThrow: jest.fn().mockReturnValue("admin@bhmc.org"),
 })
 
 // =============================================================================
@@ -153,6 +159,7 @@ describe("StripeWebhookService", () => {
 	let mockDjangoAuthService: ReturnType<typeof createMockDjangoAuthService>
 	let mockEventsService: ReturnType<typeof createMockEventsService>
 	let mockMailService: ReturnType<typeof createMockMailService>
+	let mockConfigService: ReturnType<typeof createMockConfigService>
 
 	beforeEach(() => {
 		mockAdminRegistrationService = createMockAdminRegistrationService()
@@ -162,6 +169,7 @@ describe("StripeWebhookService", () => {
 		mockDjangoAuthService = createMockDjangoAuthService()
 		mockEventsService = createMockEventsService()
 		mockMailService = createMockMailService()
+		mockConfigService = createMockConfigService()
 
 		service = new StripeWebhookService(
 			mockAdminRegistrationService as never,
@@ -171,6 +179,7 @@ describe("StripeWebhookService", () => {
 			mockDjangoAuthService as never,
 			mockEventsService as never,
 			mockMailService as never,
+			mockConfigService as never,
 		)
 	})
 
@@ -242,6 +251,27 @@ describe("StripeWebhookService", () => {
 			await service.handlePaymentIntentSucceeded(paymentIntent)
 
 			expect(mockPaymentsService.paymentConfirmed).toHaveBeenCalledWith(10, 7)
+		})
+
+		it("emits orphaned-payment alert and re-throws on OrphanedRegistrationError", async () => {
+			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord({ id: 9 }))
+			mockPaymentsService.paymentConfirmed.mockRejectedValue(new OrphanedRegistrationError(77, 9))
+
+			const paymentIntent = createPaymentIntent({
+				metadata: { registrationId: "77", paymentId: "9" },
+			})
+
+			// Re-throw causes Stripe (per controller) to retry the webhook.
+			await expect(service.handlePaymentIntentSucceeded(paymentIntent)).rejects.toBeInstanceOf(
+				OrphanedRegistrationError,
+			)
+
+			expect(mockMailService.sendOrphanedPaymentAlert).toHaveBeenCalledWith(
+				["admin@bhmc.org"],
+				expect.objectContaining({ registrationId: 77, paymentId: 9, paymentCode: "pi_test123" }),
+			)
+			// Confirmation email path must NOT run for orphaned payments.
+			expect(mockAdminRegistrationService.getCompleteRegistrationAndPayment).not.toHaveBeenCalled()
 		})
 	})
 

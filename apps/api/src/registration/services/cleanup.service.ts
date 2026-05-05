@@ -74,33 +74,48 @@ export class CleanupService {
 	 * Release slots based on event type.
 	 * For choosable events: reset slots to AVAILABLE.
 	 * For non-choosable events: delete slots.
+	 *
+	 * Defense-in-depth: RESERVED slots represent a confirmed payment and must
+	 * never be released by a cleanup path. The cancel/cleanup callers should
+	 * have already refused via the payment-in-flight guard, but if anything
+	 * slips through (admin tooling, race, future code), filter here too.
 	 */
 	async releaseSlots(slotIds: number[], canChoose: boolean): Promise<void> {
 		if (slotIds.length === 0) return
 
+		const slots = await this.repository.findRegistrationSlotsByIds(slotIds)
+		const safeIds = slots
+			.filter((s) => s.status !== RegistrationStatusChoices.RESERVED)
+			.map((s) => s.id)
+		const skipped = slotIds.length - safeIds.length
+		if (skipped > 0) {
+			this.logger.warn(
+				`releaseSlots skipped ${skipped} RESERVED slot(s) out of ${slotIds.length} requested`,
+			)
+		}
+		if (safeIds.length === 0) return
+
 		if (canChoose) {
-			await this.repository.updateRegistrationSlots(slotIds, {
+			await this.repository.updateRegistrationSlots(safeIds, {
 				status: RegistrationStatusChoices.AVAILABLE,
 				registrationId: null,
 				playerId: null,
 			})
 		} else {
-			await this.repository.deleteRegistrationSlots(slotIds)
+			await this.repository.deleteRegistrationSlots(safeIds)
 		}
 	}
 
 	/**
-	 * Release slots by registration ID.
-	 * For choosable events: reset slots to AVAILABLE.
-	 * For non-choosable events: delete slots.
+	 * Release slots by registration ID. Routes through releaseSlots so the
+	 * RESERVED-skip guard applies for both choosable and non-choosable events.
 	 */
 	async releaseSlotsByRegistration(registrationId: number, canChoose: boolean): Promise<void> {
-		if (canChoose) {
-			const slots = await this.repository.findRegistrationSlotsByRegistrationId(registrationId)
-			const slotIds = slots.map((s) => s.id)
-			await this.releaseSlots(slotIds, canChoose)
-		} else {
-			await this.repository.deleteRegistrationSlotsByRegistration(registrationId)
-		}
+		const slots = await this.repository.findRegistrationSlotsByRegistrationId(registrationId)
+		if (slots.length === 0) return
+		await this.releaseSlots(
+			slots.map((s) => s.id),
+			canChoose,
+		)
 	}
 }

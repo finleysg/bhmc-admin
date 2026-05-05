@@ -30,10 +30,16 @@ export function CancelButton({ mode, onCanceled }: CancelButtonProps) {
 			: "This will discard your changes and return to the event detail page."
 
 	const handleConfirm = () => {
-		if (onCanceled) {
-			onCanceled()
-		}
-		void cancelRegistration("user", mode)
+		// Wait for the cancel result before navigating. If the API refuses
+		// (409: payment in flight), the registration must be preserved and we
+		// stay on the current page so the user sees the toast and the webhook
+		// can complete.
+		void cancelRegistration("user", mode).then((cancelled) => {
+			if (!cancelled) return
+			if (onCanceled) {
+				onCanceled()
+			}
+		})
 	}
 
 	return (

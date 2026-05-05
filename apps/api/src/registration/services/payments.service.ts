@@ -23,7 +23,7 @@ import { eq } from "drizzle-orm"
 import { EventsService } from "../../events"
 import { StripeService } from "../../stripe/stripe.service"
 
-import { PaymentNotFoundError } from "../errors/registration.errors"
+import { OrphanedRegistrationError, PaymentNotFoundError } from "../errors/registration.errors"
 import { toPayment, toPaymentWithDetails, toRegistrationFee } from "../mappers"
 import { PaymentsRepository } from "../repositories/payments.repository"
 import { RegistrationRepository } from "../repositories/registration.repository"
@@ -58,6 +58,15 @@ export class PaymentsService {
 	async findPaymentById(paymentId: number): Promise<Payment | null> {
 		const row = await this.paymentRepository.findPaymentById(paymentId)
 		return row ? toPayment(row) : null
+	}
+
+	/**
+	 * Find all payments tied to a registration (via its slots' fees).
+	 * Used by the cancel/cleanup paths to detect in-flight or captured Stripe payments.
+	 */
+	async findPaymentsForRegistration(registrationId: number): Promise<Payment[]> {
+		const rows = await this.paymentRepository.findPaymentsForRegistration(registrationId)
+		return rows.map(toPayment)
 	}
 
 	/**
@@ -361,6 +370,20 @@ export class PaymentsService {
 		const reservedSlots = slots.filter(
 			(slot) => slot.status === RegistrationStatusChoices.AWAITING_PAYMENT && slot.playerId,
 		)
+
+		// Tripwire: zero slots awaiting payment AND the registration was orphaned
+		// (userId nulled by a cancel/cleanup path). Confirming silently here is the
+		// duplicate-payment failure mode — the captured charge looks "successful" in
+		// our DB but no slots are tied to it. Refuse so Stripe retries delivery and
+		// ops can intervene from logs / the alert email sent by the webhook handler.
+		if (reservedSlots.length === 0 && reg.userId === null) {
+			this.logger.error(
+				`ORPHANED PAYMENT: registration ${registrationId} has no AWAITING_PAYMENT slots ` +
+					`and userId=null. Refusing to confirm payment ${paymentId}.`,
+			)
+			throw new OrphanedRegistrationError(registrationId, paymentId)
+		}
+
 		if (reservedSlots.length > 0) {
 			const slotIds = reservedSlots.map((s) => s.id)
 			await this.registrationRepository.updateRegistrationSlots(slotIds, {

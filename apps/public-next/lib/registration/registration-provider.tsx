@@ -12,6 +12,7 @@ import {
 import { useRouter } from "next/navigation"
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 
 import {
 	AlertDialog,
@@ -52,6 +53,15 @@ interface RegistrationProviderProps {
 	clubEvent: ClubEventDetail
 }
 
+class ApiError extends Error {
+	readonly status: number
+	constructor(message: string, status: number) {
+		super(message)
+		this.name = "ApiError"
+		this.status = status
+	}
+}
+
 async function apiFetch<T = unknown>(
 	url: string,
 	options?: RequestInit & { correlationId?: string },
@@ -72,7 +82,7 @@ async function apiFetch<T = unknown>(
 		} catch {
 			message = body
 		}
-		throw new Error(message)
+		throw new ApiError(message, response.status)
 	}
 	if (response.status === 204) return undefined as T
 	return response.json() as Promise<T>
@@ -318,10 +328,7 @@ export function RegistrationProvider({
 			const registrationId = state.registration?.id ?? 0
 			return apiFetch(`/api/registration/${registrationId}/cancel`, {
 				method: "PUT",
-				body: JSON.stringify({
-					paymentId: state.payment?.id ?? null,
-					reason,
-				}),
+				body: JSON.stringify({ reason }),
 				correlationId: state.correlationId,
 			})
 		},
@@ -339,6 +346,13 @@ export function RegistrationProvider({
 			})
 		},
 		onError: (error: Error) => {
+			// 409 = payment in flight or already captured. Preserve client state so
+			// the user stays on the payment/complete page; their charge is still
+			// being processed and the registration must not be released.
+			if (error instanceof ApiError && error.status === 409) {
+				toast.error(error.message)
+				return
+			}
 			dispatch({ type: "update-error", payload: { error: error.message } })
 		},
 	})
@@ -639,11 +653,19 @@ export function RegistrationProvider({
 	const cancelRegistration = useCallback(
 		(reason: "user" | "timeout" | "navigation" | "violation", mode: RegistrationMode) => {
 			if (mode === "new") {
-				return cancelRegistrationMutation({ reason }).then(() => {})
+				return cancelRegistrationMutation({ reason }).then(
+					() => true,
+					(error: unknown) => {
+						// 409 means the API refused — propagate as `false` so navigation
+						// callers can stay put. onError already toasts and preserves state.
+						if (error instanceof ApiError && error.status === 409) return false
+						throw error
+					},
+				)
 			}
 			dispatch({ type: "cancel-registration" })
 			void queryClient.invalidateQueries({ queryKey: ["registration"] })
-			return Promise.resolve()
+			return Promise.resolve(true)
 		},
 		[cancelRegistrationMutation, queryClient],
 	)
@@ -786,17 +808,18 @@ export function RegistrationProvider({
 
 	const handleGuardConfirm = useCallback(() => {
 		const href = confirmNavigation()
-		if (href) {
-			if (href === BACK_NAVIGATION) {
-				// For back button: go back in history, then cancel registration
-				void cancelRegistration("navigation", state.mode)
-				history.back()
-			} else {
-				// Navigate first, then cancel in background to avoid race with
-				// the register page's useEffect that redirects when registration becomes null
-				router.replace(href)
-				void cancelRegistration("navigation", state.mode)
-			}
+		if (!href) return
+		// Navigate first so the register page's auto-redirect (when state clears)
+		// completes naturally; if the cancel is refused with 409 the toast surfaces
+		// from the mutation's onError and the server still holds the registration
+		// so the user can resume. Either way the API guard is what prevents the
+		// orphaned-payment bug — this is a UX layer, not the security boundary.
+		if (href === BACK_NAVIGATION) {
+			void cancelRegistration("navigation", state.mode)
+			history.back()
+		} else {
+			router.replace(href)
+			void cancelRegistration("navigation", state.mode)
 		}
 	}, [confirmNavigation, cancelRegistration, state.mode, router])
 

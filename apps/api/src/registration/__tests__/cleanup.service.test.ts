@@ -5,13 +5,23 @@ import { ChangeLogService } from "../services/changelog.service"
 import { CleanupService } from "../services/cleanup.service"
 import { RegistrationBroadcastService } from "../services/registration-broadcast.service"
 
-const createMockRepository = () => ({
-	findExpiredPendingRegistrations: jest.fn(),
-	updateRegistrationSlots: jest.fn().mockResolvedValue(undefined),
-	deleteRegistrationSlots: jest.fn().mockResolvedValue(undefined),
-	deleteRegistration: jest.fn().mockResolvedValue(undefined),
-	updateRegistration: jest.fn().mockResolvedValue(undefined),
-})
+const createMockRepository = () => {
+	// findRegistrationSlotsByIds is used by releaseSlots' RESERVED-skip guard.
+	// Default: synthesize matching slots with PENDING status so existing tests
+	// (which exercise PENDING/expired flows) pass without explicit setup.
+	const findRegistrationSlotsByIds = jest.fn((ids: number[]) =>
+		Promise.resolve(ids.map((id) => ({ id, status: "P" }))),
+	)
+	return {
+		findExpiredPendingRegistrations: jest.fn(),
+		findRegistrationSlotsByIds,
+		findRegistrationSlotsByRegistrationId: jest.fn().mockResolvedValue([]),
+		updateRegistrationSlots: jest.fn().mockResolvedValue(undefined),
+		deleteRegistrationSlots: jest.fn().mockResolvedValue(undefined),
+		deleteRegistration: jest.fn().mockResolvedValue(undefined),
+		updateRegistration: jest.fn().mockResolvedValue(undefined),
+	}
+}
 
 const createMockPaymentsRepository = () => ({
 	findPaymentsForRegistration: jest.fn().mockResolvedValue([]),
@@ -196,6 +206,63 @@ describe("CleanupService", () => {
 		expect(mockRepository.deleteRegistrationSlots).toHaveBeenCalledWith([1, 2])
 		expect(mockRepository.updateRegistrationSlots).not.toHaveBeenCalled()
 		expect(mockBroadcastService.notifyChange).not.toHaveBeenCalled()
+	})
+
+	describe("releaseSlots RESERVED guard", () => {
+		it("skips RESERVED slots when releasing for a choosable event", async () => {
+			mockRepository.findRegistrationSlotsByIds.mockResolvedValue([
+				{ id: 1, status: "X" }, // AWAITING_PAYMENT
+				{ id: 2, status: "R" }, // RESERVED — must be skipped
+				{ id: 3, status: "P" }, // PENDING
+			])
+
+			await service.releaseSlots([1, 2, 3], true)
+
+			expect(mockRepository.updateRegistrationSlots).toHaveBeenCalledWith([1, 3], {
+				status: "A",
+				registrationId: null,
+				playerId: null,
+			})
+		})
+
+		it("skips RESERVED slots when releasing for a non-choosable event", async () => {
+			mockRepository.findRegistrationSlotsByIds.mockResolvedValue([
+				{ id: 1, status: "P" },
+				{ id: 2, status: "R" },
+			])
+
+			await service.releaseSlots([1, 2], false)
+
+			expect(mockRepository.deleteRegistrationSlots).toHaveBeenCalledWith([1])
+			expect(mockRepository.updateRegistrationSlots).not.toHaveBeenCalled()
+		})
+
+		it("returns early when every slot is RESERVED", async () => {
+			mockRepository.findRegistrationSlotsByIds.mockResolvedValue([
+				{ id: 1, status: "R" },
+				{ id: 2, status: "R" },
+			])
+
+			await service.releaseSlots([1, 2], true)
+
+			expect(mockRepository.updateRegistrationSlots).not.toHaveBeenCalled()
+			expect(mockRepository.deleteRegistrationSlots).not.toHaveBeenCalled()
+		})
+
+		it("releaseSlotsByRegistration routes through releaseSlots so RESERVED is skipped", async () => {
+			mockRepository.findRegistrationSlotsByRegistrationId.mockResolvedValue([
+				{ id: 11, status: "R" },
+				{ id: 12, status: "P" },
+			])
+			mockRepository.findRegistrationSlotsByIds.mockResolvedValue([
+				{ id: 11, status: "R" },
+				{ id: 12, status: "P" },
+			])
+
+			await service.releaseSlotsByRegistration(7, false)
+
+			expect(mockRepository.deleteRegistrationSlots).toHaveBeenCalledWith([12])
+		})
 	})
 
 	it("filters out null playerIds when resolving names", async () => {

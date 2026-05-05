@@ -25,6 +25,7 @@ import type { ReactElement } from "react"
 import {
 	AdminRegistrationNotificationEmail,
 	MatchPlayEmail,
+	OrphanedPaymentAlertEmail,
 	PayoutNotificationEmail,
 	PlayerMoveNotificationEmail,
 	PlayerReplacementNotificationEmail,
@@ -589,6 +590,24 @@ export class MailService {
 			to: recipients,
 			subject: `Failed Payment Alert: ${details.eventName}`,
 			template: StalePaymentNotificationEmail(details),
+		})
+	}
+
+	async sendOrphanedPaymentAlert(
+		recipients: string[],
+		details: {
+			registrationId: number
+			paymentId: number
+			paymentCode: string | null
+		},
+	): Promise<void> {
+		await this.sendEmail({
+			to: recipients,
+			subject: `Orphaned Payment Alert: registration ${details.registrationId}`,
+			template: OrphanedPaymentAlertEmail({
+				...details,
+				detectedAt: new Date().toISOString(),
+			}),
 		})
 	}
 }
