@@ -27,11 +27,6 @@ export function MatchPlayEmail({ firstName, year, matchplayUrl }: MatchPlayEmail
 				at any time to review the rules and deadlines. Once matches are underway, you will also see
 				a link to the Golf Genius portal page, where we update the brackets.
 			</Text>
-			<Text style={paragraph}>
-				Please schedule your matches as soon as possible once you know your opponent for a given
-				round. Even better, keep May 8 open to play your first match on the Match Play Kickoff Day.
-				If you have any trouble getting a match scheduled, notify one of the co-chairs right away.
-			</Text>
 			<Text style={paragraph}>Thank you again for participating in this tournament.</Text>
 			<Text style={paragraph}>&nbsp;</Text>
 			<Text style={signature}>
