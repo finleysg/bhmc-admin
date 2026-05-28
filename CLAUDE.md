@@ -1,97 +1,72 @@
 # CLAUDE.md
 
-## CRITICAL Rules
+Review ./AGENTS.md for project-specific guidance.
 
-- **NEVER change the password for auth_user id=1.** This is the project owner's account. Do not reset, update, or overwrite this password under any circumstances.
+Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
-- Never modify user passwords, authentication credentials, or seed data without explicit user approval. Always ask before changing any auth-related data.
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-## Project Overview
+## 1. Think Before Coding
 
-Golf tournament management system for Bunker Hills Men's Club (BHMC). This monorepo contains the admin API, admin web dashboard, and public-facing Next.js site (bhmc.org). It complements a separate Django backend (data.bhmc.org) that owns the database schema.
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
 
-## Code Style
+Before implementing:
 
-This project uses tab-based indentation. When editing files, always match the existing tab indentation exactly. Never convert tabs to spaces.
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
 
-This project uses TypeScript with strict mode. Always handle possibly-undefined array accesses with non-null assertions or proper guards. Use the full markdown editor component (ContentEditor) for any rich text fields, not simplified alternatives.
+## 2. Simplicity First
 
-## Data
+**Minimum code that solves the problem. Nothing speculative.**
 
-- The Django backend at data.bhmc.org is the source of truth for data. The NestJS API reads/writes the same MySQL database using Drizzle ORM (schema defined externally — no migrations in this repo).
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
 
-## Build & Development
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
-When the UI package (`packages/ui` or similar) is modified, it must be rebuilt (check for a build/compile step that outputs to `dist/`) before changes will appear in the consuming app. Always rebuild UI packages after editing them.
+## 3. Surgical Changes
 
-## Feedback
+**Touch only what you must. Clean up only your own mess.**
 
-Use the following tools / commands as feedback on your work.
+When editing existing code:
 
-`pnpm format`
-`pnpm lint` (fix warnings and errors, even if pre-existing)
-`pnpm test` (fix failures, even if pre-existing)
-`pnpm typecheck` (fix failures, even if pre-existing)
-`pnpm build` (fix failures -- ALWAYS)
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
 
-When a change is made to a next app, rebuild the container.
+When your changes create orphans:
 
-### IMPORTANT: UX Feedback
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
 
-Use the `playwright cli` skill to validate your work directly:
+The test: Every changed line should trace directly to the user's request.
 
-- Admin site: http://localhost:3100
-- Public site: http://localhost:3200
+## 4. Goal-Driven Execution
 
-## Commit Message Convention
+**Define success criteria. Loop until verified.**
 
-This project uses [Conventional Commits](https://www.conventionalcommits.org/). All commit messages are validated by commitlint via a husky `commit-msg` hook.
+Transform tasks into verifiable goals:
 
-### Format
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
 
-```
-<type>(<scope>): <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-### Types
-
-| Type       | When to use                                             |
-| ---------- | ------------------------------------------------------- |
-| `feat`     | A new feature or capability                             |
-| `fix`      | A bug fix                                               |
-| `docs`     | Documentation-only changes                              |
-| `style`    | Formatting, whitespace, missing semicolons, etc.        |
-| `refactor` | Code change that neither fixes a bug nor adds a feature |
-| `perf`     | Performance improvement                                 |
-| `test`     | Adding or updating tests                                |
-| `ci`       | CI/CD pipeline changes                                  |
-| `chore`    | Maintenance (dependencies, configs, tooling)            |
-| `revert`   | Reverting a previous commit                             |
-
-### Scopes (optional)
-
-Use one of: `api`, `admin`, `public-next`, `domain`, `eslint-config`, `e2e`, `deps`
-
-Omit the scope when a change spans multiple packages or is repo-wide.
-
-### Examples
+For multi-step tasks, state a brief plan:
 
 ```
-feat(admin): add player search to event registration
-fix(api): handle null handicap in scorecard endpoint
-chore(deps): update turbo to v2.9
-docs: update README with deployment instructions
-ci: add typecheck to GitHub Actions workflow
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
 ```
 
-### Changelog
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-Generate a changelog on demand:
+---
 
-```sh
-pnpm changelog
-```
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.

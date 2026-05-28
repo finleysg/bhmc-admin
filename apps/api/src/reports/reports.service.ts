@@ -963,8 +963,8 @@ export class ReportsService {
 					if (section.type === "stroke") {
 						columns = [
 							{ header: "Flight", key: "flight", width: 10 },
-							{ header: "Position", key: "position", width: 10 },
-							{ header: "Player Full Name", key: "fullName", width: 20 },
+							{ header: "Pos", key: "position", width: 10 },
+							{ header: "Player", key: "fullName", width: 20 },
 							{ header: "Score", key: "score", width: 8 },
 							{ header: "Amount", key: "amount", width: 10 },
 							{ header: "Team", key: "team", width: 15 },
@@ -973,8 +973,8 @@ export class ReportsService {
 						// skins
 						columns = [
 							{ header: "Details", key: "details", width: 15 },
-							{ header: "Skins Won", key: "skinsWon", width: 10 },
-							{ header: "Player Full Name", key: "fullName", width: 20 },
+							{ header: "Skins", key: "skinsWon", width: 10 },
+							{ header: "Player", key: "fullName", width: 20 },
 							{ header: "", key: "flight", width: 5 }, // empty
 							{ header: "Amount", key: "amount", width: 10 },
 							{ header: "", key: "position", width: 5 }, // empty
@@ -1005,7 +1005,7 @@ export class ReportsService {
 				const columns = [
 					{ header: "Tournament Name", key: "tournamentName", width: 20 },
 					{ header: "", key: "flight", width: 5 }, // empty
-					{ header: "Player Full Name", key: "fullName", width: 20 },
+					{ header: "Player", key: "fullName", width: 20 },
 					{ header: "", key: "position", width: 5 }, // empty
 					{ header: "Amount", key: "amount", width: 10 },
 					{ header: "", key: "score", width: 5 }, // empty
