@@ -417,7 +417,7 @@ class ResultFormatByEventFilter(TournamentFormatByEventFilter):
 
 
 class TournamentAdmin(admin.ModelAdmin):
-    fields = ["event", "round", "name", "format", "is_net", "gg_id"]
+    fields = ["event", "round", "name", "raw_format", "is_net", "gg_id"]
     list_display = ["event", "round", "name", "raw_format", "is_net", "gg_id"]
     list_display_links = ("name",)
     list_filter = (CurrentSeasonFilter, TournamentFormatByEventFilter, "is_net")
