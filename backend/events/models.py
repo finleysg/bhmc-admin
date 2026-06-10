@@ -448,9 +448,7 @@ class Tournament(models.Model):
         verbose_name="Round", to=Round, on_delete=CASCADE, related_name="gg_rounds"
     )
     name = models.CharField(verbose_name="Tournament name", max_length=120)
-    format = models.CharField(
-        verbose_name="Format", max_length=20, choices=TOURNAMENT_FORMAT_CHOICES
-    )
+    format = models.CharField(verbose_name="Format", max_length=20)
     is_net = models.BooleanField(verbose_name="Is Net", default=False)
     gg_id = models.CharField(verbose_name="Golf Genius id: tournament_id", max_length=22)
 
