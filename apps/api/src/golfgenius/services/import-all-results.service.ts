@@ -33,7 +33,7 @@ import {
 	StrokePlayResultParser,
 	TeamResultParser,
 } from "./result-parsers"
-import { parsePurseAmount } from "./utils"
+import { parsePosition, parsePurseAmount } from "./utils"
 import { toDbString } from "../../database"
 
 @Injectable()
@@ -612,14 +612,8 @@ export class ImportAllResultsService {
 			return null
 		}
 
-		// Parse position from aggregate.position
-		const positionStr = playerData.position
-		let position = 0
-		try {
-			position = positionStr && positionStr.trim() !== "" ? parseInt(positionStr, 10) : 0
-		} catch {
-			position = 0
-		}
+		// Parse position from aggregate.position (handles "T4" tie format)
+		const position = parsePosition(playerData.position)
 
 		// Parse score (total strokes)
 		const totalStr = playerData.total
@@ -679,14 +673,8 @@ export class ImportAllResultsService {
 			return null
 		}
 
-		// Parse position from aggregate.position
-		const positionStr = playerData.position
-		let position = 0
-		try {
-			position = positionStr && positionStr.trim() !== "" ? parseInt(positionStr, 10) : 0
-		} catch {
-			position = 0
-		}
+		// Parse position from aggregate.position (handles "T4" tie format)
+		const position = parsePosition(playerData.position)
 
 		// Parse score from aggregate.total (the quota result like +2, -1)
 		const totalStr = playerData.total
@@ -786,7 +774,7 @@ export class ImportAllResultsService {
 		const preparedRecords: PreparedTournamentResult[] = []
 
 		// Parse quota-style fields from aggregate (shared by all team members)
-		const position = parseInt(aggregate.position || "0", 10) || 0
+		const position = parsePosition(aggregate.position)
 
 		// Parse score from aggregate.total (the quota result like +2, -1)
 		let score: number | null = null
@@ -903,7 +891,7 @@ export class ImportAllResultsService {
 			}
 
 			// Parse team-level fields
-			const position = parseInt(aggregate.position || "0", 10) || 0
+			const position = parsePosition(aggregate.position)
 			const amount = parsePurseAmount(aggregate.purse) // Full purse per player (no split)
 			if (amount === null) {
 				this.logger.log(`No amount won for ${playerFullName}`)

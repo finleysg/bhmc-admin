@@ -1,4 +1,38 @@
-import { parsePurseAmount } from "../utils"
+import { parsePosition, parsePurseAmount } from "../utils"
+
+describe("parsePosition", () => {
+	it("should parse a plain numeric position", () => {
+		expect(parsePosition("4")).toBe(4)
+	})
+
+	it("should parse a tied position with T prefix", () => {
+		expect(parsePosition("T4")).toBe(4)
+	})
+
+	it("should parse a lowercase t prefix", () => {
+		expect(parsePosition("t4")).toBe(4)
+	})
+
+	it("should parse a tied position with surrounding whitespace", () => {
+		expect(parsePosition(" T12 ")).toBe(12)
+	})
+
+	it("should return 0 for empty string", () => {
+		expect(parsePosition("")).toBe(0)
+	})
+
+	it("should return 0 for null", () => {
+		expect(parsePosition(null)).toBe(0)
+	})
+
+	it("should return 0 for undefined", () => {
+		expect(parsePosition(undefined)).toBe(0)
+	})
+
+	it("should return 0 for non-numeric strings", () => {
+		expect(parsePosition("DQ")).toBe(0)
+	})
+})
 
 describe("parsePurseAmount", () => {
 	describe("valid currency strings", () => {

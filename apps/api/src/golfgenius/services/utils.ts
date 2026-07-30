@@ -18,6 +18,22 @@
  * parsePurseAmount("1,234.56") // returns 1234.56
  * parsePurseAmount("") // returns null
  */
+/**
+ * Parses a leaderboard position string into a number.
+ *
+ * Golf Genius reports ties with a "T" prefix (e.g. "T4" for a tie for 4th).
+ *
+ * @param positionStr - The position string to parse (e.g., "4", "T4")
+ * @returns The numeric position, or 0 if missing/unparseable
+ */
+export function parsePosition(positionStr: string | undefined | null): number {
+	if (!positionStr) return 0
+
+	const cleaned = positionStr.trim().replace(/^T/i, "")
+	const position = parseInt(cleaned, 10)
+	return isNaN(position) ? 0 : position
+}
+
 export function parsePurseAmount(purseStr: string | undefined | null): number | null {
 	if (!purseStr || purseStr.trim() === "") return null
 
