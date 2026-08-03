@@ -451,6 +451,12 @@ class Tournament(models.Model):
     format = models.CharField(verbose_name="Format", max_length=20)
     is_net = models.BooleanField(verbose_name="Is Net", default=False)
     gg_id = models.CharField(verbose_name="Golf Genius id: tournament_id", max_length=22)
+    gg_spec_id = models.CharField(
+        verbose_name="Golf Genius id: tournament_spec_id",
+        max_length=22,
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         constraints = [

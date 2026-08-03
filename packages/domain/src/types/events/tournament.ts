@@ -8,4 +8,5 @@ export interface Tournament {
 	format: TournamentFormatValue
 	isNet: boolean
 	ggId: string
+	ggSpecId: string | null
 }

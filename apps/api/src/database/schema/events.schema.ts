@@ -187,6 +187,7 @@ export const tournament = mysqlTable(
 		format: varchar({ length: 20 }),
 		isNet: tinyint("is_net").notNull(),
 		ggId: varchar("gg_id", { length: 22 }).notNull(),
+		ggSpecId: varchar("gg_spec_id", { length: 22 }),
 		eventId: int("event_id")
 			.notNull()
 			.references(() => event.id),
