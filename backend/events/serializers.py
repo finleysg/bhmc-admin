@@ -25,6 +25,7 @@ class TournamentSerializer(serializers.ModelSerializer):
             "format",
             "is_net",
             "gg_id",
+            "gg_spec_id",
         )
 
 

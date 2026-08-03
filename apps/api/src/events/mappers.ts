@@ -170,6 +170,7 @@ export function toTournament(row: TournamentRow): Tournament {
 		format: row.format as TournamentFormatValue,
 		isNet: Boolean(row.isNet),
 		ggId: row.ggId,
+		ggSpecId: row.ggSpecId,
 	}
 }
 

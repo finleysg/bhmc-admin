@@ -417,12 +417,12 @@ class ResultFormatByEventFilter(TournamentFormatByEventFilter):
 
 
 class TournamentAdmin(admin.ModelAdmin):
-    fields = ["event", "round", "name", "format", "is_net", "gg_id"]
-    list_display = ["event", "round", "name", "format", "is_net", "gg_id"]
+    fields = ["event", "round", "name", "format", "is_net", "gg_id", "gg_spec_id"]
+    list_display = ["event", "round", "name", "format", "is_net", "gg_id", "gg_spec_id"]
     list_display_links = ("name",)
     list_filter = (CurrentSeasonFilter, TournamentFormatByEventFilter, "is_net")
     ordering = ["event", "round", "name"]
-    search_fields = ["event__name", "name", "gg_id"]
+    search_fields = ["event__name", "name", "gg_id", "gg_spec_id"]
     save_on_top = True
 
     @admin.display(description="Format")

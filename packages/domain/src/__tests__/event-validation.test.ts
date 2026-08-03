@@ -43,6 +43,7 @@ describe("validateClubEvent", () => {
 		format: TournamentFormatChoices.STROKE,
 		isNet: false,
 		ggId: "tourn123",
+		ggSpecId: null,
 	}
 
 	const mockHole = {
