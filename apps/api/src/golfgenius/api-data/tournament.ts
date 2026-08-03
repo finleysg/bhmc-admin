@@ -27,6 +27,7 @@ import { z } from "zod"
 export const GgTournamentSchema = z.object({
 	id: z.string(),
 	name: z.string(),
+	tournament_spec_id: z.string().nullish(),
 	score_format: z.string(),
 	handicap_format: z.string(),
 	score_scope: z.string(),

@@ -51,7 +51,11 @@ export class ImportAllResultsService {
 
 	async importAllResultsStream(eventId: number): Promise<Observable<TournamentProgressEvent>> {
 		const clubEvent = await this.eventsService.getCompleteClubEventById(eventId)
-		const tournaments = clubEvent.tournaments.filter((t) => t.name !== "Overall")
+		// By club convention, "overall" tournaments (e.g. "Overall", "Saturday Overall")
+		// exist for scoring only and never have results/payouts.
+		const tournaments = clubEvent.tournaments.filter(
+			(t) => !t.name.toLowerCase().includes("overall"),
+		)
 
 		if (tournaments.length === 0) {
 			throw new Error(`No tournaments found for event ${eventId}`)
@@ -88,40 +92,57 @@ export class ImportAllResultsService {
 						message: `Processing tournament ${i + 1} of ${totalTournaments}: ${t.name}...`,
 					})
 
-					const tournamentData = toTournamentData(t, clubEvent)
-					const tournamentResult = await this.importTournamentResults(
-						tournamentData,
-						this.selectProcessor(t.format),
-						undefined, // No per-player progress for streaming
-						(success, tournamentName) => {
-							processedTournaments++
-							this.progressTracker.emitTournamentProgress(eventId, {
-								totalTournaments,
-								processedTournaments,
-								status: processedTournaments >= totalTournaments ? "complete" : "processing",
-								message: success
-									? `Processed ${tournamentName} (${processedTournaments}/${totalTournaments})`
-									: `Skipped ${tournamentName} (${processedTournaments}/${totalTournaments})`,
-							})
-						}, // Tournament completion callback
-					)
+					// A bad tournament (e.g. missing round or ggId) should not abort the
+					// import of the remaining tournaments.
+					try {
+						const tournamentData = toTournamentData(t, clubEvent)
+						const tournamentResult = await this.importTournamentResults(
+							tournamentData,
+							this.selectProcessor(t.format),
+							undefined, // No per-player progress for streaming
+							(success, tournamentName) => {
+								processedTournaments++
+								this.progressTracker.emitTournamentProgress(eventId, {
+									totalTournaments,
+									processedTournaments,
+									status: processedTournaments >= totalTournaments ? "complete" : "processing",
+									message: success
+										? `Processed ${tournamentName} (${processedTournaments}/${totalTournaments})`
+										: `Skipped ${tournamentName} (${processedTournaments}/${totalTournaments})`,
+								})
+							}, // Tournament completion callback
+						)
 
-					this.logger.log(
-						`Processed tournamentResult for ${tournamentResult.tournamentName}: ${tournamentResult.resultsImported}`,
-					)
+						this.logger.log(
+							`Processed tournamentResult for ${tournamentResult.tournamentName}: ${tournamentResult.resultsImported}`,
+						)
 
-					// Aggregate results
-					result.created += tournamentResult.resultsImported
-					result.totalProcessed += tournamentResult.resultsImported
+						// Aggregate results
+						result.created += tournamentResult.resultsImported
+						result.totalProcessed += tournamentResult.resultsImported
 
-					// Convert errors to ImportError format
-					result.errors.push(
-						...tournamentResult.errors.map((error: string) => ({
+						// Convert errors to ImportError format
+						result.errors.push(
+							...tournamentResult.errors.map((error: string) => ({
+								itemId: t.id?.toString() ?? "",
+								itemName: t.name,
+								error,
+							})),
+						)
+					} catch (error) {
+						processedTournaments++
+						result.errors.push({
 							itemId: t.id?.toString() ?? "",
 							itemName: t.name,
-							error,
-						})),
-					)
+							error: error instanceof Error ? error.message : String(error),
+						})
+						this.progressTracker.emitTournamentProgress(eventId, {
+							totalTournaments,
+							processedTournaments,
+							status: processedTournaments >= totalTournaments ? "complete" : "processing",
+							message: `Skipped ${t.name} (${processedTournaments}/${totalTournaments})`,
+						})
+					}
 				}
 
 				// Complete the operation
@@ -199,14 +220,15 @@ export class ImportAllResultsService {
 			// Fetch player map for this event (optimization: single query instead of N+1)
 			const playerMap = await this.fetchPlayerMapForEvent(tournamentData.eventId)
 
-			// Delete existing results (idempotent)
-			await this.eventsService.deleteTournamentResults(tournamentData.id)
-
-			// Fetch results from Golf Genius
+			// Fetch results from Golf Genius BEFORE deleting existing results, so a
+			// failed fetch (e.g. stale tournament id) leaves prior results intact.
 			const ggResults = await this.fetchGGResults(tournamentData, result)
 			if (!ggResults) {
 				return result
 			}
+
+			// Delete existing results (idempotent)
+			await this.eventsService.deleteTournamentResults(tournamentData.id)
 
 			// Process results using the provided processor
 			await processor(tournamentData, result, ggResults, playerMap, onPlayerProcessed)
@@ -615,13 +637,12 @@ export class ImportAllResultsService {
 		// Parse position from aggregate.position (handles "T4" tie format)
 		const position = parsePosition(playerData.position)
 
-		// Parse score (total strokes)
+		// Parse score (total strokes); non-numeric totals like "WD" become null
 		const totalStr = playerData.total
 		let score: number | null = null
-		try {
-			score = totalStr && totalStr.trim() !== "" ? parseInt(totalStr, 10) : null
-		} catch {
-			score = null
+		if (totalStr && totalStr.trim() !== "") {
+			const parsed = parseInt(totalStr, 10)
+			score = isNaN(parsed) ? null : parsed
 		}
 
 		// Parse purse amount
@@ -676,13 +697,13 @@ export class ImportAllResultsService {
 		// Parse position from aggregate.position (handles "T4" tie format)
 		const position = parsePosition(playerData.position)
 
-		// Parse score from aggregate.total (the quota result like +2, -1)
+		// Parse score from aggregate.total (the quota result like +2, -1);
+		// non-numeric totals like "WD" become null
 		const totalStr = playerData.total
 		let score: number | null = null
-		try {
-			score = totalStr && totalStr.trim() !== "" ? parseInt(totalStr, 10) : null
-		} catch {
-			score = null
+		if (totalStr && totalStr.trim() !== "") {
+			const parsed = parseInt(totalStr, 10)
+			score = isNaN(parsed) ? null : parsed
 		}
 
 		// Parse summary from aggregate.score formatted as "Quota score: [value]"
@@ -776,13 +797,12 @@ export class ImportAllResultsService {
 		// Parse quota-style fields from aggregate (shared by all team members)
 		const position = parsePosition(aggregate.position)
 
-		// Parse score from aggregate.total (the quota result like +2, -1)
+		// Parse score from aggregate.total (the quota result like +2, -1);
+		// non-numeric totals like "WD" become null
 		let score: number | null = null
-		try {
-			score =
-				aggregate.total && aggregate.total.trim() !== "" ? parseInt(aggregate.total, 10) : null
-		} catch {
-			score = null
+		if (aggregate.total && aggregate.total.trim() !== "") {
+			const parsed = parseInt(aggregate.total, 10)
+			score = isNaN(parsed) ? null : parsed
 		}
 
 		// Parse summary from aggregate.stableford or aggregate.score
@@ -898,14 +918,16 @@ export class ImportAllResultsService {
 				continue
 			}
 
-			// Parse team score (aggregate total) - each player gets the team score
+			// Parse team score (aggregate total) - each player gets the team score;
+			// non-numeric totals like "WD" become null
 			let score: number | null = null
-			try {
-				score =
-					aggregate.total && aggregate.total.trim() !== "" ? parseInt(aggregate.total, 10) : null
-			} catch {
-				this.logger.warn(`Failed to parse team total score for ${teamName}: ${aggregate.total}`)
-				score = null
+			if (aggregate.total && aggregate.total.trim() !== "") {
+				const parsed = parseInt(aggregate.total, 10)
+				if (isNaN(parsed)) {
+					this.logger.warn(`Failed to parse team total score for ${teamName}: ${aggregate.total}`)
+				} else {
+					score = parsed
+				}
 			}
 
 			// Prepare record

@@ -10,6 +10,8 @@ interface EventSyncSummary {
 	roundsUpdated: number
 	tournamentsCreated: number
 	tournamentsUpdated: number
+	errors: string[]
+	warnings: string[]
 }
 
 interface CourseSyncSummary {
@@ -39,6 +41,8 @@ export class EventSyncService {
 			roundsUpdated: 0,
 			tournamentsCreated: 0,
 			tournamentsUpdated: 0,
+			errors: [],
+			warnings: [],
 		}
 
 		// 1) Load our event
@@ -98,9 +102,18 @@ export class EventSyncService {
 			}
 		}
 
-		// 5) Upsert tournaments by ggId.
+		// 5) Upsert tournaments.
+		//
+		// Golf Genius quirks this has to survive:
+		// - A multi-round tournament (e.g. a 2-day total) is listed under every round
+		//   with the same tournament id. It must map to ONE local row (first round wins).
+		// - Golf Genius recreates tournaments with a brand-new id when their setup
+		//   changes mid-event (e.g. flighting after round 1), sometimes renaming them.
+		//   The tournament_spec_id survives recreation, so match ggId → name → specId
+		//   and refresh the stored ids on every match.
 		const existingTournaments = await this.events.findTournamentsByEventId(localEventId)
-		const existingTournamentsByGgId = new Map(existingTournaments.map((t) => [t.ggId, t]))
+		const claimedLocalIds = new Set<number>()
+		const seenGgIds = new Set<string>()
 
 		for (const gr of ggRounds) {
 			const localRoundId = ggRoundIdToLocalId[String(gr.id)]
@@ -110,28 +123,86 @@ export class EventSyncService {
 			}
 			const ggTournaments = await this.apiClient.getRoundTournaments(ggEventId, String(gr.id))
 			for (const gt of ggTournaments) {
-				const isNet = gt.handicap_format.toLowerCase().includes("net")
-				const isPoints = gt.name.toLowerCase().includes("points")
+				// A tournament already handled under an earlier round keeps that binding.
+				if (seenGgIds.has(gt.id)) continue
+				seenGgIds.add(gt.id)
+
+				// Gross/net variants of a flighted tournament can both report a "net"
+				// handicap_format, so the name is the more reliable signal.
+				const nameLower = gt.name.toLowerCase()
+				const isNet = nameLower.includes("gross")
+					? false
+					: nameLower.includes("net") || gt.handicap_format.toLowerCase().includes("net")
+				const isPoints = nameLower.includes("points")
 				const data = {
 					name: gt.name,
 					format: isPoints ? "points" : gt.score_format.toLowerCase(),
 					isNet: isNet ? 1 : 0,
 					ggId: gt.id,
+					ggSpecId: gt.tournament_spec_id ?? null,
 					eventId: localEventId,
 					roundId: localRoundId,
 				}
-				const existing = existingTournamentsByGgId.get(gt.id)
-				if (existing) {
-					await this.events.updateTournament(existing.id, data)
-					summary.tournamentsUpdated += 1
-				} else {
-					await this.events.createTournament(data)
-					summary.tournamentsCreated += 1
+
+				const existing = this.findMatchingTournament(gt, existingTournaments, claimedLocalIds)
+				try {
+					if (existing) {
+						claimedLocalIds.add(existing.id)
+						await this.events.updateTournament(existing.id, data)
+						summary.tournamentsUpdated += 1
+					} else {
+						const created = await this.events.createTournament(data)
+						if (created && created.id) claimedLocalIds.add(created.id)
+						summary.tournamentsCreated += 1
+					}
+				} catch (error) {
+					const message = error instanceof Error ? error.message : String(error)
+					summary.errors.push(`Failed to sync tournament "${gt.name}": ${message}`)
+					this.logger.error(`Failed to sync tournament "${gt.name}"`, message)
 				}
 			}
 		}
 
+		// Local tournaments Golf Genius no longer reports (stale ids from recreated
+		// tournaments). Not deleted automatically because results may hang off them.
+		for (const t of existingTournaments) {
+			if (!claimedLocalIds.has(t.id)) {
+				summary.warnings.push(
+					`Local tournament "${t.name}" (ggId ${t.ggId}) was not found in Golf Genius`,
+				)
+			}
+		}
+
 		return summary
+	}
+
+	/**
+	 * Find the local tournament that corresponds to a Golf Genius tournament.
+	 * Match order: ggId (normal case), then name (recreated with a new id),
+	 * then tournament_spec_id (recreated AND renamed). Rows already claimed
+	 * by another tournament in this sync run are never matched again.
+	 */
+	private findMatchingTournament(
+		gt: { id: string; name: string; tournament_spec_id?: string | null },
+		existingTournaments: { id: number; name: string; ggId: string; ggSpecId: string | null }[],
+		claimedLocalIds: Set<number>,
+	): { id: number; name: string; ggId: string; ggSpecId: string | null } | undefined {
+		const unclaimed = existingTournaments.filter((t) => !claimedLocalIds.has(t.id))
+
+		const byGgId = unclaimed.find((t) => t.ggId === gt.id)
+		if (byGgId) return byGgId
+
+		const byName = unclaimed.find((t) => t.name === gt.name)
+		if (byName) return byName
+
+		// Spec ids are shared by gross/net views of the same tournament, so only
+		// match when exactly one candidate remains.
+		if (gt.tournament_spec_id) {
+			const bySpecId = unclaimed.filter((t) => t.ggSpecId === gt.tournament_spec_id)
+			if (bySpecId.length === 1) return bySpecId[0]
+		}
+
+		return undefined
 	}
 
 	/**
