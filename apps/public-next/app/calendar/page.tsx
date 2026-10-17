@@ -1,3 +1,6 @@
+// Resolve the current month per request, rather than caching the build-time date.
+export const dynamic = "force-dynamic"
+
 import { redirect } from "next/navigation"
 import { format } from "date-fns"
 

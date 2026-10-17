@@ -87,6 +87,18 @@ export class TeesheetImportService {
 				true, // include custom fields for player_id
 			)
 
+			// A tee-time event with unassigned tee times is a Golf Genius setup
+			// error the admin needs to catch before event day.
+			if (evt.startType === "TT") {
+				const missing = pairingGroups.filter((g) => !g.tee_time).length
+				if (missing > 0) {
+					result.errors.push({
+						itemName: `Round ${round.roundNumber}`,
+						error: `${missing} of ${pairingGroups.length} pairing groups have no tee time assigned in Golf Genius`,
+					})
+				}
+			}
+
 			await this.processPairingGroups(eventId, round.id, pairingGroups, result)
 			result.totalProcessed++
 		}
@@ -167,7 +179,7 @@ export class TeesheetImportService {
 				courseId: courseRow.id,
 				teeId: teeRow.id,
 				holeId: holeRow.id,
-				teeTime: group.tee_time,
+				teeTime: group.tee_time ?? "",
 				groupGgid: group.foursome_ggid,
 				pairingGroupId: group.id,
 			})

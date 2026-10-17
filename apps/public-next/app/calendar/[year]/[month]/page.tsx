@@ -33,7 +33,13 @@ export default async function CalendarPage({ params }: CalendarPageProps) {
 
 	return (
 		<div>
-			<CalendarHeader monthName={calendar.monthName} year={year} prev={prev} next={next} />
+			<CalendarHeader
+				monthName={calendar.monthName}
+				year={year}
+				currentYear={new Date().getFullYear()}
+				prev={prev}
+				next={next}
+			/>
 			<div className="hidden md:block">
 				<CalendarGrid calendar={calendar} />
 			</div>

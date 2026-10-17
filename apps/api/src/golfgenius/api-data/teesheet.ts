@@ -59,7 +59,8 @@ export type GgPlayer = z.infer<typeof GgPlayerSchema>
 export const GgPairingGroupSchema = z.object({
 	id: z.string(),
 	hole: z.coerce.string(),
-	tee_time: z.string(),
+	// null when the round has no assigned tee times (e.g. shotgun start)
+	tee_time: z.string().nullable(),
 	date: z.string(),
 	foursome_ggid: z.string(),
 	players: z.array(GgPlayerSchema),

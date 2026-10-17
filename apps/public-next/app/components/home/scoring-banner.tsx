@@ -117,8 +117,9 @@ export function ScoringBanner({ events }: ScoringBannerProps) {
 								{evtPairings.length > 1 && ` — Round ${pairing.round_number}`}
 							</p>
 							<p className="text-sm text-muted-foreground">
-								{roundLabel(pairing.round_date)} &middot; {formatTeeTime(pairing.tee_time)} &middot;
-								Hole {pairing.hole_number}
+								{roundLabel(pairing.round_date)}
+								{pairing.tee_time && <> &middot; {formatTeeTime(pairing.tee_time)}</>} &middot; Hole{" "}
+								{pairing.hole_number}
 							</p>
 						</div>
 						<span className="text-sm font-medium text-primary">Open Scoring &rarr;</span>
