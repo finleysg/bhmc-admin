@@ -124,7 +124,7 @@ export function usePlayerRegistration(eventId: number | undefined, playerId: num
 			}
 			const data = (await response.json()) as DjangoRegistration[]
 			if (!data || data.length === 0) return null
-			return { registration: transformRegistration(data[0]) } as PlayerRegistrationResponse
+			return { registration: transformRegistration(data[0]) }
 		},
 		enabled: !!eventId && !!playerId,
 	})

@@ -4,7 +4,7 @@ import { Inject, Injectable, Logger } from "@nestjs/common"
 import { PlayerProgressEvent } from "@repo/domain/types"
 
 import { CoursesService } from "../../courses"
-import { ScorecardRow, ScoreInsert } from "../../database"
+import { ScoreInsert } from "../../database"
 import { EventsService } from "../../events"
 import { PlayerService, RegistrationService } from "../../registration"
 import { ScoresService } from "../../scores"
@@ -204,7 +204,7 @@ export class ScoresImportService {
 				courseHandicap: courseHandicap ?? 0,
 				courseId,
 				teeId,
-			} as ScorecardRow)
+			})
 		} else {
 			results.scorecards.created++
 			return await this.scoresService.createScorecard({

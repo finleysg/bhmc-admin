@@ -176,9 +176,8 @@ beforeEach(() => {
 })
 
 test("renders replace page with source player selector and Replace button disabled", async () => {
-	const { default: ReplacePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/replace/page"
-	)
+	const { default: ReplacePage } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/replace/page")
 
 	render(<ReplacePage />)
 
@@ -210,9 +209,8 @@ test("Replace button enabled after selecting source and searching for target", a
 			]),
 	})
 
-	const { default: ReplacePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/replace/page"
-	)
+	const { default: ReplacePage } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/replace/page")
 
 	jest.useFakeTimers()
 	render(<ReplacePage />)
@@ -265,9 +263,8 @@ test("confirming replace calls PATCH API and navigates to manage", async () => {
 			json: () => Promise.resolve({ slotId: 102, greenFeeDifference: undefined }),
 		})
 
-	const { default: ReplacePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/replace/page"
-	)
+	const { default: ReplacePage } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/replace/page")
 
 	jest.useFakeTimers()
 	render(<ReplacePage />)
@@ -330,9 +327,8 @@ test("shows error toast on replace failure", async () => {
 		})
 		.mockResolvedValueOnce({ ok: false, status: 500 })
 
-	const { default: ReplacePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/replace/page"
-	)
+	const { default: ReplacePage } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/replace/page")
 
 	jest.useFakeTimers()
 	render(<ReplacePage />)

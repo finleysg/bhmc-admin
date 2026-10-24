@@ -34,7 +34,7 @@ test("GO_BACK from confirm step returns to replacement", () => {
 		selectedGroup: mockGroup,
 		originalPlayer: mockPlayer,
 		originalSlot: mockSlot,
-		replacementPlayer: { ...mockPlayer, id: 2 } as Player,
+		replacementPlayer: { ...mockPlayer, id: 2 },
 	}
 	const result = reducer(state, { type: "GO_BACK" })
 	expect(result.step).toBe("replacement")

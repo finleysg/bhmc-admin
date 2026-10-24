@@ -71,9 +71,8 @@ beforeEach(() => {
 })
 
 test("renders PaymentElement and submit button", async () => {
-	const { default: PaymentPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
-	)
+	const { default: PaymentPage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page")
 
 	render(<PaymentPage />)
 
@@ -82,9 +81,8 @@ test("renders PaymentElement and submit button", async () => {
 })
 
 test("displays the amount due", async () => {
-	const { default: PaymentPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
-	)
+	const { default: PaymentPage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page")
 
 	render(<PaymentPage />)
 
@@ -99,9 +97,8 @@ test("executes full submit flow on button click", async () => {
 	mockUseElements.mockReturnValue({ submit: mockSubmit })
 	mockCreatePaymentIntent.mockResolvedValue({ client_secret: "pi_test_secret" })
 
-	const { default: PaymentPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
-	)
+	const { default: PaymentPage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page")
 
 	render(<PaymentPage />)
 
@@ -127,9 +124,8 @@ test("stops flow when elements validation fails", async () => {
 	mockUseStripe.mockReturnValue({ confirmPayment: jest.fn() })
 	mockUseElements.mockReturnValue({ submit: mockSubmit })
 
-	const { default: PaymentPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
-	)
+	const { default: PaymentPage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page")
 
 	render(<PaymentPage />)
 
@@ -143,9 +139,8 @@ test("stops flow when elements validation fails", async () => {
 })
 
 test("back button navigates to review", async () => {
-	const { default: PaymentPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
-	)
+	const { default: PaymentPage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page")
 
 	render(<PaymentPage />)
 
@@ -159,9 +154,8 @@ test("submit button disabled when stripe/elements not loaded", async () => {
 	mockUseStripe.mockReturnValue(null)
 	mockUseElements.mockReturnValue(null)
 
-	const { default: PaymentPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
-	)
+	const { default: PaymentPage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page")
 
 	render(<PaymentPage />)
 
@@ -178,9 +172,8 @@ test("adds beforeunload handler during processing", async () => {
 	mockUseStripe.mockReturnValue({ confirmPayment: jest.fn() })
 	mockUseElements.mockReturnValue({ submit: mockSubmit })
 
-	const { default: PaymentPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
-	)
+	const { default: PaymentPage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page")
 
 	render(<PaymentPage />)
 
@@ -209,9 +202,8 @@ test("calls suppressBeforeUnload before confirmPayment", async () => {
 	mockUseElements.mockReturnValue({ submit: mockSubmit })
 	mockCreatePaymentIntent.mockResolvedValue({ client_secret: "pi_test_secret" })
 
-	const { default: PaymentPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
-	)
+	const { default: PaymentPage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page")
 
 	render(<PaymentPage />)
 
@@ -238,9 +230,8 @@ test("beforeunload handler does not preventDefault after payment submitted", asy
 	mockUseElements.mockReturnValue({ submit: mockSubmit })
 	mockCreatePaymentIntent.mockResolvedValue({ client_secret: "pi_test_secret" })
 
-	const { default: PaymentPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page"
-	)
+	const { default: PaymentPage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/payment/page")
 
 	render(<PaymentPage />)
 
@@ -257,7 +248,7 @@ test("beforeunload handler does not preventDefault after payment submitted", asy
 	expect(beforeunloadCall).toBeDefined()
 
 	const handler = beforeunloadCall![1] as (e: BeforeUnloadEvent) => void
-	const event = new Event("beforeunload") as BeforeUnloadEvent
+	const event = new Event("beforeunload")
 	const preventDefaultSpy = jest.spyOn(event, "preventDefault")
 
 	handler(event)

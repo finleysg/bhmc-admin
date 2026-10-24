@@ -410,7 +410,7 @@ export class PointsImportService {
 		result: PointsImportSummary,
 		playerMap: PlayerMap,
 	): PreparedTournamentPoints[] | null {
-		const memberCards = PointsResultParser.extractMemberCards(aggregate as GgAggregate)
+		const memberCards = PointsResultParser.extractMemberCards(aggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return null

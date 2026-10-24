@@ -1,7 +1,7 @@
 # Build stage
 FROM node:24-alpine AS builder
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 
 WORKDIR /app
 
@@ -34,7 +34,7 @@ RUN mkdir -p /sourcemaps && find /app/apps/api/dist -name '*.map' -exec cp {} /s
 # Production stage
 FROM node:24-alpine AS runner
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 
 WORKDIR /app
 

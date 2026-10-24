@@ -990,7 +990,7 @@ describe("RegistrationService", () => {
 					createRegistrationSlotFull({ id: 1, playerId: 1, slot: 0, sessionId: 7 }),
 					createRegistrationSlotFull({
 						id: 2,
-						playerId: undefined as any,
+						playerId: undefined,
 						slot: 1,
 						sessionId: null,
 					}),

@@ -83,7 +83,7 @@ describe("useRegistrationSlots respects SSE version", () => {
 		global.fetch = jest.fn().mockResolvedValue({
 			ok: true,
 			json: () => Promise.resolve(STALE_HTTP_DATA),
-		}) as unknown as typeof fetch
+		})
 
 		const { result } = renderWithClient(client)
 
@@ -102,7 +102,7 @@ describe("useRegistrationSlots respects SSE version", () => {
 		global.fetch = jest.fn().mockResolvedValue({
 			ok: true,
 			json: () => Promise.resolve(STALE_HTTP_DATA),
-		}) as unknown as typeof fetch
+		})
 
 		const { result } = renderWithClient(client)
 
@@ -126,7 +126,7 @@ describe("useRegistrationSlots respects SSE version", () => {
 		global.fetch = jest.fn().mockResolvedValue({
 			ok: true,
 			json: () => Promise.resolve(POLLED_DATA),
-		}) as unknown as typeof fetch
+		})
 
 		const { result } = renderWithClient(client)
 		// Force the polling refetch path (which is what kicks in on disconnect).

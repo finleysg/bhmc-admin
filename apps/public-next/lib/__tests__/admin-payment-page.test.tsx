@@ -52,9 +52,8 @@ afterEach(() => {
 })
 
 test("renders event name, date, and amount due", async () => {
-	const { default: AdminPaymentPage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/page"
-	)
+	const { default: AdminPaymentPage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/page")
 
 	render(<AdminPaymentPage />)
 
@@ -64,9 +63,8 @@ test("renders event name, date, and amount due", async () => {
 })
 
 test("renders Stripe PaymentElement", async () => {
-	const { default: AdminPaymentPage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/page"
-	)
+	const { default: AdminPaymentPage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/page")
 
 	render(<AdminPaymentPage />)
 
@@ -77,9 +75,8 @@ test("submit button disabled when Stripe not loaded", async () => {
 	mockUseStripe.mockReturnValue(null)
 	mockUseElements.mockReturnValue(null)
 
-	const { default: AdminPaymentPage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/page"
-	)
+	const { default: AdminPaymentPage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/page")
 
 	render(<AdminPaymentPage />)
 
@@ -99,9 +96,8 @@ test("submit flow: calls elements.submit, fetches payment-intent, calls stripe.c
 		json: () => Promise.resolve({ client_secret: "pi_test_secret" }),
 	})
 
-	const { default: AdminPaymentPage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/page"
-	)
+	const { default: AdminPaymentPage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/page")
 
 	render(<AdminPaymentPage />)
 
@@ -131,9 +127,8 @@ test("shows Processing... during submission", async () => {
 	mockUseStripe.mockReturnValue({ confirmPayment: jest.fn() })
 	mockUseElements.mockReturnValue({ submit: mockSubmit })
 
-	const { default: AdminPaymentPage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/page"
-	)
+	const { default: AdminPaymentPage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/page")
 
 	render(<AdminPaymentPage />)
 
@@ -149,9 +144,8 @@ test("handles Stripe validation errors", async () => {
 	mockUseStripe.mockReturnValue({ confirmPayment: jest.fn() })
 	mockUseElements.mockReturnValue({ submit: mockSubmit })
 
-	const { default: AdminPaymentPage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/page"
-	)
+	const { default: AdminPaymentPage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/page")
 
 	render(<AdminPaymentPage />)
 
@@ -176,9 +170,8 @@ test("handles confirmPayment error", async () => {
 		json: () => Promise.resolve({ client_secret: "pi_test_secret" }),
 	})
 
-	const { default: AdminPaymentPage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/page"
-	)
+	const { default: AdminPaymentPage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/page")
 
 	render(<AdminPaymentPage />)
 
@@ -199,9 +192,8 @@ test("handles payment intent fetch failure", async () => {
 
 	globalThis.fetch = jest.fn().mockResolvedValue({ ok: false })
 
-	const { default: AdminPaymentPage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/page"
-	)
+	const { default: AdminPaymentPage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/page")
 
 	render(<AdminPaymentPage />)
 
@@ -219,9 +211,8 @@ test("handles unexpected errors during payment submission", async () => {
 
 	globalThis.fetch = jest.fn().mockRejectedValue(new Error("Network error"))
 
-	const { default: AdminPaymentPage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/page"
-	)
+	const { default: AdminPaymentPage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/page")
 
 	render(<AdminPaymentPage />)
 

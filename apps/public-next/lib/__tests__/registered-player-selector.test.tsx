@@ -78,9 +78,8 @@ function makeRegistration(overrides: Partial<ServerRegistration> = {}): ServerRe
 
 test("renders player names from occupied slots only", async () => {
 	const onChange = jest.fn()
-	const { RegisteredPlayerSelector } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/components/registered-player-selector"
-	)
+	const { RegisteredPlayerSelector } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/components/registered-player-selector")
 
 	render(<RegisteredPlayerSelector registration={makeRegistration()} onChange={onChange} />)
 
@@ -93,9 +92,8 @@ test("renders player names from occupied slots only", async () => {
 
 test("multi-select: clicking a player checkbox reports selected IDs", async () => {
 	const onChange = jest.fn()
-	const { RegisteredPlayerSelector } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/components/registered-player-selector"
-	)
+	const { RegisteredPlayerSelector } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/components/registered-player-selector")
 
 	render(<RegisteredPlayerSelector registration={makeRegistration()} onChange={onChange} />)
 
@@ -114,9 +112,8 @@ test("multi-select: clicking a player checkbox reports selected IDs", async () =
 
 test("single-select (limit=1): only one player selectable at a time", async () => {
 	const onChange = jest.fn()
-	const { RegisteredPlayerSelector } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/components/registered-player-selector"
-	)
+	const { RegisteredPlayerSelector } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/components/registered-player-selector")
 
 	render(
 		<RegisteredPlayerSelector registration={makeRegistration()} limit={1} onChange={onChange} />,
@@ -136,9 +133,8 @@ test("single-select (limit=1): only one player selectable at a time", async () =
 
 test("select all toggles all players", async () => {
 	const onChange = jest.fn()
-	const { RegisteredPlayerSelector } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/components/registered-player-selector"
-	)
+	const { RegisteredPlayerSelector } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/components/registered-player-selector")
 
 	render(<RegisteredPlayerSelector registration={makeRegistration()} onChange={onChange} />)
 

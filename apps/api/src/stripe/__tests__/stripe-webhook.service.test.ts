@@ -860,7 +860,7 @@ describe("StripeWebhookService", () => {
 		it("handles undefined metadata object gracefully", async () => {
 			mockPaymentsService.findPaymentByPaymentCode.mockResolvedValue(createPaymentRecord())
 			const paymentIntent = createPaymentIntent({
-				metadata: undefined as any,
+				metadata: undefined,
 			})
 
 			await service.handlePaymentIntentSucceeded(paymentIntent)

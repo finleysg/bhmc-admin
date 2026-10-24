@@ -9,6 +9,7 @@ import type { PostHog } from "posthog-node"
 
 import { Logger, LogLevel } from "@nestjs/common"
 import { NestFactory } from "@nestjs/core"
+import { NestExpressApplication } from "@nestjs/platform-express"
 
 import { AppModule } from "./app.module"
 import { POSTHOG_CLIENT } from "./posthog"
@@ -27,7 +28,7 @@ async function bootstrap() {
 			enabledLevels = logLevelsOrder.slice(index)
 		}
 	}
-	const app = await NestFactory.create(AppModule, {
+	const app = await NestFactory.create<NestExpressApplication>(AppModule, {
 		logger: enabledLevels.length > 0 ? enabledLevels : false,
 		rawBody: true,
 	})

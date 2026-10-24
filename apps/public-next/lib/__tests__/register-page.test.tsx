@@ -109,9 +109,8 @@ beforeEach(() => {
 })
 
 test("calls createRegistration for non-choice events when registration is null", async () => {
-	const { default: RegisterPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/register/page"
-	)
+	const { default: RegisterPage } =
+		await import("@/app/event/[eventDate]/[eventName]/register/page")
 
 	render(<RegisterPage />)
 
@@ -157,9 +156,8 @@ test("redirects with a toast when can_choose registration is null and an error i
 			}) as unknown as ReturnType<typeof mockRegistrationContext>,
 	)
 
-	const { default: RegisterPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/register/page"
-	)
+	const { default: RegisterPage } =
+		await import("@/app/event/[eventDate]/[eventName]/register/page")
 
 	render(<RegisterPage />)
 
@@ -205,9 +203,8 @@ test("redirects to event page for can_choose events when registration is null", 
 		updateStep: jest.fn(),
 	}))
 
-	const { default: RegisterPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/register/page"
-	)
+	const { default: RegisterPage } =
+		await import("@/app/event/[eventDate]/[eventName]/register/page")
 
 	render(<RegisterPage />)
 
@@ -252,9 +249,8 @@ test("does not call createRegistration for non-returning member on returning-mem
 		updateStep: jest.fn(),
 	}))
 
-	const { default: RegisterPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/register/page"
-	)
+	const { default: RegisterPage } =
+		await import("@/app/event/[eventDate]/[eventName]/register/page")
 
 	render(<RegisterPage />)
 
@@ -298,9 +294,8 @@ test("calls createRegistration for returning member on returning-members-only ev
 		updateStep: jest.fn(),
 	}))
 
-	const { default: RegisterPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/register/page"
-	)
+	const { default: RegisterPage } =
+		await import("@/app/event/[eventDate]/[eventName]/register/page")
 
 	render(<RegisterPage />)
 
@@ -344,9 +339,8 @@ test("shows error with back button when registration creation fails", async () =
 			}) as unknown as ReturnType<typeof mockRegistrationContext>,
 	)
 
-	const { default: RegisterPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/register/page"
-	)
+	const { default: RegisterPage } =
+		await import("@/app/event/[eventDate]/[eventName]/register/page")
 
 	render(<RegisterPage />)
 
@@ -439,9 +433,8 @@ test("skips canRegister check in edit mode", async () => {
 			}) as unknown as ReturnType<typeof mockRegistrationContext>,
 	)
 
-	const { default: RegisterPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/register/page"
-	)
+	const { default: RegisterPage } =
+		await import("@/app/event/[eventDate]/[eventName]/register/page")
 
 	render(<RegisterPage />)
 

@@ -49,9 +49,9 @@ const createCompleteClubEvent = (
 	overrides: Partial<CompleteClubEvent> = {},
 ): CompleteClubEvent => ({
 	id: 100,
-	eventType: "W" as any,
+	eventType: "W",
 	name: "Test Event",
-	registrationType: "M" as any,
+	registrationType: "M",
 	canChoose: true,
 	ghinRequired: false,
 	startDate: "2025-06-15",
