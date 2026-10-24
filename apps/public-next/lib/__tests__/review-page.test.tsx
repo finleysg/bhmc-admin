@@ -5,7 +5,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import React from "react"
 
 import type { ClubEventDetail } from "../types"
-import type { RegistrationMode, ServerPayment, ServerRegistration } from "../registration/types"
+import type { ServerPayment, ServerRegistration } from "../registration/types"
 
 // --- Factories ---
 
@@ -136,7 +136,7 @@ const mockRegistrationContext = jest.fn(() => ({
 	currentStep: { name: "review", order: 3, title: "Review Registration Details" },
 	registration: makeRegistration(),
 	payment: makePayment(),
-	mode: "new" as RegistrationMode,
+	mode: "new",
 	error: null,
 	selectedStart: null,
 	setError: mockSetError,
@@ -165,7 +165,7 @@ beforeEach(() => {
 		currentStep: { name: "review", order: 3, title: "Review Registration Details" },
 		registration: makeRegistration(),
 		payment: makePayment(),
-		mode: "new" as RegistrationMode,
+		mode: "new",
 		error: null,
 		selectedStart: null,
 		setError: mockSetError,
@@ -193,7 +193,7 @@ test("navigates back to /manage/edit in edit mode", async () => {
 		currentStep: { name: "review", order: 3, title: "Review Registration Details" },
 		registration: makeRegistration(),
 		payment: makePayment(),
-		mode: "edit" as RegistrationMode,
+		mode: "edit",
 		error: null,
 		selectedStart: null,
 		setError: mockSetError,
@@ -232,7 +232,7 @@ test("calls savePayment and navigates to payment when amount > 0", async () => {
 		currentStep: { name: "review", order: 3, title: "Review Registration Details" },
 		registration: makeRegistration(),
 		payment,
-		mode: "new" as RegistrationMode,
+		mode: "new",
 		error: null,
 		selectedStart: null,
 		setError: mockSetError,
@@ -265,7 +265,7 @@ test("calls savePayment and completes when amount is 0", async () => {
 		currentStep: { name: "review", order: 3, title: "Review Registration Details" },
 		registration: makeRegistration(),
 		payment: makePayment({ details: [] }),
-		mode: "new" as RegistrationMode,
+		mode: "new",
 		error: null,
 		selectedStart: null,
 		setError: mockSetError,
@@ -297,7 +297,7 @@ test("redirects when registration is missing", async () => {
 		currentStep: { name: "review", order: 3, title: "Review Registration Details" },
 		registration: null as unknown as ServerRegistration,
 		payment: makePayment(),
-		mode: "new" as RegistrationMode,
+		mode: "new",
 		error: null,
 		selectedStart: null,
 		setError: mockSetError,

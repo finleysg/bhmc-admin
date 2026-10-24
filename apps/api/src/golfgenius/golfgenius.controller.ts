@@ -14,7 +14,6 @@ import {
 	Sse,
 	UseInterceptors,
 } from "@nestjs/common"
-import { IntegrationActionName } from "@repo/domain/types"
 
 import { Admin } from "../auth"
 
@@ -91,7 +90,7 @@ export class GolfgeniusController {
 	@Get("/events/:id/logs")
 	async getEventLogs(@Param("id") id: string, @Query("actionName") actionName?: string) {
 		const eid = parseInt(id, 10)
-		return this.integrationLog.getLogsByEventId(eid, actionName as IntegrationActionName)
+		return this.integrationLog.getLogsByEventId(eid, actionName)
 	}
 
 	@Sse("/events/:id/export-roster")

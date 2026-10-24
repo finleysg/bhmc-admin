@@ -477,7 +477,7 @@ export class ImportAllResultsService {
 		}
 
 		// Extract member cards and get first member card
-		const memberCards = ProxyResultParser.extractMemberCards(aggregate as GgAggregate)
+		const memberCards = ProxyResultParser.extractMemberCards(aggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return null
@@ -485,7 +485,7 @@ export class ImportAllResultsService {
 		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
-		const playerData = ProxyResultParser.parsePlayerData(aggregate as GgAggregate, memberCards[0])
+		const playerData = ProxyResultParser.parsePlayerData(aggregate, memberCards[0])
 
 		// Resolve player using pre-fetched player map
 		const player = this.resolvePlayerFromMap(memberId, playerMap, result)
@@ -532,7 +532,7 @@ export class ImportAllResultsService {
 		playerMap: PlayerMap,
 	): PreparedTournamentResult | null {
 		// Extract member cards and get first member card
-		const memberCards = SkinsResultParser.extractMemberCards(aggregate as GgAggregate)
+		const memberCards = SkinsResultParser.extractMemberCards(aggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return null
@@ -615,7 +615,7 @@ export class ImportAllResultsService {
 		playerMap: PlayerMap,
 	): PreparedTournamentResult | null {
 		// Extract member cards and get first member card
-		const memberCards = StrokePlayResultParser.extractMemberCards(aggregate as GgAggregate)
+		const memberCards = StrokePlayResultParser.extractMemberCards(aggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return null
@@ -623,10 +623,7 @@ export class ImportAllResultsService {
 		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
-		const playerData = StrokePlayResultParser.parsePlayerData(
-			aggregate as GgAggregate,
-			memberCards[0],
-		)
+		const playerData = StrokePlayResultParser.parsePlayerData(aggregate, memberCards[0])
 
 		// Resolve player using pre-fetched player map
 		const player = this.resolvePlayerFromMap(memberId, playerMap, result)
@@ -678,7 +675,7 @@ export class ImportAllResultsService {
 		playerMap: PlayerMap,
 	): PreparedTournamentResult | null {
 		// Extract member cards and get first member card
-		const memberCards = QuotaResultParser.extractMemberCards(aggregate as GgAggregate)
+		const memberCards = QuotaResultParser.extractMemberCards(aggregate)
 		if (!memberCards || memberCards.length === 0) {
 			result.errors.push(`No member cards found for aggregate ${aggregate.name || "Unknown"}`)
 			return null
@@ -686,7 +683,7 @@ export class ImportAllResultsService {
 		const memberId = memberCards[0].member_id_str
 
 		// Parse player data using parser
-		const playerData = QuotaResultParser.parsePlayerData(aggregate as GgAggregate, memberCards[0])
+		const playerData = QuotaResultParser.parsePlayerData(aggregate, memberCards[0])
 
 		// Resolve player using pre-fetched player map
 		const player = this.resolvePlayerFromMap(memberId, playerMap, result)

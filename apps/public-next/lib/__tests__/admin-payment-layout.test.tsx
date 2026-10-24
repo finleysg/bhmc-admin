@@ -73,9 +73,8 @@ test("renders loading state while data is pending", async () => {
 		isPending: true,
 	})
 
-	const { default: AdminPaymentLayout } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/layout"
-	)
+	const { default: AdminPaymentLayout } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/layout")
 
 	render(
 		<AdminPaymentLayout>
@@ -98,9 +97,8 @@ test("renders error state when admin payment data fetch fails", async () => {
 		isPending: false,
 	})
 
-	const { default: AdminPaymentLayout } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/layout"
-	)
+	const { default: AdminPaymentLayout } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/layout")
 
 	render(
 		<AdminPaymentLayout>
@@ -130,9 +128,8 @@ test("renders Stripe Elements with correct amount when data loads", async () => 
 		isPending: false,
 	})
 
-	const { default: AdminPaymentLayout } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/layout"
-	)
+	const { default: AdminPaymentLayout } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/layout")
 
 	render(
 		<AdminPaymentLayout>
@@ -167,9 +164,8 @@ test("renders nothing while auth is loading", async () => {
 		isPending: true,
 	})
 
-	const { default: AdminPaymentLayout } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/layout"
-	)
+	const { default: AdminPaymentLayout } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/layout")
 
 	const { container } = render(
 		<AdminPaymentLayout>

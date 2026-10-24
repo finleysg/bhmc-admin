@@ -15,8 +15,7 @@ interface DjangoFieldErrors {
 
 export type AuthResult = { success: true } | { success: false; error: string }
 export type RegisterResult =
-	| { success: true }
-	| { success: false; error: string; fieldErrors?: Record<string, string> }
+	{ success: true } | { success: false; error: string; fieldErrors?: Record<string, string> }
 
 export async function login(
 	email: string,

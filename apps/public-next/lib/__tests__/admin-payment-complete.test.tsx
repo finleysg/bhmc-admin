@@ -27,9 +27,8 @@ test("shows Payment Complete on succeeded status", async () => {
 		paymentIntent: { status: "succeeded", amount: 2605 },
 	})
 
-	const { default: CompletePage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 
@@ -45,9 +44,8 @@ test("shows Payment Processing on processing status", async () => {
 		paymentIntent: { status: "processing", amount: 2605 },
 	})
 
-	const { default: CompletePage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 
@@ -63,9 +61,8 @@ test("shows Payment Failed on requires_payment_method status", async () => {
 		paymentIntent: { status: "requires_payment_method", amount: 2605 },
 	})
 
-	const { default: CompletePage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 
@@ -80,9 +77,8 @@ test("shows Payment Failed on requires_payment_method status", async () => {
 test("shows error when client secret is missing", async () => {
 	mockSearchParams = new URLSearchParams("")
 
-	const { default: CompletePage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 
@@ -96,9 +92,8 @@ test("shows Home link", async () => {
 		paymentIntent: { status: "succeeded", amount: 2605 },
 	})
 
-	const { default: CompletePage } = await import(
-		"@/app/registration/[registrationId]/payment/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/registration/[registrationId]/payment/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 

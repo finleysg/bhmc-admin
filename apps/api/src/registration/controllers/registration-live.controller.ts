@@ -32,13 +32,11 @@ export class RegistrationLiveController {
 		this.logger.log(`SSE connection opened for event ${eventId}`)
 
 		const updates$ = this.broadcast.subscribe(eventId).pipe(
-			map(
-				(event: RegistrationUpdateEvent): SseMessage => ({
-					data: JSON.stringify(event),
-					type: "update",
-					id: event.timestamp,
-				}),
-			),
+			map((event: RegistrationUpdateEvent): SseMessage => ({
+				data: JSON.stringify(event),
+				type: "update",
+				id: event.timestamp,
+			})),
 			catchError((error) => {
 				this.logger.error(`Error in broadcast stream for event ${eventId}`, error)
 				return of({
@@ -50,12 +48,10 @@ export class RegistrationLiveController {
 
 		// Heartbeat every 30 seconds
 		const heartbeat$ = interval(30000).pipe(
-			map(
-				(): SseMessage => ({
-					data: "",
-					type: "heartbeat",
-				}),
-			),
+			map((): SseMessage => ({
+				data: "",
+				type: "heartbeat",
+			})),
 		)
 
 		// Handle client disconnect

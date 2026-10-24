@@ -222,7 +222,7 @@ export class ProgressTracker {
 		// Log successful operation completion
 		await this.integrationLog
 			.createLogEntry({
-				actionName: actionName as IntegrationActionName,
+				actionName: actionName,
 				actionDate: new Date(),
 				details: JSON.stringify(result, null, 2),
 				eventId,

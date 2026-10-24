@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 
 # Install uv and system dependencies
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.7 /uv /uvx /bin/
 
 RUN apt update && apt install --no-install-recommends -y \
   python3 \

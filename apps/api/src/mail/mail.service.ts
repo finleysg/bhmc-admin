@@ -49,7 +49,7 @@ export interface SendEmailOptions {
 @Injectable()
 export class MailService {
 	private readonly logger = new Logger(MailService.name)
-	private transporter: nodemailer.Transporter
+	private transporter: nodemailer.Transporter<{ messageId: string }>
 	private readonly fromAddress: string
 
 	constructor(@Inject(ConfigService) private configService: ConfigService) {
@@ -92,7 +92,7 @@ export class MailService {
 				html,
 			}
 
-			const info = (await this.transporter.sendMail(mailOptions)) as { messageId: string }
+			const info = await this.transporter.sendMail(mailOptions)
 			this.logger.log(`Email sent successfully: ${info.messageId}`)
 		} catch (error) {
 			const to = Array.isArray(options.to) ? options.to.join(",") : options.to

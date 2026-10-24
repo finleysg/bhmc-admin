@@ -136,9 +136,8 @@ beforeEach(() => {
 test("renders textarea with initial notes from registration", async () => {
 	mockRegistration.mockImplementation(() => makeRegistration({ notes: "Please pair with Bob" }))
 
-	const { default: ManageNotesPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/notes/page"
-	)
+	const { default: ManageNotesPage } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/notes/page")
 
 	render(<ManageNotesPage />)
 
@@ -147,9 +146,8 @@ test("renders textarea with initial notes from registration", async () => {
 })
 
 test("renders empty textarea when registration has no notes", async () => {
-	const { default: ManageNotesPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/notes/page"
-	)
+	const { default: ManageNotesPage } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/notes/page")
 
 	render(<ManageNotesPage />)
 
@@ -158,9 +156,8 @@ test("renders empty textarea when registration has no notes", async () => {
 })
 
 test("save button disabled when notes have not changed", async () => {
-	const { default: ManageNotesPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/notes/page"
-	)
+	const { default: ManageNotesPage } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/notes/page")
 
 	render(<ManageNotesPage />)
 
@@ -169,9 +166,8 @@ test("save button disabled when notes have not changed", async () => {
 })
 
 test("save button enabled after text changes", async () => {
-	const { default: ManageNotesPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/notes/page"
-	)
+	const { default: ManageNotesPage } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/notes/page")
 
 	render(<ManageNotesPage />)
 
@@ -185,9 +181,8 @@ test("save button enabled after text changes", async () => {
 test("calls PATCH /api/registration/{id} with correct body on save", async () => {
 	;(global.fetch as jest.Mock).mockResolvedValue({ ok: true })
 
-	const { default: ManageNotesPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/notes/page"
-	)
+	const { default: ManageNotesPage } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/notes/page")
 
 	render(<ManageNotesPage />)
 
@@ -209,9 +204,8 @@ test("calls PATCH /api/registration/{id} with correct body on save", async () =>
 test("shows success toast and navigates to manage URL on success", async () => {
 	;(global.fetch as jest.Mock).mockResolvedValue({ ok: true })
 
-	const { default: ManageNotesPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/notes/page"
-	)
+	const { default: ManageNotesPage } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/notes/page")
 
 	render(<ManageNotesPage />)
 
@@ -231,9 +225,8 @@ test("shows success toast and navigates to manage URL on success", async () => {
 test("shows error toast on API failure", async () => {
 	;(global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 500 })
 
-	const { default: ManageNotesPage } = await import(
-		"@/app/event/[eventDate]/[eventName]/manage/notes/page"
-	)
+	const { default: ManageNotesPage } =
+		await import("@/app/event/[eventDate]/[eventName]/manage/notes/page")
 
 	render(<ManageNotesPage />)
 

@@ -105,8 +105,7 @@ export default function IntegrationActionCard({
 			eventSource.onmessage = (event) => {
 				try {
 					const progressData = JSON.parse(event.data as string) as
-						| PlayerProgressEvent
-						| TournamentProgressEvent
+						PlayerProgressEvent | TournamentProgressEvent
 					setProgress(progressData)
 
 					if (progressData.status === "complete") {

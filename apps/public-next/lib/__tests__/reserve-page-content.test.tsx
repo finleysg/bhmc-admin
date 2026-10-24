@@ -65,8 +65,8 @@ jest.mock("../../app/event/[eventDate]/[eventName]/components/reserve-grid", () 
 			data-testid="trigger-reserve"
 			onClick={() =>
 				onReserve({ id: 1, name: "East" }, [
-					{ id: 11, playerId: null } as never,
-					{ id: 12, playerId: null } as never,
+					{ id: 11, playerId: null },
+					{ id: 12, playerId: null },
 				])
 			}
 		>

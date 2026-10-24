@@ -52,7 +52,7 @@ describe("ApiClient - domain helpers", () => {
 		const year = new Date().getFullYear().toString()
 
 		it("throws when no seasons returned", async () => {
-			jest.spyOn(svc, "getSeasons").mockResolvedValueOnce([] as any)
+			jest.spyOn(svc, "getSeasons").mockResolvedValueOnce([])
 			await expect(svc.getCurrentSeasonForYear()).rejects.toThrow(ApiError)
 		})
 
@@ -84,7 +84,7 @@ describe("ApiClient - domain helpers", () => {
 
 		it("throws when no events on date", async () => {
 			jest.spyOn(svc, "getSeasonForYear").mockResolvedValueOnce(season2025 as any)
-			jest.spyOn(svc, "getEvents").mockResolvedValueOnce([] as any)
+			jest.spyOn(svc, "getEvents").mockResolvedValueOnce([])
 			await expect(svc.findMatchingEventByStartDate("2025-01-01")).rejects.toThrow(ApiError)
 		})
 

@@ -59,9 +59,8 @@ test("shows success message when payment succeeded", async () => {
 		paymentIntent: { status: "succeeded" },
 	})
 
-	const { default: CompletePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 
@@ -77,9 +76,8 @@ test("shows user email in confirmation on success", async () => {
 		paymentIntent: { status: "succeeded" },
 	})
 
-	const { default: CompletePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 
@@ -93,9 +91,8 @@ test("shows processing message", async () => {
 		paymentIntent: { status: "processing" },
 	})
 
-	const { default: CompletePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 
@@ -111,9 +108,8 @@ test("shows verification required for requires_action", async () => {
 		paymentIntent: { status: "requires_action" },
 	})
 
-	const { default: CompletePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 
@@ -129,9 +125,8 @@ test("shows payment failed with retry link", async () => {
 		paymentIntent: { status: "requires_payment_method" },
 	})
 
-	const { default: CompletePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 
@@ -149,9 +144,8 @@ test("shows error when retrievePaymentIntent fails", async () => {
 		error: { message: "Something went wrong" },
 	})
 
-	const { default: CompletePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 
@@ -163,9 +157,8 @@ test("shows error when retrievePaymentIntent fails", async () => {
 test("shows error when client secret is missing", async () => {
 	mockSearchParams = new URLSearchParams("")
 
-	const { default: CompletePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 
@@ -179,9 +172,8 @@ test("renders navigation links to registrations and home", async () => {
 		paymentIntent: { status: "succeeded" },
 	})
 
-	const { default: CompletePage } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page"
-	)
+	const { default: CompletePage } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/complete/page")
 
 	render(<CompletePage />)
 

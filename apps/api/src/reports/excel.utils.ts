@@ -55,5 +55,5 @@ export function deriveDynamicColumns<T extends Record<string, unknown>>(
 
 export async function generateBuffer(workbook: ExcelJS.Workbook): Promise<Buffer> {
 	const buffer = await workbook.xlsx.writeBuffer()
-	return Buffer.from(buffer as ArrayBuffer)
+	return Buffer.from(buffer)
 }

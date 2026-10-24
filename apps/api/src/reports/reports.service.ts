@@ -1307,8 +1307,7 @@ function formatChangeLogDetails(action: string, details: Record<string, unknown>
 		}
 		case "update_fees": {
 			const players = details.players as
-				| { name: string; fees: { name: string; amount: number }[] }[]
-				| undefined
+				{ name: string; fees: { name: string; amount: number }[] }[] | undefined
 			if (!players?.length) return "Fees updated"
 			const playerSummary = players
 				.map((p) => {

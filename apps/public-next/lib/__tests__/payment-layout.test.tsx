@@ -67,9 +67,8 @@ test("renders Elements provider when stripe amount loads", async () => {
 		isError: false,
 	})
 
-	const { default: PaymentLayout } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
-	)
+	const { default: PaymentLayout } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/layout")
 
 	render(
 		<PaymentLayout>
@@ -99,9 +98,8 @@ test("calls useCustomerSession with isAuthenticated", async () => {
 		isError: false,
 	})
 
-	const { default: PaymentLayout } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
-	)
+	const { default: PaymentLayout } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/layout")
 
 	render(
 		<PaymentLayout>
@@ -119,9 +117,8 @@ test("shows nothing while stripe amount is pending", async () => {
 		isError: false,
 	})
 
-	const { default: PaymentLayout } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
-	)
+	const { default: PaymentLayout } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/layout")
 
 	const { container } = render(
 		<PaymentLayout>
@@ -148,9 +145,8 @@ test("shows nothing while customer session is pending for authenticated user", a
 		isError: false,
 	})
 
-	const { default: PaymentLayout } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
-	)
+	const { default: PaymentLayout } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/layout")
 
 	const { container } = render(
 		<PaymentLayout>
@@ -172,9 +168,8 @@ test("provides amount data via useCurrentPaymentAmount", async () => {
 		isError: false,
 	})
 
-	const { default: PaymentLayout, useCurrentPaymentAmount } = await import(
-		"@/app/event/[eventDate]/[eventName]/[paymentId]/layout"
-	)
+	const { default: PaymentLayout, useCurrentPaymentAmount } =
+		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/layout")
 
 	function ChildComponent() {
 		const { amount } = useCurrentPaymentAmount()
