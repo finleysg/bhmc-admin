@@ -5,7 +5,7 @@ import { act, render, screen, waitFor } from "@testing-library/react"
 import React from "react"
 
 // Mock useCurrentPaymentAmount (from the payment layout)
-jest.mock("../../app/event/[eventDate]/[eventName]/[paymentId]/layout", () => ({
+jest.mock("../../app/event/[eventDate]/[eventName]/[paymentId]/payment-context", () => ({
 	useCurrentPaymentAmount: () => ({
 		amount: { subtotal: 25.0, transactionFee: 1.05, total: 26.05 },
 	}),

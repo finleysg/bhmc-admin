@@ -1,5 +1,7 @@
 import "./global.css"
 
+import { DisplayPreferences } from "./components/display-preferences"
+
 import type { Metadata } from "next"
 import { Montserrat, Open_Sans } from "next/font/google"
 
@@ -29,24 +31,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<head>
-				<script
-					dangerouslySetInnerHTML={{
-						__html: `
-try {
-  let theme = localStorage.getItem('theme');
-  if (!theme) {
-    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-  if (theme === 'dark') {
-    document.documentElement.classList.add('dark');
-  }
-} catch (e) {}
-`,
-					}}
-				/>
-			</head>
 			<body className={`${montserrat.variable} ${openSans.variable}`}>
+				<DisplayPreferences />
 				<Providers>
 					<div className="flex min-h-screen flex-col">
 						<Header />

@@ -13,7 +13,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useRegistration } from "@/lib/registration/registration-context"
 import { formatCurrency } from "@/lib/registration/payment-utils"
 import { getEventUrl } from "@/lib/event-utils"
-import { useCurrentPaymentAmount } from "../layout"
+import { useCurrentPaymentAmount } from "../payment-context"
 
 export default function CompletePage() {
 	const searchParams = useSearchParams()

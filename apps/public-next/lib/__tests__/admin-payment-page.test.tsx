@@ -5,7 +5,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import React from "react"
 
 // Mock useAdminPayment (from the admin payment layout)
-jest.mock("../../app/registration/[registrationId]/payment/[paymentId]/layout", () => ({
+jest.mock("../../app/registration/[registrationId]/payment/[paymentId]/payment-context", () => ({
 	useAdminPayment: () => ({
 		amount: { subtotal: 25.0, transactionFee: 1.05, total: 26.05 },
 		data: {

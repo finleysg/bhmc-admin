@@ -5,6 +5,7 @@ import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Logo } from "./logo"
+import { TextSizeControl } from "./text-size-control"
 import { ThemeToggle } from "./theme-toggle"
 import { UserMenu } from "./user-menu"
 import { SidebarNav } from "./sidebar"
@@ -14,7 +15,7 @@ export function Header() {
 
 	return (
 		<header className="sticky top-0 z-40 border-b bg-header text-header-foreground">
-			<div className="flex h-14 items-center gap-4 px-4 lg:px-6">
+			<div className="flex min-h-14 flex-wrap items-center py-2 gap-4 px-4 lg:px-6">
 				<Button
 					variant="ghost"
 					size="icon"
@@ -32,7 +33,8 @@ export function Header() {
 					<Logo compact />
 				</div>
 
-				<div className="ml-auto flex items-center gap-2">
+				<div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+					<TextSizeControl />
 					<ThemeToggle />
 					<UserMenu />
 				</div>

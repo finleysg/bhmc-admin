@@ -24,9 +24,9 @@ export default async function PointsPage() {
 	const filteredDocs = historicalDocs.filter((d) => d.year !== currentSeason)
 
 	return (
-		<div className="grid gap-6 lg:grid-cols-12">
+		<div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
 			{/* Left column */}
-			<div className="space-y-6 lg:col-span-3">
+			<div className="min-w-0 space-y-6 lg:col-span-3">
 				<Card>
 					<CardHeader>
 						<CardTitle className="text-primary">Current Standings</CardTitle>
@@ -56,7 +56,7 @@ export default async function PointsPage() {
 			</div>
 
 			{/* Center column */}
-			<div className="space-y-6 lg:col-span-6">
+			<div className="min-w-0 space-y-6 lg:col-span-6">
 				{pageContent && (
 					<Card>
 						<CardHeader>
@@ -78,7 +78,7 @@ export default async function PointsPage() {
 			</div>
 
 			{/* Right column */}
-			<div className="lg:col-span-3">
+			<div className="min-w-0 lg:col-span-3">
 				<DocumentList documents={filteredDocs} title="Past Seasons" />
 			</div>
 		</div>

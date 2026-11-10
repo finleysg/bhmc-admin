@@ -96,7 +96,7 @@ export function ResultEventCard({ summary }: ResultEventCardProps) {
 									<span className="font-medium">${payout.amount.toFixed(2)}</span>
 									<span className="ml-1 text-xs text-muted-foreground">({payout.payoutType})</span>
 									<span
-										className={`ml-1.5 inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium ${badgeClass}`}
+										className={`ml-1.5 inline-block rounded-full px-1.5 py-0.5 text-[length:calc(0.625rem*var(--text-scale))] font-medium ${badgeClass}`}
 									>
 										{payout.payoutStatus}
 									</span>

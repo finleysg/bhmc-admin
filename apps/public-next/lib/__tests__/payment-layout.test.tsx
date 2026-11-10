@@ -1,3 +1,4 @@
+import { useCurrentPaymentAmount } from "../../app/event/[eventDate]/[eventName]/[paymentId]/payment-context"
 /**
  * @jest-environment jsdom
  */
@@ -168,7 +169,7 @@ test("provides amount data via useCurrentPaymentAmount", async () => {
 		isError: false,
 	})
 
-	const { default: PaymentLayout, useCurrentPaymentAmount } =
+	const { default: PaymentLayout } =
 		await import("@/app/event/[eventDate]/[eventName]/[paymentId]/layout")
 
 	function ChildComponent() {

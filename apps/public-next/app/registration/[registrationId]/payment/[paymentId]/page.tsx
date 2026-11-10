@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/lib/auth-context"
 import { formatCurrency } from "@/lib/registration/payment-utils"
-import { useAdminPayment } from "./layout"
+import { useAdminPayment } from "./payment-context"
 
 export default function AdminPaymentPage() {
 	const stripe = useStripe()

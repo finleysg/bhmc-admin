@@ -44,6 +44,7 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           APP="${TAG%%-v*}"
+          if [ "$APP" = "public" ]; then APP="public-next"; fi
           echo "name=${APP}" >> $GITHUB_OUTPUT
 
       - name: Lint

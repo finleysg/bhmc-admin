@@ -75,9 +75,9 @@ export default async function HomePage() {
 	return (
 		<>
 			<ScoringBanner events={events} />
-			<div className="grid gap-6 lg:grid-cols-12">
+			<div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
 				{/* Left column */}
-				<div className="space-y-6 lg:col-span-6">
+				<div className="min-w-0 space-y-6 lg:col-span-6">
 					<Card>
 						<CardHeader>
 							<CardTitle className="text-primary">Club News and Announcements</CardTitle>
@@ -93,14 +93,14 @@ export default async function HomePage() {
 				</div>
 
 				{/* Middle column */}
-				<div className="space-y-6 lg:col-span-3">
+				<div className="min-w-0 space-y-6 lg:col-span-3">
 					<UpcomingEvents events={events} />
 					<QuickLinks />
 					<ClubDocumentsCard documents={clubDocuments} />
 				</div>
 
 				{/* Right column */}
-				<div className="space-y-6 lg:col-span-3">
+				<div className="min-w-0 space-y-6 lg:col-span-3">
 					<HoleInOneCard content={holeInOneContent} aces={aces} />
 					<LowScoresCard lowScores={lowScores} />
 				</div>

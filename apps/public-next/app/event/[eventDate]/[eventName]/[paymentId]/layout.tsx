@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext } from "react"
+import { PaymentAmountContext } from "./payment-context"
 import { useParams } from "next/navigation"
 
 import { Elements } from "@stripe/react-stripe-js"
@@ -8,19 +8,7 @@ import { loadStripe } from "@stripe/stripe-js"
 
 import { useAuth } from "@/lib/auth-context"
 import { useCustomerSession } from "@/lib/hooks/use-customer-session"
-import { type PaymentAmount, useStripeAmount } from "@/lib/hooks/use-stripe-amount"
-
-type PaymentAmountContextType = { amount: PaymentAmount }
-
-const PaymentAmountContext = createContext<PaymentAmountContextType | null>(null)
-
-export function useCurrentPaymentAmount() {
-	const context = useContext(PaymentAmountContext)
-	if (!context) {
-		throw new Error("useCurrentPaymentAmount must be used within a PaymentLayout")
-	}
-	return context
-}
+import { useStripeAmount } from "@/lib/hooks/use-stripe-amount"
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!)
 

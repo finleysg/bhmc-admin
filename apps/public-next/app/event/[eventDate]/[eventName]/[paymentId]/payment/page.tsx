@@ -14,7 +14,7 @@ import { useRegistration } from "@/lib/registration/registration-context"
 import { ReviewStep } from "@/lib/registration/registration-reducer"
 import { getEventUrl } from "@/lib/event-utils"
 import { formatCurrency } from "@/lib/registration/payment-utils"
-import { useCurrentPaymentAmount } from "../layout"
+import { useCurrentPaymentAmount } from "../payment-context"
 
 export default function PaymentPage() {
 	const router = useRouter()

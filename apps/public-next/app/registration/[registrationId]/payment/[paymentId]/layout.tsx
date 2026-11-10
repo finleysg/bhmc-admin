@@ -1,30 +1,15 @@
 "use client"
 
-import { createContext, useContext } from "react"
+import { AdminPaymentContext } from "./payment-context"
 import { useParams, usePathname } from "next/navigation"
 
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
 
 import { useAuth } from "@/lib/auth-context"
-import { useAdminPaymentData, type AdminPaymentData } from "@/lib/hooks/use-admin-payment-data"
+import { useAdminPaymentData } from "@/lib/hooks/use-admin-payment-data"
 import { useCustomerSession } from "@/lib/hooks/use-customer-session"
-import { type PaymentAmount, useStripeAmount } from "@/lib/hooks/use-stripe-amount"
-
-export interface AdminPaymentContextType {
-	amount: PaymentAmount
-	data: AdminPaymentData
-}
-
-const AdminPaymentContext = createContext<AdminPaymentContextType | null>(null)
-
-export function useAdminPayment() {
-	const context = useContext(AdminPaymentContext)
-	if (!context) {
-		throw new Error("useAdminPayment must be used within an AdminPaymentLayout")
-	}
-	return context
-}
+import { useStripeAmount } from "@/lib/hooks/use-stripe-amount"
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!)
 
