@@ -2,7 +2,7 @@
 
 Status: Agreed direction. The finance track, results examples, and the Golf Genius API docs will refine details within slices.
 
-Sources: [Administrative Inventory](admin-inventory.md), [glossary](../CONTEXT.md), [ADR 0001](adr/0001-django-retains-schema-and-auth.md), [ADR 0002](adr/0002-admin-ui-matches-public-site.md), [ADR 0003](adr/0003-admin-roles.md).
+Sources: [Administrative Inventory](admin-inventory.md), [glossary](../CONTEXT.md), [ADR 0001](adr/0001-django-retains-schema-and-auth.md), [ADR 0002](adr/0002-admin-ui-matches-public-site.md), [ADR 0003](adr/0003-admin-roles.md), [ADR 0005](adr/0005-admin-server-components-and-actions.md).
 
 ## Direction
 
