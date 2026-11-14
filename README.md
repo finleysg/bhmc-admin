@@ -14,7 +14,6 @@ bhmc/
 ├── packages/
 │   ├── domain/         Shared types and business logic
 │   └── eslint-config/  Shared ESLint config
-├── e2e/                Playwright end-to-end tests
 └── docker-compose.yml
 ```
 
@@ -31,7 +30,7 @@ The Django backend at data.bhmc.org owns the database schema and handles authent
 | Payments          | Stripe                                                           |
 | Analytics         | PostHog                                                          |
 | Email             | React Email, Nodemailer, Mailgun                                 |
-| Testing           | Jest (unit), Playwright (e2e)                                    |
+| Testing           | Jest (unit), Jest + supertest (local API integration)            |
 | Tooling           | pnpm, Turborepo, Docker, ESLint, Prettier, Husky                 |
 | CI/CD             | GitHub Actions, CapRover                                         |
 
@@ -67,7 +66,7 @@ pnpm build         # Build all apps
 pnpm lint          # Lint all apps
 pnpm test          # Run unit tests
 pnpm typecheck     # TypeScript checks
-pnpm test:e2e      # Playwright end-to-end tests
+pnpm test:integration  # API integration tests (local only)
 pnpm format        # Format with Prettier
 ```
 

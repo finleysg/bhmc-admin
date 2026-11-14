@@ -7,7 +7,6 @@ import { MailModule } from "../mail/mail.module"
 import { StripeModule } from "../stripe/stripe.module"
 import {
 	AdminRegistrationController,
-	TestRegistrationController,
 	RegistrationLiveController,
 	UserRegistrationController,
 	RegistrationCleanupCron,
@@ -38,7 +37,6 @@ import {
 	],
 	controllers: [
 		AdminRegistrationController,
-		TestRegistrationController,
 		RegistrationLiveController,
 		UserPaymentsController,
 		UserRegistrationController,

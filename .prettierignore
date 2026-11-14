@@ -11,7 +11,4 @@ coverage
 pnpm-lock.yaml
 /*.log
 .venv
-test-results
-playwright-report
-playwright/.auth
 backend/templates

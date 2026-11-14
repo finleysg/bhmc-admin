@@ -10,9 +10,6 @@
 		},
 		"lint": {},
 		"test": {},
-		"typecheck": {},
-		"test:e2e": {
-			"cache": false
-		}
+		"typecheck": {}
 	}
 }

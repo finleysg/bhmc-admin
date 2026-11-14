@@ -7,11 +7,7 @@ export default {
 			"always",
 			["feat", "fix", "docs", "style", "refactor", "perf", "test", "ci", "chore", "revert"],
 		],
-		"scope-enum": [
-			1,
-			"always",
-			["api", "admin", "public-next", "domain", "eslint-config", "e2e", "deps"],
-		],
+		"scope-enum": [1, "always", ["api", "admin", "public-next", "domain", "eslint-config", "deps"]],
 		"scope-empty": [0],
 		"body-max-line-length": [0],
 		"footer-max-line-length": [0],

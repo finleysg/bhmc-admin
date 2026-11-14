@@ -60,7 +60,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/). 
 
 ### Scopes (optional)
 
-Use one of: `api`, `admin`, `public-next`, `domain`, `eslint-config`, `e2e`, `deps`
+Use one of: `api`, `admin`, `public-next`, `domain`, `eslint-config`, `deps`
 
 Omit the scope when a change spans multiple packages or is repo-wide.
 
