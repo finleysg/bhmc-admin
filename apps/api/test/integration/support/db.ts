@@ -46,6 +46,7 @@ const RESET_TABLES = [
 	"courses_hole",
 	"courses_course",
 	"core_adminauditentry",
+	"core_adminsetting",
 	"auth_user_groups",
 	"auth_user",
 ]

@@ -122,3 +122,20 @@ class AdminAuditEntry(models.Model):
 
     def __str__(self):
         return f"{self.created_at} {self.operation} {self.entity_type}:{self.entity_id}"
+
+
+class AdminSetting(models.Model):
+    """
+    An operational setting edited in the admin (alert lead times, thresholds, recipients).
+    Keys, types, and defaults are defined in the NestJS API; a key with no row uses its default.
+    """
+
+    key = models.CharField(verbose_name="Key", max_length=60, unique=True)
+    value = models.JSONField(verbose_name="Value")
+    updated_by = models.ForeignKey(
+        verbose_name="Updated by", to=settings.AUTH_USER_MODEL, on_delete=DO_NOTHING
+    )
+    updated_at = models.DateTimeField(verbose_name="Updated at")
+
+    def __str__(self):
+        return self.key

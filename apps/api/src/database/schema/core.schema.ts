@@ -6,6 +6,7 @@ import {
 	mysqlTable,
 	primaryKey,
 	tinyint,
+	unique,
 	varchar,
 } from "drizzle-orm/mysql-core"
 
@@ -67,5 +68,23 @@ export const adminAuditEntry = mysqlTable(
 		primaryKey({ columns: [table.id], name: "core_adminauditentry_id" }),
 		index("audit_entity_idx").on(table.entityType, table.entityId),
 		index("audit_created_idx").on(table.createdAt),
+	],
+)
+
+/** An operational setting (Django model core.AdminSetting). Keys and defaults live in src/settings. */
+export const adminSetting = mysqlTable(
+	"core_adminsetting",
+	{
+		id: int().autoincrement().notNull(),
+		key: varchar({ length: 60 }).notNull(),
+		value: json().notNull(),
+		updatedById: int("updated_by_id")
+			.notNull()
+			.references(() => authUser.id),
+		updatedAt: datetime("updated_at", { mode: "string", fsp: 6 }).notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.id], name: "core_adminsetting_id" }),
+		unique("key").on(table.key),
 	],
 )

@@ -15,6 +15,7 @@ import { MailModule } from "./mail/mail.module"
 import { PostHogModule } from "./posthog"
 import { RegistrationModule } from "./registration/registration.module"
 import { ReportsModule } from "./reports/reports.module"
+import { SettingsModule } from "./settings"
 import { StripeModule } from "./stripe/stripe.module"
 
 @Module({
@@ -32,6 +33,7 @@ import { StripeModule } from "./stripe/stripe.module"
 		MailModule,
 		RegistrationModule,
 		ReportsModule,
+		SettingsModule,
 		StripeModule,
 	],
 	providers: [

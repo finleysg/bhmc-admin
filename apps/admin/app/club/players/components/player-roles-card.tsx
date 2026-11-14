@@ -18,7 +18,9 @@ import {
 import { Checkbox } from "@/components/shadcn/checkbox"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/shadcn/field"
 
-import { type FormState, setPlayerRoles } from "../actions"
+import type { FormState } from "@/lib/form-state"
+
+import { setPlayerRoles } from "../actions"
 
 const ROLE_OPTIONS: { role: AdminRole; label: string; description: string }[] = [
 	{

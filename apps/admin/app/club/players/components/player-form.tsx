@@ -21,7 +21,9 @@ import {
 
 import { DetailItem, DetailList } from "@/components/detail-list"
 
-import { type FormState, type PlayerField, updatePlayer } from "../actions"
+import type { FormState } from "@/lib/form-state"
+
+import { type PlayerField, updatePlayer } from "../actions"
 
 export function PlayerForm({ player }: { player: Player }) {
 	const [state, formAction, isPending] = useActionState(

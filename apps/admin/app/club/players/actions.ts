@@ -5,14 +5,8 @@ import { z } from "zod"
 
 import { ADMIN_ROLE_GROUPS, type AdminRole, type PlayerUpdate } from "@repo/domain/types"
 
+import type { FormState } from "@/lib/form-state"
 import { apiRequest } from "@/lib/server-api"
-
-/** Result of a form submission, rendered by the form via useActionState. */
-export interface FormState<Field extends string = string> {
-	status: "idle" | "success" | "error"
-	message?: string
-	fieldErrors?: Partial<Record<Field, string>>
-}
 
 /** Blank strings become null, matching the API's "not set". */
 const optionalText = (max?: number, message?: string) =>
