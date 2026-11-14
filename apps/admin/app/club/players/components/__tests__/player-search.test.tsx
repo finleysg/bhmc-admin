@@ -84,4 +84,27 @@ describe("PlayerSearch", () => {
 
 		expect(replace).toHaveBeenLastCalledWith("/club/players?all=1")
 	})
+
+	it("shows the new search text after a URL change made elsewhere", () => {
+		const { view } = setup({ query: "chris", membersOnly: true })
+
+		pending = false
+		view.rerender(<PlayerSearch query="" membersOnly={true} />)
+
+		expect(screen.getByLabelText("Search Players")).toHaveValue("")
+	})
+
+	it("keeps text typed while its own search was loading", async () => {
+		const { user, view } = setup()
+		const input = screen.getByLabelText("Search Players")
+
+		await user.type(input, "chris")
+		act(() => jest.advanceTimersByTime(300))
+		await user.type(input, "x")
+		// The "chris" search commits while "x" is still waiting on the debounce.
+		pending = false
+		view.rerender(<PlayerSearch query="chris" membersOnly={true} />)
+
+		expect(input).toHaveValue("chrisx")
+	})
 })

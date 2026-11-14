@@ -26,9 +26,15 @@ export function PlayerSearch({ query, membersOnly }: PlayerSearchProps) {
 	// commits, so merging into it would drop a change still in flight.
 	const requested = useRef({ q: query, membersOnly })
 
+	const input = useRef<HTMLInputElement>(null)
+
 	// Adopt URL changes that came from elsewhere (a link, back/forward) once ours have settled.
+	// A committed query that isn't the one we last requested came from outside, so show it;
+	// otherwise leave the box alone, since the user may have typed more while it loaded.
 	useEffect(() => {
-		if (!isPending) requested.current = { q: query, membersOnly }
+		if (isPending) return
+		if (query !== requested.current.q && input.current) input.current.value = query
+		requested.current = { q: query, membersOnly }
 	}, [query, membersOnly, isPending])
 
 	const navigate = (change: { q?: string; membersOnly?: boolean }) => {
@@ -54,6 +60,7 @@ export function PlayerSearch({ query, membersOnly }: PlayerSearchProps) {
 				<div className="relative">
 					<Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
 					<Input
+						ref={input}
 						id="player-search"
 						className="bg-card pr-9 pl-9"
 						placeholder="Search by name, email, or GHIN (min 3 characters)..."
