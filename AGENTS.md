@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Golf tournament management system for Bunker Hills Men's Club (BHMC). This monorepo contains the admin API, admin web dashboard, and public-facing Next.js site (bhmc.org). It complements a separate Django backend (data.bhmc.org) that owns the database schema.
+Golf tournament management system for Bunker Hills Men's Club (BHMC). This monorepo contains the admin API, admin web dashboard, public-facing Next.js site (bhmc.org), and the `bhmc` admin CLI (`apps/cli`). It complements a separate Django backend (data.bhmc.org) that owns the database schema.
 
 ## Code Style
 
@@ -60,7 +60,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/). 
 
 ### Scopes (optional)
 
-Use one of: `api`, `admin`, `public-next`, `domain`, `eslint-config`, `deps`
+Use one of: `api`, `admin`, `cli`, `public-next`, `domain`, `eslint-config`, `deps`
 
 Omit the scope when a change spans multiple packages or is repo-wide.
 

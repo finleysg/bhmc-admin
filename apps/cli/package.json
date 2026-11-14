@@ -1,0 +1,28 @@
+{
+	"name": "cli",
+	"version": "0.1.0",
+	"private": true,
+	"description": "bhmc: command-line client for the BHMC admin API, used by agents acting for an operator",
+	"bin": {
+		"bhmc": "dist/index.js"
+	},
+	"scripts": {
+		"bhmc": "tsx src/index.ts",
+		"build": "tsc -p tsconfig.build.json",
+		"lint": "eslint --config ../../packages/eslint-config/index.js .",
+		"test": "jest",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@repo/domain": "workspace:*",
+		"commander": "^14.0.0"
+	},
+	"devDependencies": {
+		"@types/jest": "^30.0.0",
+		"@types/node": "^24.19.2",
+		"jest": "^30.5.2",
+		"ts-jest": "^29.4.15",
+		"tsx": "^4.23.15",
+		"typescript": "^5.9.3"
+	}
+}

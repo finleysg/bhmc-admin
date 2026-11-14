@@ -4,6 +4,7 @@ import { DatabaseModule } from "../database/database.module"
 
 import { AuthUserRepository } from "./auth-user.repository"
 import { DjangoAuthService } from "./django-auth.service"
+import { MeController } from "./me.controller"
 import { PlayerRolesController } from "./player-roles.controller"
 import { PlayerRolesRepository } from "./player-roles.repository"
 import { PlayerRolesService } from "./player-roles.service"
@@ -11,7 +12,7 @@ import { PlayerRolesService } from "./player-roles.service"
 @Global()
 @Module({
 	imports: [DatabaseModule],
-	controllers: [PlayerRolesController],
+	controllers: [MeController, PlayerRolesController],
 	providers: [DjangoAuthService, AuthUserRepository, PlayerRolesRepository, PlayerRolesService],
 	exports: [DjangoAuthService, AuthUserRepository],
 })
