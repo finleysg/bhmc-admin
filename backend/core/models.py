@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.db.models import DO_NOTHING
 
@@ -11,12 +12,14 @@ class BoardMember(models.Model):
     term_expires = models.IntegerField(verbose_name="Member thru")
 
     def __str__(self):
-        return "{} {} ({})".format(self.player.first_name, self.player.last_name, self.role)
+        return f"{self.player.first_name} {self.player.last_name} ({self.role})"
 
 
 class MajorChampion(models.Model):
     season = models.IntegerField(verbose_name="Season")
-    event = models.ForeignKey(verbose_name="Event", to=Event, null=True, blank=True, on_delete=DO_NOTHING)
+    event = models.ForeignKey(
+        verbose_name="Event", to=Event, null=True, blank=True, on_delete=DO_NOTHING
+    )
     event_name = models.CharField(verbose_name="Event name", max_length=60)
     flight = models.CharField(verbose_name="Flight", max_length=30)
     player = models.ForeignKey(verbose_name="Player", to=Player, on_delete=DO_NOTHING)
@@ -25,7 +28,7 @@ class MajorChampion(models.Model):
     team_id = models.CharField(verbose_name="Team Id", max_length=8, null=True, blank=True)
 
     def __str__(self):
-        return "{} {} - {}".format(self.season, self.event_name, self.player.last_name)
+        return f"{self.season} {self.event_name} - {self.player.last_name}"
 
 
 class LowScore(models.Model):
@@ -36,7 +39,7 @@ class LowScore(models.Model):
     is_net = models.BooleanField(verbose_name="Is net score", default=False)
 
     def __str__(self):
-        return "{} {} - {}".format(self.season, self.course_name, self.player.last_name)
+        return f"{self.season} {self.course_name} - {self.player.last_name}"
 
 
 class Ace(models.Model):
@@ -46,21 +49,26 @@ class Ace(models.Model):
     shot_date = models.DateField(verbose_name="Date", null=True)
 
     def __str__(self):
-        return "{} {} - {}".format(self.season, self.hole_name, self.player.last_name)
+        return f"{self.season} {self.hole_name} - {self.player.last_name}"
 
 
 class SeasonSettings(models.Model):
     season = models.IntegerField(verbose_name="Season")
     is_active = models.BooleanField(verbose_name="Is Active", default=False)
-    member_event = models.ForeignKey(verbose_name="Membership Event", to=Event, related_name="member_event",
-                                     on_delete=DO_NOTHING)
-    match_play_event = models.ForeignKey(verbose_name="Match Play Event", to=Event, related_name="match_play_event",
-                                         on_delete=DO_NOTHING)
+    member_event = models.ForeignKey(
+        verbose_name="Membership Event", to=Event, related_name="member_event", on_delete=DO_NOTHING
+    )
+    match_play_event = models.ForeignKey(
+        verbose_name="Match Play Event",
+        to=Event,
+        related_name="match_play_event",
+        on_delete=DO_NOTHING,
+    )
 
     def __str__(self):
         """
         Provide a human-readable label for the season indicating whether it is active.
-        
+
         Returns:
             label (str): The season followed by "Active" if is_active is True, otherwise "Inactive".
         """
@@ -68,7 +76,9 @@ class SeasonSettings(models.Model):
 
 
 class GolfGeniusIntegrationLog(models.Model):
-    event = models.ForeignKey(verbose_name="Event", to=Event, related_name="integration_logs", on_delete=DO_NOTHING)
+    event = models.ForeignKey(
+        verbose_name="Event", to=Event, related_name="integration_logs", on_delete=DO_NOTHING
+    )
     action_name = models.CharField(verbose_name="Action Name", max_length=20)
     action_date = models.DateTimeField(verbose_name="Date", auto_now_add=True)
     is_successful = models.BooleanField(verbose_name="Action Completed Successfully")
@@ -77,8 +87,38 @@ class GolfGeniusIntegrationLog(models.Model):
     def __str__(self):
         """
         Return a human-readable representation of the integration log.
-        
+
         Returns:
             str: A string in the format "Event {event_id} ({action_name} - {action_date})".
         """
-        return "Event {} ({} - {})".format(self.event.id, self.action_name, self.action_date)
+        return f"Event {self.event.id} ({self.action_name} - {self.action_date})"
+
+
+class AdminAuditEntry(models.Model):
+    """
+    One administrative change, written by the NestJS API in the same transaction as the
+    change itself. `changes` holds {field: {"before": ..., "after": ...}} for changed
+    fields only. Entries are never updated or deleted.
+    """
+
+    CLIENT_CHOICES = (("ui", "Admin UI"), ("cli", "CLI"))
+
+    created_at = models.DateTimeField(verbose_name="When", auto_now_add=True)
+    actor = models.ForeignKey(verbose_name="Who", to=settings.AUTH_USER_MODEL, on_delete=DO_NOTHING)
+    client = models.CharField(verbose_name="Client", max_length=3, choices=CLIENT_CHOICES)
+    operation = models.CharField(verbose_name="Operation", max_length=60)
+    entity_type = models.CharField(verbose_name="Entity type", max_length=30)
+    entity_id = models.IntegerField(verbose_name="Entity id")
+    event = models.ForeignKey(
+        verbose_name="Event", to=Event, null=True, blank=True, on_delete=DO_NOTHING
+    )
+    changes = models.JSONField(verbose_name="Changes")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["entity_type", "entity_id"], name="audit_entity_idx"),
+            models.Index(fields=["created_at"], name="audit_created_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.created_at} {self.operation} {self.entity_type}:{self.entity_id}"

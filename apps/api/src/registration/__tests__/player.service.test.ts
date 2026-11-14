@@ -142,6 +142,7 @@ function createService() {
 		mailService as any,
 		coursesService as any,
 		authUserRepository as any,
+		{ record: jest.fn() },
 	)
 
 	return {

@@ -6,6 +6,10 @@ import {
 	NotFoundException,
 } from "@nestjs/common"
 import { ADMIN_ROLE_GROUPS, AdminRole, PlayerAdminRoles } from "@repo/domain/types"
+import type { MySql2Database } from "drizzle-orm/mysql2"
+
+import { AuditService, type AuditContext } from "../audit"
+import { DrizzleService } from "../database"
 
 import { PlayerRolesRepository } from "./player-roles.repository"
 
@@ -13,27 +17,54 @@ const ROLES = Object.keys(ADMIN_ROLE_GROUPS) as AdminRole[]
 
 @Injectable()
 export class PlayerRolesService {
-	constructor(@Inject(PlayerRolesRepository) private readonly repository: PlayerRolesRepository) {}
+	constructor(
+		@Inject(DrizzleService) private readonly drizzle: DrizzleService,
+		@Inject(PlayerRolesRepository) private readonly repository: PlayerRolesRepository,
+		@Inject(AuditService) private readonly audit: AuditService,
+	) {}
 
 	async getRoles(playerId: number): Promise<PlayerAdminRoles> {
 		const { userId, isSuperuser } = await this.findAccount(playerId)
-		const groups = await this.repository.findGroupNames(userId)
-		const roles = ROLES.filter((role) => groups.includes(ADMIN_ROLE_GROUPS[role])).sort()
-		return { roles, isSuperuser }
+		return { roles: await this.rolesOf(userId), isSuperuser }
 	}
 
-	/** Replaces the player's admin roles. Other Django groups are left alone. */
-	async setRoles(playerId: number, roles: unknown): Promise<PlayerAdminRoles> {
+	/**
+	 * Replaces the player's admin roles. Other Django groups are left alone.
+	 * The change and its audit entry are written in one transaction.
+	 */
+	async setRoles(
+		playerId: number,
+		roles: unknown,
+		context: AuditContext,
+	): Promise<PlayerAdminRoles> {
 		if (!Array.isArray(roles) || !roles.every((r) => ROLES.includes(r as AdminRole))) {
 			throw new BadRequestException(`roles must be a list of: ${ROLES.join(", ")}`)
 		}
+		const requested = [...new Set(roles as AdminRole[])].sort()
 		const { userId } = await this.findAccount(playerId)
-		await this.repository.replaceMemberships(
-			userId,
-			ROLES.map((role) => ADMIN_ROLE_GROUPS[role]),
-			(roles as AdminRole[]).map((role) => ADMIN_ROLE_GROUPS[role]),
-		)
+
+		await this.drizzle.db.transaction(async (tx) => {
+			const before = await this.rolesOf(userId, tx)
+			await this.repository.replaceMemberships(
+				tx,
+				userId,
+				ROLES.map((role) => ADMIN_ROLE_GROUPS[role]),
+				requested.map((role) => ADMIN_ROLE_GROUPS[role]),
+			)
+			await this.audit.record(tx, context, {
+				operation: "player.roles.update",
+				entityType: "player",
+				entityId: playerId,
+				before: { roles: before },
+				after: { roles: requested },
+			})
+		})
 		return this.getRoles(playerId)
+	}
+
+	private async rolesOf(userId: number, db?: MySql2Database): Promise<AdminRole[]> {
+		const groups = await this.repository.findGroupNames(userId, db)
+		return ROLES.filter((role) => groups.includes(ADMIN_ROLE_GROUPS[role])).sort()
 	}
 
 	private async findAccount(playerId: number): Promise<{ userId: number; isSuperuser: boolean }> {

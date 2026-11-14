@@ -1,4 +1,15 @@
-import { int, mysqlTable, primaryKey, tinyint, varchar } from "drizzle-orm/mysql-core"
+import {
+	datetime,
+	index,
+	int,
+	json,
+	mysqlTable,
+	primaryKey,
+	tinyint,
+	varchar,
+} from "drizzle-orm/mysql-core"
+
+import { authUser } from "./auth.schema"
 
 import { event } from "./events.schema"
 import { player } from "./registration.schema"
@@ -34,4 +45,27 @@ export const champion = mysqlTable(
 		teamId: varchar("team_id", { length: 8 }),
 	},
 	(table) => [primaryKey({ columns: [table.id] })],
+)
+
+/** One administrative change (Django model core.AdminAuditEntry). Insert-only. */
+export const adminAuditEntry = mysqlTable(
+	"core_adminauditentry",
+	{
+		id: int().autoincrement().notNull(),
+		createdAt: datetime("created_at", { mode: "string", fsp: 6 }).notNull(),
+		actorId: int("actor_id")
+			.notNull()
+			.references(() => authUser.id),
+		client: varchar({ length: 3 }).notNull(),
+		operation: varchar({ length: 60 }).notNull(),
+		entityType: varchar("entity_type", { length: 30 }).notNull(),
+		entityId: int("entity_id").notNull(),
+		eventId: int("event_id").references(() => event.id),
+		changes: json().notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.id], name: "core_adminauditentry_id" }),
+		index("audit_entity_idx").on(table.entityType, table.entityId),
+		index("audit_created_idx").on(table.createdAt),
+	],
 )

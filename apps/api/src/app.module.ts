@@ -3,6 +3,7 @@ import { APP_FILTER, APP_GUARD } from "@nestjs/core"
 import { ScheduleModule } from "@nestjs/schedule"
 
 import { AnnouncementsModule } from "./announcements/announcements.module"
+import { AuditModule } from "./audit"
 import { AuthModule, JwtAuthGuard } from "./auth"
 import { CoreModule } from "./core/core.module"
 import { DatabaseExceptionFilter } from "./database/database-exception.filter"
@@ -21,6 +22,7 @@ import { StripeModule } from "./stripe/stripe.module"
 		PostHogModule,
 		ScheduleModule.forRoot(),
 		AnnouncementsModule,
+		AuditModule,
 		AuthModule,
 		CoreModule,
 		DatabaseModule,

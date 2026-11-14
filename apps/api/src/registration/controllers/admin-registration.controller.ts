@@ -34,6 +34,7 @@ import type {
 
 import { hasAdminRole } from "@repo/domain/functions"
 
+import { Audit, type AuditContext } from "../../audit"
 import { ClubAdmin, EventAdmin, type AuthenticatedRequest, Roles } from "../../auth"
 import { EventsService } from "../../events"
 import { AdminRegistrationService } from "../services/admin-registration.service"
@@ -102,8 +103,9 @@ export class AdminRegistrationController {
 	async updatePlayer(
 		@Param("playerId", ParseIntPipe) playerId: number,
 		@Body() body: PlayerUpdate,
+		@Audit() audit: AuditContext,
 	): Promise<Player> {
-		return this.adminRegisterService.updatePlayer(playerId, body)
+		return this.adminRegisterService.updatePlayer(playerId, body, audit)
 	}
 
 	@Get(":eventId/groups/search")

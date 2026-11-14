@@ -29,6 +29,7 @@ import {
 	SwapPlayersResponse,
 } from "@repo/domain/types"
 
+import { AuditService, type AuditContext } from "../../audit"
 import { AuthUserRepository } from "../../auth"
 import { CoursesService } from "../../courses"
 import { toCourse, toHole } from "../../courses/mappers"
@@ -73,6 +74,7 @@ export class PlayerService {
 		@Inject(MailService) private readonly mail: MailService,
 		@Inject(CoursesService) private readonly courses: CoursesService,
 		@Inject(AuthUserRepository) private readonly authUserRepository: AuthUserRepository,
+		@Inject(AuditService) private readonly audit: AuditService,
 	) {}
 
 	/** Find a player by id */
@@ -294,42 +296,47 @@ export class PlayerService {
 		return toPlayer(row)
 	}
 
-	/** Update editable player fields. */
-	async updatePlayer(playerId: number, data: PlayerUpdate): Promise<Player> {
+	/**
+	 * Update editable player fields, keeping the login account's name and email in
+	 * step. The change and its audit entry are written in one transaction.
+	 */
+	async updatePlayer(playerId: number, data: PlayerUpdate, context: AuditContext): Promise<Player> {
 		const playerRow = await this.repository.findPlayerById(playerId)
+		const before = toPlayer(playerRow)
 		const dbData: Record<string, unknown> = { ...data }
 		if (data.isMember !== undefined) {
 			dbData.isMember = data.isMember ? 1 : 0
 		}
 
-		const hasAuthFields =
-			data.firstName !== undefined || data.lastName !== undefined || data.email !== undefined
+		const authData: Partial<{
+			firstName: string
+			lastName: string
+			email: string
+			username: string
+		}> = {}
+		if (data.firstName !== undefined) authData.firstName = data.firstName
+		if (data.lastName !== undefined) authData.lastName = data.lastName
+		if (data.email !== undefined) {
+			authData.email = data.email
+			authData.username = data.email
+		}
 		const userId = playerRow.userId
 
-		if (userId && hasAuthFields) {
-			const authData: Partial<{
-				firstName: string
-				lastName: string
-				email: string
-				username: string
-			}> = {}
-			if (data.firstName !== undefined) authData.firstName = data.firstName
-			if (data.lastName !== undefined) authData.lastName = data.lastName
-			if (data.email !== undefined) {
-				authData.email = data.email
-				authData.username = data.email
-			}
-
-			await this.drizzle.db.transaction(async (tx) => {
-				await this.repository.updatePlayer(playerId, dbData, tx)
+		await this.drizzle.db.transaction(async (tx) => {
+			await this.repository.updatePlayer(playerId, dbData, tx)
+			if (userId && Object.keys(authData).length > 0) {
 				await this.authUserRepository.update(userId, authData, tx)
+			}
+			await this.audit.record(tx, context, {
+				operation: "player.update",
+				entityType: "player",
+				entityId: playerId,
+				before: { ...before },
+				after: { ...data },
 			})
+		})
 
-			const row = await this.repository.findPlayerById(playerId)
-			return toPlayer(row)
-		}
-
-		const row = await this.repository.updatePlayer(playerId, dbData)
+		const row = await this.repository.findPlayerById(playerId)
 		return toPlayer(row)
 	}
 

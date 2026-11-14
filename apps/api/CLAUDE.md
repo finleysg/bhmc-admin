@@ -14,6 +14,7 @@ This project is responsible for three primary functions:
 - **Domain-Driven Design**: Service/controller/DTO layers per module
 - **TypeScript**: Strict mode, no `any` in production code
 - **Configuration**: .env files validated with Joi
+- **Admin audit**: every new or touched admin write records an entry with `AuditService.record(tx, context, …)` inside the same transaction as the change (never after it). Controllers get the context with the `@Audit()` parameter decorator. See `src/audit`.
 - **Database**: API uses Drizzle ORM (external schema - no migrations)
 
 ## Naming Conventions

@@ -1,6 +1,8 @@
 import { Body, Controller, Get, Inject, Param, ParseIntPipe, Put } from "@nestjs/common"
 import type { PlayerAdminRoles } from "@repo/domain/types"
 
+import { Audit, type AuditContext } from "../audit"
+
 import { ClubAdmin } from "./decorators"
 import { PlayerRolesService } from "./player-roles.service"
 
@@ -19,7 +21,8 @@ export class PlayerRolesController {
 	async setRoles(
 		@Param("playerId", ParseIntPipe) playerId: number,
 		@Body() body: { roles?: unknown },
+		@Audit() audit: AuditContext,
 	): Promise<PlayerAdminRoles> {
-		return this.service.setRoles(playerId, body?.roles)
+		return this.service.setRoles(playerId, body?.roles, audit)
 	}
 }

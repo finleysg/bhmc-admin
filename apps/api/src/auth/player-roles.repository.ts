@@ -1,4 +1,5 @@
 import { and, eq, inArray } from "drizzle-orm"
+import type { MySql2Database } from "drizzle-orm/mysql2"
 
 import { Inject, Injectable } from "@nestjs/common"
 
@@ -22,8 +23,8 @@ export class PlayerRolesRepository {
 		return { userId: row.userId, isSuperuser: Boolean(row.isSuperuser) }
 	}
 
-	async findGroupNames(userId: number): Promise<string[]> {
-		const rows = await this.drizzle.db
+	async findGroupNames(userId: number, db: MySql2Database = this.drizzle.db): Promise<string[]> {
+		const rows = await db
 			.select({ name: authGroup.name })
 			.from(authUserGroups)
 			.innerJoin(authGroup, eq(authGroup.id, authUserGroups.groupId))
@@ -33,33 +34,32 @@ export class PlayerRolesRepository {
 
 	/**
 	 * Makes the user's membership among `managedGroups` exactly `memberOf`.
-	 * Groups outside `managedGroups` are not touched.
+	 * Groups outside `managedGroups` are not touched. Run it inside a transaction.
 	 */
 	async replaceMemberships(
+		tx: MySql2Database,
 		userId: number,
 		managedGroups: string[],
 		memberOf: string[],
 	): Promise<void> {
-		await this.drizzle.db.transaction(async (tx) => {
-			const groups = await tx.select().from(authGroup).where(inArray(authGroup.name, managedGroups))
-			if (groups.length !== managedGroups.length) {
-				throw new Error(`Missing admin groups; expected ${managedGroups.join(", ")}`)
-			}
+		const groups = await tx.select().from(authGroup).where(inArray(authGroup.name, managedGroups))
+		if (groups.length !== managedGroups.length) {
+			throw new Error(`Missing admin groups; expected ${managedGroups.join(", ")}`)
+		}
 
-			await tx.delete(authUserGroups).where(
-				and(
-					eq(authUserGroups.userId, userId),
-					inArray(
-						authUserGroups.groupId,
-						groups.map((g) => g.id),
-					),
+		await tx.delete(authUserGroups).where(
+			and(
+				eq(authUserGroups.userId, userId),
+				inArray(
+					authUserGroups.groupId,
+					groups.map((g) => g.id),
 				),
-			)
+			),
+		)
 
-			const toAdd = groups.filter((g) => memberOf.includes(g.name))
-			if (toAdd.length > 0) {
-				await tx.insert(authUserGroups).values(toAdd.map((g) => ({ userId, groupId: g.id })))
-			}
-		})
+		const toAdd = groups.filter((g) => memberOf.includes(g.name))
+		if (toAdd.length > 0) {
+			await tx.insert(authUserGroups).values(toAdd.map((g) => ({ userId, groupId: g.id })))
+		}
 	}
 }
