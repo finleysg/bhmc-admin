@@ -25,6 +25,7 @@ Use the following tools / commands as feedback on your work.
 `pnpm test` (fix failures, even if pre-existing)
 `pnpm typecheck` (fix failures, even if pre-existing)
 `pnpm build` (fix failures -- ALWAYS)
+`pnpm test:integration` (local only; API changes. See `apps/api/test/integration/README.md`)
 
 When a change is made to a next app, rebuild the container.
 

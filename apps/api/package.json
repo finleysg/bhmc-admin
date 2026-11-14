@@ -12,7 +12,9 @@
 		"test": "jest",
 		"test:watch": "jest --watch",
 		"test:coverage": "jest --coverage",
-		"typecheck": "tsc --noEmit"
+		"test:integration": "jest --config jest.integration.config.js",
+		"test:integration:setup": "bash test/integration/setup-db.sh",
+		"typecheck": "tsc --noEmit && tsc -p test/integration"
 	},
 	"dependencies": {
 		"@nestjs/common": "^11.2.8",
@@ -43,6 +45,7 @@
 		"zod": "^4.6.7"
 	},
 	"devDependencies": {
+		"@nestjs/testing": "^11.2.10",
 		"@types/cookie-parser": "^1.4.10",
 		"@types/express": "^5.0.6",
 		"@types/jest": "^30.0.0",
@@ -50,7 +53,9 @@
 		"@types/nodemailer-mailgun-transport": "^1.4.6",
 		"@types/react": "19.3.0",
 		"@types/react-dom": "19.3.0",
+		"@types/supertest": "^6.0.3",
 		"jest": "^30.5.2",
+		"supertest": "^7.3.2",
 		"ts-jest": "^29.4.15",
 		"tsx": "^4.23.15",
 		"typescript": "^5.9.3"
