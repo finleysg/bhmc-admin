@@ -32,6 +32,8 @@ import type {
 	DropPlayersResponse,
 } from "@repo/domain/types"
 
+import { hasAdminRole } from "@repo/domain/functions"
+
 import { ClubAdmin, EventAdmin, type AuthenticatedRequest, Roles } from "../../auth"
 import { EventsService } from "../../events"
 import { AdminRegistrationService } from "../services/admin-registration.service"
@@ -195,7 +197,7 @@ export class AdminRegistrationController {
 		@Body() request: DropPlayersRequest,
 		@Req() req: AuthenticatedRequest,
 	): Promise<DropPlayersResponse> {
-		const isAdmin = req.user.isStaff || req.user.isSuperuser
+		const isAdmin = hasAdminRole(req.user, ["event-admin"])
 		let shouldRefund = request.autoRefund ?? !isAdmin
 
 		// Fetch registration once — used for ownership check and changelog
@@ -275,7 +277,7 @@ export class AdminRegistrationController {
 			`Replacing player ${request.originalPlayerId} with ${request.replacementPlayerId} in slot ${request.slotId} for event ${eventId}`,
 		)
 
-		const isAdmin = req.user.isStaff || req.user.isSuperuser
+		const isAdmin = hasAdminRole(req.user, ["event-admin"])
 
 		// Fetch slot once — used for ownership check and changelog
 		const slot = await this.registrationService.findSlotById(request.slotId)
@@ -325,7 +327,7 @@ export class AdminRegistrationController {
 			`Moving ${request.sourceSlotIds.length} players to hole ${request.destinationStartingHoleId} order ${request.destinationStartingOrder} for event ${eventId}`,
 		)
 
-		const isAdmin = req.user.isStaff || req.user.isSuperuser
+		const isAdmin = hasAdminRole(req.user, ["event-admin"])
 		const sourceSlot = await this.registrationService.findSlotById(request.sourceSlotIds[0])
 
 		// Non-admin users must be a member of the registration group
@@ -369,7 +371,7 @@ export class AdminRegistrationController {
 		this.logger.log(
 			`Swapping player ${request.playerAId} in slot ${request.slotAId} with player ${request.playerBId} in slot ${request.slotBId} for event ${eventId}`,
 		)
-		const isAdmin = req.user.isStaff || req.user.isSuperuser
+		const isAdmin = hasAdminRole(req.user, ["event-admin"])
 		const result = await this.adminRegisterService.swapPlayers(eventId, request)
 
 		const [slotA, slotB] = await Promise.all([

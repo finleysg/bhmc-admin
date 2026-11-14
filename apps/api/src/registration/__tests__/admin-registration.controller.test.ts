@@ -177,7 +177,7 @@ describe("AdminRegistrationController", () => {
 		it("admin user: drops without collecting fees or processing refunds", async () => {
 			const { controller, playerService, paymentsService, refundService, registrationService } =
 				createController()
-			const user = createUser({ isStaff: true })
+			const user = createUser({ groups: ["Event Admin"] })
 			const req = { user } as any
 
 			registrationService.findRegistrationById.mockResolvedValue({
@@ -223,7 +223,7 @@ describe("AdminRegistrationController", () => {
 		it("admin user with autoRefund true: collects paid fees and processes refunds", async () => {
 			const { controller, playerService, paymentsService, refundService, registrationService } =
 				createController()
-			const user = createUser({ isStaff: true })
+			const user = createUser({ groups: ["Event Admin"] })
 			const req = { user } as any
 			const dropWithRefund = { ...dropRequest, autoRefund: true }
 
@@ -253,7 +253,7 @@ describe("AdminRegistrationController", () => {
 		it("admin user with autoRefund false: skips refund even when explicitly set", async () => {
 			const { controller, playerService, paymentsService, refundService, registrationService } =
 				createController()
-			const user = createUser({ isStaff: true })
+			const user = createUser({ groups: ["Event Admin"] })
 			const req = { user } as any
 			const dropNoRefund = { ...dropRequest, autoRefund: false }
 
@@ -363,7 +363,7 @@ describe("AdminRegistrationController", () => {
 				registrationService,
 				eventsService,
 			} = createController()
-			const user = createUser({ isStaff: true })
+			const user = createUser({ groups: ["Event Admin"] })
 			const req = { user } as any
 			const dropWithRefund = { ...dropRequest, autoRefund: true }
 
@@ -437,7 +437,7 @@ describe("AdminRegistrationController", () => {
 		it("admin user: skips ownership check and replaces player", async () => {
 			const { controller, playerService, registrationService, changeLogService } =
 				createController()
-			const user = createUser({ isStaff: true })
+			const user = createUser({ groups: ["Event Admin"] })
 			const req = { user } as any
 
 			registrationService.findSlotById.mockResolvedValue({ registrationId: 42 })
@@ -478,6 +478,22 @@ describe("AdminRegistrationController", () => {
 
 			expect(registrationService.findRegistrationById).toHaveBeenCalledWith(42, 5)
 		})
+
+		it("staff user without an admin role: ownership is still checked (ADR 0003)", async () => {
+			const { controller, registrationService } = createController()
+			const user = createUser({ playerId: 5, isStaff: true })
+			const req = { user } as any
+
+			registrationService.findSlotById.mockResolvedValue({ registrationId: 42 })
+			registrationService.findRegistrationById.mockRejectedValue(
+				new ForbiddenException("Not authorized"),
+			)
+
+			await expect(controller.replacePlayer(100, replaceRequest, req)).rejects.toThrow(
+				ForbiddenException,
+			)
+			expect(registrationService.findRegistrationById).toHaveBeenCalledWith(42, 5)
+		})
 	})
 
 	describe("movePlayers", () => {
@@ -506,7 +522,7 @@ describe("AdminRegistrationController", () => {
 
 		it("admin user: skips ownership check and moves players", async () => {
 			const { controller, playerService, registrationService } = createController()
-			const user = createUser({ isStaff: true })
+			const user = createUser({ groups: ["Event Admin"] })
 			const req = { user } as any
 
 			registrationService.findSlotById.mockResolvedValue({ registrationId: 42 })
@@ -534,6 +550,22 @@ describe("AdminRegistrationController", () => {
 			)
 
 			expect(registrationService.findSlotById).toHaveBeenCalledWith(101)
+			expect(registrationService.findRegistrationById).toHaveBeenCalledWith(42, 5)
+		})
+
+		it("staff user without an admin role: ownership is still checked (ADR 0003)", async () => {
+			const { controller, registrationService } = createController()
+			const user = createUser({ playerId: 5, isStaff: true })
+			const req = { user } as any
+
+			registrationService.findSlotById.mockResolvedValue({ registrationId: 42 })
+			registrationService.findRegistrationById.mockRejectedValue(
+				new ForbiddenException("Not authorized"),
+			)
+
+			await expect(controller.movePlayers(100, moveRequest, req)).rejects.toThrow(
+				ForbiddenException,
+			)
 			expect(registrationService.findRegistrationById).toHaveBeenCalledWith(42, 5)
 		})
 

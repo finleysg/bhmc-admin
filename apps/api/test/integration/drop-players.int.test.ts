@@ -85,10 +85,8 @@ describe("POST /registration/:eventId/drop-players", () => {
 		expect(await slot(reg.slotIds[1])).toMatchObject({ playerId: partner.playerId })
 	})
 
-	// ADR 0003: the staff flag no longer grants admin rights. drop-players still
-	// treats isStaff as admin, so a staff user outside the group can drop players.
-	// Remove `.failing` once the handler uses hasAdminRole.
-	it.failing("forbids a staff user without an admin role who is not in the group", async () => {
+	// ADR 0003: the staff flag alone does not grant admin rights.
+	it("forbids a staff user without an admin role who is not in the group", async () => {
 		const evt = await createEvent()
 		const [owner, partner] = [await createUser(), await createUser()]
 		const staff = await createUser({ staff: true })
