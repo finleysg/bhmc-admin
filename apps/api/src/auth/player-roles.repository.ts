@@ -1,0 +1,65 @@
+import { and, eq, inArray } from "drizzle-orm"
+
+import { Inject, Injectable } from "@nestjs/common"
+
+import { authGroup, authUser, authUserGroups, DrizzleService, player } from "../database"
+
+@Injectable()
+export class PlayerRolesRepository {
+	constructor(@Inject(DrizzleService) private drizzle: DrizzleService) {}
+
+	/** The player's login account, or `undefined` if the player does not exist. */
+	async findPlayerUser(
+		playerId: number,
+	): Promise<{ userId: number | null; isSuperuser: boolean } | undefined> {
+		const [row] = await this.drizzle.db
+			.select({ userId: player.userId, isSuperuser: authUser.isSuperuser })
+			.from(player)
+			.leftJoin(authUser, eq(authUser.id, player.userId))
+			.where(eq(player.id, playerId))
+			.limit(1)
+		if (!row) return undefined
+		return { userId: row.userId, isSuperuser: Boolean(row.isSuperuser) }
+	}
+
+	async findGroupNames(userId: number): Promise<string[]> {
+		const rows = await this.drizzle.db
+			.select({ name: authGroup.name })
+			.from(authUserGroups)
+			.innerJoin(authGroup, eq(authGroup.id, authUserGroups.groupId))
+			.where(eq(authUserGroups.userId, userId))
+		return rows.map((r) => r.name)
+	}
+
+	/**
+	 * Makes the user's membership among `managedGroups` exactly `memberOf`.
+	 * Groups outside `managedGroups` are not touched.
+	 */
+	async replaceMemberships(
+		userId: number,
+		managedGroups: string[],
+		memberOf: string[],
+	): Promise<void> {
+		await this.drizzle.db.transaction(async (tx) => {
+			const groups = await tx.select().from(authGroup).where(inArray(authGroup.name, managedGroups))
+			if (groups.length !== managedGroups.length) {
+				throw new Error(`Missing admin groups; expected ${managedGroups.join(", ")}`)
+			}
+
+			await tx.delete(authUserGroups).where(
+				and(
+					eq(authUserGroups.userId, userId),
+					inArray(
+						authUserGroups.groupId,
+						groups.map((g) => g.id),
+					),
+				),
+			)
+
+			const toAdd = groups.filter((g) => memberOf.includes(g.name))
+			if (toAdd.length > 0) {
+				await tx.insert(authUserGroups).values(toAdd.map((g) => ({ userId, groupId: g.id })))
+			}
+		})
+	}
+}

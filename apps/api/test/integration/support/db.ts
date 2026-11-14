@@ -36,6 +36,7 @@ const RESET_TABLES = [
 	"courses_tee",
 	"courses_hole",
 	"courses_course",
+	"auth_user_groups",
 	"auth_user",
 ]
 

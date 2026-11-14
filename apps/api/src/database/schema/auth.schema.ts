@@ -28,3 +28,32 @@ export const authUser = mysqlTable(
 		unique("username").on(table.username),
 	],
 )
+
+export const authGroup = mysqlTable(
+	"auth_group",
+	{
+		id: int().autoincrement().notNull(),
+		name: varchar({ length: 150 }).notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.id], name: "auth_group_id" }),
+		unique("name").on(table.name),
+	],
+)
+
+export const authUserGroups = mysqlTable(
+	"auth_user_groups",
+	{
+		id: int().autoincrement().notNull(),
+		userId: int("user_id")
+			.notNull()
+			.references(() => authUser.id),
+		groupId: int("group_id")
+			.notNull()
+			.references(() => authGroup.id),
+	},
+	(table) => [
+		primaryKey({ columns: [table.id], name: "auth_user_groups_id" }),
+		unique("auth_user_groups_user_id_group_id_94350c0c_uniq").on(table.userId, table.groupId),
+	],
+)

@@ -34,3 +34,10 @@ export const ADMIN_ROLE_GROUPS: Record<AdminRole, string> = {
 	"event-admin": "Event Admin",
 	"club-admin": "Club Admin",
 }
+
+/** A player's admin roles, as managed in club player management. */
+export interface PlayerAdminRoles {
+	roles: AdminRole[]
+	/** Superusers hold every role regardless of `roles`. */
+	isSuperuser: boolean
+}
