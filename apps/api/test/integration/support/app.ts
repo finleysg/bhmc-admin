@@ -48,19 +48,27 @@ export interface TestApp {
  * Boots the real AppModule against the test database. Only the Django token
  * check, mail, and Stripe are replaced.
  */
-export async function createTestApp(): Promise<TestApp> {
+export async function createTestApp(
+	options: {
+		/** Extra providers to replace, e.g. [[ALERT_SOURCES, [fakeSource]]]. */
+		overrides?: [token: unknown, value: unknown][]
+	} = {},
+): Promise<TestApp> {
 	const users = new Map<string, DjangoUser>()
 	const mail = createFake()
 	const stripe = createFake()
 
-	const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+	const builder = Test.createTestingModule({ imports: [AppModule] })
 		.overrideProvider(DjangoAuthService)
 		.useValue({ validateToken: (token: string) => Promise.resolve(users.get(token) ?? null) })
 		.overrideProvider(MailService)
 		.useValue(mail)
 		.overrideProvider(StripeService)
 		.useValue(stripe)
-		.compile()
+	for (const [token, value] of options.overrides ?? []) {
+		builder.overrideProvider(token).useValue(value)
+	}
+	const moduleRef = await builder.compile()
 
 	const app = moduleRef.createNestApplication({ logger: ["error"] })
 	app.use(cookieParser())

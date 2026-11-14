@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common"
 import { APP_FILTER, APP_GUARD } from "@nestjs/core"
 import { ScheduleModule } from "@nestjs/schedule"
 
+import { AlertsModule } from "./alerts"
 import { AnnouncementsModule } from "./announcements/announcements.module"
 import { AuditModule } from "./audit"
 import { AuthModule, JwtAuthGuard } from "./auth"
@@ -21,6 +22,7 @@ import { StripeModule } from "./stripe/stripe.module"
 @Module({
 	imports: [
 		PostHogModule,
+		AlertsModule,
 		ScheduleModule.forRoot(),
 		AnnouncementsModule,
 		AuditModule,
