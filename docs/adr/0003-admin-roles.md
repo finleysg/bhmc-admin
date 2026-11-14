@@ -13,5 +13,6 @@ Today the admin app admits only superusers, but the API's `@Admin()` check admit
 
 - The staff flag no longer grants API access. The public site calls no staff-only endpoints, so it is unaffected.
 - The existing "Tournament Admin" and "Paul Helpers" groups are left alone. Only Django admin's own permissions use them.
+- Read-only lookups that Club Admin screens depend on allow either role: events by season, the season registration event, and player search. A new Club Admin screen that reads an Event Admin endpoint needs the same exception, covered by the roles integration test.
 - Group names are matched exactly. Renaming a group in Django admin revokes the role.
 - Treasurer and pro shop alert recipients are email addresses in Settings, not role holders.

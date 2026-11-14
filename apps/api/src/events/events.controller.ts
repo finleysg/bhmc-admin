@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common"
 import { ClubEvent, PayoutSummary } from "@repo/domain/types"
 
-import { EventAdmin } from "../auth"
+import { EventAdmin, Roles } from "../auth"
 import { MailService } from "../mail/mail.service"
 
 import { EventsRepository } from "./events.repository"
@@ -32,6 +32,7 @@ export class EventsController {
 	) {}
 
 	@Get()
+	@Roles("event-admin", "club-admin") // announcement event picker
 	async getEventsBySeason(@Query("season", ParseIntPipe) season: number): Promise<ClubEvent[]> {
 		return this.service.getEventsBySeason(season)
 	}
@@ -47,6 +48,7 @@ export class EventsController {
 	}
 
 	@Get("season-registration/:season")
+	@Roles("event-admin", "club-admin") // membership page
 	async getSeasonRegistrationEventId(
 		@Param("season", ParseIntPipe) season: number,
 	): Promise<{ eventId: number }> {

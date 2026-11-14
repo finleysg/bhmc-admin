@@ -42,6 +42,21 @@ describe("admin roles (ADR 0003)", () => {
 			allowed: ["club-admin"],
 		},
 		{
+			name: "GET events by season (announcement event picker)",
+			call: (u) => t.http(u).get("/events?season=2027"),
+			allowed: ["event-admin", "club-admin"],
+		},
+		{
+			name: "GET season registration event (membership page)",
+			call: (u) => t.http(u).get("/events/season-registration/2027"),
+			allowed: ["event-admin", "club-admin"],
+		},
+		{
+			name: "GET payouts (event-only endpoint on the same controller)",
+			call: (u) => t.http(u).get(`/events/${eventId}/payouts`),
+			allowed: ["event-admin"],
+		},
+		{
 			name: "GET player search",
 			call: (u) => t.http(u).get("/registration/players?searchText=test"),
 			allowed: ["event-admin", "club-admin"],
