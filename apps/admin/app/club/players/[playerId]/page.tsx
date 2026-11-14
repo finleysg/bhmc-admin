@@ -1,127 +1,44 @@
-"use client"
+import { notFound } from "next/navigation"
 
-import { useCallback, useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { toast } from "sonner"
+import type { Player, PlayerAdminRoles } from "@repo/domain/types"
 
-import type { Player, PlayerUpdate } from "@repo/domain/types"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/shadcn/card"
+import { apiGet, apiRequest } from "@/lib/server-api"
 
-import { useAuth } from "@/lib/auth-context"
-import { LoadingSpinner } from "@/app/components/ui/loading-spinner"
-import { Alert } from "@/app/components/ui/alert"
-import { PageLayout } from "@/app/components/ui/page-layout"
-import { Card, CardBody, CardTitle } from "@/app/components/ui/card"
 import { PlayerForm } from "../components/player-form"
+import { PlayerRolesCard } from "../components/player-roles-card"
 
-export default function EditPlayerPage() {
-	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
-	const router = useRouter()
-	const params = useParams()
-	const playerId = params.playerId as string
+export default async function EditPlayerPage({
+	params,
+}: {
+	params: Promise<{ playerId: string }>
+}) {
+	const id = Number((await params).playerId)
+	if (!Number.isInteger(id)) notFound()
 
-	const [player, setPlayer] = useState<Player | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
-	const [isSubmitting, setIsSubmitting] = useState(false)
-	const [error, setError] = useState<string | null>(null)
-	const [saveCount, setSaveCount] = useState(0)
-
-	const fetchPlayer = useCallback(async () => {
-		const res = await fetch(`/api/registration/players/${playerId}`)
-		if (!res.ok) {
-			throw new Error("Player not found")
-		}
-		const data = (await res.json()) as Player
-		setPlayer(data)
-	}, [playerId])
-
-	useEffect(() => {
-		if (signedIn && playerId) {
-			const loadData = async () => {
-				try {
-					await fetchPlayer()
-				} catch (err) {
-					setError(err instanceof Error ? err.message : "Failed to load player")
-				} finally {
-					setIsLoading(false)
-				}
-			}
-			void loadData()
-		}
-	}, [signedIn, playerId, fetchPlayer])
-
-	const handleSubmit = async (data: PlayerUpdate) => {
-		setIsSubmitting(true)
-		setError(null)
-
-		try {
-			const res = await fetch(`/api/registration/players/${playerId}`, {
-				method: "PATCH",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(data),
-			})
-
-			if (!res.ok) {
-				const errorData = (await res.json().catch(() => ({}))) as { message?: string }
-				throw new Error(errorData.message ?? "Failed to update player")
-			}
-
-			const updated = (await res.json()) as Player
-			setPlayer(updated)
-			setSaveCount((c) => c + 1)
-			toast.success("Player updated")
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to update player")
-		} finally {
-			setIsSubmitting(false)
-		}
-	}
-
-	const handleCancel = () => {
-		router.push("/club/players")
-	}
-
-	if (isPending || isLoading) {
-		return <LoadingSpinner size="lg" />
-	}
-
-	if (!signedIn) {
-		return null
-	}
-
-	if (!player) {
-		return (
-			<PageLayout maxWidth="3xl">
-				<div className="text-center py-8">
-					<p className="text-base-content/70 mb-4">{error ?? "Player not found"}</p>
-					<button onClick={() => router.push("/club/players")} className="btn btn-primary">
-						Back to Players
-					</button>
-				</div>
-			</PageLayout>
-		)
-	}
+	// Roles are optional: 409 means no login account, 403 means the viewer is not a Club Admin.
+	const [player, roles] = await Promise.all([
+		apiGet<Player>(`/registration/players/${id}`),
+		apiRequest<PlayerAdminRoles>(`/players/${id}/roles`),
+	])
 
 	return (
-		<PageLayout maxWidth="3xl">
-			{error && (
-				<Alert type="error" className="mb-4">
-					{error}
-				</Alert>
-			)}
-			<Card shadow="xs">
-				<CardBody>
-					<CardTitle>
+		<div className="mx-auto min-h-screen max-w-3xl space-y-6 md:py-8">
+			<Card>
+				<CardHeader>
+					<CardTitle className="font-heading text-xl">
 						{player.firstName} {player.lastName}
 					</CardTitle>
-					<PlayerForm
-						key={saveCount}
-						player={player}
-						onSubmit={handleSubmit}
-						onCancel={handleCancel}
-						isSubmitting={isSubmitting}
-					/>
-				</CardBody>
+				</CardHeader>
+				<CardContent>
+					<PlayerForm player={player} />
+				</CardContent>
 			</Card>
-		</PageLayout>
+			{roles.ok ? (
+				<PlayerRolesCard playerId={id} current={roles.data} />
+			) : (
+				roles.status === 409 && <PlayerRolesCard playerId={id} current={null} />
+			)}
+		</div>
 	)
 }

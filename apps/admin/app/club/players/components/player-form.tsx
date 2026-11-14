@@ -1,229 +1,167 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import Link from "next/link"
+import { startTransition, useActionState } from "react"
+import { toast } from "sonner"
 
-import type { Player, PlayerUpdate } from "@repo/domain/types"
+import type { Player } from "@repo/domain/types"
 
-interface PlayerFormProps {
-	player: Player
-	onSubmit: (data: PlayerUpdate) => void | Promise<void>
-	onCancel: () => void
-	isSubmitting: boolean
-}
+import { Alert, AlertDescription } from "@/components/shadcn/alert"
+import { Button } from "@/components/shadcn/button"
+import { Checkbox } from "@/components/shadcn/checkbox"
+import { Field, FieldError, FieldLabel } from "@/components/shadcn/field"
+import { Input } from "@/components/shadcn/input"
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/shadcn/select"
 
-export function PlayerForm({ player, onSubmit, onCancel, isSubmitting }: PlayerFormProps) {
-	const [firstName, setFirstName] = useState(player.firstName)
-	const [lastName, setLastName] = useState(player.lastName)
-	const [email, setEmail] = useState(player.email)
-	const [phoneNumber, setPhoneNumber] = useState(player.phoneNumber ?? "")
-	const [ghin, setGhin] = useState(player.ghin ?? "")
-	const [tee, setTee] = useState(player.tee)
-	const [birthDate, setBirthDate] = useState(player.birthDate ?? "")
-	const [isMember, setIsMember] = useState(player.isMember)
-	const [validationError, setValidationError] = useState<string | null>(null)
+import { DetailItem, DetailList } from "@/components/detail-list"
 
-	const initialValues = useMemo(
-		() => ({
-			firstName: player.firstName,
-			lastName: player.lastName,
-			email: player.email,
-			phoneNumber: player.phoneNumber ?? "",
-			ghin: player.ghin ?? "",
-			tee: player.tee,
-			birthDate: player.birthDate ?? "",
-			isMember: player.isMember,
-		}),
-		[player],
+import { type FormState, type PlayerField, updatePlayer } from "../actions"
+
+export function PlayerForm({ player }: { player: Player }) {
+	const [state, formAction, isPending] = useActionState(
+		async (prev: FormState<PlayerField>, formData: FormData) => {
+			const result = await updatePlayer(player.id, prev, formData)
+			if (result.status === "success") toast.success(result.message)
+			return result
+		},
+		{ status: "idle" },
 	)
-
-	const isDirty =
-		firstName !== initialValues.firstName ||
-		lastName !== initialValues.lastName ||
-		email !== initialValues.email ||
-		phoneNumber !== initialValues.phoneNumber ||
-		ghin !== initialValues.ghin ||
-		tee !== initialValues.tee ||
-		birthDate !== initialValues.birthDate ||
-		isMember !== initialValues.isMember
-
-	const handleSubmit = (e: React.FormEvent) => {
-		e.preventDefault()
-		setValidationError(null)
-
-		if (!firstName.trim()) {
-			setValidationError("First name is required")
-			return
-		}
-		if (!lastName.trim()) {
-			setValidationError("Last name is required")
-			return
-		}
-		if (!email.trim()) {
-			setValidationError("Email is required")
-			return
-		}
-
-		const data: PlayerUpdate = {
-			firstName: firstName.trim(),
-			lastName: lastName.trim(),
-			email: email.trim(),
-			phoneNumber: phoneNumber.trim() || null,
-			ghin: ghin.trim() || null,
-			tee,
-			birthDate: birthDate || null,
-			isMember,
-		}
-
-		void onSubmit(data)
-	}
+	const errors = state.fieldErrors ?? {}
 
 	return (
-		<form onSubmit={handleSubmit}>
-			{/* Read-only info */}
-			<div className="mb-6 rounded-lg bg-base-200 p-4">
-				<h3 className="mb-2 text-sm font-semibold text-base-content/70">Account Info</h3>
-				<div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
-					<div>
-						<span className="text-base-content/50">ID:</span> {player.id}
-					</div>
-					<div>
-						<span className="text-base-content/50">Last Season:</span> {player.lastSeason ?? "—"}
-					</div>
-					<div>
-						<span className="text-base-content/50">GG ID:</span> {player.ggId ?? "—"}
-					</div>
-					<div>
-						<span className="text-base-content/50">User ID:</span> {player.userId ?? "—"}
-					</div>
-					<div>
-						<span className="text-base-content/50">Stripe ID:</span>{" "}
-						{player.stripeCustomerId ?? "—"}
-					</div>
-				</div>
+		<form
+			// onSubmit rather than action: an action-prop submission resets the form (ADR 0005).
+			onSubmit={(e) => {
+				e.preventDefault()
+				const formData = new FormData(e.currentTarget)
+				startTransition(() => formAction(formData))
+			}}
+			className="space-y-6"
+			noValidate
+		>
+			<div className="rounded-lg bg-muted p-4">
+				<h3 className="mb-2 text-sm font-semibold text-muted-foreground">Account Info</h3>
+				<DetailList>
+					<DetailItem label="ID" value={player.id} />
+					<DetailItem label="Last Season" value={player.lastSeason} />
+					<DetailItem label="GG ID" value={player.ggId} />
+					<DetailItem label="User ID" value={player.userId} />
+					<DetailItem label="Stripe ID" value={player.stripeCustomerId} />
+				</DetailList>
 			</div>
 
-			{validationError && (
-				<div className="alert alert-error mb-4">
-					<span>{validationError}</span>
-				</div>
+			{state.status === "error" && (
+				<Alert variant="destructive">
+					<AlertDescription>{state.message}</AlertDescription>
+				</Alert>
 			)}
 
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-				<fieldset className="fieldset">
-					<legend className="fieldset-legend">
-						First Name <span className="text-error">*</span>
-					</legend>
-					<input
-						type="text"
-						className="input input-bordered w-full"
-						value={firstName}
-						onChange={(e) => setFirstName(e.target.value)}
-						disabled={isSubmitting}
+			<fieldset disabled={isPending} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+				<Field data-invalid={!!errors.firstName}>
+					<FieldLabel htmlFor="firstName">
+						First Name
+						<span className="text-destructive">*</span>
+					</FieldLabel>
+					<Input
+						id="firstName"
+						aria-invalid={!!errors.firstName}
+						name="firstName"
+						defaultValue={player.firstName}
 					/>
-				</fieldset>
-
-				<fieldset className="fieldset">
-					<legend className="fieldset-legend">
-						Last Name <span className="text-error">*</span>
-					</legend>
-					<input
-						type="text"
-						className="input input-bordered w-full"
-						value={lastName}
-						onChange={(e) => setLastName(e.target.value)}
-						disabled={isSubmitting}
+					<FieldError>{errors.firstName}</FieldError>
+				</Field>
+				<Field data-invalid={!!errors.lastName}>
+					<FieldLabel htmlFor="lastName">
+						Last Name
+						<span className="text-destructive">*</span>
+					</FieldLabel>
+					<Input
+						id="lastName"
+						aria-invalid={!!errors.lastName}
+						name="lastName"
+						defaultValue={player.lastName}
 					/>
-				</fieldset>
-
-				<fieldset className="fieldset">
-					<legend className="fieldset-legend">
-						Email <span className="text-error">*</span>
-					</legend>
-					<input
+					<FieldError>{errors.lastName}</FieldError>
+				</Field>
+				<Field data-invalid={!!errors.email}>
+					<FieldLabel htmlFor="email">
+						Email
+						<span className="text-destructive">*</span>
+					</FieldLabel>
+					<Input
+						id="email"
+						aria-invalid={!!errors.email}
+						name="email"
 						type="email"
-						className="input input-bordered w-full"
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
-						disabled={isSubmitting}
+						defaultValue={player.email}
 					/>
-				</fieldset>
-
-				<fieldset className="fieldset">
-					<legend className="fieldset-legend">Phone Number</legend>
-					<input
+					<FieldError>{errors.email}</FieldError>
+				</Field>
+				<Field data-invalid={!!errors.phoneNumber}>
+					<FieldLabel htmlFor="phoneNumber">Phone Number</FieldLabel>
+					<Input
+						id="phoneNumber"
+						aria-invalid={!!errors.phoneNumber}
+						name="phoneNumber"
 						type="tel"
-						className="input input-bordered w-full"
-						value={phoneNumber}
-						onChange={(e) => setPhoneNumber(e.target.value)}
-						disabled={isSubmitting}
+						defaultValue={player.phoneNumber ?? ""}
 					/>
-				</fieldset>
-
-				<fieldset className="fieldset">
-					<legend className="fieldset-legend">GHIN</legend>
-					<input
-						type="text"
-						className="input input-bordered w-full"
-						value={ghin}
+					<FieldError>{errors.phoneNumber}</FieldError>
+				</Field>
+				<Field data-invalid={!!errors.ghin}>
+					<FieldLabel htmlFor="ghin">GHIN</FieldLabel>
+					<Input
+						id="ghin"
+						aria-invalid={!!errors.ghin}
+						name="ghin"
 						maxLength={8}
-						onChange={(e) => setGhin(e.target.value)}
-						disabled={isSubmitting}
+						defaultValue={player.ghin ?? ""}
 					/>
-				</fieldset>
-
-				<fieldset className="fieldset">
-					<legend className="fieldset-legend">Tee</legend>
-					<select
-						className="select select-bordered w-full"
-						value={tee}
-						onChange={(e) => setTee(e.target.value)}
-						disabled={isSubmitting}
-					>
-						<option value="Club">Club</option>
-						<option value="Gold">Gold</option>
-					</select>
-				</fieldset>
-
-				<fieldset className="fieldset">
-					<legend className="fieldset-legend">Birth Date</legend>
-					<input
+					<FieldError>{errors.ghin}</FieldError>
+				</Field>
+				<Field data-invalid={!!errors.tee}>
+					<FieldLabel htmlFor="tee">Tee</FieldLabel>
+					<Select name="tee" defaultValue={player.tee}>
+						<SelectTrigger id="tee" className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="Club">Club</SelectItem>
+							<SelectItem value="Gold">Gold</SelectItem>
+						</SelectContent>
+					</Select>
+					<FieldError>{errors.tee}</FieldError>
+				</Field>
+				<Field data-invalid={!!errors.birthDate}>
+					<FieldLabel htmlFor="birthDate">Birth Date</FieldLabel>
+					<Input
+						id="birthDate"
+						aria-invalid={!!errors.birthDate}
+						name="birthDate"
 						type="date"
-						className="input input-bordered w-full"
-						value={birthDate}
-						onChange={(e) => setBirthDate(e.target.value)}
-						disabled={isSubmitting}
+						defaultValue={player.birthDate ?? ""}
 					/>
-				</fieldset>
+					<FieldError>{errors.birthDate}</FieldError>
+				</Field>
+				<Field orientation="horizontal" className="sm:pt-7">
+					<Checkbox id="isMember" name="isMember" defaultChecked={player.isMember} />
+					<FieldLabel htmlFor="isMember">Active member</FieldLabel>
+				</Field>
+			</fieldset>
 
-				<fieldset className="fieldset">
-					<legend className="fieldset-legend">Member</legend>
-					<label className="flex cursor-pointer items-center gap-3">
-						<input
-							type="checkbox"
-							className="toggle toggle-primary"
-							checked={isMember}
-							onChange={(e) => setIsMember(e.target.checked)}
-							disabled={isSubmitting}
-						/>
-						<span className="text-sm">{isMember ? "Active member" : "Not a member"}</span>
-					</label>
-				</fieldset>
-			</div>
-
-			<div className="mt-6 flex justify-end gap-2">
-				<button type="button" className="btn" onClick={onCancel} disabled={isSubmitting}>
-					Cancel
-				</button>
-				<button type="submit" className="btn btn-primary" disabled={isSubmitting || !isDirty}>
-					{isSubmitting ? (
-						<>
-							<span className="loading loading-spinner loading-sm"></span>
-							Saving...
-						</>
-					) : (
-						"Save"
-					)}
-				</button>
+			<div className="flex justify-end gap-2">
+				<Button variant="outline" asChild>
+					<Link href="/club/players">Cancel</Link>
+				</Button>
+				<Button type="submit" disabled={isPending}>
+					{isPending ? "Saving..." : "Save"}
+				</Button>
 			</div>
 		</form>
 	)
