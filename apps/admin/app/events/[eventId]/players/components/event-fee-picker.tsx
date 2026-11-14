@@ -163,7 +163,7 @@ export function EventFeePicker({ fees, players, onChange, eventDate }: EventFeeP
 							<span>Transaction Fee:</span>
 							<span>{formatCurrency(amountDue.transactionFee)}</span>
 						</div>
-						<div className="flex justify-between text-accent font-bold border-t border-base-300 pt-1">
+						<div className="flex justify-between text-primary font-bold border-t border-base-300 pt-1">
 							<span>Total Due:</span>
 							<span>{formatCurrency(amountDue.total)}</span>
 						</div>

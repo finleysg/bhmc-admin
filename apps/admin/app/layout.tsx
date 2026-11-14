@@ -1,6 +1,7 @@
 import "./global.css"
 
 import type { Metadata } from "next"
+import { Montserrat, Open_Sans } from "next/font/google"
 import { Toaster } from "sonner"
 
 import { PostHogErrorProvider } from "../components/posthog-provider"
@@ -8,6 +9,18 @@ import { AuthProvider } from "../lib/auth-context"
 import Breadcrumb from "./components/breadcrumb"
 import Header from "./components/header"
 import { SuperuserGuard } from "./components/superuser-guard"
+
+const montserrat = Montserrat({
+	subsets: ["latin"],
+	variable: "--font-heading",
+	display: "swap",
+})
+
+const openSans = Open_Sans({
+	subsets: ["latin"],
+	variable: "--font-body",
+	display: "swap",
+})
 
 export const metadata: Metadata = {
 	title: "BHMC Event Administration",
@@ -34,7 +47,7 @@ document.documentElement.setAttribute('data-theme', theme);
 					}}
 				/>
 			</head>
-			<body>
+			<body className={`${montserrat.variable} ${openSans.variable}`}>
 				<PostHogErrorProvider>
 					<AuthProvider>
 						<SuperuserGuard>

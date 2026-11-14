@@ -2,12 +2,12 @@
 
 Status: Agreed direction. The finance track, results examples, and the Golf Genius API docs will refine details within slices.
 
-Sources: [Administrative Inventory](admin-inventory.md), [glossary](../CONTEXT.md), [ADR 0001](adr/0001-django-retains-schema-and-auth.md).
+Sources: [Administrative Inventory](admin-inventory.md), [glossary](../CONTEXT.md), [ADR 0001](adr/0001-django-retains-schema-and-auth.md), [ADR 0002](adr/0002-admin-ui-matches-public-site.md).
 
 ## Direction
 
 - **Replace Django admin; don't retire Django yet.** This plan delivers administration that never requires Django admin. Retiring Django is a separate follow-on project (see [Follow-on](#follow-on-django-retirement)). Until then Django owns the schema and auth, so new tables arrive through Django migrations ([ADR 0001](adr/0001-django-retains-schema-and-auth.md)).
-- **Rebuild `apps/admin` in place, slice by slice.** Each slice replaces its old screens when it ships. Areas that already work (membership, club documents, photos, announcements, club player management) are re-skinned, not rewritten.
+- **Rebuild `apps/admin` in place, slice by slice.** Each slice replaces its old screens when it ships. Areas that already work (membership, club documents, photos, announcements, club player management) are re-skinned, not rewritten. New and touched screens use shadcn/Tailwind, matching the public site with a jade primary ([ADR 0002](adr/0002-admin-ui-matches-public-site.md)).
 - **API first.** Business rules, permissions, validation, transactions, and audit history live in the NestJS API. Both the UI and the CLI are clients of it.
 - **The CLI is for agents acting on the operator's behalf.** It authenticates with the operator's own token. Commands that change data default to a dry-run preview and require `--apply`. The audit record notes when an action came from the CLI. CLI commands ship with each slice; nothing requires the CLI to operate the club.
 - **Someone else can take over.** A capable club leader who is not the current admin, and not a developer, must be able to run a season. Manual steps are written into the workflows, rules about which steps apply to which event are encoded rather than remembered, and settings are editable in the admin.
