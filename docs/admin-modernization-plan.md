@@ -144,6 +144,7 @@ Golf Genius's API supports writing roster players and reading data (tee sheets, 
 
 ### 9. Club Content and Records
 
+- **Close the Django write gap.** Django's document, static document, document code, tag, photo, and page content endpoints use `IsAuthenticatedOrReadOnly`, so any signed-in member can write to them directly. The NestJS role guard ([ADR 0003](adr/0003-admin-roles.md)) never sees these calls. Require Club Admin for writes, either in Django or by moving the endpoints to NestJS.
 - Simple maintenance screens for tags, aces, board members, Dam Cup, fee types, and policies.
 - Page content and club document codes: edit content for records that already exist. Creating new records is development work coordinated with public-site code.
 - Read-only access to contact messages.
