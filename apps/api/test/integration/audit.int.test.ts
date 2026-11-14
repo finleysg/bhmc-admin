@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm"
 
-import { adminAuditEntry, authUserGroups, player } from "../../src/database"
+import { adminAuditEntry, authGroup, authUserGroups, player } from "../../src/database"
 import { createTestApp, TestApp } from "./support/app"
-import { closeTestDb, resetDb, testDb } from "./support/db"
+import { closeTestDb, openConnection, resetDb, testDb } from "./support/db"
 import { createUser, TestUser } from "./support/factories"
 
 const auditEntries = () => testDb().select().from(adminAuditEntry)
@@ -141,6 +141,75 @@ describe("admin audit record", () => {
 			expect(res.ok).toBe(false)
 			const [row] = await testDb().select().from(player).where(eq(player.id, target.playerId))
 			expect(row.phoneNumber).toBeNull()
+		})
+	})
+
+	/**
+	 * Another admin's transaction (a second connection) holds the row and changes it.
+	 * The app's request starts while that change is uncommitted, so it must wait for
+	 * the commit and diff against the committed value, not an earlier read.
+	 */
+	describe("concurrent changes", () => {
+		const blockedWhile = async (lockAndChange: string[], request: () => Promise<unknown>) => {
+			const other = await openConnection()
+			try {
+				await other.beginTransaction()
+				for (const statement of lockAndChange) await other.query(statement)
+				const pending = request()
+				// Give the request time to reach the database and block on the lock.
+				await new Promise((r) => setTimeout(r, 300))
+				await other.commit()
+				await pending
+			} finally {
+				await other.end()
+			}
+		}
+
+		it("audits a player update that restores a value another admin just changed", async () => {
+			const target = await createUser()
+			await testDb().update(player).set({ phoneNumber: "A" }).where(eq(player.id, target.playerId))
+
+			await blockedWhile(
+				[
+					`SELECT id FROM register_player WHERE id = ${target.playerId} FOR UPDATE`,
+					`UPDATE register_player SET phone_number = 'B' WHERE id = ${target.playerId}`,
+				],
+				() =>
+					t
+						.http(clubAdmin)
+						.patch(`/registration/players/${target.playerId}`)
+						.send({ phoneNumber: "A" })
+						.then((res) => expect(res.status).toBe(200)),
+			)
+
+			expect((await auditEntries()).map((e) => e.changes)).toEqual([
+				{ phoneNumber: { before: "B", after: "A" } },
+			])
+		})
+
+		it("audits a role revoke for a role another admin just granted", async () => {
+			const target = await createUser()
+			const [group] = await testDb()
+				.select()
+				.from(authGroup)
+				.where(eq(authGroup.name, "Event Admin"))
+
+			await blockedWhile(
+				[
+					`SELECT id FROM auth_user WHERE id = ${target.id} FOR UPDATE`,
+					`INSERT INTO auth_user_groups (user_id, group_id) VALUES (${target.id}, ${group.id})`,
+				],
+				() =>
+					t
+						.http(clubAdmin)
+						.put(`/players/${target.playerId}/roles`)
+						.send({ roles: [] })
+						.then((res) => expect(res.status).toBe(200)),
+			)
+
+			expect((await auditEntries()).map((e) => e.changes)).toEqual([
+				{ roles: { before: ["event-admin"], after: [] } },
+			])
 		})
 	})
 })

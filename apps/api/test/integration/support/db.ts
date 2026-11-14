@@ -13,6 +13,15 @@ export function testDb(): MySql2Database {
 	return db
 }
 
+/**
+ * A separate connection, for tests that play a second admin: open a
+ * transaction, lock rows, change them, and commit while the app waits.
+ * The caller must `end()` it.
+ */
+export function openConnection(): Promise<mysql.Connection> {
+	return mysql.createConnection({ uri: process.env.DATABASE_URL })
+}
+
 export async function closeTestDb(): Promise<void> {
 	await pool?.end()
 	pool = undefined

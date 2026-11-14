@@ -23,6 +23,14 @@ export class PlayerRolesRepository {
 		return { userId: row.userId, isSuperuser: Boolean(row.isSuperuser) }
 	}
 
+	/**
+	 * Locks the user's auth_user row (SELECT … FOR UPDATE) for the rest of `tx`,
+	 * so concurrent role changes for one user run one at a time.
+	 */
+	async lockUser(tx: MySql2Database, userId: number): Promise<void> {
+		await tx.select({ id: authUser.id }).from(authUser).where(eq(authUser.id, userId)).for("update")
+	}
+
 	async findGroupNames(userId: number, db: MySql2Database = this.drizzle.db): Promise<string[]> {
 		const rows = await db
 			.select({ name: authGroup.name })

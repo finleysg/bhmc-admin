@@ -44,6 +44,8 @@ export class PlayerRolesService {
 		const { userId } = await this.findAccount(playerId)
 
 		await this.drizzle.db.transaction(async (tx) => {
+			// Lock first: a plain read here is a snapshot and can miss a concurrent change.
+			await this.repository.lockUser(tx, userId)
 			const before = await this.rolesOf(userId, tx)
 			await this.repository.replaceMemberships(
 				tx,

@@ -301,8 +301,6 @@ export class PlayerService {
 	 * step. The change and its audit entry are written in one transaction.
 	 */
 	async updatePlayer(playerId: number, data: PlayerUpdate, context: AuditContext): Promise<Player> {
-		const playerRow = await this.repository.findPlayerById(playerId)
-		const before = toPlayer(playerRow)
 		const dbData: Record<string, unknown> = { ...data }
 		if (data.isMember !== undefined) {
 			dbData.isMember = data.isMember ? 1 : 0
@@ -320,18 +318,19 @@ export class PlayerService {
 			authData.email = data.email
 			authData.username = data.email
 		}
-		const userId = playerRow.userId
 
 		await this.drizzle.db.transaction(async (tx) => {
+			// Read "before" under a row lock, so a concurrent update can't leave a stale diff.
+			const playerRow = await this.repository.lockPlayer(tx, playerId)
 			await this.repository.updatePlayer(playerId, dbData, tx)
-			if (userId && Object.keys(authData).length > 0) {
-				await this.authUserRepository.update(userId, authData, tx)
+			if (playerRow.userId && Object.keys(authData).length > 0) {
+				await this.authUserRepository.update(playerRow.userId, authData, tx)
 			}
 			await this.audit.record(tx, context, {
 				operation: "player.update",
 				entityType: "player",
 				entityId: playerId,
-				before: { ...before },
+				before: { ...toPlayer(playerRow) },
 				after: { ...data },
 			})
 		})

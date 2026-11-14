@@ -57,6 +57,18 @@ export class RegistrationRepository {
 		return p
 	}
 
+	/**
+	 * Reads the player with SELECT … FOR UPDATE inside `tx`: returns the latest
+	 * committed row and holds it until the transaction ends.
+	 */
+	async lockPlayer(tx: MySql2Database, id: number): Promise<PlayerRow> {
+		const [p] = await tx.select().from(player).where(eq(player.id, id)).limit(1).for("update")
+		if (!p) {
+			throw new Error(`No player found with id ${id}`)
+		}
+		return p
+	}
+
 	async findPlayersByIds(ids: number[]): Promise<PlayerRow[]> {
 		if (!ids.length) return []
 		return await this.drizzle.db.select().from(player).where(inArray(player.id, ids))
