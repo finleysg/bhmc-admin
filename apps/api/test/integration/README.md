@@ -1,6 +1,6 @@
 # API integration tests
 
-Local-only tests that boot the real NestJS `AppModule` against a real MySQL database (`bhmc_test`) and call it over HTTP. They are not part of `pnpm test` or CI.
+Local-only tests that boot the real NestJS `AppModule` against a real MySQL database (`bhmc_test`) and call it over HTTP. They are not part of `pnpm test` or CI. They replace the old browser end-to-end suite ([ADR 0004](../../../../docs/adr/0004-api-integration-tests-replace-e2e.md)).
 
 ## Running
 
