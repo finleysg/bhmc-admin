@@ -8,7 +8,7 @@ import { PostHogErrorProvider } from "../components/posthog-provider"
 import { AuthProvider } from "../lib/auth-context"
 import Breadcrumb from "./components/breadcrumb"
 import Header from "./components/header"
-import { SuperuserGuard } from "./components/superuser-guard"
+import { AdminRoleGuard } from "./components/admin-role-guard"
 
 const montserrat = Montserrat({
 	subsets: ["latin"],
@@ -50,13 +50,13 @@ document.documentElement.setAttribute('data-theme', theme);
 			<body className={`${montserrat.variable} ${openSans.variable}`}>
 				<PostHogErrorProvider>
 					<AuthProvider>
-						<SuperuserGuard>
+						<AdminRoleGuard>
 							<div className="min-h-screen bg-base-100 text-base-content">
 								<Header />
 								<Breadcrumb />
 								<main className="container bg-base-200 mx-auto p-4">{children}</main>
 							</div>
-						</SuperuserGuard>
+						</AdminRoleGuard>
 					</AuthProvider>
 				</PostHogErrorProvider>
 				<Toaster />

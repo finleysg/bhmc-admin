@@ -1,11 +1,11 @@
 import { Body, Controller, Inject, Logger, Param, ParseIntPipe, Post } from "@nestjs/common"
 import type { AdminRegistration } from "@repo/domain/types"
 
-import { Admin } from "../../auth"
+import { EventAdmin } from "../../auth"
 import { AdminRegistrationService } from "../services/admin-registration.service"
 
 @Controller("registration")
-@Admin()
+@EventAdmin()
 export class TestRegistrationController {
 	private readonly logger = new Logger(TestRegistrationController.name)
 

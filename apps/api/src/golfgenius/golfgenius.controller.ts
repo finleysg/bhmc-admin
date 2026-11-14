@@ -15,7 +15,7 @@ import {
 	UseInterceptors,
 } from "@nestjs/common"
 
-import { Admin } from "../auth"
+import { EventAdmin } from "../auth"
 
 import { EventsService } from "../events/events.service"
 import { LogIntegrationInterceptor } from "./interceptors/log-integration.interceptor"
@@ -31,7 +31,7 @@ import { ScoresImportService } from "./services/scores-import.service"
 import { TeesheetImportService } from "./services/teesheet-import.service"
 
 @Controller("golfgenius")
-@Admin()
+@EventAdmin()
 export class GolfgeniusController {
 	private readonly logger = new Logger(GolfgeniusController.name)
 

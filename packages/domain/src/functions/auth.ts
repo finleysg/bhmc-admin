@@ -1,4 +1,4 @@
-import { DjangoUserResponse, DjangoUser } from "../types"
+import { ADMIN_ROLE_GROUPS, AdminRole, DjangoUserResponse, DjangoUser } from "../types"
 
 // Helper function to transform API response
 export function transformDjangoUser(response: DjangoUserResponse): DjangoUser {
@@ -13,5 +13,12 @@ export function transformDjangoUser(response: DjangoUserResponse): DjangoUser {
 		ghin: response.ghin,
 		birthDate: response.birth_date,
 		playerId: response.player_id,
+		groups: response.groups.map((g) => g.name),
 	}
+}
+
+/** True if the user holds any of the roles. Superusers hold every role. */
+export function hasAdminRole(user: DjangoUser, roles: AdminRole[]): boolean {
+	if (user.isSuperuser) return true
+	return roles.some((role) => user.groups.includes(ADMIN_ROLE_GROUPS[role]))
 }

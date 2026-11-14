@@ -2,7 +2,7 @@
 
 Status: Agreed direction. The finance track, results examples, and the Golf Genius API docs will refine details within slices.
 
-Sources: [Administrative Inventory](admin-inventory.md), [glossary](../CONTEXT.md), [ADR 0001](adr/0001-django-retains-schema-and-auth.md), [ADR 0002](adr/0002-admin-ui-matches-public-site.md).
+Sources: [Administrative Inventory](admin-inventory.md), [glossary](../CONTEXT.md), [ADR 0001](adr/0001-django-retains-schema-and-auth.md), [ADR 0002](adr/0002-admin-ui-matches-public-site.md), [ADR 0003](adr/0003-admin-roles.md).
 
 ## Direction
 
@@ -16,10 +16,12 @@ Sources: [Administrative Inventory](admin-inventory.md), [glossary](../CONTEXT.m
 
 ## Shared foundations (Release 1)
 
-- **Roles:** **Event Admin** and **Club Admin**, stored as Django auth groups and enforced on every API endpoint. This replaces today's browser-only superuser check. Group membership is managed in club player management. One person may hold both roles.
-- **Audit record:** a single admin audit table (who, when, operation, event, client UI or CLI, JSON diff), written in the same transaction as the change. It is not fire-and-forget.
-- **Settings:** a database-backed Settings page for operational values: alert lead times, stale-state thresholds, and alert recipients.
-- **Alerts:** a daily scheduled email job. It sends nothing on days with no findings.
+- **Roles:** **Event Admin** and **Club Admin**, stored as Django auth groups and enforced on every API endpoint. This replaces today's browser-only superuser check. Group membership is managed in club player management. One person may hold both roles. Superusers pass every role check. Both groups start empty ([ADR 0003](adr/0003-admin-roles.md)).
+- **Audit record:** a single admin audit table (who, when, operation, event, client UI or CLI, JSON diff), written in the same transaction as the change. It is not fire-and-forget. The diff holds before and after values of the changed fields only, and is kept indefinitely. Only new and touched write endpoints are audited; existing endpoints are not retrofitted.
+- **Settings:** a database-backed Settings page for operational values: alert lead times, stale-state thresholds, and alert recipients. Stored as key/value rows (JSON value, updated by, updated at). Each key's type and default are defined in API code, so adding a setting needs no migration. Recipients are plain email addresses. Club Admin edits Settings.
+- **Alerts:** a daily scheduled email job at 7am Central. It sends one digest per recipient covering all their findings, and sends nothing on days with no findings.
+- **CLI shell:** `apps/cli` signs in through Django's login endpoint, stores the operator's token locally, prints structured JSON, and follows the dry-run/`--apply` convention. It starts with `whoami`; each slice adds its own commands.
+- New tables (audit, settings) are added through Django migrations in the `core` app.
 
 ## Step 0 — Finance Track (parallel, starting now)
 

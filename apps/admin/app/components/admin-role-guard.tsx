@@ -7,8 +7,8 @@ import { useAuth } from "../../lib/auth-context"
 
 const UNGUARDED_ROUTES = ["/sign-in", "/restricted"]
 
-export function SuperuserGuard({ children }: { children: React.ReactNode }) {
-	const { isAuthenticated, isSuperuser, isLoading } = useAuth()
+export function AdminRoleGuard({ children }: { children: React.ReactNode }) {
+	const { isAuthenticated, hasAdminAccess, isLoading } = useAuth()
 	const router = useRouter()
 	const pathname = usePathname()
 
@@ -18,13 +18,13 @@ export function SuperuserGuard({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		if (isLoading || isUnguarded) return
-		if (isAuthenticated && !isSuperuser) {
+		if (isAuthenticated && !hasAdminAccess) {
 			router.replace("/restricted")
 		}
-	}, [isAuthenticated, isSuperuser, isLoading, isUnguarded, router])
+	}, [isAuthenticated, hasAdminAccess, isLoading, isUnguarded, router])
 
 	if (isLoading) return <>{children}</>
-	if (!isUnguarded && isAuthenticated && !isSuperuser) return null
+	if (!isUnguarded && isAuthenticated && !hasAdminAccess) return null
 
 	return <>{children}</>
 }

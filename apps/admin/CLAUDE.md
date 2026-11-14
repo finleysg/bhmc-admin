@@ -15,6 +15,6 @@ This project defines the UX for player and club administration + reporting.
 ### Auth
 
 - **Credentials**: email and password protected accounts, owned by the Django backend
-- **Roles**: roles defined in Django
-  - Admin (staff users)
-  - Super Admin (superusers) — required for admin site access
+- **Roles**: Django auth groups, enforced by the API ([ADR 0003](../../docs/adr/0003-admin-roles.md))
+  - Event Admin and Club Admin — either one admits a user to the admin site
+  - Superusers hold every role

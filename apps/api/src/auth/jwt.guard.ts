@@ -11,10 +11,11 @@ import {
 	UnauthorizedException,
 } from "@nestjs/common"
 import { Reflector } from "@nestjs/core"
-import { DjangoUser } from "@repo/domain/types"
+import { hasAdminRole } from "@repo/domain/functions"
+import { AdminRole, DjangoUser } from "@repo/domain/types"
 
 import { IS_PUBLIC_KEY } from "./decorators/public.decorator"
-import { ROLES_KEY, Role } from "./decorators/roles.decorator"
+import { ROLES_KEY } from "./decorators/roles.decorator"
 import { DjangoAuthService } from "./django-auth.service"
 import { AuthenticatedRequest } from "."
 
@@ -61,8 +62,7 @@ export class JwtAuthGuard implements CanActivate {
 		// Attach user to request
 		req.user = user
 
-		// Check role hierarchy
-		const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+		const requiredRoles = this.reflector.getAllAndOverride<AdminRole[]>(ROLES_KEY, [
 			context.getHandler(),
 			context.getClass(),
 		])
@@ -72,19 +72,8 @@ export class JwtAuthGuard implements CanActivate {
 			return true
 		}
 
-		// Check role hierarchy
-		if (requiredRoles.includes("superadmin")) {
-			if (!user.isSuperuser) {
-				throw new ForbiddenException("Superadmin access required")
-			}
-		} else if (requiredRoles.includes("admin")) {
-			if (!user.isStaff && !user.isSuperuser) {
-				throw new ForbiddenException("Admin access required")
-			}
-		} else {
-			// Unknown role - deny by default
-			this.logger.error(`Unknown role(s) required: ${requiredRoles.join(", ")}`)
-			throw new ForbiddenException("Invalid role configuration")
+		if (!hasAdminRole(user, requiredRoles)) {
+			throw new ForbiddenException(`Requires role: ${requiredRoles.join(" or ")}`)
 		}
 
 		return true

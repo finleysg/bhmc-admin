@@ -11,7 +11,7 @@ import {
 } from "@nestjs/common"
 import type { EventSessionWithFees } from "@repo/domain/types"
 
-import { Admin } from "../auth"
+import { EventAdmin } from "../auth"
 import { EventsService } from "./events.service"
 
 interface SessionFeeOverrideDto {
@@ -34,7 +34,7 @@ interface UpdateSessionDto {
 }
 
 @Controller("events/:eventId/sessions")
-@Admin()
+@EventAdmin()
 export class SessionsController {
 	constructor(@Inject(EventsService) private readonly service: EventsService) {}
 

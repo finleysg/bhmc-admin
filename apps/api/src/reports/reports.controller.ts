@@ -2,15 +2,16 @@ import type { Response } from "express"
 
 import { Controller, Get, Inject, Param, ParseIntPipe, Res } from "@nestjs/common"
 
-import { Admin } from "../auth"
+import { ClubAdmin, EventAdmin } from "../auth"
 import { ReportsService } from "./reports.service"
 
 @Controller("reports")
-@Admin()
+@EventAdmin()
 export class ReportsController {
 	constructor(@Inject(ReportsService) private readonly reports: ReportsService) {}
 
 	@Get(":season/membership")
+	@ClubAdmin()
 	async getMembershipReport(@Param("season", ParseIntPipe) season: number) {
 		return this.reports.getMembershipReport(season)
 	}
@@ -33,11 +34,13 @@ export class ReportsController {
 	}
 
 	@Get("events/:eventId/membership-report")
+	@ClubAdmin()
 	async getMembershipEventReport(@Param("eventId", ParseIntPipe) eventId: number) {
 		return this.reports.getMembershipEventReport(eventId)
 	}
 
 	@Get("events/:eventId/membership-report/excel")
+	@ClubAdmin()
 	async getMembershipReportExcel(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Res() res: Response,

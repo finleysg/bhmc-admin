@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common"
 import { ClubEvent, PayoutSummary } from "@repo/domain/types"
 
-import { Admin } from "../auth"
+import { EventAdmin } from "../auth"
 import { MailService } from "../mail/mail.service"
 
 import { EventsRepository } from "./events.repository"
@@ -21,7 +21,7 @@ import { toEvent } from "./mappers"
 import { EventsService } from "./events.service"
 
 @Controller("events")
-@Admin()
+@EventAdmin()
 export class EventsController {
 	private readonly logger = new Logger(EventsController.name)
 

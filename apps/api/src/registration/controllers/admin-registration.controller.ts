@@ -32,7 +32,7 @@ import type {
 	DropPlayersResponse,
 } from "@repo/domain/types"
 
-import { Admin, type AuthenticatedRequest, Roles } from "../../auth"
+import { ClubAdmin, EventAdmin, type AuthenticatedRequest, Roles } from "../../auth"
 import { EventsService } from "../../events"
 import { AdminRegistrationService } from "../services/admin-registration.service"
 import { ChangeLogService } from "../services/changelog.service"
@@ -58,7 +58,7 @@ function buildRefundRequests(paidFees: { id: number; paymentId: number }[]): Ref
 }
 
 @Controller("registration")
-@Admin()
+@EventAdmin()
 export class AdminRegistrationController {
 	private readonly logger = new Logger(AdminRegistrationController.name)
 
@@ -74,6 +74,7 @@ export class AdminRegistrationController {
 	) {}
 
 	@Get("players")
+	@Roles("event-admin", "club-admin")
 	async playerQuery(@Query() query: PlayerQuery) {
 		const obj: PlayerQuery = {
 			searchText: query.searchText,
@@ -89,11 +90,13 @@ export class AdminRegistrationController {
 	}
 
 	@Get("players/:playerId")
+	@Roles("event-admin", "club-admin")
 	async getPlayer(@Param("playerId", ParseIntPipe) playerId: number): Promise<Player> {
 		return this.adminRegisterService.findPlayerById(playerId)
 	}
 
 	@Patch("players/:playerId")
+	@ClubAdmin()
 	async updatePlayer(
 		@Param("playerId", ParseIntPipe) playerId: number,
 		@Body() body: PlayerUpdate,

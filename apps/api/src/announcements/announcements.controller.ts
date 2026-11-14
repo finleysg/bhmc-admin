@@ -10,12 +10,12 @@ import {
 	Put,
 } from "@nestjs/common"
 
-import { Admin } from "../auth"
+import { ClubAdmin } from "../auth"
 import { AnnouncementsService } from "./announcements.service"
 import type { AnnouncementResponse } from "./mappers"
 
 @Controller("announcements")
-@Admin()
+@ClubAdmin()
 export class AnnouncementsController {
 	constructor(@Inject(AnnouncementsService) private readonly service: AnnouncementsService) {}
 

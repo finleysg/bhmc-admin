@@ -38,6 +38,7 @@ const createDjangoUser = (overrides: Partial<DjangoUser> = {}): DjangoUser => ({
 	lastName: "Doe",
 	email: "john@example.com",
 	playerId: 1,
+	groups: [],
 	isStaff: false,
 	isActive: true,
 	isSuperuser: false,

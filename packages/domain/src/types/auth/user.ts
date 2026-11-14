@@ -9,6 +9,7 @@ export interface DjangoUserResponse {
 	ghin: string | null
 	birth_date: string | null
 	player_id: number
+	groups: { name: string }[]
 }
 
 export interface DjangoUser {
@@ -22,4 +23,14 @@ export interface DjangoUser {
 	ghin: string | null
 	birthDate: string | null
 	playerId: number
+	/** Django auth group names */
+	groups: string[]
+}
+
+/** Admin roles, each backed by a Django auth group (ADR 0003). */
+export type AdminRole = "event-admin" | "club-admin"
+
+export const ADMIN_ROLE_GROUPS: Record<AdminRole, string> = {
+	"event-admin": "Event Admin",
+	"club-admin": "Club Admin",
 }

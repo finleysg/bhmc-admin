@@ -74,6 +74,7 @@ export class DjangoAuthService {
 			ghin: null,
 			birthDate: null,
 			playerId: 0,
+			groups: [],
 		}
 	}
 

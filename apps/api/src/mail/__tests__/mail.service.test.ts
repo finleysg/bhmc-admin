@@ -312,6 +312,7 @@ describe("MailService", () => {
 				ghin: null,
 				birthDate: null,
 				playerId: 1,
+				groups: [],
 			}
 
 			const event = createClubEvent()
@@ -388,6 +389,7 @@ describe("MailService", () => {
 			ghin: null,
 			birthDate: null,
 			playerId: 1,
+			groups: [],
 		}
 
 		const createFee = (
