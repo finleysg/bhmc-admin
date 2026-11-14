@@ -21,6 +21,11 @@
 	--color-primary-content: hsl(164 40% 10%);
 	--color-secondary: hsl(215 20% 65%);
 	--color-secondary-content: hsl(222 47% 11%);
+	/* Match the shadcn dark surfaces (card, background, muted) so legacy panels don't look grey on navy. */
+	--color-base-100: hsl(226 47% 11%);
+	--color-base-200: hsl(226 40% 14%);
+	--color-base-300: hsl(226 33% 17%);
+	--color-base-content: hsl(226 20% 88%);
 }
 
 /* The theme toggle sets data-theme; "business" is the dark theme. */

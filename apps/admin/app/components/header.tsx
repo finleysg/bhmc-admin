@@ -34,14 +34,11 @@ export default function Header() {
 	const title = getTitle(pathname)
 
 	return (
-		<header className="navbar bg-base-300 container mx-auto pl-4 pr-4">
-			<div className="flex-1">
-				<h1 className="text-xl font-bold">{title}</h1>
-			</div>
-			<div className="flex-none">
+		<header className="sticky top-0 z-40 border-b bg-header text-header-foreground">
+			<div className="container mx-auto flex min-h-14 items-center gap-4 px-4">
+				<h1 className="flex-1 font-heading text-xl font-bold">{title}</h1>
 				<ThemeToggle />
 			</div>
-			{/* <Breadcrumb /> */}
 		</header>
 	)
 }

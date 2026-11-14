@@ -23,7 +23,7 @@ export default async function EditPlayerPage({
 	])
 
 	return (
-		<div className="mx-auto min-h-screen max-w-3xl space-y-6 md:py-8">
+		<div className="mx-auto max-w-3xl space-y-6 md:py-8">
 			<Card>
 				<CardHeader>
 					<CardTitle className="font-heading text-xl">

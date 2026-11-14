@@ -51,10 +51,10 @@ document.documentElement.setAttribute('data-theme', theme);
 				<PostHogErrorProvider>
 					<AuthProvider>
 						<AdminRoleGuard>
-							<div className="min-h-screen bg-base-100 text-base-content">
+							<div className="min-h-screen bg-background text-foreground">
 								<Header />
 								<Breadcrumb />
-								<main className="container bg-base-200 mx-auto p-4">{children}</main>
+								<main className="container mx-auto p-4">{children}</main>
 							</div>
 						</AdminRoleGuard>
 					</AuthProvider>

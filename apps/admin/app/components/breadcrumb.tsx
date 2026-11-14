@@ -2,6 +2,16 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Fragment } from "react"
+
+import {
+	Breadcrumb as BreadcrumbRoot,
+	BreadcrumbItem as BreadcrumbEntry,
+	BreadcrumbLink,
+	BreadcrumbList,
+	BreadcrumbPage,
+	BreadcrumbSeparator,
+} from "@/components/shadcn/breadcrumb"
 
 interface BreadcrumbItem {
 	label: string
@@ -83,22 +93,25 @@ export default function Breadcrumb() {
 	const breadcrumbs = generateBreadcrumbs(pathname)
 
 	return (
-		<div className="bg-base-200 container mx-auto pl-4 pr-4">
-			<div className="breadcrumbs text-sm">
-				<ul>
-					{breadcrumbs.map((crumb, index) => (
-						<li key={index}>
+		<BreadcrumbRoot className="container mx-auto px-4 pt-4">
+			<BreadcrumbList>
+				{breadcrumbs.map((crumb, index) => (
+					<Fragment key={index}>
+						{index > 0 && <BreadcrumbSeparator />}
+						<BreadcrumbEntry>
 							{crumb.href ? (
-								<Link href={crumb.href} className="text-primary hover:text-primary-focus">
-									{crumb.label}
-								</Link>
+								<BreadcrumbLink asChild>
+									<Link href={crumb.href} className="text-primary hover:underline">
+										{crumb.label}
+									</Link>
+								</BreadcrumbLink>
 							) : (
-								<span className="text-base-content font-semibold">{crumb.label}</span>
+								<BreadcrumbPage className="font-semibold">{crumb.label}</BreadcrumbPage>
 							)}
-						</li>
-					))}
-				</ul>
-			</div>
-		</div>
+						</BreadcrumbEntry>
+					</Fragment>
+				))}
+			</BreadcrumbList>
+		</BreadcrumbRoot>
 	)
 }

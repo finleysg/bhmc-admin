@@ -25,7 +25,7 @@ export default async function PlayersPage({
 	}
 
 	return (
-		<div className="mx-auto min-h-screen max-w-5xl space-y-6 md:py-8">
+		<div className="mx-auto max-w-5xl space-y-6 md:py-8">
 			<PlayerSearch query={q} membersOnly={membersOnly} />
 			{players ? (
 				<PlayerTable players={players} />
