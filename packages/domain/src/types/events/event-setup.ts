@@ -31,3 +31,20 @@ export interface CopyEventInput {
 	/** Defaults to the source event's name. */
 	name?: string
 }
+
+/**
+ * One group of registration slots: a tee time (tee-time events) or a hole and
+ * wave (shotgun events, starting order 0 = A, 1 = B) on one course.
+ */
+export interface SlotGroup {
+	courseId: number
+	courseName: string
+	holeId: number
+	holeNumber: number
+	startingOrder: number
+	/** Counts of the group's slots by status code (A, P, R, X, U). */
+	statusCounts: Record<string, number>
+	/** Slots with a player in them, whatever their status. */
+	filled: number
+	total: number
+}

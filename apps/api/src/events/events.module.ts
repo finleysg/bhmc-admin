@@ -7,10 +7,16 @@ import { EventsController } from "./events.controller"
 import { EventsRepository } from "./events.repository"
 import { EventsService } from "./events.service"
 import { SessionsController } from "./sessions.controller"
-import { EventSetupController, EventSetupLookupsController } from "./setup/event-setup.controller"
+import {
+	EventSetupController,
+	EventSetupLookupsController,
+	SlotSetupController,
+} from "./setup/event-setup.controller"
 import { EventSetupRepository } from "./setup/event-setup.repository"
 import { EventSetupService } from "./setup/event-setup.service"
 import { SessionSetupService } from "./setup/session-setup.service"
+import { SlotSetupRepository } from "./setup/slot-setup.repository"
+import { SlotSetupService } from "./setup/slot-setup.service"
 
 @Module({
 	imports: [DatabaseModule, CoursesModule, MailModule],
@@ -19,6 +25,7 @@ import { SessionSetupService } from "./setup/session-setup.service"
 		SessionsController,
 		EventSetupController,
 		EventSetupLookupsController,
+		SlotSetupController,
 	],
 	providers: [
 		EventsRepository,
@@ -26,6 +33,8 @@ import { SessionSetupService } from "./setup/session-setup.service"
 		EventSetupRepository,
 		EventSetupService,
 		SessionSetupService,
+		SlotSetupRepository,
+		SlotSetupService,
 	],
 	exports: [EventsRepository, EventsService],
 })

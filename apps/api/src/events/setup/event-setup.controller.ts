@@ -10,12 +10,13 @@ import {
 	Post,
 	Put,
 } from "@nestjs/common"
-import type { ClubEvent, Course, EventFee, FeeType } from "@repo/domain/types"
+import type { ClubEvent, Course, EventFee, FeeType, SlotGroup } from "@repo/domain/types"
 
 import { Audit, type AuditContext } from "../../audit"
 import { EventAdmin } from "../../auth"
 
 import { EventSetupService } from "./event-setup.service"
+import { SlotSetupService } from "./slot-setup.service"
 
 /** The event workspace: event settings, courses, and event fees (Event Admin). */
 @Controller("events")
@@ -104,5 +105,54 @@ export class EventSetupLookupsController {
 	@Get("courses")
 	async listCourses(): Promise<Course[]> {
 		return this.service.listCourses()
+	}
+}
+
+/** Registration slots for events where players choose their slot (Event Admin). */
+@Controller("events/:eventId/slots")
+@EventAdmin()
+export class SlotSetupController {
+	constructor(@Inject(SlotSetupService) private readonly service: SlotSetupService) {}
+
+	@Get()
+	async listGroups(@Param("eventId", ParseIntPipe) eventId: number): Promise<SlotGroup[]> {
+		return this.service.listGroups(eventId)
+	}
+
+	@Post()
+	async create(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Audit() audit: AuditContext,
+	): Promise<SlotGroup[]> {
+		return this.service.createSlots(eventId, audit)
+	}
+
+	@Post("tee-times")
+	async appendTeeTime(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Audit() audit: AuditContext,
+	): Promise<SlotGroup[]> {
+		return this.service.appendTeeTime(eventId, audit)
+	}
+
+	@Delete("groups/:holeId/:startingOrder")
+	async deleteGroup(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Param("holeId", ParseIntPipe) holeId: number,
+		@Param("startingOrder", ParseIntPipe) startingOrder: number,
+		@Audit() audit: AuditContext,
+	): Promise<SlotGroup[]> {
+		return this.service.deleteGroup(eventId, holeId, startingOrder, audit)
+	}
+
+	@Put("groups/:holeId/:startingOrder/status")
+	async setGroupStatus(
+		@Param("eventId", ParseIntPipe) eventId: number,
+		@Param("holeId", ParseIntPipe) holeId: number,
+		@Param("startingOrder", ParseIntPipe) startingOrder: number,
+		@Body() body: unknown,
+		@Audit() audit: AuditContext,
+	): Promise<SlotGroup[]> {
+		return this.service.setGroupStatus(eventId, holeId, startingOrder, body, audit)
 	}
 }
