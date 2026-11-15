@@ -1,49 +1,27 @@
-"use client"
+import { notFound } from "next/navigation"
 
-import { useCallback, useEffect, useState } from "react"
-import { useParams } from "next/navigation"
 import type { ClubEvent } from "@repo/domain/types"
 
 import LinkCard from "@/components/link-card"
-import { useAuth } from "@/lib/auth-context"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { PageLayout } from "@/components/ui/page-layout"
+import { apiGet } from "@/lib/server-api"
 
-export default function EventHubPage() {
-	const { isAuthenticated: signedIn, isLoading: isPending } = useAuth()
-	const params = useParams()
-	const eventId = params.eventId as string
-	const [event, setEvent] = useState<ClubEvent | null>(null)
+export default async function EventHubPage({ params }: { params: Promise<{ eventId: string }> }) {
+	const eventId = Number((await params).eventId)
+	if (!Number.isInteger(eventId)) notFound()
 
-	const fetchEvent = useCallback(async () => {
-		try {
-			const res = await fetch(`/api/events/${eventId}`)
-			if (res.ok) {
-				const data = (await res.json()) as ClubEvent
-				setEvent(data)
-			}
-		} catch {
-			// Event data is optional for the hub — cards still render
-		}
-	}, [eventId])
-
-	useEffect(() => {
-		if (signedIn && eventId) {
-			void fetchEvent()
-		}
-	}, [signedIn, eventId, fetchEvent])
-
-	if (isPending) {
-		return <LoadingSpinner size="lg" />
-	}
-
-	if (!signedIn) {
-		return null // Middleware will redirect
-	}
+	const event = await apiGet<ClubEvent>(`/events/${eventId}/setup`)
 
 	return (
 		<PageLayout maxWidth="5xl">
-			<div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+			<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+				<LinkCard
+					title="Event Setup"
+					description="Edit the event's settings, courses, and fees."
+					href={`/events/${eventId}/setup`}
+					icon={"⚙️"}
+				/>
+
 				<LinkCard
 					title="Player Management"
 					description="Manage player change requests (add, move, drop, etc)."
@@ -100,7 +78,7 @@ export default function EventHubPage() {
 					icon={"📋"}
 				/>
 
-				{event && !event.canChoose && (
+				{!event.canChoose && (
 					<LinkCard
 						title="Session Configuration"
 						description="Configure sessions and fee overrides for this event."

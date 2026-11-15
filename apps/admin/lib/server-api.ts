@@ -57,5 +57,6 @@ export async function apiRequest<T>(
 		body: body === undefined ? undefined : JSON.stringify(body),
 	})
 	if (!res.ok) return { ok: false, status: res.status, message: await errorMessage(res) }
+	if (res.status === 204) return { ok: true, data: undefined as T }
 	return { ok: true, data: (await res.json()) as T }
 }

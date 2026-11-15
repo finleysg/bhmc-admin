@@ -93,9 +93,9 @@ describe("ContentEditor", () => {
 		expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
 	})
 
-	it("passes initial value to editor", () => {
+	it("loads the initial value without reporting it as an edit", () => {
 		render(<ContentEditor {...defaultProps} />)
-		expect(mockEditor.commands.setContent).toHaveBeenCalledWith("# Hello")
+		expect(mockEditor.commands.setContent).toHaveBeenCalledWith("# Hello", { emitUpdate: false })
 	})
 
 	it("calls onChange when editor updates", () => {
@@ -163,7 +163,7 @@ describe("ContentEditor", () => {
 
 		rerender(<ContentEditor {...defaultProps} value="# Updated" />)
 
-		expect(mockEditor.commands.setContent).toHaveBeenCalledWith("# Updated")
+		expect(mockEditor.commands.setContent).toHaveBeenCalledWith("# Updated", { emitUpdate: false })
 	})
 
 	it("does not re-set content for internal changes", () => {
@@ -188,7 +188,7 @@ describe("ContentEditor", () => {
 
 		rerender(<ContentEditor {...defaultProps} disabled={true} />)
 
-		expect(mockEditor.setEditable).toHaveBeenCalledWith(false)
+		expect(mockEditor.setEditable).toHaveBeenCalledWith(false, false)
 	})
 
 	it("opens link dialog via toolbar callback", () => {

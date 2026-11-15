@@ -70,12 +70,13 @@ export function ContentEditor({
 		},
 	})
 
-	// Set initial content once editor is ready
+	// Set initial content once editor is ready. Loading content is not an edit, so it
+	// must not emit an update: onChange would report re-serialized markdown as a change.
 	const initialized = useRef(false)
 	useEffect(() => {
 		if (editor && !initialized.current) {
 			initialized.current = true
-			editor.commands.setContent(value)
+			editor.commands.setContent(value, { emitUpdate: false })
 			lastEmittedRef.current = value
 		}
 	}, [editor, value])
@@ -85,14 +86,14 @@ export function ContentEditor({
 		if (!editor || !initialized.current) return
 		if (value !== lastEmittedRef.current) {
 			lastEmittedRef.current = value
-			editor.commands.setContent(value)
+			editor.commands.setContent(value, { emitUpdate: false })
 		}
 	}, [editor, value])
 
-	// Update editable state when disabled changes
+	// Update editable state when disabled changes, without emitting an update (not an edit)
 	useEffect(() => {
 		if (editor) {
-			editor.setEditable(!disabled)
+			editor.setEditable(!disabled, false)
 		}
 	}, [editor, disabled])
 
