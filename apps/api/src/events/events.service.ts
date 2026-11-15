@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, sql } from "drizzle-orm"
+import { and, eq, inArray, sql } from "drizzle-orm"
 
 import { BadRequestException, Inject, Injectable, Logger } from "@nestjs/common"
 import { validateClubEvent } from "@repo/domain/functions"
@@ -14,14 +14,7 @@ import {
 } from "@repo/domain/types"
 
 import { CoursesService } from "../courses"
-import {
-	DrizzleService,
-	player,
-	registrationSlot,
-	toDbString,
-	tournament,
-	tournamentResult,
-} from "../database"
+import { DrizzleService, player, toDbString, tournament, tournamentResult } from "../database"
 import {
 	mapPreparedPointsToTournamentPointsInsert,
 	mapPreparedResultsToTournamentResultInsert,
@@ -255,65 +248,6 @@ export class EventsService {
 		const feeRows = await this.repository.findSessionFeesBySessionIds(sessionIds)
 
 		return sessionRows.map((s) => toEventSessionWithFees(s, feeRows))
-	}
-
-	async createSession(
-		eventId: number,
-		data: { name: string; registrationLimit: number; displayOrder: number },
-		feeOverrides: { eventFeeId: number; amount: number }[],
-	): Promise<EventSessionWithFees> {
-		const session = await this.repository.createSession({ eventId, ...data })
-
-		for (const override of feeOverrides) {
-			await this.repository.createSessionFee({
-				sessionId: session.id,
-				eventFeeId: override.eventFeeId,
-				amount: override.amount.toFixed(2),
-			})
-		}
-
-		const feeRows = await this.repository.findSessionFeesBySessionIds([session.id])
-		return toEventSessionWithFees(session, feeRows)
-	}
-
-	async updateSession(
-		sessionId: number,
-		data: { name?: string; registrationLimit?: number; displayOrder?: number },
-		feeOverrides?: { eventFeeId: number; amount: number }[],
-	): Promise<EventSessionWithFees> {
-		const session = await this.repository.updateSession(sessionId, data)
-
-		if (feeOverrides) {
-			await this.repository.deleteSessionFeesBySessionId(sessionId)
-			for (const override of feeOverrides) {
-				await this.repository.createSessionFee({
-					sessionId,
-					eventFeeId: override.eventFeeId,
-					amount: override.amount.toFixed(2),
-				})
-			}
-		}
-
-		const feeRows = await this.repository.findSessionFeesBySessionIds([sessionId])
-		return toEventSessionWithFees(session, feeRows)
-	}
-
-	async deleteSession(sessionId: number): Promise<void> {
-		const session = await this.repository.findSessionById(sessionId)
-
-		// Guard: refuse if slots reference this session
-		const [result] = await this.drizzle.db
-			.select({ count: count() })
-			.from(registrationSlot)
-			.where(eq(registrationSlot.sessionId, sessionId))
-		if (result.count > 0) {
-			throw new BadRequestException(
-				`Cannot delete session "${session.name}" — ${result.count} registration(s) exist`,
-			)
-		}
-
-		await this.repository.deleteSessionFeesBySessionId(sessionId)
-		await this.repository.deleteSession(sessionId)
 	}
 
 	private truncateField(value: string | null, maxLen: number, field: string): string | null {

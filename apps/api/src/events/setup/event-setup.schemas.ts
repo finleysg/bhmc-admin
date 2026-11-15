@@ -110,6 +110,20 @@ export const eventFeeSchema = z
 
 export type EventFeeValues = z.infer<typeof eventFeeSchema>
 
+export const sessionSchema = z
+	.object({
+		name: z.string().trim().min(1).max(60),
+		registrationLimit: z.number().int().min(1),
+		displayOrder: z.number().int().min(1),
+		feeOverrides: z.array(z.object({ eventFeeId: z.number().int().positive(), amount: money })),
+	})
+	.refine((s) => new Set(s.feeOverrides.map((f) => f.eventFeeId)).size === s.feeOverrides.length, {
+		path: ["feeOverrides"],
+		message: "A session can override each event fee only once",
+	})
+
+export type SessionValues = z.infer<typeof sessionSchema>
+
 export const eventCoursesSchema = z.object({
 	courseIds: z.array(z.number().int().positive()),
 })

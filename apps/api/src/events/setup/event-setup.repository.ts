@@ -174,7 +174,7 @@ export class EventSetupRepository {
 		return row.count
 	}
 
-	// events_eventsession (copied with an event)
+	// events_eventsession
 	async findSessions(tx: Db, eventId: number): Promise<EventSessionRow[]> {
 		return tx.select().from(eventSession).where(eq(eventSession.eventId, eventId))
 	}
@@ -191,5 +191,61 @@ export class EventSetupRepository {
 
 	async insertSessionFee(tx: Db, values: Omit<EventSessionFeeRow, "id">): Promise<void> {
 		await tx.insert(eventSessionFee).values(values)
+	}
+
+	async lockSession(
+		tx: Db,
+		eventId: number,
+		sessionId: number,
+	): Promise<EventSessionRow | undefined> {
+		const [row] = await tx
+			.select()
+			.from(eventSession)
+			.where(and(eq(eventSession.id, sessionId), eq(eventSession.eventId, eventId)))
+			.for("update")
+		return row
+	}
+
+	async updateSession(
+		tx: Db,
+		sessionId: number,
+		values: Pick<EventSessionRow, "name" | "registrationLimit" | "displayOrder">,
+	): Promise<void> {
+		await tx.update(eventSession).set(values).where(eq(eventSession.id, sessionId))
+	}
+
+	async deleteSession(tx: Db, sessionId: number): Promise<void> {
+		await tx.delete(eventSessionFee).where(eq(eventSessionFee.sessionId, sessionId))
+		await tx.delete(eventSession).where(eq(eventSession.id, sessionId))
+	}
+
+	/** Another session of the event already uses this name or display order. */
+	async sessionConflict(
+		tx: Db,
+		eventId: number,
+		values: { name: string; displayOrder: number },
+		exceptId?: number,
+	): Promise<"name" | "displayOrder" | undefined> {
+		const others = (await this.findSessions(tx, eventId)).filter((s) => s.id !== exceptId)
+		if (others.some((s) => s.name === values.name)) return "name"
+		if (others.some((s) => s.displayOrder === values.displayOrder)) return "displayOrder"
+		return undefined
+	}
+
+	async updateSessionFee(tx: Db, sessionFeeId: number, amount: string): Promise<void> {
+		await tx.update(eventSessionFee).set({ amount }).where(eq(eventSessionFee.id, sessionFeeId))
+	}
+
+	async deleteSessionFees(tx: Db, sessionFeeIds: number[]): Promise<void> {
+		if (sessionFeeIds.length === 0) return
+		await tx.delete(eventSessionFee).where(inArray(eventSessionFee.id, sessionFeeIds))
+	}
+
+	async countSlotsInSession(tx: Db, sessionId: number): Promise<number> {
+		const [row] = await tx
+			.select({ count: count() })
+			.from(registrationSlot)
+			.where(eq(registrationSlot.sessionId, sessionId))
+		return row.count
 	}
 }

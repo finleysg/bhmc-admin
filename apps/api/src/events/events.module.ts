@@ -10,6 +10,7 @@ import { SessionsController } from "./sessions.controller"
 import { EventSetupController, EventSetupLookupsController } from "./setup/event-setup.controller"
 import { EventSetupRepository } from "./setup/event-setup.repository"
 import { EventSetupService } from "./setup/event-setup.service"
+import { SessionSetupService } from "./setup/session-setup.service"
 
 @Module({
 	imports: [DatabaseModule, CoursesModule, MailModule],
@@ -19,7 +20,13 @@ import { EventSetupService } from "./setup/event-setup.service"
 		EventSetupController,
 		EventSetupLookupsController,
 	],
-	providers: [EventsRepository, EventsService, EventSetupRepository, EventSetupService],
+	providers: [
+		EventsRepository,
+		EventsService,
+		EventSetupRepository,
+		EventSetupService,
+		SessionSetupService,
+	],
 	exports: [EventsRepository, EventsService],
 })
 export class EventsModule {}

@@ -19,8 +19,6 @@ import {
 	type EventFeeRow,
 	type EventSessionRow,
 	type EventSessionFeeRow,
-	type EventSessionInsert,
-	type EventSessionFeeInsert,
 	type FeeTypeRow,
 	type RoundRow,
 	type TournamentRow,
@@ -169,46 +167,11 @@ export class EventsRepository {
 			.orderBy(eventSession.displayOrder)
 	}
 
-	async findSessionById(id: number): Promise<EventSessionRow> {
-		const [row] = await this.drizzle.db
-			.select()
-			.from(eventSession)
-			.where(eq(eventSession.id, id))
-			.limit(1)
-		if (!row) {
-			throw new Error(`No event session found with id ${id}`)
-		}
-		return row
-	}
-
 	async findSessionFeesBySessionIds(sessionIds: number[]): Promise<EventSessionFeeRow[]> {
 		if (sessionIds.length === 0) return []
 		return this.drizzle.db
 			.select()
 			.from(eventSessionFee)
 			.where(inArray(eventSessionFee.sessionId, sessionIds))
-	}
-
-	async createSession(data: EventSessionInsert): Promise<EventSessionRow> {
-		const [result] = await this.drizzle.db.insert(eventSession).values(data)
-		return this.findSessionById(Number(result.insertId))
-	}
-
-	async updateSession(id: number, data: Partial<EventSessionInsert>): Promise<EventSessionRow> {
-		await this.drizzle.db.update(eventSession).set(data).where(eq(eventSession.id, id))
-		return this.findSessionById(id)
-	}
-
-	async deleteSession(id: number): Promise<void> {
-		await this.drizzle.db.delete(eventSession).where(eq(eventSession.id, id))
-	}
-
-	// events_eventsessionfee
-	async createSessionFee(data: EventSessionFeeInsert): Promise<void> {
-		await this.drizzle.db.insert(eventSessionFee).values(data)
-	}
-
-	async deleteSessionFeesBySessionId(sessionId: number): Promise<void> {
-		await this.drizzle.db.delete(eventSessionFee).where(eq(eventSessionFee.sessionId, sessionId))
 	}
 }
