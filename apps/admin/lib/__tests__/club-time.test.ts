@@ -1,4 +1,10 @@
-import { fromClubLocalInput, toClubLocalInput } from "../club-time"
+import {
+	daysBetween,
+	fromClubLocalInput,
+	shiftByClubDays,
+	shiftLocalInput,
+	toClubLocalInput,
+} from "../club-time"
 
 describe("club time", () => {
 	it.each([
@@ -13,5 +19,25 @@ describe("club time", () => {
 	it("treats empty values as not set", () => {
 		expect(fromClubLocalInput("")).toBeNull()
 		expect(toClubLocalInput(null)).toBe("")
+	})
+
+	it("counts whole days between dates", () => {
+		expect(daysBetween("2026-04-01", "2027-03-31")).toBe(364)
+		expect(daysBetween("2027-03-31", "2026-04-01")).toBe(-364)
+		expect(daysBetween("", "2027-03-31")).toBeNull()
+	})
+
+	it("moves a club-time value by whole days, keeping the time across a daylight saving change", () => {
+		expect(shiftLocalInput("2027-02-24T09:00", 35)).toBe("2027-03-31T09:00")
+		expect(fromClubLocalInput(shiftLocalInput("2027-02-24T09:00", 35))).toBe(
+			"2027-03-31T14:00:00.000Z",
+		)
+		expect(shiftLocalInput("", 7)).toBe("")
+	})
+
+	it("moves an API datetime by whole days at the same club time", () => {
+		// 9:00 AM CST on Feb 24 → 9:00 AM CDT on Mar 31
+		expect(shiftByClubDays("2027-02-24T15:00:00.000Z", 35)).toBe("2027-03-31T14:00:00.000Z")
+		expect(shiftByClubDays(null, 35)).toBeNull()
 	})
 })

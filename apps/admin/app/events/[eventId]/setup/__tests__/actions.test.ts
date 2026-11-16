@@ -1,9 +1,8 @@
 import { revalidatePath } from "next/cache"
 
-import { createEvent } from "../../../new/actions"
+import { createEvent, listEventsForCopy, loadEventForCopy } from "../../../new/actions"
 import {
 	appendTeeTime,
-	copyEvent,
 	createSlots,
 	deleteEventFee,
 	deleteSession,
@@ -148,6 +147,41 @@ describe("event workspace actions", () => {
 				"http://api.test/events",
 				expect.objectContaining({ method: "POST" }),
 			)
+			expect(sentBody(fetchMock)).not.toHaveProperty("copyFromEventId")
+		})
+
+		it("sends the event to copy courses, fees, and sessions from", async () => {
+			fetchMock.mockReturnValueOnce(respond(201, { id: 42 }))
+			const data = settingsForm()
+			data.set("copyFromEventId", "670")
+
+			await expect(createEvent(idle, data)).rejects.toThrow("redirect:/events/42/setup")
+			expect(sentBody(fetchMock)).toMatchObject({ name: "Weeknight Stroke", copyFromEventId: 670 })
+		})
+	})
+
+	describe("copy-from-event reads", () => {
+		it("lists a season's events in date order", async () => {
+			fetchMock.mockReturnValueOnce(
+				respond(200, [
+					{ id: 2, startDate: "2026-05-06" },
+					{ id: 1, startDate: "2026-04-01" },
+				]),
+			)
+
+			const events = await listEventsForCopy(2026)
+
+			expect(fetchMock.mock.calls[0]![0]).toBe("http://api.test/events?season=2026")
+			expect(events.map((e) => e.id)).toEqual([1, 2])
+		})
+
+		it("loads an event's setup, or null when it cannot", async () => {
+			fetchMock.mockReturnValueOnce(respond(200, { id: 670 }))
+			expect(await loadEventForCopy(670)).toEqual({ id: 670 })
+			expect(fetchMock.mock.calls[0]![0]).toBe("http://api.test/events/670/setup")
+
+			fetchMock.mockReturnValueOnce(respond(404, { message: "Event 9 not found" }))
+			expect(await loadEventForCopy(9)).toBeNull()
 		})
 	})
 
@@ -346,34 +380,6 @@ describe("event workspace actions", () => {
 			expect(await createSlots(7)).toEqual({
 				status: "error",
 				message: "Cannot create slots after registration has opened",
-			})
-		})
-	})
-
-	describe("copyEvent", () => {
-		it("copies the event and opens the copy's workspace", async () => {
-			fetchMock.mockReturnValueOnce(respond(201, { id: 99 }))
-
-			await expect(
-				copyEvent(7, idle, form({ startDate: "2027-04-07", name: " " })),
-			).rejects.toThrow("redirect:/events/99/setup")
-			expect(sentBody(fetchMock)).toEqual({ startDate: "2027-04-07" })
-		})
-
-		it("requires a date", async () => {
-			const result = await copyEvent(7, idle, form({ startDate: "", name: "Opener" }))
-			expect(result.fieldErrors).toHaveProperty("startDate")
-			expect(fetchMock).not.toHaveBeenCalled()
-		})
-
-		it("returns the API's refusal of a duplicate name", async () => {
-			fetchMock.mockReturnValueOnce(
-				respond(409, { message: 'An event named "Opener" already exists on 2027-04-07' }),
-			)
-			const result = await copyEvent(7, idle, form({ startDate: "2027-04-07", name: "Opener" }))
-			expect(result).toEqual({
-				status: "error",
-				message: 'An event named "Opener" already exists on 2027-04-07',
 			})
 		})
 	})

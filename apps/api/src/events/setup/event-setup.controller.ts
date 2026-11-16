@@ -43,15 +43,6 @@ export class EventSetupController {
 		return this.service.updateEvent(eventId, body, audit)
 	}
 
-	@Post(":eventId/copy")
-	async copy(
-		@Param("eventId", ParseIntPipe) eventId: number,
-		@Body() body: unknown,
-		@Audit() audit: AuditContext,
-	): Promise<ClubEvent> {
-		return this.service.copyEvent(eventId, body, audit)
-	}
-
 	@Put(":eventId/courses")
 	async setCourses(
 		@Param("eventId", ParseIntPipe) eventId: number,

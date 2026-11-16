@@ -13,7 +13,6 @@ jest.mock("../components/courses-panel", () => ({ CoursesPanel: () => null }))
 jest.mock("../components/fees-panel", () => ({ FeesPanel: () => null }))
 jest.mock("../components/slots-panel", () => ({ SlotsPanel: () => null }))
 jest.mock("../components/sessions-panel", () => ({ SessionsPanel: () => null }))
-jest.mock("../components/copy-event-dialog", () => ({ CopyEventDialog: () => null }))
 
 function serve(event: Partial<ClubEvent>) {
 	jest

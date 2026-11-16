@@ -1,22 +1,28 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/shadcn/card"
 
-import { EventSettingsForm } from "../components/event-settings-form"
+import { NewEventForm } from "./components/new-event-form"
 
-import { createEvent } from "./actions"
+export default async function NewEventPage({
+	searchParams,
+}: {
+	searchParams: Promise<{ season?: string }>
+}) {
+	// The season chosen on the events list; the new event starts in it.
+	const requested = Number((await searchParams).season)
+	const season = Number.isInteger(requested) && requested > 0 ? requested : new Date().getFullYear()
 
-export default function NewEventPage() {
 	return (
 		<div className="mx-auto max-w-4xl space-y-6 md:py-8">
 			<Card>
 				<CardHeader>
 					<CardTitle className="font-heading text-xl">New event</CardTitle>
 					<CardDescription>
-						After you create the event, add its courses, fees, sessions, and slots in the event
-						workspace. To start from an existing event, copy it instead.
+						After you create the event, finish its courses, slots, fees, and sessions in the event
+						workspace.
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<EventSettingsForm action={createEvent} submitLabel="Create event" cancelHref="/events" />
+					<NewEventForm season={season} />
 				</CardContent>
 			</Card>
 		</div>

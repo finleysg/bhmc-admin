@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { z } from "zod"
 
 import { FeeRestrictionChoices, type EventFeeInput } from "@repo/domain/types"
@@ -222,39 +221,4 @@ export async function setSlotGroupStatus(
 		status === "U" ? "Group disabled" : "Group enabled",
 		{ status },
 	)
-}
-
-const copySchema = z.object({
-	startDate: z.iso.date("Enter a date"),
-	name: z
-		.string()
-		.trim()
-		.max(100, "At most 100 characters")
-		.transform((v) => v || undefined),
-})
-
-export type CopyField = "startDate" | "name"
-
-/** Copies the event to a new date, then opens the copy in the workspace. */
-export async function copyEvent(
-	eventId: number,
-	_prev: FormState<CopyField>,
-	formData: FormData,
-): Promise<FormState<CopyField>> {
-	const parsed = copySchema.safeParse({
-		startDate: formData.get("startDate") ?? "",
-		name: formData.get("name") ?? "",
-	})
-	if (!parsed.success) {
-		const fieldErrors: Partial<Record<CopyField, string>> = {}
-		for (const issue of parsed.error.issues) {
-			fieldErrors[issue.path[0] as CopyField] ??= issue.message
-		}
-		return { status: "error", message: "Please fix the highlighted fields.", fieldErrors }
-	}
-
-	const result = await apiRequest<{ id: number }>(`/events/${eventId}/copy`, "POST", parsed.data)
-	if (!result.ok) return { status: "error", message: result.message }
-
-	redirect(`/events/${result.data.id}/setup`)
 }

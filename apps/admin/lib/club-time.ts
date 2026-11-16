@@ -44,3 +44,32 @@ export function fromClubLocalInput(local: string): string | null {
 	utc = wall - (wallClockMs(utc) - utc)
 	return new Date(utc).toISOString()
 }
+
+const DAY_MS = 86_400_000
+
+/** Whole days from one ISO date ("2027-05-05") to another; null if either is missing. */
+export function daysBetween(from: string, to: string): number | null {
+	const a = Date.parse(`${from}T00:00:00Z`)
+	const b = Date.parse(`${to}T00:00:00Z`)
+	return Number.isNaN(a) || Number.isNaN(b) ? null : Math.round((b - a) / DAY_MS)
+}
+
+/**
+ * Moves a `datetime-local` value ("2027-04-28T09:00", club time) by whole days,
+ * keeping its wall-clock time. Empty stays empty.
+ */
+export function shiftLocalInput(local: string, days: number): string {
+	if (!local) return local
+	const wall = Date.parse(`${local}:00Z`)
+	if (Number.isNaN(wall)) return local
+	return new Date(wall + days * DAY_MS).toISOString().slice(0, 16)
+}
+
+/**
+ * Moves a UTC datetime from the API by whole days, keeping its wall-clock time
+ * in club time (so 9:00 AM stays 9:00 AM across a daylight saving change).
+ */
+export function shiftByClubDays(iso: string | null | undefined, days: number): string | null {
+	if (!iso) return null
+	return fromClubLocalInput(shiftLocalInput(toClubLocalInput(iso), days))
+}

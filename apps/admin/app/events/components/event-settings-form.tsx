@@ -139,16 +139,22 @@ export interface ExtraTab {
 
 export function EventSettingsForm({
 	event,
+	newEventDefaults,
 	action,
 	submitLabel,
 	cancelHref,
 	extraTabs = [],
+	copyFromEventId,
 }: {
 	event?: ClubEvent
+	/** For a new event (no `event`): values that replace the built-in starting values, such as the season. */
+	newEventDefaults?: Partial<ClubEvent>
 	action: SettingsAction
 	submitLabel: string
 	cancelHref?: string
 	extraTabs?: ExtraTab[]
+	/** Submitted with the form, so creating the event also copies this event's courses, fees, and sessions. */
+	copyFromEventId?: number
 }) {
 	const [state, formAction, isPending] = useActionState(
 		async (prev: FormState<SettingsField>, formData: FormData) => {
@@ -168,7 +174,7 @@ export function EventSettingsForm({
 			: "event"
 	const onSettingsTab = TABS.includes(tab as Tab)
 	const [notes, setNotes] = useState(event?.notes ?? "")
-	const values = event ?? NEW_EVENT
+	const values = event ?? { ...NEW_EVENT, ...newEventDefaults }
 	const errors = state.fieldErrors ?? {}
 
 	const field = (name: SettingsField) => ({ name, errors })
@@ -208,6 +214,7 @@ export function EventSettingsForm({
 					</Alert>
 				)}
 
+				{copyFromEventId && <input type="hidden" name="copyFromEventId" value={copyFromEventId} />}
 				<fieldset disabled={isPending}>
 					{/* Every panel stays mounted so its fields are always submitted. */}
 					<TabsContent

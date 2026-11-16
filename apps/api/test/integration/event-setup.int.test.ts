@@ -343,19 +343,9 @@ describe("event workspace", () => {
 		})
 	})
 
-	describe("copying an event", () => {
-		it("copies settings, courses, fees, sessions, and session fees to the new date", async () => {
-			const evt = await createEvent({
-				name: "Spring Scramble",
-				startDate: "2027-03-03",
-				registrationType: "M",
-				// 9:00 AM Central (CST) on 2027-02-24
-				signupStart: "2027-02-24 15:00:00.000000",
-				signupEnd: "2027-03-02 23:00:00.000000",
-				ggId: "gg-123",
-				portalUrl: "https://portal",
-				status: "C",
-			})
+	describe("creating an event from another event", () => {
+		async function sourceWithSession() {
+			const evt = await createEvent({ name: "Spring Scramble", startDate: "2027-03-03" })
 			const [fee] = await testDb().select().from(eventFee).where(eq(eventFee.eventId, evt.id))
 			const [sessionRow] = await testDb()
 				.insert(eventSession)
@@ -363,55 +353,73 @@ describe("event workspace", () => {
 			await testDb()
 				.insert(eventSessionFee)
 				.values({ sessionId: sessionRow.insertId, eventFeeId: fee.id, amount: "12.00" })
+			return { evt, fee }
+		}
+
+		it("creates the event with the source's courses, fees, sessions, and session fees", async () => {
+			const { evt, fee } = await sourceWithSession()
 
 			const res = await t
 				.http(eventAdmin)
-				.post(`/events/${evt.id}/copy`)
-				.send({ startDate: "2027-04-07" })
+				.post("/events")
+				.send({
+					...settings({ name: "Spring Scramble", startDate: "2027-04-07" }),
+					copyFromEventId: evt.id,
+				})
 
 			expect(res.status).toBe(201)
-			const copy = res.body as {
+			const created = res.body as {
 				id: number
 				courses: { id: number }[]
 				eventFees: { id: number; amount: number }[]
 				sessions: { name: string; feeOverrides: { eventFeeId: number; amount: number }[] }[]
 			}
-			expect(copy).toMatchObject({
-				name: "Spring Scramble",
-				startDate: "2027-04-07",
-				season: 2027,
-				status: "S",
-				ggId: null,
-				portalUrl: null,
-				// still 9:00 AM Central, now CDT
-				signupStart: "2027-03-31T14:00:00.000Z",
-			})
-			expect(copy.courses.map((c) => c.id)).toEqual([evt.courseId])
-			expect(copy.eventFees).toEqual([expect.objectContaining({ amount: 15 })])
-			expect(copy.eventFees[0].id).not.toBe(fee.id)
-			expect(copy.sessions).toEqual([
+			expect(created).toMatchObject({ name: "Spring Scramble", startDate: "2027-04-07" })
+			expect(created.courses.map((c) => c.id)).toEqual([evt.courseId])
+			expect(created.eventFees).toEqual([expect.objectContaining({ amount: 15 })])
+			expect(created.eventFees[0].id).not.toBe(fee.id)
+			expect(created.sessions).toEqual([
 				expect.objectContaining({
 					name: "Early",
-					feeOverrides: [expect.objectContaining({ eventFeeId: copy.eventFees[0].id, amount: 12 })],
+					feeOverrides: [
+						expect.objectContaining({ eventFeeId: created.eventFees[0].id, amount: 12 }),
+					],
 				}),
 			])
+			expect(
+				await testDb().select().from(eventFee).where(eq(eventFee.eventId, evt.id)),
+			).toHaveLength(1)
 			expect((await auditEntries())[0]).toMatchObject({
-				operation: "event.copy",
-				entityId: copy.id,
+				operation: "event.create",
+				entityId: created.id,
 				changes: { copiedFromEventId: { before: null, after: evt.id } },
 			})
 		})
 
-		it("refuses a copy whose name already exists on that date and leaves nothing behind", async () => {
-			const evt = await createEvent({ name: "Opener", startDate: "2027-04-07" })
+		it("rejects an unknown event to copy from and creates nothing", async () => {
+			const res = await t
+				.http(eventAdmin)
+				.post("/events")
+				.send({ ...settings(), copyFromEventId: 9999 })
+
+			expect(res.status).toBe(400)
+			expect(await testDb().select().from(event)).toEqual([])
+		})
+
+		it("leaves nothing behind when the copy's name is taken on that date", async () => {
+			const { evt } = await sourceWithSession()
 
 			const res = await t
 				.http(eventAdmin)
-				.post(`/events/${evt.id}/copy`)
-				.send({ startDate: "2027-04-07" })
+				.post("/events")
+				.send({
+					...settings({ name: "Spring Scramble", startDate: "2027-03-03" }),
+					copyFromEventId: evt.id,
+				})
 
 			expect(res.status).toBe(409)
 			expect(await testDb().select().from(event)).toHaveLength(1)
+			expect(await testDb().select().from(eventSession)).toHaveLength(1)
 		})
 	})
 

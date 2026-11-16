@@ -128,9 +128,9 @@ export const eventCoursesSchema = z.object({
 	courseIds: z.array(z.number().int().positive()),
 })
 
-export const copyEventSchema = z.object({
-	startDate: z.iso.date(),
-	name: z.string().trim().min(1).max(100).optional(),
+/** On create: the event whose courses, fees, and sessions to copy into the new one. */
+export const copyFromSchema = z.object({
+	copyFromEventId: z.number().int().positive().optional(),
 })
 
 /** Parses a request body, or throws a 400 listing every problem. */

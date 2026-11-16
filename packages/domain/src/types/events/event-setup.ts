@@ -25,12 +25,8 @@ export interface EventFeeInput {
 	overrideRestriction?: FeeRestrictionValue | null
 }
 
-/** Copy an event to a new date. Dates relative to the event date keep their offsets. */
-export interface CopyEventInput {
-	startDate: string
-	/** Defaults to the source event's name. */
-	name?: string
-}
+/** Creating an event, optionally copying another event's courses, fees, and sessions into it. */
+export type CreateEventInput = EventSettingsInput & { copyFromEventId?: number }
 
 /**
  * One group of registration slots: a tee time (tee-time events) or a hole and

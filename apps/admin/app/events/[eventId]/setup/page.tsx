@@ -14,7 +14,6 @@ import { apiGet } from "@/lib/server-api"
 import { EventSettingsForm, type ExtraTab } from "../../components/event-settings-form"
 
 import { updateEventSettings } from "./actions"
-import { CopyEventDialog } from "./components/copy-event-dialog"
 import { CoursesPanel } from "./components/courses-panel"
 import { FeesPanel } from "./components/fees-panel"
 import { SessionsPanel } from "./components/sessions-panel"
@@ -69,10 +68,7 @@ export default async function EventSetupPage({ params }: { params: Promise<{ eve
 	}
 
 	return (
-		<div className="mx-auto max-w-4xl space-y-4 md:py-8">
-			<div className="flex justify-end">
-				<CopyEventDialog eventId={eventId} name={event.name} />
-			</div>
+		<div className="mx-auto max-w-4xl md:py-8">
 			<Card>
 				<CardContent>
 					<EventSettingsForm

@@ -79,4 +79,21 @@ describe("EventSettingsForm", () => {
 		expect(screen.getByText("Fee table")).toBeVisible()
 		expect(screen.queryByRole("button", { name: "Save settings" })).not.toBeInTheDocument()
 	})
+
+	it("submits the event to copy from", async () => {
+		const action = jest.fn().mockResolvedValue({ status: "idle" })
+		render(
+			<EventSettingsForm
+				event={event}
+				action={action}
+				submitLabel="Create event"
+				copyFromEventId={670}
+			/>,
+		)
+
+		await userEvent.click(screen.getByRole("button", { name: "Create event" }))
+
+		await waitFor(() => expect(action).toHaveBeenCalled())
+		expect((action.mock.calls[0] as [unknown, FormData])[1].get("copyFromEventId")).toBe("670")
+	})
 })

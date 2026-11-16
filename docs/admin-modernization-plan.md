@@ -38,7 +38,10 @@ Returning-member season registration opens in mid-January, so the Season Registr
 ### 1. Event Workspace
 
 - Edit every event setting, the event's courses, its event fees, and its sessions in one workspace backed by NestJS. Event setup no longer calls Django.
-- Create registration slots and append tee times as explicit operations. Fix the defects in the code being replaced:
+- The workspace is tabbed: Event, Registration, Dates, Links, and Notes share one settings form; Courses and Slots appear when players choose a slot, Fees when the event has registration, and Sessions when players register for a session instead.
+- **New event, copy from event (pull):** a new event starts blank, or "Copy from event" fills the new event form from an existing event chosen in a modal (defaulting to the current season). Its settings come over as they are, except the Golf Genius ID, portal and external URLs, and status (Scheduled); the season stays the one chosen on the events list. If an event date was entered first, the signup, priority, and payments-end dates move with it at the same club time; otherwise they start blank. Creating the event copies the source's courses, event fees, sessions, and session fees in the same transaction. This replaces Django's push-model Copy Event.
+- Registration slots are explicit operations, never delete-and-recreate: create (only for an event with none), append a tee time, delete an empty group, and disable or re-enable a group. Create and delete are refused once registration opens (priority signup start, or signup start); append and disable are allowed during registration. Generated slots are all Available: the starter gap comes from the tee time calculator, not unavailable slots. The Slots tab shows a read-only tee sheet per course.
+- Every write is transactional and audited. This fixes the defects in the Django code it replaces:
   - slot recreation deletes before it creates, outside a transaction
   - clone runs outside a transaction
   - slots are created with status `"A "` (trailing space)
@@ -64,7 +67,7 @@ Readiness is a shared diagnostic. It produces **findings**, each stating what is
 
 ### 3. Season Roll-forward
 
-Roll-forward replaces Copy Event and event cloning in Django.
+Roll-forward replaces event cloning in Django for a whole season at once. Copying a single event is "Copy from event" on the new event form (slice 1).
 
 - Choose a source season. Each source event gets a proposed date: the same week and weekday, normally +364 days. Signup, priority, and payments-end dates keep their offsets from the event date.
 - Review in a preview grid: adjust dates, drop events, add events.

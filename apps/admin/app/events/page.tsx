@@ -52,7 +52,7 @@ export default async function EventsPage({
 			<div className="flex items-center justify-between">
 				<h2 className="font-heading text-2xl font-bold">Events</h2>
 				<Button asChild>
-					<Link href="/events/new">New event</Link>
+					<Link href={`/events/new?season=${season}`}>New event</Link>
 				</Button>
 			</div>
 			<Card>

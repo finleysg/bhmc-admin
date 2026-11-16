@@ -6,13 +6,7 @@ import {
 	NotFoundException,
 } from "@nestjs/common"
 import type { MySql2Database } from "drizzle-orm/mysql2"
-import {
-	EventStatusChoices,
-	type ClubEvent,
-	type Course,
-	type EventFee,
-	type FeeType,
-} from "@repo/domain/types"
+import { type ClubEvent, type Course, type EventFee, type FeeType } from "@repo/domain/types"
 
 import { AuditService, type AuditContext } from "../../audit"
 import { toMysqlDatetime } from "../../common"
@@ -36,7 +30,7 @@ import {
 
 import { EventSetupRepository } from "./event-setup.repository"
 import {
-	copyEventSchema,
+	copyFromSchema,
 	eventCoursesSchema,
 	eventFeeSchema,
 	eventSettingsSchema,
@@ -44,7 +38,6 @@ import {
 	type EventFeeValues,
 	type EventSettings,
 } from "./event-setup.schemas"
-import { daysBetween, shiftDatetimeByDays } from "./shift-date"
 
 const SETTINGS_FIELDS = Object.keys(eventSettingsSchema.shape) as (keyof EventSettings)[]
 const FEE_FIELDS = [
@@ -93,11 +86,23 @@ export class EventSetupService {
 		return (await this.repository.listCourses()).map(toCourse)
 	}
 
+	/**
+	 * Creates an event. With `copyFromEventId`, the source event's courses, event
+	 * fees, sessions, and session fees are copied into it in the same transaction
+	 * (the settings come from the request, which the admin fills from the source).
+	 * Registrations, slots, results, and documents are never copied.
+	 */
 	async createEvent(body: unknown, context: AuditContext): Promise<ClubEvent> {
 		const settings = parseBody(eventSettingsSchema, body)
+		const { copyFromEventId } = parseBody(copyFromSchema, body)
 		const eventId = await this.drizzle.db.transaction(async (tx) => {
+			if (copyFromEventId && !(await this.repository.lockEvent(tx, copyFromEventId))) {
+				throw new BadRequestException(`Event ${copyFromEventId} to copy from not found`)
+			}
 			await this.refuseDuplicateName(tx, settings.name, settings.startDate)
 			const id = await this.repository.insertEvent(tx, toEventValues(settings))
+			if (copyFromEventId) await this.copySetup(tx, copyFromEventId, id)
+
 			const created = await this.repository.findEvent(tx, id)
 			await this.audit.record(tx, context, {
 				operation: "event.create",
@@ -105,7 +110,7 @@ export class EventSetupService {
 				entityId: id,
 				eventId: id,
 				before: {},
-				after: settingsOf(created),
+				after: { ...settingsOf(created), copiedFromEventId: copyFromEventId },
 			})
 			return id
 		})
@@ -255,75 +260,34 @@ export class EventSetupService {
 		})
 	}
 
-	/**
-	 * Copies an event to a new date: settings, courses, event fees, sessions,
-	 * and session fees. Signup, priority, and payments-end dates keep their
-	 * offsets from the event date (same local time). The copy is Scheduled
-	 * and has no Golf Genius id, portal URL, or external URL. Registrations,
-	 * slots, results, and documents are never copied.
-	 */
-	async copyEvent(eventId: number, body: unknown, context: AuditContext): Promise<ClubEvent> {
-		const input = parseBody(copyEventSchema, body)
-		const newId = await this.drizzle.db.transaction(async (tx) => {
-			const source = await this.lockEvent(tx, eventId)
-			const name = input.name ?? source.name
-			await this.refuseDuplicateName(tx, name, input.startDate)
+	/** Copies courses, event fees, sessions, and session fees from one event to another. */
+	private async copySetup(tx: MySql2Database, sourceId: number, targetId: number): Promise<void> {
+		await this.repository.addCourses(
+			tx,
+			targetId,
+			await this.repository.findCourseIds(tx, sourceId),
+		)
 
-			const days = daysBetween(source.startDate, input.startDate)
-			const shift = (value: string | null) => (value ? shiftDatetimeByDays(value, days) : null)
-			const { id: sourceId, ...copied } = source
-			const id = await this.repository.insertEvent(tx, {
-				...copied,
-				name,
-				startDate: input.startDate,
-				season: Number(input.startDate.slice(0, 4)),
-				status: EventStatusChoices.SCHEDULED,
-				ggId: null,
-				portalUrl: null,
-				externalUrl: null,
-				prioritySignupStart: shift(source.prioritySignupStart),
-				signupStart: shift(source.signupStart),
-				signupEnd: shift(source.signupEnd),
-				paymentsEnd: shift(source.paymentsEnd),
-			})
+		const feeIds = new Map<number, number>()
+		for (const { id: sourceFeeId, ...fee } of await this.repository.findFees(tx, sourceId)) {
+			feeIds.set(sourceFeeId, await this.repository.insertFee(tx, { ...fee, eventId: targetId }))
+		}
 
-			await this.repository.addCourses(tx, id, await this.repository.findCourseIds(tx, eventId))
-
-			const feeIds = new Map<number, number>()
-			for (const { id: sourceFeeId, ...fee } of await this.repository.findFees(tx, eventId)) {
-				feeIds.set(sourceFeeId, await this.repository.insertFee(tx, { ...fee, eventId: id }))
+		const sessions = await this.repository.findSessions(tx, sourceId)
+		const sessionFees = await this.repository.findSessionFees(
+			tx,
+			sessions.map((s) => s.id),
+		)
+		for (const { id: sourceSessionId, ...session } of sessions) {
+			const sessionId = await this.repository.insertSession(tx, { ...session, eventId: targetId })
+			for (const sf of sessionFees.filter((f) => f.sessionId === sourceSessionId)) {
+				await this.repository.insertSessionFee(tx, {
+					sessionId,
+					eventFeeId: feeIds.get(sf.eventFeeId)!,
+					amount: sf.amount,
+				})
 			}
-
-			const sessions = await this.repository.findSessions(tx, eventId)
-			const sessionFees = await this.repository.findSessionFees(
-				tx,
-				sessions.map((s) => s.id),
-			)
-			for (const { id: sourceSessionId, ...session } of sessions) {
-				const sessionId = await this.repository.insertSession(tx, { ...session, eventId: id })
-				for (const sf of sessionFees.filter((f) => f.sessionId === sourceSessionId)) {
-					await this.repository.insertSessionFee(tx, {
-						sessionId,
-						eventFeeId: feeIds.get(sf.eventFeeId)!,
-						amount: sf.amount,
-					})
-				}
-			}
-
-			await this.audit.record(tx, context, {
-				operation: "event.copy",
-				entityType: "event",
-				entityId: id,
-				eventId: id,
-				before: {},
-				after: {
-					copiedFromEventId: sourceId,
-					...settingsOf(await this.repository.findEvent(tx, id)),
-				},
-			})
-			return id
-		})
-		return this.getSetup(newId)
+		}
 	}
 
 	private async getFee(eventId: number, feeId: number): Promise<EventFee> {
