@@ -96,4 +96,24 @@ describe("EventSettingsForm", () => {
 		await waitFor(() => expect(action).toHaveBeenCalled())
 		expect((action.mock.calls[0] as [unknown, FormData])[1].get("copyFromEventId")).toBe("670")
 	})
+
+	it("offers the photo tags on the Links tab and submits the chosen one", async () => {
+		const action = jest.fn().mockResolvedValue({ status: "success", message: "Saved" })
+		render(
+			<EventSettingsForm
+				event={{ ...event, defaultTagId: 4 }}
+				action={action}
+				submitLabel="Save settings"
+				tags={[
+					{ id: 4, name: "Majors" },
+					{ id: 5, name: "Weeknights" },
+				]}
+			/>,
+		)
+
+		expect(screen.getByRole("combobox", { name: "Photo tag" })).toHaveTextContent("Majors")
+		await userEvent.click(screen.getByRole("button", { name: "Save settings" }))
+		await waitFor(() => expect(action).toHaveBeenCalled())
+		expect((action.mock.calls[0] as [unknown, FormData])[1].get("defaultTagId")).toBe("4")
+	})
 })

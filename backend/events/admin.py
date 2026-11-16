@@ -22,6 +22,23 @@ from .models import (
 logger = structlog.get_logger(__name__)
 
 
+class ReadOnlyAdminMixin:
+    """
+    Shows records without allowing changes. Event setup (events, their fees,
+    courses, and sessions) is done in the admin site's event workspace, backed
+    by the NestJS API, which validates and audits every change.
+    """
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 class TournamentResultEventFilter(SimpleListFilter):
     """
     Filter tournament results by current season events.
@@ -157,7 +174,7 @@ class TournamentByEventFilter(SimpleListFilter):
         return queryset
 
 
-class CoursesInline(admin.TabularInline):
+class CoursesInline(ReadOnlyAdminMixin, admin.TabularInline):
     model = Event.courses.through
     can_delete = True
     extra = 0
@@ -166,7 +183,7 @@ class CoursesInline(admin.TabularInline):
     ]
 
 
-class EventSessionFeeInline(admin.TabularInline):
+class EventSessionFeeInline(ReadOnlyAdminMixin, admin.TabularInline):
     model = EventSessionFee
     can_delete = True
     extra = 0
@@ -183,7 +200,7 @@ class EventSessionFeeInline(admin.TabularInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class EventSessionAdmin(admin.ModelAdmin):
+class EventSessionAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     fields = [
         "event",
         "name",
@@ -211,7 +228,7 @@ class EventSessionAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class EventSessionsInline(admin.TabularInline):
+class EventSessionsInline(ReadOnlyAdminMixin, admin.TabularInline):
     model = EventSession
     can_delete = True
     extra = 0
@@ -223,7 +240,7 @@ class EventSessionsInline(admin.TabularInline):
     ]
 
 
-class EventFeesInline(admin.TabularInline):
+class EventFeesInline(ReadOnlyAdminMixin, admin.TabularInline):
     model = EventFee
     can_delete = True
     extra = 0
@@ -255,11 +272,12 @@ class FeeTypeAdmin(admin.ModelAdmin):
     ]
 
 
-class EventAdmin(admin.ModelAdmin):
+class EventAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     fieldsets = (
         (
             "Event Details",
             {
+                "description": "Read-only. Edit events in the event workspace on the admin site.",
                 "fields": (
                     "season",
                     "name",
@@ -269,7 +287,7 @@ class EventAdmin(admin.ModelAdmin):
                         "season_points",
                         "skins_type",
                     ),
-                )
+                ),
             },
         ),
         (

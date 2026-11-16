@@ -1,4 +1,3 @@
-from datetime import date
 from datetime import timedelta
 
 from django.core.exceptions import ValidationError
@@ -35,8 +34,7 @@ class EventModelTests(TestCase):
         event.group_size = 0
         with self.assertRaises(
             ValidationError,
-            msg="A group size is required if players are choosing their starting "
-            "hole or tee time",
+            msg="A group size is required if players are choosing their starting hole or tee time",
         ):
             event.clean()
 
@@ -63,7 +61,7 @@ class EventModelTests(TestCase):
     def test_weeknight_registration_signup_start_before_end(self):
         """
         Verifies that an Event whose signup_start is after signup_end fails validation.
-        
+
         This test sets signup_start to one hour after signup_end and asserts that calling
         event.clean() raises a ValidationError with the message "The signup start must be earlier than signup end".
         """
@@ -73,28 +71,3 @@ class EventModelTests(TestCase):
             ValidationError, msg="The signup start must be earlier than signup end"
         ):
             event.clean()
-
-    def test_can_clone(self):
-        event = Event.objects.get(pk=1)
-        new_dt = date.fromisoformat("2020-12-04")
-        copy = Event.objects.clone(event, new_dt)
-        self.assertNotEqual(event.id, copy.id)
-        self.assertEqual(event.name, copy.name)
-        self.assertGreater(copy.signup_start, event.signup_start)
-
-    def test_clone_includes_registration_slots(self):
-        event = Event.objects.get(pk=3)
-        new_dt = date.fromisoformat("2020-12-04")
-        copy = Event.objects.clone(event, new_dt)
-        self.assertEqual(len(copy.registrations.all()), 0)
-
-    def test_clone_includes_fees(self):
-        """
-        Verify that cloning an Event copies its fees to the cloned Event.
-        
-        The clone created for a new date must have one or more associated fee records.
-        """
-        event = Event.objects.get(pk=4)
-        new_dt = date.fromisoformat("2020-12-31")
-        copy = Event.objects.clone(event, new_dt)
-        self.assertGreater(len(copy.fees.all()), 0)

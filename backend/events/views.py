@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -40,7 +40,12 @@ def _get_int_param(request, name):
         raise ValidationError({name: "Must be an integer."})
 
 
-class EventViewSet(viewsets.ModelViewSet):
+class EventViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Events, read-only: they are created and edited through the NestJS event
+    workspace. The custom actions below keep their own permission checks.
+    """
+
     serializer_class = EventSerializer
 
     def get_queryset(self):
@@ -84,76 +89,6 @@ class EventViewSet(viewsets.ModelViewSet):
             Response: DRF response containing the serialized page or list of Event objects.
         """
         return super().list(request, *args, **kwargs)
-
-    @transaction.atomic()
-    @action(detail=True, methods=["put"], permission_classes=[IsAdminUser])
-    def append_teetime(self, request, pk):
-        """
-        Append a new tee time (registration slot) to the event identified by `pk` and return the updated event.
-
-        If the event does not allow tee time selection, a ValidationError is raised.
-
-        Parameters:
-            pk (int): Primary key of the Event to modify.
-
-        Returns:
-            rest_framework.response.Response: Serialized Event data reflecting the updated total_groups.
-
-        Raises:
-            rest_framework.exceptions.ValidationError: If the event's `can_choose` is False.
-        """
-        event = Event.objects.get(pk=pk)
-        if not event.can_choose:
-            raise ValidationError("This event does not allow tee time selection")
-
-        last_start = RegistrationSlot.objects.append_teetime(event)
-        event.total_groups = last_start + 1
-        event.save()
-
-        serializer = EventSerializer(event, context={"request": request})
-        return Response(serializer.data)
-
-    @action(detail=True, methods=["post"], permission_classes=[IsAdminUser])
-    def copy_event(self, request, pk):
-        """
-        Clone an existing Event to a new start date and return the cloned event's serialized data.
-
-        Expects the query parameter `start_dt` in ISO format (YYYY-MM-DD). Retrieves the Event identified by `pk`, clones it with the provided start date, and returns the serialized clone.
-
-        Parameters:
-            request: DRF request; must include `start_dt` in `request.query_params`.
-            pk: Primary key of the Event to clone.
-
-        Returns:
-            Serialized data of the newly cloned Event.
-        """
-        start_dt = request.query_params.get("start_dt")
-        event = Event.objects.get(pk=pk)
-        new_dt = date.fromisoformat(start_dt)
-        copy = Event.objects.clone(event, new_dt)
-
-        serializer = EventSerializer(copy, context={"request": request})
-        return Response(serializer.data)
-
-    @action(detail=True, methods=["post"], permission_classes=[IsAdminUser])
-    def create_slots(self, request, pk):
-        """
-        Create registration slots for the specified event and return their serialized representation.
-
-        Parameters:
-            request: The HTTP request object (used to build serializer context).
-            pk (int | str): Primary key of the event for which slots will be recreated.
-
-        Returns:
-            list: Serialized list of the created RegistrationSlot objects.
-        """
-        event = Event.objects.get(pk=pk)
-
-        RegistrationSlot.objects.remove_slots_for_event(event)
-        slots = RegistrationSlot.objects.create_slots_for_event(event)
-
-        serializer = RegistrationSlotSerializer(slots, many=True, context={"request": request})
-        return Response(serializer.data)
 
     @transaction.atomic()
     @action(detail=True, methods=["put"], permission_classes=[IsAdminUser])

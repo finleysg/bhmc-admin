@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 
 import { parseLocalDate } from "@repo/domain/functions"
-import { EventStatusChoices, type ClubEvent } from "@repo/domain/types"
+import { EventStatusChoices, type ClubEvent, type ContentTag } from "@repo/domain/types"
 
 import { Button } from "@/components/shadcn/button"
 import { daysBetween, shiftByClubDays } from "@/lib/club-time"
@@ -48,7 +48,7 @@ export function copiedSettings(source: ClubEvent, season: number, startDate: str
 }
 
 /** The new event form, optionally filled from an existing event ("pull"). */
-export function NewEventForm({ season }: { season: number }) {
+export function NewEventForm({ season, tags }: { season: number; tags: ContentTag[] }) {
 	const formArea = useRef<HTMLDivElement>(null)
 	const [copy, setCopy] = useState<{ source: ClubEvent; defaults: ClubEvent } | null>(null)
 
@@ -97,6 +97,7 @@ export function NewEventForm({ season }: { season: number }) {
 					action={createEvent}
 					submitLabel="Create event"
 					cancelHref={`/events?season=${season}`}
+					tags={tags}
 				/>
 			</div>
 		</div>

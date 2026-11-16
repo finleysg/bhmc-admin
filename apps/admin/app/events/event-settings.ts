@@ -89,6 +89,10 @@ const settingsSchema = z.object({
 	signupWaves: optionalCount,
 	ageRestriction: optionalCount,
 	ageRestrictionType: choice(AgeRestrictionTypeChoices),
+	defaultTagId: z
+		.string()
+		.transform((v) => (v === NONE || v === "" ? null : Number(v)))
+		.pipe(wholeNumber.positive("Choose a tag").nullable()),
 }) satisfies z.ZodType<EventSettingsInput>
 
 export type SettingsField = keyof EventSettingsInput

@@ -76,7 +76,7 @@ describe("copiedSettings", () => {
 
 describe("NewEventForm", () => {
 	it("fills the form from the chosen event, except what belongs only to it", async () => {
-		render(<NewEventForm season={2027} />)
+		render(<NewEventForm season={2027} tags={[]} />)
 
 		await userEvent.click(screen.getByRole("button", { name: "Copy from event" }))
 
@@ -90,7 +90,7 @@ describe("NewEventForm", () => {
 	})
 
 	it("leaves the dates blank when no event date was entered first", async () => {
-		render(<NewEventForm season={2027} />)
+		render(<NewEventForm season={2027} tags={[]} />)
 
 		await userEvent.click(screen.getByRole("button", { name: "Copy from event" }))
 
@@ -101,7 +101,7 @@ describe("NewEventForm", () => {
 	})
 
 	it("fills the signup dates to match an event date entered first", async () => {
-		render(<NewEventForm season={2027} />)
+		render(<NewEventForm season={2027} tags={[]} />)
 		fireEvent.change(document.querySelector("[name=startDate]")!, {
 			target: { value: "2027-03-31" },
 		})
@@ -117,7 +117,7 @@ describe("NewEventForm", () => {
 	})
 
 	it("starts blank again", async () => {
-		render(<NewEventForm season={2027} />)
+		render(<NewEventForm season={2027} tags={[]} />)
 		await userEvent.click(screen.getByRole("button", { name: "Copy from event" }))
 
 		await userEvent.click(screen.getByRole("button", { name: "Start blank" }))
@@ -128,7 +128,7 @@ describe("NewEventForm", () => {
 	})
 
 	it("starts blank in the season chosen on the list, and cancels back to that season", () => {
-		render(<NewEventForm season={2027} />)
+		render(<NewEventForm season={2027} tags={[]} />)
 
 		expect(value("season")).toBe("2027")
 		expect(screen.getByRole("link", { name: "Cancel" })).toHaveAttribute(

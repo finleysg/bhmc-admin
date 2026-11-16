@@ -77,6 +77,7 @@ export function toEvent(row: EventRow): ClubEvent {
 		ageRestriction: row.ageRestriction,
 		ageRestrictionType: row.ageRestrictionType as AgeRestrictionTypeValue,
 		ggId: row.ggId,
+		defaultTagId: row.defaultTagId,
 	}
 }
 

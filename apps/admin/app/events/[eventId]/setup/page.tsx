@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import {
 	RegistrationTypeChoices,
 	type ClubEvent,
+	type ContentTag,
 	type Course,
 	type FeeType,
 	type SlotGroup,
@@ -24,10 +25,11 @@ export default async function EventSetupPage({ params }: { params: Promise<{ eve
 	const eventId = Number((await params).eventId)
 	if (!Number.isInteger(eventId)) notFound()
 
-	const [event, courses, feeTypes] = await Promise.all([
+	const [event, courses, feeTypes, tags] = await Promise.all([
 		apiGet<ClubEvent>(`/events/${eventId}/setup`),
 		apiGet<Course[]>("/courses"),
 		apiGet<FeeType[]>("/fee-types"),
+		apiGet<ContentTag[]>("/tags"),
 	])
 	const slotGroups = event.canChoose ? await apiGet<SlotGroup[]>(`/events/${eventId}/slots`) : []
 
@@ -76,6 +78,7 @@ export default async function EventSetupPage({ params }: { params: Promise<{ eve
 						action={updateEventSettings.bind(null, eventId)}
 						submitLabel="Save settings"
 						extraTabs={extraTabs}
+						tags={tags}
 					/>
 				</CardContent>
 			</Card>

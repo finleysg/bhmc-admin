@@ -46,6 +46,8 @@ export interface ClubEvent {
 	ageRestriction?: number | null
 	ageRestrictionType: AgeRestrictionTypeValue
 	ggId?: string | null
+	/** The photo tag the public event page shows a gallery for. */
+	defaultTagId?: number | null
 	courses?: Course[]
 	eventFees?: EventFee[]
 	sessions?: EventSessionWithFees[]

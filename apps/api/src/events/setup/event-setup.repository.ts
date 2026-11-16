@@ -4,6 +4,7 @@ import type { MySql2Database } from "drizzle-orm/mysql2"
 import { Inject, Injectable } from "@nestjs/common"
 
 import {
+	contentTag,
 	course,
 	DrizzleService,
 	event,
@@ -15,6 +16,7 @@ import {
 	hole,
 	registrationFee,
 	registrationSlot,
+	type ContentTagRow,
 	type CourseRow,
 	type EventFeeInsert,
 	type EventFeeRow,
@@ -39,6 +41,18 @@ export class EventSetupRepository {
 
 	async listCourses(): Promise<CourseRow[]> {
 		return this.drizzle.db.select().from(course).orderBy(course.name)
+	}
+
+	async listTags(): Promise<ContentTagRow[]> {
+		return this.drizzle.db.select().from(contentTag).orderBy(contentTag.name)
+	}
+
+	async tagExists(tx: Db, tagId: number): Promise<boolean> {
+		const [row] = await tx
+			.select({ id: contentTag.id })
+			.from(contentTag)
+			.where(eq(contentTag.id, tagId))
+		return row !== undefined
 	}
 
 	async feeTypeExists(tx: Db, feeTypeId: number): Promise<boolean> {

@@ -13,6 +13,7 @@ import {
 	SkinTypeChoices,
 	StartTypeChoices,
 	type ClubEvent,
+	type ContentTag,
 } from "@repo/domain/types"
 
 import { ContentEditor } from "@/components/content-editor"
@@ -87,7 +88,7 @@ const TAB_FIELDS = {
 		"ageRestriction",
 	],
 	dates: ["prioritySignupStart", "signupStart", "signupEnd", "paymentsEnd"],
-	links: ["portalUrl", "externalUrl"],
+	links: ["portalUrl", "externalUrl", "defaultTagId"],
 	notes: ["notes"],
 } satisfies Record<string, SettingsField[]>
 
@@ -145,6 +146,7 @@ export function EventSettingsForm({
 	cancelHref,
 	extraTabs = [],
 	copyFromEventId,
+	tags = [],
 }: {
 	event?: ClubEvent
 	/** For a new event (no `event`): values that replace the built-in starting values, such as the season. */
@@ -155,6 +157,8 @@ export function EventSettingsForm({
 	extraTabs?: ExtraTab[]
 	/** Submitted with the form, so creating the event also copies this event's courses, fees, and sessions. */
 	copyFromEventId?: number
+	/** Choices for the photo tag. */
+	tags?: ContentTag[]
 }) {
 	const [state, formAction, isPending] = useActionState(
 		async (prev: FormState<SettingsField>, formData: FormData) => {
@@ -394,6 +398,14 @@ export function EventSettingsForm({
 								value={values.externalUrl}
 								type="url"
 							/>
+							<ChoiceField
+								{...field("defaultTagId")}
+								label="Photo tag"
+								value={values.defaultTagId == null ? null : String(values.defaultTagId)}
+								options={tags.map((t) => ({ value: String(t.id), label: t.name }))}
+								optional
+								description="The public event page shows photos with this tag."
+							/>
 						</div>
 					</TabsContent>
 					<TabsContent
@@ -531,6 +543,7 @@ function ChoiceField({
 	value,
 	options: choices,
 	optional,
+	description,
 }: FieldProps & { value?: string | null; options: Option[]; optional?: boolean }) {
 	return (
 		<Field data-invalid={!!errors[name]}>
@@ -548,6 +561,7 @@ function ChoiceField({
 					))}
 				</SelectContent>
 			</Select>
+			{description && <FieldDescription>{description}</FieldDescription>}
 			<FieldError>{errors[name]}</FieldError>
 		</Field>
 	)

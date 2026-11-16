@@ -45,6 +45,7 @@ const RESET_TABLES = [
 	"events_feetype",
 	"events_event_courses",
 	"events_event",
+	"content_tag",
 	"courses_tee",
 	"courses_hole",
 	"courses_course",

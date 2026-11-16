@@ -21,6 +21,10 @@ The calendar year of events the club runs, identified by its year.
 Creating a new season's events from the previous season's events, with dates moved to the new year and adjusted before creation.
 _Avoid_: Copy event, clone, season import
 
+**Copy from Event**:
+Filling a new event's setup from one existing event (settings, courses, event fees, and sessions) before creating it. The new event pulls from the source; the source is never changed. For a whole season, use Season Roll-forward.
+_Avoid_: Copy event, clone, duplicate
+
 **Fee Type**:
 A kind of charge, such as a cart fee or skins, that an event can offer.
 

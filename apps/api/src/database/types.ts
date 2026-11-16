@@ -16,6 +16,7 @@ import {
 	eventScorecard,
 	eventSession,
 	eventSessionFee,
+	contentTag,
 	feeType,
 	hole,
 	integrationLog,
@@ -42,6 +43,7 @@ import {
 export type EventRow = typeof event.$inferSelect
 export type EventFeeRow = typeof eventFee.$inferSelect
 export type FeeTypeRow = typeof feeType.$inferSelect
+export type ContentTagRow = typeof contentTag.$inferSelect
 export type RoundRow = typeof round.$inferSelect
 export type TournamentRow = typeof tournament.$inferSelect
 export type TournamentResultRow = typeof tournamentResult.$inferSelect

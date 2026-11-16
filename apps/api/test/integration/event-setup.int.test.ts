@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm"
 
 import {
 	adminAuditEntry,
+	contentTag,
 	course,
 	event,
 	eventCourses,
@@ -52,6 +53,7 @@ function settings(overrides: Record<string, unknown> = {}) {
 		signupWaves: null,
 		ageRestriction: null,
 		ageRestrictionType: "N",
+		defaultTagId: null,
 		...overrides,
 	}
 }
@@ -423,16 +425,45 @@ describe("event workspace", () => {
 		})
 	})
 
+	describe("photo tag", () => {
+		it("saves the event's photo tag and refuses an unknown one", async () => {
+			const [tag] = await testDb().insert(contentTag).values({ name: "2027 Club Championship" })
+			const created = (await t.http(eventAdmin).post("/events").send(settings())).body as {
+				id: number
+			}
+
+			const saved = await t
+				.http(eventAdmin)
+				.put(`/events/${created.id}`)
+				.send(settings({ defaultTagId: tag.insertId }))
+			const unknown = await t
+				.http(eventAdmin)
+				.put(`/events/${created.id}`)
+				.send(settings({ defaultTagId: 9999 }))
+
+			expect(saved.status).toBe(200)
+			expect(saved.body).toMatchObject({ defaultTagId: tag.insertId })
+			expect(unknown.status).toBe(400)
+			expect((await auditEntries())[1]).toMatchObject({
+				changes: { defaultTagId: { before: null, after: tag.insertId } },
+			})
+		})
+	})
+
 	describe("lookups", () => {
-		it("lists fee types and courses", async () => {
+		it("lists fee types, courses, and tags", async () => {
 			await createFeeType("Cart")
 			await createCourse("North")
 
+			await testDb().insert(contentTag).values({ name: "Majors" })
+
 			const feeTypes = await t.http(eventAdmin).get("/fee-types")
 			const courses = await t.http(eventAdmin).get("/courses")
+			const tags = await t.http(eventAdmin).get("/tags")
 
 			expect(feeTypes.body).toEqual([expect.objectContaining({ name: "Cart" })])
 			expect(courses.body).toEqual([expect.objectContaining({ name: "North" })])
+			expect(tags.body).toEqual([{ id: expect.any(Number) as number, name: "Majors" }])
 		})
 	})
 })

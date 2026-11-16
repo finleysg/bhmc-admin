@@ -11,6 +11,7 @@ import {
 	varchar,
 } from "drizzle-orm/mysql-core"
 
+import { contentTag } from "./content.schema"
 import { course, hole, tee } from "./courses.schema"
 import { player } from "./registration.schema"
 
@@ -43,7 +44,7 @@ export const event = mysqlTable(
 		status: varchar({ length: 1 }).notNull(),
 		season: int().notNull(),
 		teeTimeSplits: varchar("tee_time_splits", { length: 10 }),
-		// defaultTagId: int("default_tag_id").references(() => contentTag.id),
+		defaultTagId: int("default_tag_id").references(() => contentTag.id),
 		starterTimeInterval: int("starter_time_interval").notNull(),
 		teamSize: int("team_size").notNull(),
 		prioritySignupStart: datetime("priority_signup_start", { mode: "string", fsp: 6 }),

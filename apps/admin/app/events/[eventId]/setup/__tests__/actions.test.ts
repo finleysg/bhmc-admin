@@ -68,6 +68,7 @@ const settingsForm = (overrides: Record<string, string> = {}) =>
 		signupWaves: "",
 		ageRestriction: "",
 		ageRestrictionType: "N",
+		defaultTagId: "none",
 		...overrides,
 	})
 
@@ -106,8 +107,15 @@ describe("event workspace actions", () => {
 				signupStart: "2027-04-28T14:00:00.000Z",
 				prioritySignupStart: null,
 				notes: null,
+				defaultTagId: null,
 			})
 			expect(revalidatePath).toHaveBeenCalledWith("/events/7", "layout")
+		})
+
+		it("sends the chosen photo tag", async () => {
+			fetchMock.mockReturnValueOnce(respond(200, {}))
+			await updateEventSettings(7, idle, settingsForm({ defaultTagId: "12" }))
+			expect(sentBody(fetchMock)).toMatchObject({ defaultTagId: 12 })
 		})
 
 		it("reports field errors without calling the API", async () => {

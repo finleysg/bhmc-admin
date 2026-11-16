@@ -6,7 +6,13 @@ import {
 	NotFoundException,
 } from "@nestjs/common"
 import type { MySql2Database } from "drizzle-orm/mysql2"
-import { type ClubEvent, type Course, type EventFee, type FeeType } from "@repo/domain/types"
+import {
+	type ClubEvent,
+	type ContentTag,
+	type Course,
+	type EventFee,
+	type FeeType,
+} from "@repo/domain/types"
 
 import { AuditService, type AuditContext } from "../../audit"
 import { toMysqlDatetime } from "../../common"
@@ -82,6 +88,10 @@ export class EventSetupService {
 		return (await this.repository.listFeeTypes()).map(toFeeType)
 	}
 
+	async listTags(): Promise<ContentTag[]> {
+		return (await this.repository.listTags()).map(({ id, name }) => ({ id, name }))
+	}
+
 	async listCourses(): Promise<Course[]> {
 		return (await this.repository.listCourses()).map(toCourse)
 	}
@@ -100,6 +110,7 @@ export class EventSetupService {
 				throw new BadRequestException(`Event ${copyFromEventId} to copy from not found`)
 			}
 			await this.refuseDuplicateName(tx, settings.name, settings.startDate)
+			await this.checkTag(tx, settings.defaultTagId)
 			const id = await this.repository.insertEvent(tx, toEventValues(settings))
 			if (copyFromEventId) await this.copySetup(tx, copyFromEventId, id)
 
@@ -122,6 +133,7 @@ export class EventSetupService {
 		await this.drizzle.db.transaction(async (tx) => {
 			const before = await this.lockEvent(tx, eventId)
 			await this.refuseDuplicateName(tx, settings.name, settings.startDate, eventId)
+			await this.checkTag(tx, settings.defaultTagId)
 			await this.repository.updateEvent(tx, eventId, toEventValues(settings))
 			const after = await this.repository.findEvent(tx, eventId)
 			await this.audit.record(tx, context, {
@@ -317,6 +329,12 @@ export class EventSetupService {
 	): Promise<void> {
 		if (await this.repository.nameTaken(tx, name, startDate, exceptId)) {
 			throw new ConflictException(`An event named "${name}" already exists on ${startDate}`)
+		}
+	}
+
+	private async checkTag(tx: MySql2Database, tagId: number | null): Promise<void> {
+		if (tagId !== null && !(await this.repository.tagExists(tx, tagId))) {
+			throw new BadRequestException(`Unknown tag ${tagId}`)
 		}
 	}
 

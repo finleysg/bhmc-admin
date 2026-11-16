@@ -10,7 +10,14 @@ import {
 	Post,
 	Put,
 } from "@nestjs/common"
-import type { ClubEvent, Course, EventFee, FeeType, SlotGroup } from "@repo/domain/types"
+import type {
+	ClubEvent,
+	ContentTag,
+	Course,
+	EventFee,
+	FeeType,
+	SlotGroup,
+} from "@repo/domain/types"
 
 import { Audit, type AuditContext } from "../../audit"
 import { EventAdmin } from "../../auth"
@@ -96,6 +103,11 @@ export class EventSetupLookupsController {
 	@Get("courses")
 	async listCourses(): Promise<Course[]> {
 		return this.service.listCourses()
+	}
+
+	@Get("tags")
+	async listTags(): Promise<ContentTag[]> {
+		return this.service.listTags()
 	}
 }
 

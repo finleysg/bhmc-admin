@@ -53,6 +53,7 @@ export const eventSettingsSchema = z
 		signupWaves: count.nullable(),
 		ageRestriction: count.nullable(),
 		ageRestrictionType: z.enum(AgeRestrictionTypeChoices),
+		defaultTagId: z.number().int().positive().nullable(),
 	})
 	.superRefine((e, ctx) => {
 		const fail = (path: string, message: string) =>

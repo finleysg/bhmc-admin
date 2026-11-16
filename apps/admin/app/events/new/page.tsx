@@ -1,4 +1,7 @@
+import type { ContentTag } from "@repo/domain/types"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/shadcn/card"
+import { apiGet } from "@/lib/server-api"
 
 import { NewEventForm } from "./components/new-event-form"
 
@@ -10,6 +13,7 @@ export default async function NewEventPage({
 	// The season chosen on the events list; the new event starts in it.
 	const requested = Number((await searchParams).season)
 	const season = Number.isInteger(requested) && requested > 0 ? requested : new Date().getFullYear()
+	const tags = await apiGet<ContentTag[]>("/tags")
 
 	return (
 		<div className="mx-auto max-w-4xl space-y-6 md:py-8">
@@ -22,7 +26,7 @@ export default async function NewEventPage({
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<NewEventForm season={season} />
+					<NewEventForm season={season} tags={tags} />
 				</CardContent>
 			</Card>
 		</div>

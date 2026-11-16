@@ -54,3 +54,9 @@ export interface SlotGroupSlot {
 	status: string
 	playerName: string | null
 }
+
+/** A photo and document tag. */
+export interface ContentTag {
+	id: number
+	name: string
+}
