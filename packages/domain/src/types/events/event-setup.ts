@@ -47,4 +47,14 @@ export interface SlotGroup {
 	/** Slots with a player in them, whatever their status. */
 	filled: number
 	total: number
+	/** The group's slots in slot order, for showing it as a tee sheet row. */
+	slots: SlotGroupSlot[]
+}
+
+export interface SlotGroupSlot {
+	id: number
+	slot: number
+	/** Status code (A, P, R, X, U). */
+	status: string
+	playerName: string | null
 }

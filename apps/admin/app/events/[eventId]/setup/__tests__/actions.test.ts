@@ -1,7 +1,19 @@
 import { revalidatePath } from "next/cache"
 
 import { createEvent } from "../../../new/actions"
-import { deleteEventFee, saveEventFee, setEventCourses, updateEventSettings } from "../actions"
+import {
+	appendTeeTime,
+	copyEvent,
+	createSlots,
+	deleteEventFee,
+	deleteSession,
+	deleteSlotGroup,
+	saveEventFee,
+	saveSession,
+	setEventCourses,
+	setSlotGroupStatus,
+	updateEventSettings,
+} from "../actions"
 
 jest.mock("next/headers", () => ({
 	cookies: () => Promise.resolve({ get: () => ({ value: "token-123" }) }),
@@ -235,6 +247,133 @@ describe("event workspace actions", () => {
 			expect(result).toEqual({
 				status: "error",
 				message: "Cannot delete a fee that 2 registration fee record(s) refer to",
+			})
+		})
+	})
+
+	describe("saveSession", () => {
+		const sessionForm = (overrides: Record<string, string> = {}) =>
+			form({
+				name: " Early ",
+				registrationLimit: "40",
+				displayOrder: "1",
+				"override-3": "12",
+				"override-4": " ",
+				...overrides,
+			})
+
+		it("sends the session with only the overrides that have an amount", async () => {
+			fetchMock.mockReturnValueOnce(respond(201, {}))
+
+			const result = await saveSession(7, null, idle, sessionForm())
+
+			expect(result).toEqual({ status: "success", message: "Session added" })
+			expect(fetchMock.mock.calls[0]![0]).toBe("http://api.test/events/7/sessions")
+			expect(sentBody(fetchMock)).toEqual({
+				name: "Early",
+				registrationLimit: 40,
+				displayOrder: 1,
+				feeOverrides: [{ eventFeeId: 3, amount: 12 }],
+			})
+		})
+
+		it("saves an existing session", async () => {
+			fetchMock.mockReturnValueOnce(respond(200, {}))
+			await saveSession(7, 11, idle, sessionForm())
+			expect(fetchMock).toHaveBeenCalledWith(
+				"http://api.test/events/7/sessions/11",
+				expect.objectContaining({ method: "PUT" }),
+			)
+		})
+
+		it.each([
+			["no name", { name: "" }, "name"],
+			["no limit", { registrationLimit: "" }, "registrationLimit"],
+			["a negative override", { "override-3": "-1" }, "feeOverrides"],
+		])("rejects %s", async (_, overrides, field) => {
+			const result = await saveSession(7, null, idle, sessionForm(overrides))
+			expect(result.fieldErrors).toHaveProperty(field)
+			expect(fetchMock).not.toHaveBeenCalled()
+		})
+
+		it("deletes a session and returns the API's refusal", async () => {
+			fetchMock.mockReturnValueOnce(respond(409, { message: "Cannot delete session" }))
+			expect(await deleteSession(7, 11)).toEqual({
+				status: "error",
+				message: "Cannot delete session",
+			})
+		})
+	})
+
+	describe("slot actions", () => {
+		it.each([
+			["createSlots", () => createSlots(7), "http://api.test/events/7/slots", "POST", undefined],
+			[
+				"appendTeeTime",
+				() => appendTeeTime(7),
+				"http://api.test/events/7/slots/tee-times",
+				"POST",
+				undefined,
+			],
+			[
+				"deleteSlotGroup",
+				() => deleteSlotGroup(7, 21, 3),
+				"http://api.test/events/7/slots/groups/21/3",
+				"DELETE",
+				undefined,
+			],
+			[
+				"setSlotGroupStatus",
+				() => setSlotGroupStatus(7, 21, 3, "U"),
+				"http://api.test/events/7/slots/groups/21/3/status",
+				"PUT",
+				JSON.stringify({ status: "U" }),
+			],
+		])("%s calls the API and refreshes the workspace", async (_, act, url, method, body) => {
+			fetchMock.mockReturnValueOnce(respond(200, []))
+
+			const result = await act()
+
+			expect(result.status).toBe("success")
+			expect(fetchMock).toHaveBeenCalledWith(url, expect.objectContaining({ method, body }))
+			expect(revalidatePath).toHaveBeenCalledWith("/events/7", "layout")
+		})
+
+		it("returns the API's refusal", async () => {
+			fetchMock.mockReturnValueOnce(
+				respond(409, { message: "Cannot create slots after registration has opened" }),
+			)
+			expect(await createSlots(7)).toEqual({
+				status: "error",
+				message: "Cannot create slots after registration has opened",
+			})
+		})
+	})
+
+	describe("copyEvent", () => {
+		it("copies the event and opens the copy's workspace", async () => {
+			fetchMock.mockReturnValueOnce(respond(201, { id: 99 }))
+
+			await expect(
+				copyEvent(7, idle, form({ startDate: "2027-04-07", name: " " })),
+			).rejects.toThrow("redirect:/events/99/setup")
+			expect(sentBody(fetchMock)).toEqual({ startDate: "2027-04-07" })
+		})
+
+		it("requires a date", async () => {
+			const result = await copyEvent(7, idle, form({ startDate: "", name: "Opener" }))
+			expect(result.fieldErrors).toHaveProperty("startDate")
+			expect(fetchMock).not.toHaveBeenCalled()
+		})
+
+		it("returns the API's refusal of a duplicate name", async () => {
+			fetchMock.mockReturnValueOnce(
+				respond(409, { message: 'An event named "Opener" already exists on 2027-04-07' }),
+			)
+			const result = await copyEvent(7, idle, form({ startDate: "2027-04-07", name: "Opener" }))
+			expect(result).toEqual({
+				status: "error",
+				message: 'An event named "Opener" already exists on 2027-04-07',
 			})
 		})
 	})

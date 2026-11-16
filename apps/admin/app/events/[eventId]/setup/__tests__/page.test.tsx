@@ -11,6 +11,9 @@ jest.mock("../actions", () => ({ updateEventSettings: jest.fn() }))
 jest.mock("../../../../components/content-editor", () => ({ ContentEditor: () => null }))
 jest.mock("../components/courses-panel", () => ({ CoursesPanel: () => null }))
 jest.mock("../components/fees-panel", () => ({ FeesPanel: () => null }))
+jest.mock("../components/slots-panel", () => ({ SlotsPanel: () => null }))
+jest.mock("../components/sessions-panel", () => ({ SessionsPanel: () => null }))
+jest.mock("../components/copy-event-dialog", () => ({ CopyEventDialog: () => null }))
 
 function serve(event: Partial<ClubEvent>) {
 	jest
@@ -29,12 +32,26 @@ async function renderPage() {
 }
 
 describe("EventSetupPage", () => {
-	it("shows Courses when players choose a slot and Fees when the event has registration", async () => {
+	beforeEach(() => jest.mocked(apiGet).mockReset())
+
+	it("shows Courses and Slots, not Sessions, when players choose a slot", async () => {
 		serve({ canChoose: true, registrationType: "M" })
 		await renderPage()
 
 		expect(screen.getByRole("tab", { name: "Courses" })).toBeInTheDocument()
+		expect(screen.getByRole("tab", { name: "Slots" })).toBeInTheDocument()
 		expect(screen.getByRole("tab", { name: "Fees" })).toBeInTheDocument()
+		expect(screen.queryByRole("tab", { name: "Sessions" })).not.toBeInTheDocument()
+		expect(apiGet).toHaveBeenCalledWith("/events/7/slots")
+	})
+
+	it("shows Sessions, not Slots, when players register for a session", async () => {
+		serve({ canChoose: false, registrationType: "M" })
+		await renderPage()
+
+		expect(screen.getByRole("tab", { name: "Sessions" })).toBeInTheDocument()
+		expect(screen.queryByRole("tab", { name: "Slots" })).not.toBeInTheDocument()
+		expect(apiGet).not.toHaveBeenCalledWith("/events/7/slots")
 	})
 
 	it("hides Courses when players do not choose a slot", async () => {
@@ -50,5 +67,6 @@ describe("EventSetupPage", () => {
 		await renderPage()
 
 		expect(screen.queryByRole("tab", { name: "Fees" })).not.toBeInTheDocument()
+		expect(screen.queryByRole("tab", { name: "Sessions" })).not.toBeInTheDocument()
 	})
 })

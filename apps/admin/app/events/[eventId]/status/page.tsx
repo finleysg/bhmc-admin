@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 
+import Link from "next/link"
 import { useParams } from "next/navigation"
 
 import { useAuth } from "@/lib/auth-context"
@@ -9,7 +10,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Card, CardBody, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { HelperText } from "@/components/ui/helper-text"
-import { Modal } from "@/components/ui/modal"
+import { Button } from "@/components/shadcn/button"
 import type { EventStatusInfo } from "@/app/api/events/[id]/status/route"
 import { PageLayout } from "@/app/components/ui"
 import {
@@ -19,10 +20,6 @@ import {
 	getSlotsCreatedVariant,
 	getGolfGeniusVariant,
 	getDocumentsVariant,
-	shouldDisableCreateSlots,
-	shouldDisableAddTeeTime,
-	shouldShowRecreateModal,
-	getCreateButtonLabel,
 } from "./helpers"
 
 export default function EventStatusPage() {
@@ -33,13 +30,6 @@ export default function EventStatusPage() {
 	const [statusInfo, setStatusInfo] = useState<EventStatusInfo | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
-	const [showRecreateModal, setShowRecreateModal] = useState(false)
-	const [isCreatingSlots, setIsCreatingSlots] = useState(false)
-	const [isAddingTeeTime, setIsAddingTeeTime] = useState(false)
-	const [feedback, setFeedback] = useState<{
-		type: "success" | "error"
-		message: string
-	} | null>(null)
 
 	const fetchStatus = useCallback(async () => {
 		try {
@@ -61,57 +51,6 @@ export default function EventStatusPage() {
 		if (!signedIn || !eventId) return
 		void fetchStatus()
 	}, [eventId, signedIn, fetchStatus])
-
-	const handleCreateSlots = async () => {
-		setIsCreatingSlots(true)
-		setFeedback(null)
-		try {
-			const response = await fetch(`/api/registration/${eventId}/create-slots`, {
-				method: "POST",
-			})
-			if (!response.ok) {
-				throw new Error(`Failed to create slots: ${response.status}`)
-			}
-			const slots = (await response.json()) as unknown[]
-			setShowRecreateModal(false)
-			await fetchStatus()
-			setFeedback({ type: "success", message: `Created ${slots.length} slots` })
-		} catch (err) {
-			console.error("Error creating slots:", err)
-			setFeedback({ type: "error", message: "Failed to create slots" })
-		} finally {
-			setIsCreatingSlots(false)
-		}
-	}
-
-	const onClickCreateSlots = () => {
-		if (statusInfo && shouldShowRecreateModal(statusInfo.totalSpots)) {
-			setShowRecreateModal(true)
-		} else {
-			void handleCreateSlots()
-		}
-	}
-
-	const handleAddTeeTime = async () => {
-		setIsAddingTeeTime(true)
-		setFeedback(null)
-		try {
-			const response = await fetch(`/api/registration/${eventId}/append-teetime`, {
-				method: "PUT",
-			})
-			if (!response.ok) {
-				throw new Error(`Failed to add tee time: ${response.status}`)
-			}
-			const event = (await response.json()) as { total_groups: number }
-			await fetchStatus()
-			setFeedback({ type: "success", message: `Added tee time (group ${event.total_groups})` })
-		} catch (err) {
-			console.error("Error adding tee time:", err)
-			setFeedback({ type: "error", message: "Failed to add tee time" })
-		} finally {
-			setIsAddingTeeTime(false)
-		}
-	}
 
 	if (isPending || loading) {
 		return (
@@ -198,91 +137,11 @@ export default function EventStatusPage() {
 							<Badge variant={getDocumentsVariant(documentsCount)}>Documents Uploaded</Badge>
 						</div>
 						<div className="divider my-2" />
-						<div className="flex flex-wrap gap-2">
-							{event.canChoose && (
-								<>
-									<button
-										className="btn btn-primary btn-sm"
-										onClick={onClickCreateSlots}
-										disabled={shouldDisableCreateSlots(isCreatingSlots, event)}
-									>
-										{isCreatingSlots ? (
-											<>
-												<span className="loading loading-spinner loading-sm"></span>
-												Creating...
-											</>
-										) : (
-											getCreateButtonLabel(totalSpots)
-										)}
-									</button>
-									<button
-										className="btn btn-secondary btn-sm"
-										onClick={() => void handleAddTeeTime()}
-										disabled={shouldDisableAddTeeTime(totalSpots, isAddingTeeTime)}
-									>
-										{isAddingTeeTime ? (
-											<>
-												<span className="loading loading-spinner loading-sm"></span>
-												Adding...
-											</>
-										) : (
-											"Add Tee Time"
-										)}
-									</button>
-								</>
-							)}
-							<a
-								href={`${process.env.NEXT_PUBLIC_DJANGO_URL}/admin/events/event/${event.id}/change/`}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="btn btn-outline btn-sm"
-							>
-								Settings
-							</a>
-						</div>
-						{feedback && (
-							<div
-								className={`mt-3 text-sm ${feedback.type === "success" ? "text-success" : "text-error"}`}
-							>
-								{feedback.message}
-							</div>
-						)}
+						<Button asChild size="sm" className="self-start">
+							<Link href={`/events/${event.id}/setup`}>Event setup</Link>
+						</Button>
 					</CardBody>
 				</Card>
-
-				<Modal
-					isOpen={showRecreateModal}
-					onClose={() => setShowRecreateModal(false)}
-					title="Recreate Slots"
-				>
-					<p className="py-4">
-						Are you sure you want to recreate slots? All existing slots will be deleted and new ones
-						will be created. This action cannot be undone.
-					</p>
-					<div className="modal-action">
-						<button
-							className="btn btn-ghost"
-							onClick={() => setShowRecreateModal(false)}
-							disabled={isCreatingSlots}
-						>
-							Cancel
-						</button>
-						<button
-							className="btn btn-error"
-							onClick={() => void handleCreateSlots()}
-							disabled={isCreatingSlots}
-						>
-							{isCreatingSlots ? (
-								<>
-									<span className="loading loading-spinner loading-sm"></span>
-									Recreating...
-								</>
-							) : (
-								"Recreate Slots"
-							)}
-						</button>
-					</div>
-				</Modal>
 			</div>
 		</PageLayout>
 	)

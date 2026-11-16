@@ -1,5 +1,5 @@
-import { parseLocalDate, parseUtcDateTime, registrationHasStarted } from "@repo/domain/functions"
-import { StartTypeChoices, ClubEvent } from "@repo/domain/types"
+import { parseLocalDate, parseUtcDateTime } from "@repo/domain/functions"
+import { StartTypeChoices } from "@repo/domain/types"
 
 export const START_TYPE_LABELS: Record<string, string> = {
 	[StartTypeChoices.TEETIMES]: "Tee Times",
@@ -33,23 +33,6 @@ export function formatDateTime(dateTimeString: string | null | undefined): strin
 
 export function getStartTypeLabel(startType: string | null | undefined): string {
 	return START_TYPE_LABELS[startType || ""] || "N/A"
-}
-
-// Button state helpers
-export function shouldDisableCreateSlots(isCreatingSlots: boolean, event: ClubEvent): boolean {
-	return isCreatingSlots || registrationHasStarted(event)
-}
-
-export function shouldDisableAddTeeTime(totalSpots: number, isAddingTeeTime: boolean): boolean {
-	return totalSpots === 0 || isAddingTeeTime
-}
-
-export function shouldShowRecreateModal(totalSpots: number): boolean {
-	return totalSpots > 0
-}
-
-export function getCreateButtonLabel(totalSpots: number): string {
-	return totalSpots > 0 ? "Recreate Slots" : "Create Slots"
 }
 
 // Badge variant helpers

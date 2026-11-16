@@ -7,6 +7,7 @@ import {
 	course,
 	DrizzleService,
 	hole,
+	player,
 	registrationSlot,
 	type RegistrationSlotRow,
 } from "../../database"
@@ -22,13 +23,16 @@ export type NewSlot = Pick<
 export class SlotSetupRepository {
 	constructor(@Inject(DrizzleService) private drizzle: DrizzleService) {}
 
-	/** Every slot of the event with its hole and course, in course, order, hole order. */
+	/** Every slot of the event with its hole, course, and player, in course, order, hole, slot order. */
 	async listSlots(eventId: number) {
 		return this.drizzle.db
 			.select({
 				id: registrationSlot.id,
+				slot: registrationSlot.slot,
 				status: registrationSlot.status,
 				playerId: registrationSlot.playerId,
+				firstName: player.firstName,
+				lastName: player.lastName,
 				startingOrder: registrationSlot.startingOrder,
 				holeId: hole.id,
 				holeNumber: hole.holeNumber,
@@ -38,8 +42,14 @@ export class SlotSetupRepository {
 			.from(registrationSlot)
 			.innerJoin(hole, eq(hole.id, registrationSlot.holeId))
 			.innerJoin(course, eq(course.id, hole.courseId))
+			.leftJoin(player, eq(player.id, registrationSlot.playerId))
 			.where(eq(registrationSlot.eventId, eventId))
-			.orderBy(asc(course.name), asc(registrationSlot.startingOrder), asc(hole.holeNumber))
+			.orderBy(
+				asc(course.name),
+				asc(registrationSlot.startingOrder),
+				asc(hole.holeNumber),
+				asc(registrationSlot.slot),
+			)
 	}
 
 	async findHoles(tx: Db, courseIds: number[]) {

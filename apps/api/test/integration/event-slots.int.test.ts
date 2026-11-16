@@ -257,25 +257,31 @@ describe("registration slots", () => {
 		})
 	})
 
-	it("lists the event's groups", async () => {
+	it("lists the event's groups with their slots and players", async () => {
 		const evt = await createEvent({ totalGroups: 2 })
 		await post(`/events/${evt.id}/slots`)
+		const player = await createUser()
+		const first = (await slotsOf(evt.id)).find((s) => s.startingOrder === 0 && s.slot === 1)!
+		await testDb()
+			.update(registrationSlot)
+			.set({ playerId: player.playerId, status: "R" })
+			.where(eq(registrationSlot.id, first.id))
 
 		const res = await t.http(eventAdmin).get(`/events/${evt.id}/slots`)
 
-		expect(res.body).toEqual([
-			expect.objectContaining({
-				startingOrder: 0,
-				holeNumber: 1,
-				total: 4,
-				statusCounts: { A: 4 },
-			}),
-			expect.objectContaining({
-				startingOrder: 1,
-				holeNumber: 1,
-				total: 4,
-				statusCounts: { A: 4 },
-			}),
+		const groups = res.body as Group[]
+		expect(groups.map((g) => [g.startingOrder, g.total, g.statusCounts, g.filled])).toEqual([
+			[0, 4, { A: 3, R: 1 }, 1],
+			[1, 4, { A: 4 }, 0],
 		])
+		expect(groups[0]).toMatchObject({
+			holeNumber: 1,
+			slots: [
+				{ slot: 0, status: "A", playerName: null },
+				{ slot: 1, status: "R", playerName: `${player.firstName} ${player.lastName}` },
+				{ slot: 2, status: "A", playerName: null },
+				{ slot: 3, status: "A", playerName: null },
+			],
+		})
 	})
 })

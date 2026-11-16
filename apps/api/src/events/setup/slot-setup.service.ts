@@ -36,7 +36,7 @@ export class SlotSetupService {
 		const groups = new Map<string, SlotGroup>()
 		for (const s of await this.slots.listSlots(eventId)) {
 			const key = `${s.holeId}:${s.startingOrder}`
-			const group = groups.get(key) ?? {
+			const group: SlotGroup = groups.get(key) ?? {
 				courseId: s.courseId,
 				courseName: s.courseName,
 				holeId: s.holeId,
@@ -45,10 +45,17 @@ export class SlotSetupService {
 				statusCounts: {},
 				filled: 0,
 				total: 0,
+				slots: [],
 			}
 			group.statusCounts[s.status] = (group.statusCounts[s.status] ?? 0) + 1
 			if (s.playerId !== null) group.filled++
 			group.total++
+			group.slots.push({
+				id: s.id,
+				slot: s.slot,
+				status: s.status,
+				playerName: s.firstName ? `${s.firstName} ${s.lastName}` : null,
+			})
 			groups.set(key, group)
 		}
 		return [...groups.values()]

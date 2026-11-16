@@ -1,23 +1,18 @@
 import { notFound } from "next/navigation"
 
-import type { ClubEvent } from "@repo/domain/types"
-
 import LinkCard from "@/components/link-card"
 import { PageLayout } from "@/components/ui/page-layout"
-import { apiGet } from "@/lib/server-api"
 
 export default async function EventHubPage({ params }: { params: Promise<{ eventId: string }> }) {
 	const eventId = Number((await params).eventId)
 	if (!Number.isInteger(eventId)) notFound()
-
-	const event = await apiGet<ClubEvent>(`/events/${eventId}/setup`)
 
 	return (
 		<PageLayout maxWidth="5xl">
 			<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
 				<LinkCard
 					title="Event Setup"
-					description="Edit the event's settings, courses, and fees."
+					description="Settings, courses, slots, fees, sessions, and copying the event."
 					href={`/events/${eventId}/setup`}
 					icon={"⚙️"}
 				/>
@@ -69,24 +64,6 @@ export default async function EventHubPage({ params }: { params: Promise<{ event
 					disabled={false}
 					icon={"💰"}
 				/>
-
-				<LinkCard
-					title="Copy Event"
-					description="Copy this event to one or more new dates."
-					href={`/events/${eventId}/copy`}
-					disabled={false}
-					icon={"📋"}
-				/>
-
-				{!event.canChoose && (
-					<LinkCard
-						title="Session Configuration"
-						description="Configure sessions and fee overrides for this event."
-						href={`/events/${eventId}/sessions`}
-						disabled={false}
-						icon={"📅"}
-					/>
-				)}
 			</div>
 		</PageLayout>
 	)
