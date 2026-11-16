@@ -190,7 +190,10 @@ export function EventSettingsForm({
 					<TabsTrigger key={t} value={t} className={TAB_TRIGGER_CLASS}>
 						{TAB_LABELS[t]}
 						{tabHasError(t, errors) && (
-							<span className="size-2 rounded-full bg-destructive" aria-label="has errors" />
+							<>
+								<span className="size-2 rounded-full bg-destructive" aria-hidden="true" />
+								<span className="sr-only">(has errors)</span>
+							</>
 						)}
 					</TabsTrigger>
 				))}

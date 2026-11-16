@@ -58,9 +58,9 @@ describe("EventSettingsForm", () => {
 
 		await userEvent.click(screen.getByRole("button", { name: "Save settings" }))
 
-		const registration = await screen.findByRole("tab", { name: /Registration/ })
+		// The error state commits after the tab switch, so wait for the marked tab itself.
+		const registration = await screen.findByRole("tab", { name: "Registration (has errors)" })
 		expect(registration).toHaveAttribute("data-state", "active")
-		expect(screen.getByLabelText("has errors")).toBeInTheDocument()
 		expect(screen.getByText("Enter a whole number")).toBeVisible()
 	})
 
