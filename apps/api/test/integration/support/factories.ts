@@ -92,6 +92,7 @@ export async function createEvent(overrides: Partial<typeof event.$inferInsert> 
 		canChoose: 1,
 		ghinRequired: 0,
 		startDate: "2027-05-05",
+		startTime: "3:00 PM",
 		startType: StartTypeChoices.TEETIMES,
 		status: EventStatusChoices.SCHEDULED,
 		season: 2027,

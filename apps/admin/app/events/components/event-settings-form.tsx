@@ -147,6 +147,7 @@ export function EventSettingsForm({
 	extraTabs = [],
 	copyFromEventId,
 	tags = [],
+	initialTab = "event",
 }: {
 	event?: ClubEvent
 	/** For a new event (no `event`): values that replace the built-in starting values, such as the season. */
@@ -159,6 +160,8 @@ export function EventSettingsForm({
 	copyFromEventId?: number
 	/** Choices for the photo tag. */
 	tags?: ContentTag[]
+	/** The tab to open first, e.g. from a readiness finding's link. */
+	initialTab?: string
 }) {
 	const [state, formAction, isPending] = useActionState(
 		async (prev: FormState<SettingsField>, formData: FormData) => {
@@ -170,7 +173,7 @@ export function EventSettingsForm({
 		},
 		{ status: "idle" },
 	)
-	const [selected, setTab] = useState<string>("event")
+	const [selected, setTab] = useState<string>(initialTab)
 	// A tab that is no longer shown (e.g. Fees after turning registration off) falls back to Event.
 	const tab =
 		TABS.includes(selected as Tab) || extraTabs.some((t) => t.value === selected)

@@ -1,4 +1,5 @@
 import { BadRequestException } from "@nestjs/common"
+import { dateOrderIssues, startTimeIssue } from "@repo/domain/functions"
 import {
 	AgeRestrictionTypeChoices,
 	type EventSettingsInput,
@@ -84,9 +85,9 @@ export const eventSettingsSchema = z
 				"Signup start and signup end are required when an event includes registration",
 			)
 		}
-		if (e.signupStart && e.signupEnd && new Date(e.signupStart) > new Date(e.signupEnd)) {
-			fail("signupEnd", "Signup start must be earlier than signup end")
-		}
+		for (const issue of dateOrderIssues(e)) fail(issue.field, issue.message)
+		const startTime = startTimeIssue(e)
+		if (startTime) fail("startTime", startTime)
 	})
 
 export type EventSettings = z.infer<typeof eventSettingsSchema>

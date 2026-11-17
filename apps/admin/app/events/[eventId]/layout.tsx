@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation"
 
 import { parseLocalDate } from "@repo/domain/functions"
-import type { ClubEvent } from "@repo/domain/types"
+import type { ClubEvent, EventReadiness } from "@repo/domain/types"
 
-import { apiGet } from "@/lib/server-api"
+import { apiGet, apiRequest } from "@/lib/server-api"
+
+import { countFindings, ReadinessIndicator } from "../components/readiness-indicator"
 
 export default async function EventLayout({
 	children,
@@ -16,7 +18,11 @@ export default async function EventLayout({
 	if (!Number.isInteger(eventId)) notFound()
 
 	// The setup read works for events that are not complete yet (no fees or courses).
-	const event = await apiGet<ClubEvent>(`/events/${eventId}/setup`)
+	const [event, readiness] = await Promise.all([
+		apiGet<ClubEvent>(`/events/${eventId}/setup`),
+		// Event Admin only: other admins see the event without the indicator.
+		apiRequest<EventReadiness>(`/events/${eventId}/readiness`),
+	])
 	const date = parseLocalDate(event.startDate).toLocaleDateString("en-US", {
 		month: "short",
 		day: "numeric",
@@ -30,6 +36,11 @@ export default async function EventLayout({
 					<h2 className="mb-4 text-center text-xl font-bold text-primary">
 						{date}: {event.name}
 					</h2>
+					{readiness.ok && readiness.data.applies && (
+						<div className="mb-4 flex justify-center">
+							<ReadinessIndicator eventId={eventId} counts={countFindings(readiness.data)} />
+						</div>
+					)}
 				</div>
 			</div>
 			{children}

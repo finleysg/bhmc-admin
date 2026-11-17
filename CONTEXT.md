@@ -58,6 +58,10 @@ The readiness milestone an event must pass before its signup opens.
 **Ready to Play**:
 The readiness milestone an event must pass between registration closing and play.
 
+**Readiness Indicator**:
+The red, yellow, or green dot summarizing an event's findings for its current milestone: red for any blocking finding, yellow for warnings not dismissed, green for neither.
+_Avoid_: Event status, health
+
 ## Results and closeout
 
 **Challenge Period**:

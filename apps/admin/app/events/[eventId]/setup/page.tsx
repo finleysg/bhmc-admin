@@ -21,8 +21,15 @@ import { SessionsPanel } from "./components/sessions-panel"
 import { SlotsPanel } from "./components/slots-panel"
 
 /** The event workspace: settings, courses, slots, fees, and sessions, as tabs. */
-export default async function EventSetupPage({ params }: { params: Promise<{ eventId: string }> }) {
+export default async function EventSetupPage({
+	params,
+	searchParams,
+}: {
+	params: Promise<{ eventId: string }>
+	searchParams: Promise<{ tab?: string }>
+}) {
 	const eventId = Number((await params).eventId)
+	const { tab } = await searchParams
 	if (!Number.isInteger(eventId)) notFound()
 
 	const [event, courses, feeTypes, tags] = await Promise.all([
@@ -79,6 +86,7 @@ export default async function EventSetupPage({ params }: { params: Promise<{ eve
 						submitLabel="Save settings"
 						extraTabs={extraTabs}
 						tags={tags}
+						initialTab={tab}
 					/>
 				</CardContent>
 			</Card>

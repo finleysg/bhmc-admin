@@ -26,8 +26,13 @@ function serve(event: Partial<ClubEvent>) {
 		)
 }
 
-async function renderPage() {
-	render(await EventSetupPage({ params: Promise.resolve({ eventId: "7" }) }))
+async function renderPage(tab?: string) {
+	render(
+		await EventSetupPage({
+			params: Promise.resolve({ eventId: "7" }),
+			searchParams: Promise.resolve({ tab }),
+		}),
+	)
 }
 
 describe("EventSetupPage", () => {
@@ -42,6 +47,13 @@ describe("EventSetupPage", () => {
 		expect(screen.getByRole("tab", { name: "Fees" })).toBeInTheDocument()
 		expect(screen.queryByRole("tab", { name: "Sessions" })).not.toBeInTheDocument()
 		expect(apiGet).toHaveBeenCalledWith("/events/7/slots")
+	})
+
+	it("opens the tab named in the URL", async () => {
+		serve({ canChoose: true, registrationType: "M" })
+		await renderPage("fees")
+
+		expect(screen.getByRole("tab", { name: "Fees" })).toHaveAttribute("aria-selected", "true")
 	})
 
 	it("shows Sessions, not Slots, when players register for a session", async () => {

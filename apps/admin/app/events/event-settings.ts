@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { dateOrderIssues, startTimeIssue } from "@repo/domain/functions"
 import {
 	AgeRestrictionTypeChoices,
 	EventStatusChoices,
@@ -54,46 +55,56 @@ const datetime = z.string().transform((v, ctx) => {
 	return iso
 })
 
-const settingsSchema = z.object({
-	eventType: choice(EventTypeChoices),
-	name: z.string().trim().min(1, "Name is required").max(100, "At most 100 characters"),
-	rounds: optionalCount,
-	registrationType: choice(RegistrationTypeChoices),
-	skinsType: optionalChoice(SkinTypeChoices),
-	minimumSignupGroupSize: optionalCount,
-	maximumSignupGroupSize: optionalCount,
-	groupSize: optionalCount,
-	totalGroups: optionalCount,
-	startType: optionalChoice(StartTypeChoices),
-	canChoose: z.boolean(),
-	ghinRequired: z.boolean(),
-	seasonPoints: optionalCount,
-	notes: z
-		.string()
-		.trim()
-		.transform((v) => v || null),
-	startDate: z.iso.date("Enter a date"),
-	startTime: text(40),
-	prioritySignupStart: datetime,
-	signupStart: datetime,
-	signupEnd: datetime,
-	paymentsEnd: datetime,
-	registrationMaximum: optionalCount,
-	portalUrl: text(240),
-	externalUrl: text(255),
-	status: choice(EventStatusChoices),
-	season: requiredCount(2000),
-	teeTimeSplits: text(10),
-	starterTimeInterval: requiredCount(0),
-	teamSize: requiredCount(1),
-	signupWaves: optionalCount,
-	ageRestriction: optionalCount,
-	ageRestrictionType: choice(AgeRestrictionTypeChoices),
-	defaultTagId: z
-		.string()
-		.transform((v) => (v === NONE || v === "" ? null : Number(v)))
-		.pipe(wholeNumber.positive("Choose a tag").nullable()),
-}) satisfies z.ZodType<EventSettingsInput>
+const settingsSchema = z
+	.object({
+		eventType: choice(EventTypeChoices),
+		name: z.string().trim().min(1, "Name is required").max(100, "At most 100 characters"),
+		rounds: optionalCount,
+		registrationType: choice(RegistrationTypeChoices),
+		skinsType: optionalChoice(SkinTypeChoices),
+		minimumSignupGroupSize: optionalCount,
+		maximumSignupGroupSize: optionalCount,
+		groupSize: optionalCount,
+		totalGroups: optionalCount,
+		startType: optionalChoice(StartTypeChoices),
+		canChoose: z.boolean(),
+		ghinRequired: z.boolean(),
+		seasonPoints: optionalCount,
+		notes: z
+			.string()
+			.trim()
+			.transform((v) => v || null),
+		startDate: z.iso.date("Enter a date"),
+		startTime: text(40),
+		prioritySignupStart: datetime,
+		signupStart: datetime,
+		signupEnd: datetime,
+		paymentsEnd: datetime,
+		registrationMaximum: optionalCount,
+		portalUrl: text(240),
+		externalUrl: text(255),
+		status: choice(EventStatusChoices),
+		season: requiredCount(2000),
+		teeTimeSplits: text(10),
+		starterTimeInterval: requiredCount(0),
+		teamSize: requiredCount(1),
+		signupWaves: optionalCount,
+		ageRestriction: optionalCount,
+		ageRestrictionType: choice(AgeRestrictionTypeChoices),
+		defaultTagId: z
+			.string()
+			.transform((v) => (v === NONE || v === "" ? null : Number(v)))
+			.pipe(wholeNumber.positive("Choose a tag").nullable()),
+	})
+	// Date order and the tee sheet's start time are checked here too, so the field is
+	// highlighted before the API refuses it.
+	.superRefine((e, ctx) => {
+		for (const issue of dateOrderIssues(e)) {
+			ctx.addIssue({ code: "custom", path: [issue.field], message: issue.message })
+		}
+		const startTime = startTimeIssue(e)
+		if (startTime) ctx.addIssue({ code: "custom", path: ["startTime"], message: startTime })
+	}) satisfies z.ZodType<EventSettingsInput>
 
 export type SettingsField = keyof EventSettingsInput
 
@@ -102,8 +113,9 @@ const CHECKBOXES = new Set<string>(["canChoose", "ghinRequired"])
 const textValue = (value: FormDataEntryValue | null) => (typeof value === "string" ? value : "")
 
 /**
- * Reads the event settings form. Checks the shape of each field; the API
- * enforces the rules between fields and reports them as the form's message.
+ * Reads the event settings form. Checks the shape of each field, the order of the
+ * dates, and the tee sheet's start time; the API enforces the other rules between fields and reports them as
+ * the form's message.
  */
 export function parseEventSettings(
 	formData: FormData,

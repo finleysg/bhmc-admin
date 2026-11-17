@@ -3,7 +3,15 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 import { ApiClient } from "../api-client"
-import { type CommandContext, login, logout, whoami } from "../commands"
+import {
+	type CommandContext,
+	dismissWarning,
+	login,
+	logout,
+	readiness,
+	restoreWarning,
+	whoami,
+} from "../commands"
 import type { CliConfig } from "../config"
 import { CredentialStore } from "../credentials"
 
@@ -141,6 +149,97 @@ describe("CLI commands", () => {
 		it("succeeds when already logged out", async () => {
 			expect(await logout(ctx)).toEqual({ loggedOut: true, apiUrl: "http://api.test" })
 			expect(fetchMock).not.toHaveBeenCalled()
+		})
+	})
+
+	describe("readiness", () => {
+		const warning = {
+			code: "fee-differs",
+			subject: "3",
+			severity: "warning",
+			what: "Cart Fee is $14.00",
+			dismissed: false,
+		}
+		const eventReadiness = (dismissed = false) => ({
+			eventId: 7,
+			applies: true,
+			level: dismissed ? "green" : "yellow",
+			findings: [{ ...warning, dismissed }],
+		})
+
+		beforeEach(async () => {
+			await ctx.credentials.set("http://api.test", { token: "tok-1", email: "ops@example.com" })
+		})
+
+		const call = (n: number) => fetchMock.mock.calls[n] as [string, RequestInit]
+
+		it("shows one event's findings", async () => {
+			fetchMock.mockReturnValueOnce(respond(200, eventReadiness()))
+			expect(await readiness(ctx, { event: "7" })).toEqual(eventReadiness())
+			expect(call(0)[0]).toBe("http://api.test/events/7/readiness")
+		})
+
+		it("summarizes a season", async () => {
+			fetchMock.mockReturnValueOnce(respond(200, []))
+			await readiness(ctx, { season: "2027" })
+			expect(call(0)[0]).toBe("http://api.test/readiness?season=2027")
+		})
+
+		it("needs an event or a season", async () => {
+			await expect(readiness(ctx, {})).rejects.toThrow("Give --event <id> or --season <year>")
+		})
+
+		it("previews a dismissal without changing anything", async () => {
+			fetchMock.mockReturnValueOnce(respond(200, eventReadiness()))
+
+			const result = await dismissWarning(ctx, { eventId: "7", code: "fee-differs", subject: "3" })
+
+			expect(result).toEqual({ dryRun: true, wouldDismiss: warning })
+			expect(fetchMock).toHaveBeenCalledTimes(1)
+		})
+
+		it("dismisses with --apply", async () => {
+			fetchMock
+				.mockReturnValueOnce(respond(200, eventReadiness()))
+				.mockReturnValueOnce(respond(201, eventReadiness(true)))
+
+			const result = await dismissWarning(ctx, {
+				eventId: "7",
+				code: "fee-differs",
+				subject: "3",
+				apply: true,
+			})
+
+			expect(result).toEqual(eventReadiness(true))
+			expect(call(1)[0]).toBe("http://api.test/events/7/readiness/dismissals")
+			expect(call(1)[1]).toMatchObject({
+				method: "POST",
+				body: JSON.stringify({ code: "fee-differs", subject: "3" }),
+			})
+			expect((call(1)[1].headers as Record<string, string>)["X-Admin-Client"]).toBe("cli")
+		})
+
+		it("restores with --apply", async () => {
+			fetchMock
+				.mockReturnValueOnce(respond(200, eventReadiness(true)))
+				.mockReturnValueOnce(respond(200, eventReadiness()))
+
+			await restoreWarning(ctx, { eventId: "7", code: "fee-differs", subject: "3", apply: true })
+
+			expect(call(1)[0]).toBe(
+				"http://api.test/events/7/readiness/dismissals?code=fee-differs&subject=3",
+			)
+			expect(call(1)[1].method).toBe("DELETE")
+		})
+
+		it("names the event's warnings when the one asked for is not there", async () => {
+			fetchMock.mockReturnValueOnce(respond(200, eventReadiness()))
+
+			await expect(
+				dismissWarning(ctx, { eventId: "7", code: "schedule-differs", subject: "startTime" }),
+			).rejects.toThrow(
+				"Event 7 has no warning schedule-differs startTime. Its warnings: fee-differs 3",
+			)
 		})
 	})
 })

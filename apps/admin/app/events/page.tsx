@@ -1,7 +1,12 @@
 import Link from "next/link"
 
 import { getEventTypeName, parseLocalDate } from "@repo/domain/functions"
-import { EventTypeChoices, RegistrationTypeChoices, type ClubEvent } from "@repo/domain/types"
+import {
+	EventTypeChoices,
+	RegistrationTypeChoices,
+	type ClubEvent,
+	type ReadinessSummary,
+} from "@repo/domain/types"
 
 import { Button } from "@/components/shadcn/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/shadcn/card"
@@ -13,8 +18,9 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/shadcn/table"
-import { apiGet } from "@/lib/server-api"
+import { apiGet, apiRequest } from "@/lib/server-api"
 
+import { ReadinessDot } from "./components/readiness-indicator"
 import { ScrollToUpcoming } from "./components/scroll-to-upcoming"
 import { SeasonSelect } from "./components/season-select"
 
@@ -41,7 +47,15 @@ export default async function EventsPage({
 	const requested = Number((await searchParams).season)
 	const season = Number.isInteger(requested) && requested > 0 ? requested : new Date().getFullYear()
 
-	const events = (await apiGet<ClubEvent[]>(`/events?season=${season}`))
+	const [allEvents, readiness] = await Promise.all([
+		apiGet<ClubEvent[]>(`/events?season=${season}`),
+		// Event Admin only: other admins see the list without readiness.
+		apiRequest<ReadinessSummary[]>(`/readiness?season=${season}`),
+	])
+	const readinessOf = new Map(
+		(readiness.ok ? readiness.data : []).filter((r) => r.applies).map((r) => [r.eventId, r]),
+	)
+	const events = allEvents
 		.filter((e) => e.registrationType !== RegistrationTypeChoices.NONE)
 		.sort((a, b) => a.startDate.localeCompare(b.startDate))
 	const today = new Date().toISOString().slice(0, 10)
@@ -84,13 +98,18 @@ export default async function EventsPage({
 												{formatDate(event.startDate)}
 											</TableCell>
 											<TableCell>
-												<Link
-													href={`/events/${event.id}`}
-													// Stretched link: its click area covers the whole row.
-													className="after:absolute after:inset-0"
-												>
-													{event.name}
-												</Link>
+												<span className="flex items-center gap-2">
+													<Link
+														href={`/events/${event.id}`}
+														// Stretched link: its click area covers the whole row.
+														className="after:absolute after:inset-0"
+													>
+														{event.name}
+													</Link>
+													{readinessOf.has(event.id) && (
+														<ReadinessDot counts={readinessOf.get(event.id)!} />
+													)}
+												</span>
 											</TableCell>
 											<TableCell
 												className={`whitespace-nowrap font-medium ${eventTypeColor[event.eventType] ?? ""}`}

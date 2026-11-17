@@ -8,6 +8,11 @@ A command-line client for the BHMC admin API, for agents acting on an operator's
 pnpm -s bhmc login            # prompts for email and password; stores the token
 pnpm -s bhmc whoami           # the logged-in user and their admin roles
 pnpm -s bhmc logout           # revokes the token with Django and forgets it
+
+pnpm -s bhmc readiness --event 742          # Ready to Open Registration findings for one event
+pnpm -s bhmc readiness --season 2027        # red/yellow/green summary of every event in a season
+pnpm -s bhmc readiness dismiss 742 fee-differs 3 [--apply]   # accept a warning (dry run without --apply)
+pnpm -s bhmc readiness restore 742 fee-differs 3 [--apply]   # bring a dismissed warning back
 ```
 
 Use `-s` (silent) so pnpm's own banner doesn't mix with the JSON output.

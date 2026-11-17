@@ -134,6 +134,29 @@ describe("event workspace actions", () => {
 			expect(fetchMock).not.toHaveBeenCalled()
 		})
 
+		it("reports dates out of order on the field without calling the API", async () => {
+			const result = await updateEventSettings(
+				7,
+				idle,
+				settingsForm({ signupEnd: "2027-04-27T12:00" }),
+			)
+
+			expect(result.status).toBe("error")
+			expect(result.fieldErrors).toEqual({
+				signupEnd: "Signup start must be earlier than signup end",
+			})
+			expect(fetchMock).not.toHaveBeenCalled()
+		})
+
+		it("reports a tee-sheet start time that is not a time", async () => {
+			const result = await updateEventSettings(7, idle, settingsForm({ startTime: "2 PM" }))
+
+			expect(result.fieldErrors).toEqual({
+				startTime: "Enter a start time like 2:00 PM: players choose tee times, which count from it",
+			})
+			expect(fetchMock).not.toHaveBeenCalled()
+		})
+
 		it("returns the API's message for rules between fields", async () => {
 			fetchMock.mockReturnValueOnce(
 				respond(400, { message: ["groupSize: A group size is required"] }),

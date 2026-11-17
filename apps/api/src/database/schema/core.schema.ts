@@ -88,3 +88,24 @@ export const adminSetting = mysqlTable(
 		unique("key").on(table.key),
 	],
 )
+
+/** A readiness warning accepted for one event (Django model core.ReadinessDismissal). */
+export const readinessDismissal = mysqlTable(
+	"core_readinessdismissal",
+	{
+		id: int().autoincrement().notNull(),
+		eventId: int("event_id")
+			.notNull()
+			.references(() => event.id),
+		code: varchar({ length: 40 }).notNull(),
+		subject: varchar({ length: 60 }).notNull(),
+		dismissedById: int("dismissed_by_id")
+			.notNull()
+			.references(() => authUser.id),
+		dismissedAt: datetime("dismissed_at", { mode: "string", fsp: 6 }).notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.id], name: "core_readinessdismissal_id" }),
+		unique("readiness_dismissal_unique").on(table.eventId, table.code, table.subject),
+	],
+)

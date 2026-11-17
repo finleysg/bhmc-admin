@@ -18,6 +18,13 @@ export default async function EventHubPage({ params }: { params: Promise<{ event
 				/>
 
 				<LinkCard
+					title="Ready to Open Registration"
+					description="What still needs fixing before registration opens."
+					href={`/events/${eventId}/readiness`}
+					icon={"🚦"}
+				/>
+
+				<LinkCard
 					title="Player Management"
 					description="Manage player change requests (add, move, drop, etc)."
 					href={`/events/${eventId}/players`}

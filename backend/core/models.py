@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.db.models import DO_NOTHING
+from django.db.models import CASCADE, DO_NOTHING
 
 from events.models import Event
 from register.models import Player
@@ -139,3 +139,30 @@ class AdminSetting(models.Model):
 
     def __str__(self):
         return self.key
+
+
+class ReadinessDismissal(models.Model):
+    """
+    A readiness warning an Event Admin has accepted for one event, written by the NestJS API.
+    `code` names the check and `subject` what it is about within the event (for example a fee
+    type id), or "" when the check has one finding per event. Blocking findings are never
+    dismissed.
+    """
+
+    event = models.ForeignKey(verbose_name="Event", to=Event, on_delete=CASCADE)
+    code = models.CharField(verbose_name="Check", max_length=40)
+    subject = models.CharField(verbose_name="Subject", max_length=60, blank=True, default="")
+    dismissed_by = models.ForeignKey(
+        verbose_name="Dismissed by", to=settings.AUTH_USER_MODEL, on_delete=DO_NOTHING
+    )
+    dismissed_at = models.DateTimeField(verbose_name="Dismissed at")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["event", "code", "subject"], name="readiness_dismissal_unique"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.event_id} {self.code} {self.subject}"

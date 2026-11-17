@@ -14,6 +14,7 @@ import { GolfgeniusModule } from "./golfgenius/golfgenius.module"
 import { HealthModule } from "./health/health.module"
 import { MailModule } from "./mail/mail.module"
 import { PostHogModule } from "./posthog"
+import { ReadinessModule } from "./readiness"
 import { RegistrationModule } from "./registration/registration.module"
 import { ReportsModule } from "./reports/reports.module"
 import { SettingsModule } from "./settings"
@@ -33,6 +34,7 @@ import { StripeModule } from "./stripe/stripe.module"
 		GolfgeniusModule,
 		HealthModule,
 		MailModule,
+		ReadinessModule,
 		RegistrationModule,
 		ReportsModule,
 		SettingsModule,

@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common"
 import type { MySql2Database } from "drizzle-orm/mysql2"
 import { RegistrationStatusChoices, StartTypeChoices, type SlotGroup } from "@repo/domain/types"
+import { registrationOpensAt } from "@repo/domain/functions"
 
 import { AuditService, type AuditContext } from "../../audit"
 import { fromMysqlDatetime } from "../../common"
@@ -276,9 +277,8 @@ function requireChoosableSlots(evt: EventRow): void {
 	if (!evt.groupSize) throw new BadRequestException("Set the event's group size first")
 }
 
-/** Registration opens at the priority signup start, or the signup start if there is none. */
 function refuseAfterRegistrationOpens(evt: EventRow, action: string): void {
-	const opens = evt.prioritySignupStart ?? evt.signupStart
+	const opens = registrationOpensAt(evt)
 	if (opens && Date.parse(fromMysqlDatetime(opens)) <= Date.now()) {
 		throw new ConflictException(`Cannot ${action} after registration has opened`)
 	}

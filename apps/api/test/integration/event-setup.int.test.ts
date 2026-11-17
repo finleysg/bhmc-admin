@@ -132,14 +132,40 @@ describe("event workspace", () => {
 			["no signup group sizes", { minimumSignupGroupSize: null }, "minimumSignupGroupSize"],
 			["no signup window", { signupEnd: null }, "signupStart"],
 			["signup start after signup end", { signupStart: "2027-05-05T14:00:00.000Z" }, "signupEnd"],
+			[
+				"priority signup after signup start",
+				{ prioritySignupStart: "2027-04-29T14:00:00.000Z" },
+				"signupStart",
+			],
+			[
+				"payments ending before signup ends",
+				{ paymentsEnd: "2027-05-04T16:00:00.000Z" },
+				"paymentsEnd",
+			],
+			[
+				"payments ending after the event date",
+				{ paymentsEnd: "2027-05-06T14:00:00.000Z" },
+				"paymentsEnd",
+			],
 			["an unknown event type", { eventType: "X" }, "eventType"],
+			["a tee-sheet start time that is not a time", { startTime: "Morning Swing" }, "startTime"],
+			["no start time when players choose tee times", { startTime: null }, "startTime"],
 			["a datetime with no offset", { signupStart: "2027-04-28 09:00" }, "signupStart"],
+			["a datetime that is not a date", { signupStart: "not-a-date" }, "signupStart"],
 		])("rejects %s", async (_, overrides, field) => {
 			const res = await t.http(eventAdmin).post("/events").send(settings(overrides))
 
 			expect(res.status).toBe(400)
 			expect((res.body as { message: string[] }).message.join("\n")).toContain(field)
 			expect(await testDb().select().from(event)).toEqual([])
+		})
+
+		it("accepts a start time label when players do not choose tee times", async () => {
+			const res = await t
+				.http(eventAdmin)
+				.post("/events")
+				.send(settings({ canChoose: false, startTime: "Morning Swing" }))
+			expect(res.status).toBe(201)
 		})
 
 		it("refuses a name already used on the same date", async () => {
@@ -170,6 +196,22 @@ describe("event workspace", () => {
 					groupSize: { before: 5, after: 4 },
 				},
 			})
+		})
+
+		it("refuses to save dates out of order", async () => {
+			const created = (await t.http(eventAdmin).post("/events").send(settings())).body as {
+				id: number
+			}
+
+			const res = await t
+				.http(eventAdmin)
+				.put(`/events/${created.id}`)
+				.send(settings({ startDate: "2027-05-03" }))
+
+			expect(res.status).toBe(400)
+			expect((res.body as { message: string[] }).message).toContain(
+				"signupEnd: Signup end is after the event date",
+			)
 		})
 
 		it("does not audit saving unchanged settings", async () => {
@@ -365,7 +407,14 @@ describe("event workspace", () => {
 				.http(eventAdmin)
 				.post("/events")
 				.send({
-					...settings({ name: "Spring Scramble", startDate: "2027-04-07" }),
+					...settings({
+						name: "Spring Scramble",
+						startDate: "2027-04-07",
+						prioritySignupStart: null,
+						signupStart: "2027-03-29T14:00:00.000Z",
+						signupEnd: "2027-04-05T17:00:00.000Z",
+						paymentsEnd: "2027-04-05T22:00:00.000Z",
+					}),
 					copyFromEventId: evt.id,
 				})
 
@@ -415,7 +464,14 @@ describe("event workspace", () => {
 				.http(eventAdmin)
 				.post("/events")
 				.send({
-					...settings({ name: "Spring Scramble", startDate: "2027-03-03" }),
+					...settings({
+						name: "Spring Scramble",
+						startDate: "2027-03-03",
+						prioritySignupStart: null,
+						signupStart: "2027-02-22T14:00:00.000Z",
+						signupEnd: "2027-03-01T17:00:00.000Z",
+						paymentsEnd: "2027-03-01T22:00:00.000Z",
+					}),
 					copyFromEventId: evt.id,
 				})
 

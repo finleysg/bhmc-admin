@@ -54,15 +54,20 @@ Readiness is a shared diagnostic. It produces **findings**, each stating what is
 | Check                                                                                         | Severity |
 | --------------------------------------------------------------------------------------------- | -------- |
 | Dates out of order (priority signup ≤ signup start < signup end ≤ payments end ≤ event start) | Blocking |
+| Players choose tee times but the start time is not a time like "2:00 PM"                      | Blocking |
 | Event status is Canceled                                                                      | Blocking |
 | Players choose slots but no slots exist                                                       | Blocking |
-| Event had sessions in the previous season but has none now, or session fees are missing       | Blocking |
+| Event had sessions in the previous season but has none now, or session fees are missing       | Warning  |
 | Fees required but none configured; courses missing for tee-time or shotgun events             | Blocking |
 | Start time, weekday, or signup offsets differ from most events of the same type this season   | Warning  |
 | An event fee differs from other events of the same type using the same fee type this season   | Warning  |
 
-- Warnings can be dismissed per event, for example a deliberate early start for the season opener.
-- Daily alert: email Event Admins when an event's signup opens within the configured lead time (default 7 days) and the event has findings that are not dismissed.
+- **Date order is also event validity.** The workspace refuses to save an event whose dates are out of order (one shared rule, `dateOrderIssues` in `packages/domain`). Deadlines are compared with the event by club-local calendar date, because the start time is free text. Season Registration is exempt from the comparison with its event date, which is the day its registration opens. The same goes for the start time when players choose tee times: it is the tee sheet's first tee time, so it must read like "2:00 PM" (`startTimeIssue`); otherwise it stays free text such as "Morning Swing". The other blocking checks depend on fees, courses, slots, and sessions added after the event is created, so they are findings, not save errors.
+- Session findings: a warning when the same event last season (same name, or the name with the year moved back) had sessions and this one has none, or when a session that had fee overrides last season has none now. A session with no overrides is otherwise normal. They are warnings, not blocking, because dropping sessions or overrides can be deliberate.
+- Peer comparisons (start time, weekday, signup offsets, fees) need at least three other non-canceled events of the same type in the season, and a value more than half of them share.
+- Warnings can be dismissed per event, for example a deliberate early start for the season opener. A dismissal names the check and its subject (for example the fee type), so dismissing one fee's warning does not hide another's. Dismissals (`core.ReadinessDismissal`) and restores are audited.
+- **Readiness indicator:** the event header (every event page) and the events list show a dot computed from the findings, never stored: red for any blocking finding, yellow for warnings not dismissed, green for neither. It links to the findings page, where each finding links to the workspace tab that fixes it. It shows only while Ready to Open Registration applies: for events with registration, until registration opens (priority signup start, else signup start). It is Event Admin only; other admins see the pages without it.
+- Daily alert: email Event Admins when an event's signup opens within the configured lead time (default 7 days) and the event has findings that are not dismissed. Alert findings name the event; they carry no link because the API has no admin URL setting.
 - Golf Genius and document checks move to **Ready to Play** (slice 4).
 - Format errors in free-text notes are out of scope.
 
@@ -159,7 +164,7 @@ Completion: club maintenance no longer requires Django admin.
 ## Design Boundaries
 
 - Event configuration owns event validity. Roll-forward composes it across many events.
-- Readiness is a shared diagnostic, tied to a milestone (Ready to Open Registration, Ready to Play), not a status screen. It is distinct from **event status** (Scheduled, Tentative, Canceled).
+- Readiness is a shared diagnostic, tied to a milestone (Ready to Open Registration, Ready to Play), not a status screen. It is distinct from **event status** (Scheduled, Tentative, Canceled). The readiness indicator summarizes the current milestone's findings; it is never called a status.
 - Pre-event preparation and closeout are separate workflows with different prerequisites and recovery needs.
 - Troubleshooting exposes context and targeted repairs, not table editors.
 - Local corrections are never silently overwritten by later imports.

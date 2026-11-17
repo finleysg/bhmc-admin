@@ -39,6 +39,7 @@ const RESET_TABLES = [
 	"register_registrationslot",
 	"register_registration",
 	"register_player",
+	"core_readinessdismissal",
 	"events_eventsessionfee",
 	"events_eventsession",
 	"events_eventfee",
