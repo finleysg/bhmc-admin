@@ -62,3 +62,5 @@ bhmc-database.json
 
 # playwright-cli (browser automation tool)
 .playwright-cli/
+# Local database backups (credentials and member data)
+backup_*.sql
