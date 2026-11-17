@@ -19,6 +19,17 @@ import { CredentialStore } from "../credentials"
 const respond = (status: number, body: unknown) =>
 	Promise.resolve({ ok: status < 400, status, json: () => Promise.resolve(body) } as Response)
 
+/** Django's login response: the token arrives only as the httponly access_token cookie. */
+const loggedIn = (token: string | null) =>
+	Promise.resolve(
+		new Response(JSON.stringify({}), {
+			status: 200,
+			headers: token
+				? { "Set-Cookie": `access_token=${token}; HttpOnly; Path=/; SameSite=Lax` }
+				: {},
+		}),
+	)
+
 const me = {
 	id: 1,
 	email: "ops@example.com",
@@ -58,9 +69,7 @@ describe("CLI commands", () => {
 
 	describe("login", () => {
 		it("logs in with Django, stores the token, and confirms it against the API", async () => {
-			fetchMock
-				.mockReturnValueOnce(respond(200, { auth_token: "tok-1" }))
-				.mockReturnValueOnce(respond(200, me))
+			fetchMock.mockReturnValueOnce(loggedIn("tok-1")).mockReturnValueOnce(respond(200, me))
 
 			const result = await login(ctx, {})
 
@@ -81,14 +90,19 @@ describe("CLI commands", () => {
 		})
 
 		it("uses --email instead of asking for it", async () => {
-			fetchMock
-				.mockReturnValueOnce(respond(200, { auth_token: "tok-1" }))
-				.mockReturnValueOnce(respond(200, me))
+			fetchMock.mockReturnValueOnce(loggedIn("tok-1")).mockReturnValueOnce(respond(200, me))
 
 			await login(ctx, { email: "given@example.com" })
 
 			expect(ctx.ask).toHaveBeenCalledTimes(1)
 			expect(fetchMock.mock.calls[0]![1].body).toContain("given@example.com")
+		})
+
+		it("stores nothing when Django sends no token", async () => {
+			fetchMock.mockReturnValueOnce(loggedIn(null))
+
+			await expect(login(ctx, {})).rejects.toThrow("no access_token cookie")
+			expect(await ctx.credentials.get("http://api.test")).toBeUndefined()
 		})
 
 		it("reports Django's message for bad credentials and stores nothing", async () => {

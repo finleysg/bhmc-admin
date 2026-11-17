@@ -1,6 +1,9 @@
 import { CliError, responseMessage } from "./errors"
 
-/** Logs in with Django (djoser) and returns the operator's token. */
+/**
+ * Logs in with Django and returns the operator's token, which Django sends as the
+ * httponly `access_token` cookie (the browser sites never see it in the body).
+ */
 export async function djangoLogin(
 	djangoUrl: string,
 	email: string,
@@ -12,8 +15,10 @@ export async function djangoLogin(
 		body: JSON.stringify({ email, password }),
 	})
 	if (!res.ok) throw new CliError(await responseMessage(res), res.status)
-	const { auth_token } = (await res.json()) as { auth_token: string }
-	return auth_token
+	const cookie = res.headers.getSetCookie().find((c) => c.startsWith("access_token="))
+	const token = cookie?.slice("access_token=".length).split(";")[0]
+	if (!token) throw new CliError("Django's login response had no access_token cookie")
+	return decodeURIComponent(token)
 }
 
 /** Revokes the token with Django. A token that's already invalid is not an error. */
