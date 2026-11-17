@@ -11,10 +11,12 @@ import { SessionsController } from "./sessions.controller"
 import {
 	EventSetupController,
 	EventSetupLookupsController,
+	SeasonRollForwardController,
 	SlotSetupController,
 } from "./setup/event-setup.controller"
 import { EventSetupRepository } from "./setup/event-setup.repository"
 import { EventSetupService } from "./setup/event-setup.service"
+import { SeasonRollForwardService } from "./setup/season-roll-forward.service"
 import { SessionSetupService } from "./setup/session-setup.service"
 import { SlotSetupRepository } from "./setup/slot-setup.repository"
 import { SlotSetupService } from "./setup/slot-setup.service"
@@ -27,12 +29,14 @@ import { SlotSetupService } from "./setup/slot-setup.service"
 		EventSetupController,
 		EventSetupLookupsController,
 		SlotSetupController,
+		SeasonRollForwardController,
 	],
 	providers: [
 		EventsRepository,
 		EventsService,
 		EventSetupRepository,
 		EventSetupService,
+		SeasonRollForwardService,
 		SessionSetupService,
 		SlotSetupRepository,
 		SlotSetupService,

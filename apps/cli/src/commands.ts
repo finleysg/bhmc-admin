@@ -1,4 +1,12 @@
-import type { AdminRole, EventReadiness, ReadinessSummary } from "@repo/domain/types"
+import type {
+	AdminRole,
+	EventReadiness,
+	ReadinessSummary,
+	RollForwardEventInput,
+	RollForwardInput,
+	RollForwardPreview,
+	RollForwardResult,
+} from "@repo/domain/types"
 
 import type { ApiClient } from "./api-client"
 import type { CliConfig } from "./config"
@@ -110,4 +118,78 @@ export async function restoreWarning(ctx: CommandContext, args: WarningArgs) {
 	if (!args.apply) return { dryRun: true, wouldRestore: finding }
 	const query = new URLSearchParams({ code: args.code, subject })
 	return ctx.api.request<EventReadiness>("DELETE", `/events/${id}/readiness/dismissals?${query}`)
+}
+
+interface RollForwardArgs {
+	from: string
+	to?: string
+	/** Source event ids to leave out, each value comma-separated. */
+	drop?: string[]
+	/** "<sourceEventId>=<YYYY-MM-DD>": a different date than proposed. */
+	date?: string[]
+	/** "<sourceEventId>=<name>": a different name than proposed. */
+	name?: string[]
+	apply?: boolean
+}
+
+/**
+ * Season roll-forward: proposes every event of the source season in the target season
+ * (default: the next), adjusted by --drop, --date, and --name. A dry run shows each
+ * event's issues; --apply creates them all, or none if any has an issue.
+ */
+export async function seasonRollForward(ctx: CommandContext, args: RollForwardArgs) {
+	const fromSeason = season(args.from)
+	const toSeason = args.to ? season(args.to) : fromSeason + 1
+	const path = "/seasons/roll-forward"
+	const proposed = await ctx.api.request<RollForwardPreview>("POST", `${path}/preview`, {
+		fromSeason,
+		toSeason,
+	})
+
+	const known = new Set(proposed.events.map((e) => e.sourceEventId))
+	const check = (id: number) => {
+		if (!known.has(id))
+			throw new CliError(`Event ${id} is not an event of the ${fromSeason} season`)
+		return id
+	}
+	const dropped = new Set(
+		(args.drop ?? []).flatMap((v) => v.split(",")).map((v) => check(eventId(v.trim()))),
+	)
+	const dates = assignments(args.date, check)
+	const names = assignments(args.name, check)
+	const events: RollForwardEventInput[] = proposed.events
+		.filter((e) => !dropped.has(e.sourceEventId))
+		.map((e) => ({
+			sourceEventId: e.sourceEventId,
+			name: names.get(e.sourceEventId) ?? e.name,
+			startDate: dates.get(e.sourceEventId) ?? e.startDate,
+		}))
+	if (events.length === 0) throw new CliError("No events left to roll forward")
+
+	const body: RollForwardInput = { fromSeason, toSeason, events }
+	if (!args.apply) {
+		const preview = await ctx.api.request<RollForwardPreview>("POST", `${path}/preview`, body)
+		const refused = preview.events.filter((e) => e.issues.length > 0).length
+		return { dryRun: true, ...preview, dropped: [...dropped], refused }
+	}
+	return ctx.api.request<RollForwardResult>("POST", path, body)
+}
+
+function season(value: string): number {
+	const year = Number(value)
+	if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+		throw new CliError(`Not a season: ${value}`)
+	}
+	return year
+}
+
+/** Parses "<eventId>=<value>" options into a map. */
+function assignments(values: string[] | undefined, check: (id: number) => number) {
+	const map = new Map<number, string>()
+	for (const v of values ?? []) {
+		const at = v.indexOf("=")
+		if (at < 1 || at === v.length - 1) throw new CliError(`Expected <eventId>=<value>: ${v}`)
+		map.set(check(eventId(v.slice(0, at))), v.slice(at + 1))
+	}
+	return map
 }

@@ -13,6 +13,8 @@ pnpm -s bhmc readiness --event 742          # Ready to Open Registration finding
 pnpm -s bhmc readiness --season 2027        # red/yellow/green summary of every event in a season
 pnpm -s bhmc readiness dismiss 742 fee-differs 3 [--apply]   # accept a warning (dry run without --apply)
 pnpm -s bhmc readiness restore 742 fee-differs 3 [--apply]   # bring a dismissed warning back
+pnpm -s bhmc season roll-forward --from 2026 [--to 2027] [--drop 720,715] [--date 667=2027-01-16] [--name 667="2027 Season Registration"] [--apply]
+                                              # next season's events from 2026's (dry run lists each event's issues)
 ```
 
 Use `-s` (silent) so pnpm's own banner doesn't mix with the JSON output.

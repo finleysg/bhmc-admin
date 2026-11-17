@@ -18,6 +18,8 @@ import type {
 	Course,
 	EventFee,
 	FeeType,
+	RollForwardPreview,
+	RollForwardResult,
 	SlotGroup,
 } from "@repo/domain/types"
 
@@ -26,6 +28,7 @@ import { EventAdmin } from "../../auth"
 import { RevalidatePublicEventsInterceptor } from "../../public-site"
 
 import { EventSetupService } from "./event-setup.service"
+import { SeasonRollForwardService } from "./season-roll-forward.service"
 import { SlotSetupService } from "./slot-setup.service"
 
 /** The event workspace: event settings, courses, and event fees (Event Admin). */
@@ -163,5 +166,26 @@ export class SlotSetupController {
 		@Audit() audit: AuditContext,
 	): Promise<SlotGroup[]> {
 		return this.service.setGroupStatus(eventId, holeId, startingOrder, body, audit)
+	}
+}
+
+/** Season roll-forward: next season's events from a source season's (Event Admin). */
+@Controller("seasons/roll-forward")
+@EventAdmin()
+export class SeasonRollForwardController {
+	constructor(
+		@Inject(SeasonRollForwardService) private readonly service: SeasonRollForwardService,
+	) {}
+
+	@Post("preview")
+	@HttpCode(200)
+	async preview(@Body() body: unknown): Promise<RollForwardPreview> {
+		return this.service.preview(body)
+	}
+
+	@Post()
+	@UseInterceptors(RevalidatePublicEventsInterceptor)
+	async apply(@Body() body: unknown, @Audit() audit: AuditContext): Promise<RollForwardResult> {
+		return this.service.apply(body, audit)
 	}
 }

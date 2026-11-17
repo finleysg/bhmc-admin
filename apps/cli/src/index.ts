@@ -9,6 +9,7 @@ import {
 	logout,
 	readiness,
 	restoreWarning,
+	seasonRollForward,
 	whoami,
 } from "./commands"
 import { loadConfig } from "./config"
@@ -83,6 +84,37 @@ readinessCommand
 	.action(
 		(eventId: string, code: string, subject: string | undefined, options: { apply?: boolean }) =>
 			run((ctx) => restoreWarning(ctx, { eventId, code, subject, apply: options.apply }))(),
+	)
+
+const collect = (value: string, previous: string[]) => [...previous, value]
+
+program
+	.command("season")
+	.description("Season-wide operations")
+	.command("roll-forward")
+	.description(
+		"Create a season's events from another season's, 364 days later (dry run unless --apply)",
+	)
+	.requiredOption("--from <year>", "the season to copy")
+	.option("--to <year>", "the season to create (default: the next one)")
+	.option(
+		"--drop <ids>",
+		"source event ids to leave out, comma-separated (repeatable)",
+		collect,
+		[],
+	)
+	.option("--date <id=YYYY-MM-DD>", "a different date for a source event (repeatable)", collect, [])
+	.option("--name <id=name>", "a different name for a source event (repeatable)", collect, [])
+	.option("--apply", "create the events (all or none)")
+	.action(
+		(options: {
+			from: string
+			to?: string
+			drop: string[]
+			date: string[]
+			name: string[]
+			apply?: boolean
+		}) => run((ctx) => seasonRollForward(ctx, options))(),
 	)
 
 void program.parseAsync()

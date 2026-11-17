@@ -65,9 +65,14 @@ export default async function EventsPage({
 		<div className="mx-auto max-w-3xl space-y-4 md:py-8">
 			<div className="flex items-center justify-between">
 				<h2 className="font-heading text-2xl font-bold">Events</h2>
-				<Button asChild>
-					<Link href={`/events/new?season=${season}`}>New event</Link>
-				</Button>
+				<div className="flex gap-2">
+					<Button asChild variant="outline">
+						<Link href={`/events/roll-forward?season=${season}`}>Roll forward</Link>
+					</Button>
+					<Button asChild>
+						<Link href={`/events/new?season=${season}`}>New event</Link>
+					</Button>
+				</div>
 			</div>
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-between">

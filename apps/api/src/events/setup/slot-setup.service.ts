@@ -61,53 +61,59 @@ export class SlotSetupService {
 		return [...groups.values()]
 	}
 
-	/**
-	 * Creates every slot for an event that has none, all Available: per course,
-	 * one group per tee time on hole 1, or an A and B group on every hole for a
-	 * shotgun. A starter time interval needs no slots of its own: the tee time
-	 * calculator (calculateTeeTime) leaves the starter's gap between start times.
-	 */
+	/** Creates every slot for an event that has none, before registration opens. */
 	async createSlots(eventId: number, context: AuditContext): Promise<SlotGroup[]> {
 		await this.drizzle.db.transaction(async (tx) => {
 			const evt = await this.lockEvent(tx, eventId)
-			requireChoosableSlots(evt)
 			refuseAfterRegistrationOpens(evt, "create slots")
 			if ((await this.slots.countSlots(tx, eventId)) > 0) {
 				throw new ConflictException(
 					"The event already has slots. Append a tee time or delete groups instead.",
 				)
 			}
-			if (evt.startType === StartTypeChoices.TEETIMES && !evt.totalGroups) {
-				throw new BadRequestException("Set the number of groups per course first")
-			}
-
-			const holes = await this.holes(tx, eventId)
-			const groupSize = evt.groupSize!
-			const slots: NewSlot[] = []
-			if (evt.startType === StartTypeChoices.TEETIMES) {
-				for (const h of firstHoles(holes)) {
-					for (let order = 0; order < evt.totalGroups!; order++) {
-						slots.push(...group(eventId, h.id, order, groupSize, AVAILABLE))
-					}
-				}
-			} else {
-				for (const h of holes) {
-					slots.push(...group(eventId, h.id, 0, groupSize, AVAILABLE))
-					slots.push(...group(eventId, h.id, 1, groupSize, AVAILABLE))
-				}
-			}
-
-			await this.slots.insertSlots(tx, slots)
+			const slotCount = await this.insertInitialSlots(tx, evt)
 			await this.audit.record(tx, context, {
 				operation: "event.slots.create",
 				entityType: "event",
 				entityId: eventId,
 				eventId,
 				before: { slotCount: 0 },
-				after: { slotCount: slots.length },
+				after: { slotCount },
 			})
 		})
 		return this.listGroups(eventId)
+	}
+
+	/**
+	 * Inserts every slot of an event without any, all Available, in the caller's
+	 * transaction, and returns how many: per course, one group per tee time on hole 1,
+	 * or an A and B group on every hole for a shotgun. A starter time interval needs no
+	 * slots of its own: the tee time calculator (calculateTeeTime) leaves the starter's
+	 * gap between start times.
+	 */
+	async insertInitialSlots(tx: MySql2Database, evt: EventRow): Promise<number> {
+		requireChoosableSlots(evt)
+		if (evt.startType === StartTypeChoices.TEETIMES && !evt.totalGroups) {
+			throw new BadRequestException("Set the number of groups per course first")
+		}
+
+		const holes = await this.holes(tx, evt.id)
+		const groupSize = evt.groupSize!
+		const slots: NewSlot[] = []
+		if (evt.startType === StartTypeChoices.TEETIMES) {
+			for (const h of firstHoles(holes)) {
+				for (let order = 0; order < evt.totalGroups!; order++) {
+					slots.push(...group(evt.id, h.id, order, groupSize, AVAILABLE))
+				}
+			}
+		} else {
+			for (const h of holes) {
+				slots.push(...group(evt.id, h.id, 0, groupSize, AVAILABLE))
+				slots.push(...group(evt.id, h.id, 1, groupSize, AVAILABLE))
+			}
+		}
+		await this.slots.insertSlots(tx, slots)
+		return slots.length
 	}
 
 	/** Adds one tee time after the last, on every course, and raises the groups per course. */
@@ -264,6 +270,14 @@ export class SlotSetupService {
 		}
 		return holes
 	}
+}
+
+/** Players choose a tee time or starting hole, so the event has registration slots. */
+export function playersChooseSlots(evt: Pick<EventRow, "canChoose" | "startType">): boolean {
+	return (
+		Boolean(evt.canChoose) &&
+		(evt.startType === StartTypeChoices.TEETIMES || evt.startType === StartTypeChoices.SHOTGUN)
+	)
 }
 
 function requireChoosableSlots(evt: EventRow): void {

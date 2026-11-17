@@ -90,6 +90,14 @@ export class EventSetupRepository {
 		return rows.some((r) => r.id !== exceptId)
 	}
 
+	async findSeasonEvents(tx: Db, season: number): Promise<EventRow[]> {
+		return tx
+			.select()
+			.from(event)
+			.where(eq(event.season, season))
+			.orderBy(event.startDate, event.id)
+	}
+
 	async insertEvent(tx: Db, values: EventInsert): Promise<number> {
 		const [result] = await tx.insert(event).values(values)
 		return Number(result.insertId)
@@ -106,6 +114,16 @@ export class EventSetupRepository {
 			.from(eventCourses)
 			.where(eq(eventCourses.eventId, eventId))
 		return rows.map((r) => r.courseId).sort((a, b) => a - b)
+	}
+
+	/** Those of the events that have at least one course. */
+	async findEventIdsWithCourses(tx: Db, eventIds: number[]): Promise<number[]> {
+		if (eventIds.length === 0) return []
+		const rows = await tx
+			.selectDistinct({ eventId: eventCourses.eventId })
+			.from(eventCourses)
+			.where(inArray(eventCourses.eventId, eventIds))
+		return rows.map((r) => r.eventId)
 	}
 
 	async addCourses(tx: Db, eventId: number, courseIds: number[]): Promise<void> {

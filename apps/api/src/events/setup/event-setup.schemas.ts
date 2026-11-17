@@ -140,6 +140,30 @@ export const copyFromSchema = z.object({
 	copyFromEventId: z.number().int().positive().optional(),
 })
 
+const season = z.number().int().min(2000).max(2100)
+const rollForwardEvent = z.object({
+	sourceEventId: z.number().int().positive(),
+	name: z.string().trim().min(1).max(100),
+	startDate: z.iso.date(),
+})
+
+/** A roll-forward preview: without `events`, every event of the source season is proposed. */
+export const rollForwardPreviewSchema = z
+	.object({ fromSeason: season, toSeason: season, events: z.array(rollForwardEvent).optional() })
+	.refine((r) => r.fromSeason !== r.toSeason, {
+		path: ["toSeason"],
+		message: "Choose a target season other than the source season",
+	})
+
+export const rollForwardSchema = z
+	.object({ fromSeason: season, toSeason: season, events: z.array(rollForwardEvent).min(1) })
+	.refine((r) => r.fromSeason !== r.toSeason, {
+		path: ["toSeason"],
+		message: "Choose a target season other than the source season",
+	})
+
+export type RollForwardValues = z.infer<typeof rollForwardPreviewSchema>
+
 /** Parses a request body, or throws a 400 listing every problem. */
 export function parseBody<T extends z.ZodType>(schema: T, body: unknown): z.infer<T> {
 	const result = schema.safeParse(body)

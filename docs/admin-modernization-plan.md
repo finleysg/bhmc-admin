@@ -77,14 +77,14 @@ Readiness is a shared diagnostic. It produces **findings**, each stating what is
 
 Roll-forward replaces event cloning in Django for a whole season at once. Copying a single event is "Copy from event" on the new event form (slice 1).
 
-- Choose a source season. Each source event gets a proposed date: the same week and weekday, normally +364 days. Signup, priority, and payments-end dates keep their offsets from the event date.
-- Review in a preview grid: adjust dates, drop events, add events.
+- Choose a source season ("Roll forward" on the events list); the target is the next season. Each source event gets a proposed date 364 days later (same weekday), and its name with the source year moved to the target year ("2026 Season Registration" → "2027 Season Registration"). Signup, priority, and payments-end dates keep their offsets from the event date, at the same club time.
+- Review in a preview grid: uncheck events to drop them, and edit names and dates. New events are added afterwards with New event, which can copy from any event.
 - **Copied:** format and registration settings, courses, event fees, sessions, and session fees.
 - **Reset:** status → Scheduled (canceled source events are included and selected by default, since they were usually rained out); Golf Genius ID, portal URL, and external URL cleared; season set to the target year.
 - **Never copied:** registrations, results, documents, photos.
 - **Created:** registration slots, for events where players choose slots.
-- **Duplicate protection:** refuse any event whose name already exists in the target season.
-- Everything is created in one transaction.
+- **Refused:** an event whose name already exists on its date (the same rule as New event; names repeat within a season, such as "Individual LG/LN"), two events in the roll-forward with the same name and date, settings that are not a valid event, and an event where players choose slots but there are no courses. The preview lists each event's issues (`POST /seasons/roll-forward/preview`).
+- Everything is created in one transaction (`POST /seasons/roll-forward`): if any event is refused, nothing is created. Each new event is audited as `event.rollforward`, naming its source event.
 - **Season Fee Change:** change one fee type from an old amount to a new amount (for example weeknight cart $14 → $15), optionally limited to one event type. It covers event fees, session fees, and override amounts, and is previewed before it applies. It is available during roll-forward and on its own. It refuses events that already have registrations.
 
 ### 4. Registration Inspector

@@ -306,7 +306,7 @@ export class EventSetupService {
 	}
 
 	/** Copies courses, event fees, sessions, and session fees from one event to another. */
-	private async copySetup(tx: MySql2Database, sourceId: number, targetId: number): Promise<void> {
+	async copySetup(tx: MySql2Database, sourceId: number, targetId: number): Promise<void> {
 		await this.repository.addCourses(
 			tx,
 			targetId,
@@ -382,7 +382,7 @@ export class EventSetupService {
 	}
 }
 
-function toEventValues(s: EventSettings): Omit<EventInsert, "id"> {
+export function toEventValues(s: EventSettings): Omit<EventInsert, "id"> {
 	const dt = (value: string | null) => (value ? toMysqlDatetime(value) : null)
 	return {
 		...s,
@@ -395,7 +395,7 @@ function toEventValues(s: EventSettings): Omit<EventInsert, "id"> {
 	}
 }
 
-function settingsOf(row: EventRow): Record<string, unknown> {
+export function settingsOf(row: EventRow): Record<string, unknown> {
 	const view = toEvent(row) as unknown as Record<string, unknown>
 	return Object.fromEntries(SETTINGS_FIELDS.map((f) => [f, view[f] ?? null]))
 }
