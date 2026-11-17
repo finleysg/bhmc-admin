@@ -164,6 +164,21 @@ export const rollForwardSchema = z
 
 export type RollForwardValues = z.infer<typeof rollForwardPreviewSchema>
 
+export const seasonFeeChangeSchema = z
+	.object({
+		season,
+		feeTypeId: z.number().int().positive(),
+		fromAmount: money,
+		toAmount: money,
+		eventType: z.enum(EventTypeChoices).nullable().optional(),
+	})
+	.refine((f) => f.fromAmount !== f.toAmount, {
+		path: ["toAmount"],
+		message: "The new amount must differ from the old amount",
+	})
+
+export type SeasonFeeChangeValues = z.infer<typeof seasonFeeChangeSchema>
+
 /** Parses a request body, or throws a 400 listing every problem. */
 export function parseBody<T extends z.ZodType>(schema: T, body: unknown): z.infer<T> {
 	const result = schema.safeParse(body)

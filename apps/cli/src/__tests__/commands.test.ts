@@ -6,6 +6,7 @@ import { ApiClient } from "../api-client"
 import {
 	type CommandContext,
 	dismissWarning,
+	feesChange,
 	login,
 	logout,
 	readiness,
@@ -328,6 +329,58 @@ describe("CLI commands", () => {
 			await expect(seasonRollForward(ctx, { from: "2026", drop: ["999"] })).rejects.toThrow(
 				"Event 999 is not an event of the 2026 season",
 			)
+		})
+	})
+
+	describe("fees change", () => {
+		const call = (n: number) => fetchMock.mock.calls[n] as [string, RequestInit]
+		const sent = (n: number) => JSON.parse(call(n)[1].body as string) as unknown
+		const change = { feeTypeName: "Cart Fee", applied: false, events: [] }
+
+		beforeEach(async () => {
+			await ctx.credentials.set("http://api.test", { token: "tok-1", email: "ops@example.com" })
+		})
+
+		it("previews the change, finding the fee type by name", async () => {
+			fetchMock
+				.mockReturnValueOnce(respond(200, [{ id: 9, name: "Cart Fee" }]))
+				.mockReturnValueOnce(respond(200, change))
+
+			const result = await feesChange(ctx, {
+				season: "2027",
+				feeType: "cart fee",
+				from: "$14",
+				to: "15",
+				eventType: "n",
+			})
+
+			expect(call(0)[0]).toBe("http://api.test/fee-types")
+			expect(call(1)[0]).toBe("http://api.test/seasons/fee-change/preview")
+			expect(sent(1)).toEqual({
+				season: 2027,
+				feeTypeId: 9,
+				fromAmount: 14,
+				toAmount: 15,
+				eventType: "N",
+			})
+			expect(result).toMatchObject({ dryRun: true, feeTypeName: "Cart Fee" })
+		})
+
+		it("applies with --apply, taking a fee type id as given", async () => {
+			fetchMock.mockReturnValueOnce(respond(200, { ...change, applied: true }))
+
+			await feesChange(ctx, { season: "2027", feeType: "9", from: "14", to: "15", apply: true })
+
+			expect(call(0)[0]).toBe("http://api.test/seasons/fee-change")
+			expect(sent(0)).toMatchObject({ feeTypeId: 9, eventType: null })
+		})
+
+		it("names the fee types when the one given is unknown", async () => {
+			fetchMock.mockReturnValueOnce(respond(200, [{ id: 9, name: "Cart Fee" }]))
+
+			await expect(
+				feesChange(ctx, { season: "2027", feeType: "Carts", from: "14", to: "15" }),
+			).rejects.toThrow('No fee type named "Carts". Fee types: Cart Fee')
 		})
 	})
 })

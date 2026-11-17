@@ -20,6 +20,7 @@ import type {
 	FeeType,
 	RollForwardPreview,
 	RollForwardResult,
+	SeasonFeeChange,
 	SlotGroup,
 } from "@repo/domain/types"
 
@@ -28,6 +29,7 @@ import { EventAdmin } from "../../auth"
 import { RevalidatePublicEventsInterceptor } from "../../public-site"
 
 import { EventSetupService } from "./event-setup.service"
+import { SeasonFeeChangeService } from "./season-fee-change.service"
 import { SeasonRollForwardService } from "./season-roll-forward.service"
 import { SlotSetupService } from "./slot-setup.service"
 
@@ -186,6 +188,26 @@ export class SeasonRollForwardController {
 	@Post()
 	@UseInterceptors(RevalidatePublicEventsInterceptor)
 	async apply(@Body() body: unknown, @Audit() audit: AuditContext): Promise<RollForwardResult> {
+		return this.service.apply(body, audit)
+	}
+}
+
+/** Season Fee Change: one fee type from an old amount to a new one across a season (Event Admin). */
+@Controller("seasons/fee-change")
+@EventAdmin()
+export class SeasonFeeChangeController {
+	constructor(@Inject(SeasonFeeChangeService) private readonly service: SeasonFeeChangeService) {}
+
+	@Post("preview")
+	@HttpCode(200)
+	async preview(@Body() body: unknown): Promise<SeasonFeeChange> {
+		return this.service.preview(body)
+	}
+
+	@Post()
+	@HttpCode(200)
+	@UseInterceptors(RevalidatePublicEventsInterceptor)
+	async apply(@Body() body: unknown, @Audit() audit: AuditContext): Promise<SeasonFeeChange> {
 		return this.service.apply(body, audit)
 	}
 }

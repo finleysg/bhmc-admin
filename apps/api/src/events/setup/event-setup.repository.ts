@@ -14,6 +14,7 @@ import {
 	eventSessionFee,
 	feeType,
 	hole,
+	registration,
 	registrationFee,
 	registrationSlot,
 	type ContentTagRow,
@@ -196,6 +197,79 @@ export class EventSetupRepository {
 			.from(registrationFee)
 			.where(eq(registrationFee.eventFeeId, feeId))
 		return row.count
+	}
+
+	async findFeeType(tx: Db, feeTypeId: number): Promise<FeeTypeRow | undefined> {
+		const [row] = await tx.select().from(feeType).where(eq(feeType.id, feeTypeId))
+		return row
+	}
+
+	/**
+	 * A season's fees of one type (optionally on one event type) with their events, in event
+	 * order. With `lock`, under SELECT … FOR UPDATE.
+	 */
+	async findSeasonFees(
+		tx: Db,
+		filter: { season: number; feeTypeId: number; eventType: string | null },
+		lock = false,
+	): Promise<{ event: EventRow; fee: EventFeeRow }[]> {
+		const query = tx
+			.select({ event, fee: eventFee })
+			.from(eventFee)
+			.innerJoin(event, eq(event.id, eventFee.eventId))
+			.where(
+				and(
+					eq(event.season, filter.season),
+					eq(eventFee.feeTypeId, filter.feeTypeId),
+					filter.eventType ? eq(event.eventType, filter.eventType) : undefined,
+				),
+			)
+			.orderBy(event.startDate, event.id, eventFee.id)
+		return lock ? query.for("update") : query
+	}
+
+	/**
+	 * The session fees overriding any of the event fees, with their session's name. With
+	 * `lock`, under SELECT … FOR UPDATE (a current read, not the transaction's snapshot).
+	 */
+	async findSessionFeesOf(
+		tx: Db,
+		eventFeeIds: number[],
+		lock = false,
+	): Promise<(EventSessionFeeRow & { sessionName: string })[]> {
+		if (eventFeeIds.length === 0) return []
+		const query = tx
+			.select({
+				id: eventSessionFee.id,
+				sessionId: eventSessionFee.sessionId,
+				eventFeeId: eventSessionFee.eventFeeId,
+				amount: eventSessionFee.amount,
+				sessionName: eventSession.name,
+			})
+			.from(eventSessionFee)
+			.innerJoin(eventSession, eq(eventSession.id, eventSessionFee.sessionId))
+			.where(inArray(eventSessionFee.eventFeeId, eventFeeIds))
+			.orderBy(eventSession.displayOrder)
+		return lock ? query.for("update") : query
+	}
+
+	/**
+	 * Registrations per event, for the events that have any. With `lock`, under
+	 * SELECT … FOR SHARE (a current read, not the transaction's snapshot).
+	 */
+	async countRegistrationsByEvent(
+		tx: Db,
+		eventIds: number[],
+		lock = false,
+	): Promise<Map<number, number>> {
+		if (eventIds.length === 0) return new Map()
+		const query = tx
+			.select({ eventId: registration.eventId, count: count() })
+			.from(registration)
+			.where(inArray(registration.eventId, eventIds))
+			.groupBy(registration.eventId)
+		const rows = await (lock ? query.for("share") : query)
+		return new Map(rows.map((r) => [r.eventId, r.count]))
 	}
 
 	async countSessionFees(tx: Db, feeId: number): Promise<number> {

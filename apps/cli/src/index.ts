@@ -5,6 +5,7 @@ import { ApiClient } from "./api-client"
 import {
 	type CommandContext,
 	dismissWarning,
+	feesChange,
 	login,
 	logout,
 	readiness,
@@ -115,6 +116,33 @@ program
 			name: string[]
 			apply?: boolean
 		}) => run((ctx) => seasonRollForward(ctx, options))(),
+	)
+
+program
+	.command("fees")
+	.description("Fee operations")
+	.command("change")
+	.description(
+		"Change every amount of one fee type from an old amount to a new one across a season (dry run unless --apply)",
+	)
+	.requiredOption("--season <year>", "the season to change")
+	.requiredOption("--fee-type <id|name>", 'the fee type, by id or name (e.g. "Cart Fee")')
+	.requiredOption("--from <amount>", "the old amount")
+	.requiredOption("--to <amount>", "the new amount")
+	.option("--event-type <code>", "only events of this type (N weeknight, W weekend major, ...)")
+	.option(
+		"--apply",
+		"make the change (events with registrations or open registration are left unchanged)",
+	)
+	.action(
+		(options: {
+			season: string
+			feeType: string
+			from: string
+			to: string
+			eventType?: string
+			apply?: boolean
+		}) => run((ctx) => feesChange(ctx, options))(),
 	)
 
 void program.parseAsync()

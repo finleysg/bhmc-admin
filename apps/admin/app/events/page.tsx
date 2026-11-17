@@ -63,11 +63,14 @@ export default async function EventsPage({
 
 	return (
 		<div className="mx-auto max-w-3xl space-y-4 md:py-8">
-			<div className="flex items-center justify-between">
+			<div className="flex flex-wrap items-center justify-between gap-2">
 				<h2 className="font-heading text-2xl font-bold">Events</h2>
-				<div className="flex gap-2">
+				<div className="flex flex-wrap gap-2">
 					<Button asChild variant="outline">
 						<Link href={`/events/roll-forward?season=${season}`}>Roll forward</Link>
+					</Button>
+					<Button asChild variant="outline">
+						<Link href={`/events/fee-change?season=${season}`}>Change a fee</Link>
 					</Button>
 					<Button asChild>
 						<Link href={`/events/new?season=${season}`}>New event</Link>

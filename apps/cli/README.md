@@ -15,6 +15,8 @@ pnpm -s bhmc readiness dismiss 742 fee-differs 3 [--apply]   # accept a warning 
 pnpm -s bhmc readiness restore 742 fee-differs 3 [--apply]   # bring a dismissed warning back
 pnpm -s bhmc season roll-forward --from 2026 [--to 2027] [--drop 720,715] [--date 667=2027-01-16] [--name 667="2027 Season Registration"] [--apply]
                                               # next season's events from 2026's (dry run lists each event's issues)
+pnpm -s bhmc fees change --season 2027 --fee-type "Cart Fee" --from 14 --to 15 [--event-type N] [--apply]
+                                              # every Cart Fee amount of $14 becomes $15 (events with registrations are left unchanged)
 ```
 
 Use `-s` (silent) so pnpm's own banner doesn't mix with the JSON output.

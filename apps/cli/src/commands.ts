@@ -1,11 +1,15 @@
 import type {
 	AdminRole,
 	EventReadiness,
+	EventTypeValue,
+	FeeType,
 	ReadinessSummary,
 	RollForwardEventInput,
 	RollForwardInput,
 	RollForwardPreview,
 	RollForwardResult,
+	SeasonFeeChange,
+	SeasonFeeChangeInput,
 } from "@repo/domain/types"
 
 import type { ApiClient } from "./api-client"
@@ -173,6 +177,59 @@ export async function seasonRollForward(ctx: CommandContext, args: RollForwardAr
 		return { dryRun: true, ...preview, dropped: [...dropped], refused }
 	}
 	return ctx.api.request<RollForwardResult>("POST", path, body)
+}
+
+interface FeeChangeArgs {
+	season: string
+	/** A fee type id, or its name (any case). */
+	feeType: string
+	from: string
+	to: string
+	/** An event type code (N, W, ...); every event type when omitted. */
+	eventType?: string
+	apply?: boolean
+}
+
+/**
+ * Season Fee Change: every amount of one fee type equal to --from becomes --to, across a
+ * season. A dry run shows the events it covers; --apply changes all but the refused ones
+ * (events with registrations, or whose registration has opened).
+ */
+export async function feesChange(ctx: CommandContext, args: FeeChangeArgs) {
+	const body: SeasonFeeChangeInput = {
+		season: season(args.season),
+		feeTypeId: await feeTypeId(ctx, args.feeType),
+		fromAmount: amount(args.from),
+		toAmount: amount(args.to),
+		eventType: (args.eventType?.toUpperCase() as EventTypeValue | undefined) ?? null,
+	}
+	const path = "/seasons/fee-change"
+	if (!args.apply) {
+		return {
+			dryRun: true,
+			...(await ctx.api.request<SeasonFeeChange>("POST", `${path}/preview`, body)),
+		}
+	}
+	return ctx.api.request<SeasonFeeChange>("POST", path, body)
+}
+
+async function feeTypeId(ctx: CommandContext, value: string): Promise<number> {
+	if (/^\d+$/.test(value)) return Number(value)
+	const types = await ctx.api.get<FeeType[]>("/fee-types")
+	const match = types.find((t) => t.name.toLowerCase() === value.trim().toLowerCase())
+	if (!match) {
+		throw new CliError(
+			`No fee type named "${value}". Fee types: ${types.map((t) => t.name).join(", ")}`,
+		)
+	}
+	return match.id
+}
+
+function amount(value: string): number {
+	const n = Number(value.replace(/^\$/, ""))
+	if (value.trim() === "" || !Number.isFinite(n) || n < 0)
+		throw new CliError(`Not an amount: ${value}`)
+	return n
 }
 
 function season(value: string): number {
