@@ -270,6 +270,97 @@ describe("event workspace", () => {
 		})
 	})
 
+	describe("after registration opens", () => {
+		// Registration opened Nov 1, 2026; the event is May 5, 2027.
+		const opened = (overrides: Record<string, unknown> = {}) =>
+			settings({
+				prioritySignupStart: "2026-11-01T14:00:00.000Z",
+				signupStart: "2026-11-01T15:00:00.000Z",
+				...overrides,
+			})
+		let eventId: number
+
+		beforeEach(async () => {
+			eventId = ((await t.http(eventAdmin).post("/events").send(opened())).body as { id: number })
+				.id
+		})
+
+		it("refuses a change to how registration works, and changes nothing", async () => {
+			const res = await t
+				.http(eventAdmin)
+				.put(`/events/${eventId}`)
+				.send(opened({ groupSize: 4, startTime: "4:00 PM" }))
+
+			expect(res.status).toBe(409)
+			expect(res.body).toMatchObject({
+				overridable: true,
+				lockedChanges: ["group size", "start time"],
+			})
+			const [row] = await testDb().select().from(event).where(eq(event.id, eventId))
+			expect(row).toMatchObject({ groupSize: 5, startTime: "3:00 PM" })
+			expect(await auditEntries()).toHaveLength(1)
+		})
+
+		it("makes the change with the override, and audits it as one", async () => {
+			const res = await t
+				.http(eventAdmin)
+				.put(`/events/${eventId}`)
+				.send({ ...opened({ groupSize: 4 }), override: true })
+
+			expect(res.status).toBe(200)
+			expect(res.body).toMatchObject({ groupSize: 4 })
+			const entries = await auditEntries()
+			expect(entries[1]).toMatchObject({
+				operation: "event.update.override",
+				changes: { groupSize: { before: 5, after: 4 } },
+			})
+		})
+
+		it("allows notes, and a later signup end, without the override", async () => {
+			const res = await t
+				.http(eventAdmin)
+				.put(`/events/${eventId}`)
+				.send(opened({ notes: "Bring a towel", signupEnd: "2027-05-04T20:00:00.000Z" }))
+
+			expect(res.status).toBe(200)
+			expect((await auditEntries())[1].operation).toBe("event.update")
+		})
+
+		it("refuses fee changes without the override", async () => {
+			const cart = await createFeeType("Cart")
+			const add = (body: Record<string, unknown>) =>
+				t
+					.http(eventAdmin)
+					.post(`/events/${eventId}/fees`)
+					.send({ feeTypeId: cart, amount: 15, isRequired: true, ...body })
+
+			expect((await add({})).status).toBe(409)
+			expect(await testDb().select().from(eventFee)).toEqual([])
+
+			const added = await add({ override: true })
+			expect(added.status).toBe(201)
+			const feeId = (added.body as { id: number }).id
+
+			const edit = await t
+				.http(eventAdmin)
+				.put(`/events/${eventId}/fees/${feeId}`)
+				.send({ feeTypeId: cart, amount: 16, isRequired: true })
+			expect(edit.status).toBe(409)
+
+			const del = t.http(eventAdmin).delete(`/events/${eventId}/fees/${feeId}`)
+			expect((await del).status).toBe(409)
+			expect(
+				(await t.http(eventAdmin).delete(`/events/${eventId}/fees/${feeId}?override=true`)).status,
+			).toBe(204)
+
+			expect((await auditEntries()).map((e) => e.operation)).toEqual([
+				"event.create",
+				"event.fee.create.override",
+				"event.fee.delete.override",
+			])
+		})
+	})
+
 	describe("event fees", () => {
 		it("adds a fee after the existing ones and audits it", async () => {
 			const evt = await createEvent()

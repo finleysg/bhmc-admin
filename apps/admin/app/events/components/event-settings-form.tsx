@@ -34,6 +34,7 @@ import { toClubLocalInput } from "@/lib/club-time"
 import type { FormState } from "@/lib/form-state"
 
 import { NONE, type SettingsField } from "../event-settings"
+import { OverrideConfirm } from "./override-confirm"
 
 type Option = { value: string; label: string }
 const options = (values: Record<string, string>, label: (v: string) => string): Option[] =>
@@ -148,6 +149,7 @@ export function EventSettingsForm({
 	copyFromEventId,
 	tags = [],
 	initialTab = "event",
+	registrationOpened = false,
 }: {
 	event?: ClubEvent
 	/** For a new event (no `event`): values that replace the built-in starting values, such as the season. */
@@ -162,6 +164,8 @@ export function EventSettingsForm({
 	tags?: ContentTag[]
 	/** The tab to open first, e.g. from a readiness finding's link. */
 	initialTab?: string
+	/** Registration has opened, so some changes need an override. */
+	registrationOpened?: boolean
 }) {
 	const [state, formAction, isPending] = useActionState(
 		async (prev: FormState<SettingsField>, formData: FormData) => {
@@ -218,11 +222,20 @@ export function EventSettingsForm({
 				hidden={!onSettingsTab}
 				noValidate
 			>
+				{registrationOpened && (
+					<Alert>
+						<AlertDescription>
+							Registration has opened. Changing how registration works, the signup start, or
+							players&apos; start times needs your confirmation, and is recorded.
+						</AlertDescription>
+					</Alert>
+				)}
 				{state.status === "error" && (
 					<Alert variant="destructive">
 						<AlertDescription>{state.message}</AlertDescription>
 					</Alert>
 				)}
+				{state.canOverride && <OverrideConfirm />}
 
 				{copyFromEventId && <input type="hidden" name="copyFromEventId" value={copyFromEventId} />}
 				<fieldset disabled={isPending}>

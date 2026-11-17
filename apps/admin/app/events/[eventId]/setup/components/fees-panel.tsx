@@ -37,6 +37,7 @@ import {
 import type { FormState } from "@/lib/form-state"
 
 import { NONE } from "../../../event-settings"
+import { OverrideConfirm } from "../../../components/override-confirm"
 import { deleteEventFee, saveEventFee, type FeeField } from "../actions"
 
 const money = (amount: number) => `$${amount.toFixed(2)}`
@@ -45,10 +46,13 @@ export function FeesPanel({
 	eventId,
 	fees,
 	feeTypes,
+	registrationOpened = false,
 }: {
 	eventId: number
 	fees: EventFee[]
 	feeTypes: FeeType[]
+	/** Registration has opened, so every fee change needs an override. */
+	registrationOpened?: boolean
 }) {
 	const used = new Set(fees.map((f) => f.feeTypeId))
 
@@ -58,6 +62,8 @@ export function FeesPanel({
 				<p className="text-sm text-muted-foreground">
 					Each registration keeps the amount it was charged, so changing a fee affects only new
 					charges.
+					{registrationOpened &&
+						" Registration has opened, so any fee change needs your confirmation, and is recorded."}
 				</p>
 				<FeeDialog
 					eventId={eventId}
@@ -245,6 +251,7 @@ function FeeForm({
 					<FieldError>{errors.overrideRestriction}</FieldError>
 				</Field>
 			</fieldset>
+			{state.canOverride && <OverrideConfirm />}
 			<DialogFooter>
 				<Button type="submit" disabled={isPending}>
 					{isPending ? "Saving..." : "Save"}
@@ -257,7 +264,19 @@ function FeeForm({
 function DeleteFeeDialog({ eventId, fee }: { eventId: number; fee: EventFee }) {
 	const [open, setOpen] = useState(false)
 	const [error, setError] = useState<string>()
+	const [canOverride, setCanOverride] = useState(false)
 	const [isPending, startDelete] = useTransition()
+	const remove = (override: boolean) =>
+		startDelete(async () => {
+			const result = await deleteEventFee(eventId, fee.id, override)
+			if (result.status === "success") {
+				toast.success(result.message)
+				setOpen(false)
+			} else {
+				setError(result.message)
+				setCanOverride(result.canOverride ?? false)
+			}
+		})
 
 	return (
 		<Dialog
@@ -265,6 +284,7 @@ function DeleteFeeDialog({ eventId, fee }: { eventId: number; fee: EventFee }) {
 			onOpenChange={(next) => {
 				setOpen(next)
 				setError(undefined)
+				setCanOverride(false)
 			}}
 		>
 			<DialogTrigger asChild>
@@ -286,22 +306,8 @@ function DeleteFeeDialog({ eventId, fee }: { eventId: number; fee: EventFee }) {
 					</Alert>
 				)}
 				<DialogFooter>
-					<Button
-						variant="destructive"
-						disabled={isPending}
-						onClick={() =>
-							startDelete(async () => {
-								const result = await deleteEventFee(eventId, fee.id)
-								if (result.status === "success") {
-									toast.success(result.message)
-									setOpen(false)
-								} else {
-									setError(result.message)
-								}
-							})
-						}
-					>
-						{isPending ? "Deleting..." : "Delete"}
+					<Button variant="destructive" disabled={isPending} onClick={() => remove(canOverride)}>
+						{isPending ? "Deleting..." : canOverride ? "Delete anyway" : "Delete"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

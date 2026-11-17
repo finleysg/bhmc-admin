@@ -15,6 +15,23 @@ function refresh(eventId: number) {
 	revalidatePath(`/events/${eventId}`, "layout")
 }
 
+/** `override: true` when the admin confirmed a change registration having opened would refuse. */
+function overrideOf(formData: FormData): { override?: true } {
+	return formData.get("override") === "on" ? { override: true } : {}
+}
+
+/** The API's refusal, offering the override when the API allows one. */
+function refusal<F extends string>(result: {
+	message: string
+	overridable: boolean
+}): FormState<F> {
+	return {
+		status: "error",
+		message: result.message,
+		...(result.overridable && { canOverride: true }),
+	}
+}
+
 export async function updateEventSettings(
 	eventId: number,
 	_prev: FormState<SettingsField>,
@@ -23,8 +40,11 @@ export async function updateEventSettings(
 	const parsed = parseEventSettings(formData)
 	if (!parsed.ok) return parsed.state
 
-	const result = await apiRequest(`/events/${eventId}`, "PUT", parsed.data)
-	if (!result.ok) return { status: "error", message: result.message }
+	const result = await apiRequest(`/events/${eventId}`, "PUT", {
+		...parsed.data,
+		...overrideOf(formData),
+	})
+	if (!result.ok) return refusal(result)
 
 	refresh(eventId)
 	return { status: "success", message: "Event settings saved" }
@@ -93,19 +113,25 @@ export async function saveEventFee(
 		return { status: "error", message: "Please fix the highlighted fields.", fieldErrors }
 	}
 
+	const body = { ...parsed.data, ...overrideOf(formData) }
 	const result =
 		feeId === null
-			? await apiRequest(`/events/${eventId}/fees`, "POST", parsed.data)
-			: await apiRequest(`/events/${eventId}/fees/${feeId}`, "PUT", parsed.data)
-	if (!result.ok) return { status: "error", message: result.message }
+			? await apiRequest(`/events/${eventId}/fees`, "POST", body)
+			: await apiRequest(`/events/${eventId}/fees/${feeId}`, "PUT", body)
+	if (!result.ok) return refusal(result)
 
 	refresh(eventId)
 	return { status: "success", message: feeId === null ? "Fee added" : "Fee saved" }
 }
 
-export async function deleteEventFee(eventId: number, feeId: number): Promise<FormState> {
-	const result = await apiRequest(`/events/${eventId}/fees/${feeId}`, "DELETE")
-	if (!result.ok) return { status: "error", message: result.message }
+export async function deleteEventFee(
+	eventId: number,
+	feeId: number,
+	override = false,
+): Promise<FormState> {
+	const query = override ? "?override=true" : ""
+	const result = await apiRequest(`/events/${eventId}/fees/${feeId}${query}`, "DELETE")
+	if (!result.ok) return refusal(result)
 
 	refresh(eventId)
 	return { status: "success", message: "Fee deleted" }

@@ -42,6 +42,35 @@ describe("EventSettingsForm", () => {
 		expect(formData.get("status")).toBe("S")
 	})
 
+	it("offers to save anyway when the API allows an override", async () => {
+		const action = jest
+			.fn()
+			.mockResolvedValueOnce({
+				status: "error",
+				message: "Registration has opened",
+				canOverride: true,
+			})
+			.mockResolvedValueOnce({ status: "success", message: "Saved" })
+		render(
+			<EventSettingsForm
+				event={event}
+				action={action}
+				submitLabel="Save settings"
+				registrationOpened
+			/>,
+		)
+		expect(
+			screen.getByText(/Registration has opened\. Changing how registration works/),
+		).toBeVisible()
+
+		await userEvent.click(screen.getByRole("button", { name: "Save settings" }))
+		await userEvent.click(await screen.findByRole("checkbox", { name: /Save anyway/ }))
+		await userEvent.click(screen.getByRole("button", { name: "Save settings" }))
+
+		await waitFor(() => expect(action).toHaveBeenCalledTimes(2))
+		expect((action.mock.calls[1] as [unknown, FormData])[1].get("override")).toBe("on")
+	})
+
 	it("labels the event status, not a slot status", () => {
 		render(<EventSettingsForm event={event} action={jest.fn()} submitLabel="Save settings" />)
 

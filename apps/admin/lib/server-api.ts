@@ -6,7 +6,15 @@ import { notFound, redirect } from "next/navigation"
  * Actions (ADR 0005). Forwards the Django `access_token` cookie.
  */
 
-export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; message: string }
+export type ApiResult<T> =
+	| { ok: true; data: T }
+	| {
+			ok: false
+			status: number
+			message: string
+			/** The API refused a change that an override can make (registration has opened). */
+			overridable: boolean
+	  }
 
 async function request(path: string, init: RequestInit = {}): Promise<Response> {
 	const token = (await cookies()).get("access_token")?.value
@@ -25,10 +33,15 @@ async function request(path: string, init: RequestInit = {}): Promise<Response> 
 	return res
 }
 
-async function errorMessage(res: Response): Promise<string> {
-	const body = (await res.json().catch(() => null)) as { message?: string | string[] } | null
+type ErrorBody = { message?: string | string[]; overridable?: boolean } | null
+
+async function errorBody(res: Response): Promise<ErrorBody> {
+	return (await res.json().catch(() => null)) as ErrorBody
+}
+
+function messageOf(body: ErrorBody, status: number): string {
 	const message = Array.isArray(body?.message) ? body.message.join(", ") : body?.message
-	return message ?? `Request failed (${res.status})`
+	return message ?? `Request failed (${status})`
 }
 
 /**
@@ -39,7 +52,7 @@ export async function apiGet<T>(path: string): Promise<T> {
 	const res = await request(path)
 	if (res.status === 404) notFound()
 	if (res.status === 403) redirect("/restricted")
-	if (!res.ok) throw new Error(await errorMessage(res))
+	if (!res.ok) throw new Error(messageOf(await errorBody(res), res.status))
 	return (await res.json()) as T
 }
 
@@ -56,7 +69,15 @@ export async function apiRequest<T>(
 		method,
 		body: body === undefined ? undefined : JSON.stringify(body),
 	})
-	if (!res.ok) return { ok: false, status: res.status, message: await errorMessage(res) }
+	if (!res.ok) {
+		const body = await errorBody(res)
+		return {
+			ok: false,
+			status: res.status,
+			message: messageOf(body, res.status),
+			overridable: body?.overridable === true,
+		}
+	}
 	if (res.status === 204) return { ok: true, data: undefined as T }
 	return { ok: true, data: (await res.json()) as T }
 }

@@ -7,13 +7,12 @@ import {
 } from "@nestjs/common"
 import type { MySql2Database } from "drizzle-orm/mysql2"
 import { RegistrationStatusChoices, StartTypeChoices, type SlotGroup } from "@repo/domain/types"
-import { registrationOpensAt } from "@repo/domain/functions"
 
 import { AuditService, type AuditContext } from "../../audit"
-import { fromMysqlDatetime } from "../../common"
 import { DrizzleService, type EventRow, type RegistrationSlotRow } from "../../database"
 
 import { EventSetupRepository } from "./event-setup.repository"
+import { registrationHasOpened } from "./registration-locks"
 import { SlotSetupRepository, type NewSlot } from "./slot-setup.repository"
 
 const { AVAILABLE, UNAVAILABLE } = RegistrationStatusChoices
@@ -278,8 +277,7 @@ function requireChoosableSlots(evt: EventRow): void {
 }
 
 function refuseAfterRegistrationOpens(evt: EventRow, action: string): void {
-	const opens = registrationOpensAt(evt)
-	if (opens && Date.parse(fromMysqlDatetime(opens)) <= Date.now()) {
+	if (registrationHasOpened(evt)) {
 		throw new ConflictException(`Cannot ${action} after registration has opened`)
 	}
 }

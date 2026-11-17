@@ -9,6 +9,7 @@ import {
 	ParseIntPipe,
 	Post,
 	Put,
+	Query,
 } from "@nestjs/common"
 import type {
 	ClubEvent,
@@ -83,9 +84,10 @@ export class EventSetupController {
 	async deleteFee(
 		@Param("eventId", ParseIntPipe) eventId: number,
 		@Param("feeId", ParseIntPipe) feeId: number,
+		@Query("override") override: string | undefined,
 		@Audit() audit: AuditContext,
 	): Promise<void> {
-		return this.service.deleteFee(eventId, feeId, audit)
+		return this.service.deleteFee(eventId, feeId, override === "true", audit)
 	}
 }
 

@@ -157,6 +157,25 @@ describe("event workspace actions", () => {
 			expect(fetchMock).not.toHaveBeenCalled()
 		})
 
+		it("offers the override when registration has opened, and sends it when confirmed", async () => {
+			fetchMock.mockReturnValueOnce(
+				respond(409, { message: "Registration has opened...", overridable: true }),
+			)
+			const refused = await updateEventSettings(7, idle, settingsForm())
+			expect(refused).toEqual({
+				status: "error",
+				message: "Registration has opened...",
+				canOverride: true,
+			})
+
+			fetchMock.mockReturnValueOnce(respond(200, {}))
+			const confirmed = settingsForm()
+			confirmed.set("override", "on")
+			await updateEventSettings(7, idle, confirmed)
+			const [, init] = fetchMock.mock.calls[1] as [string, RequestInit]
+			expect(JSON.parse(init.body as string)).toMatchObject({ override: true })
+		})
+
 		it("returns the API's message for rules between fields", async () => {
 			fetchMock.mockReturnValueOnce(
 				respond(400, { message: ["groupSize: A group size is required"] }),
@@ -313,6 +332,14 @@ describe("event workspace actions", () => {
 				status: "error",
 				message: "Cannot delete a fee that 2 registration fee record(s) refer to",
 			})
+		})
+
+		it("deletes with the override after registration opens", async () => {
+			fetchMock.mockReturnValueOnce(respond(204))
+
+			await deleteEventFee(7, 9, true)
+
+			expect(fetchMock.mock.calls[0]![0]).toBe("http://api.test/events/7/fees/9?override=true")
 		})
 	})
 

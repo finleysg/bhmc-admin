@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation"
 
+import { registrationOpensAt } from "@repo/domain/functions"
+
 import {
 	RegistrationTypeChoices,
 	type ClubEvent,
@@ -43,6 +45,11 @@ export default async function EventSetupPage({
 	// Tabs follow the saved settings: players either choose a slot (Courses, Slots)
 	// or register for a session (Sessions), and only events with registration have fees.
 	const hasRegistration = event.registrationType !== RegistrationTypeChoices.NONE
+	const opens = registrationOpensAt({
+		prioritySignupStart: event.prioritySignupStart ?? null,
+		signupStart: event.signupStart ?? null,
+	})
+	const registrationOpened = opens != null && Date.parse(opens) <= Date.now()
 	const fees = event.eventFees ?? []
 	const extraTabs: ExtraTab[] = []
 	if (event.canChoose) {
@@ -65,7 +72,14 @@ export default async function EventSetupPage({
 		extraTabs.push({
 			value: "fees",
 			label: "Fees",
-			content: <FeesPanel eventId={eventId} fees={fees} feeTypes={feeTypes} />,
+			content: (
+				<FeesPanel
+					eventId={eventId}
+					fees={fees}
+					feeTypes={feeTypes}
+					registrationOpened={registrationOpened}
+				/>
+			),
 		})
 	}
 	if (hasRegistration && !event.canChoose) {
@@ -87,6 +101,7 @@ export default async function EventSetupPage({
 						extraTabs={extraTabs}
 						tags={tags}
 						initialTab={tab}
+						registrationOpened={registrationOpened}
 					/>
 				</CardContent>
 			</Card>

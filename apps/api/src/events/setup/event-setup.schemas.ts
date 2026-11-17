@@ -130,6 +130,11 @@ export const eventCoursesSchema = z.object({
 	courseIds: z.array(z.number().int().positive()),
 })
 
+/** Makes a change that registration having opened would otherwise refuse. */
+export const overrideSchema = z.object({
+	override: z.boolean().optional(),
+})
+
 /** On create: the event whose courses, fees, and sessions to copy into the new one. */
 export const copyFromSchema = z.object({
 	copyFromEventId: z.number().int().positive().optional(),

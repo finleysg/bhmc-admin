@@ -36,10 +36,16 @@ import {
 
 import { EventSetupRepository } from "./event-setup.repository"
 import {
+	lockedChangeError,
+	lockedSettingChanges,
+	registrationHasOpened,
+} from "./registration-locks"
+import {
 	copyFromSchema,
 	eventCoursesSchema,
 	eventFeeSchema,
 	eventSettingsSchema,
+	overrideSchema,
 	parseBody,
 	type EventFeeValues,
 	type EventSettings,
@@ -128,16 +134,26 @@ export class EventSetupService {
 		return this.getSetup(eventId)
 	}
 
+	/**
+	 * Saves the event's settings. Once registration has opened, changes to how registration
+	 * works, the signup start, or players' start times are refused unless `override` is set.
+	 */
 	async updateEvent(eventId: number, body: unknown, context: AuditContext): Promise<ClubEvent> {
 		const settings = parseBody(eventSettingsSchema, body)
+		const { override } = parseBody(overrideSchema, body)
 		await this.drizzle.db.transaction(async (tx) => {
 			const before = await this.lockEvent(tx, eventId)
 			await this.refuseDuplicateName(tx, settings.name, settings.startDate, eventId)
 			await this.checkTag(tx, settings.defaultTagId)
 			await this.repository.updateEvent(tx, eventId, toEventValues(settings))
 			const after = await this.repository.findEvent(tx, eventId)
+			const locked = registrationHasOpened(before)
+				? lockedSettingChanges(settingsOf(before), settingsOf(after))
+				: []
+			// Throwing rolls the update back.
+			if (locked.length > 0 && !override) throw lockedChangeError(locked)
 			await this.audit.record(tx, context, {
-				operation: "event.update",
+				operation: locked.length > 0 ? "event.update.override" : "event.update",
 				entityType: "event",
 				entityId: eventId,
 				eventId,
@@ -188,10 +204,13 @@ export class EventSetupService {
 		return this.getSetup(eventId)
 	}
 
+	/** Once registration has opened, every fee change needs `override`. */
 	async addFee(eventId: number, body: unknown, context: AuditContext): Promise<EventFee> {
 		const values = parseBody(eventFeeSchema, body)
+		const { override } = parseBody(overrideSchema, body)
 		const feeId = await this.drizzle.db.transaction(async (tx) => {
-			await this.lockEvent(tx, eventId)
+			const opened = registrationHasOpened(await this.lockEvent(tx, eventId))
+			if (opened && !override) throw lockedChangeError(["adding a fee"])
 			await this.checkFeeType(tx, eventId, values.feeTypeId)
 			const displayOrder =
 				values.displayOrder ?? (await this.repository.nextFeeDisplayOrder(tx, eventId))
@@ -200,7 +219,7 @@ export class EventSetupService {
 				...toFeeValues({ ...values, displayOrder }),
 			} as EventFeeInsert)
 			await this.audit.record(tx, context, {
-				operation: "event.fee.create",
+				operation: opened ? "event.fee.create.override" : "event.fee.create",
 				entityType: "event_fee",
 				entityId: id,
 				eventId,
@@ -219,8 +238,9 @@ export class EventSetupService {
 		context: AuditContext,
 	): Promise<EventFee> {
 		const values = parseBody(eventFeeSchema, body)
+		const { override } = parseBody(overrideSchema, body)
 		await this.drizzle.db.transaction(async (tx) => {
-			await this.lockEvent(tx, eventId)
+			const opened = registrationHasOpened(await this.lockEvent(tx, eventId))
 			const before = await this.lockFee(tx, eventId, feeId)
 			if (values.feeTypeId !== before.feeTypeId) {
 				await this.checkFeeType(tx, eventId, values.feeTypeId)
@@ -230,22 +250,35 @@ export class EventSetupService {
 				feeId,
 				toFeeValues({ ...values, displayOrder: values.displayOrder ?? before.displayOrder }),
 			)
+			const after = feeOf(toEventFee(await this.repository.findFee(tx, feeId)))
+			const changed = JSON.stringify(after) !== JSON.stringify(feeOf(toEventFee(before)))
+			// Throwing rolls the update back.
+			if (opened && changed && !override) throw lockedChangeError(["changing a fee"])
 			await this.audit.record(tx, context, {
-				operation: "event.fee.update",
+				operation: opened ? "event.fee.update.override" : "event.fee.update",
 				entityType: "event_fee",
 				entityId: feeId,
 				eventId,
 				before: feeOf(toEventFee(before)),
-				after: feeOf(toEventFee(await this.repository.findFee(tx, feeId))),
+				after,
 			})
 		})
 		return this.getFee(eventId, feeId)
 	}
 
-	/** Refused once a registration has been charged the fee or a session overrides it. */
-	async deleteFee(eventId: number, feeId: number, context: AuditContext): Promise<void> {
+	/**
+	 * Refused once a registration has been charged the fee or a session overrides it, and
+	 * after registration opens unless `override` is set.
+	 */
+	async deleteFee(
+		eventId: number,
+		feeId: number,
+		override: boolean,
+		context: AuditContext,
+	): Promise<void> {
 		await this.drizzle.db.transaction(async (tx) => {
-			await this.lockEvent(tx, eventId)
+			const opened = registrationHasOpened(await this.lockEvent(tx, eventId))
+			if (opened && !override) throw lockedChangeError(["deleting a fee"])
 			const before = await this.lockFee(tx, eventId, feeId)
 			const charged = await this.repository.countRegistrationFees(tx, feeId)
 			if (charged > 0) {
@@ -262,7 +295,7 @@ export class EventSetupService {
 			await this.repository.deleteFee(tx, feeId)
 			const fee = feeOf(toEventFee(before))
 			await this.audit.record(tx, context, {
-				operation: "event.fee.delete",
+				operation: opened ? "event.fee.delete.override" : "event.fee.delete",
 				entityType: "event_fee",
 				entityId: feeId,
 				eventId,
