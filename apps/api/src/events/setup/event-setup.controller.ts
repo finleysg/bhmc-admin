@@ -10,6 +10,7 @@ import {
 	Post,
 	Put,
 	Query,
+	UseInterceptors,
 } from "@nestjs/common"
 import type {
 	ClubEvent,
@@ -22,6 +23,7 @@ import type {
 
 import { Audit, type AuditContext } from "../../audit"
 import { EventAdmin } from "../../auth"
+import { RevalidatePublicEventsInterceptor } from "../../public-site"
 
 import { EventSetupService } from "./event-setup.service"
 import { SlotSetupService } from "./slot-setup.service"
@@ -29,6 +31,7 @@ import { SlotSetupService } from "./slot-setup.service"
 /** The event workspace: event settings, courses, and event fees (Event Admin). */
 @Controller("events")
 @EventAdmin()
+@UseInterceptors(RevalidatePublicEventsInterceptor)
 export class EventSetupController {
 	constructor(@Inject(EventSetupService) private readonly service: EventSetupService) {}
 
@@ -116,6 +119,7 @@ export class EventSetupLookupsController {
 /** Registration slots for events where players choose their slot (Event Admin). */
 @Controller("events/:eventId/slots")
 @EventAdmin()
+@UseInterceptors(RevalidatePublicEventsInterceptor)
 export class SlotSetupController {
 	constructor(@Inject(SlotSetupService) private readonly service: SlotSetupService) {}
 

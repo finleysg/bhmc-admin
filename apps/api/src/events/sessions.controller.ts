@@ -9,16 +9,19 @@ import {
 	ParseIntPipe,
 	Post,
 	Put,
+	UseInterceptors,
 } from "@nestjs/common"
 import type { EventSessionWithFees } from "@repo/domain/types"
 
 import { Audit, type AuditContext } from "../audit"
 import { EventAdmin } from "../auth"
+import { RevalidatePublicEventsInterceptor } from "../public-site"
 import { EventsService } from "./events.service"
 import { SessionSetupService } from "./setup/session-setup.service"
 
 @Controller("events/:eventId/sessions")
 @EventAdmin()
+@UseInterceptors(RevalidatePublicEventsInterceptor)
 export class SessionsController {
 	constructor(
 		@Inject(EventsService) private readonly service: EventsService,

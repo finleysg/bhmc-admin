@@ -3,6 +3,7 @@ import { Module } from "@nestjs/common"
 import { CoursesModule } from "../courses/courses.module"
 import { DatabaseModule } from "../database/database.module"
 import { MailModule } from "../mail/mail.module"
+import { PublicSiteModule } from "../public-site"
 import { EventsController } from "./events.controller"
 import { EventsRepository } from "./events.repository"
 import { EventsService } from "./events.service"
@@ -19,7 +20,7 @@ import { SlotSetupRepository } from "./setup/slot-setup.repository"
 import { SlotSetupService } from "./setup/slot-setup.service"
 
 @Module({
-	imports: [DatabaseModule, CoursesModule, MailModule],
+	imports: [DatabaseModule, CoursesModule, MailModule, PublicSiteModule],
 	controllers: [
 		EventsController,
 		SessionsController,
