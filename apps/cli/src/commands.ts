@@ -3,7 +3,9 @@ import type {
 	EventReadiness,
 	EventTypeValue,
 	FeeType,
+	InspectorSearchResult,
 	ReadinessSummary,
+	RegistrationInspection,
 	RollForwardEventInput,
 	RollForwardInput,
 	RollForwardPreview,
@@ -75,6 +77,25 @@ function eventId(value: string): number {
 	const id = Number(value)
 	if (!Number.isInteger(id) || id <= 0) throw new CliError(`Not an event id: ${value}`)
 	return id
+}
+
+/**
+ * Registration Inspector, always for one event: one registration with its slots, fees,
+ * payments, refunds, live Stripe check, and change log; or, without an id, the event's
+ * registrations, narrowed by --player (name, GHIN, or email).
+ */
+export async function inspectRegistration(
+	ctx: CommandContext,
+	args: { event: string; id?: string; player?: string },
+) {
+	const base = `/registration-inspector/events/${eventId(args.event)}`
+	if (args.id) {
+		const id = Number(args.id)
+		if (!Number.isInteger(id) || id <= 0) throw new CliError(`Not a registration id: ${args.id}`)
+		return ctx.api.get<RegistrationInspection>(`${base}/registrations/${id}`)
+	}
+	const query = args.player ? `?${new URLSearchParams({ q: args.player })}` : ""
+	return ctx.api.get<InspectorSearchResult[]>(`${base}/search${query}`)
 }
 
 interface WarningArgs {

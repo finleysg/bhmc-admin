@@ -17,6 +17,8 @@ pnpm -s bhmc season roll-forward --from 2026 [--to 2027] [--drop 720,715] [--dat
                                               # next season's events from 2026's (dry run lists each event's issues)
 pnpm -s bhmc fees change --season 2027 --fee-type "Cart Fee" --from 14 --to 15 [--event-type N] [--apply]
                                               # every Cart Fee amount of $14 becomes $15 (events with registrations are left unchanged)
+pnpm -s bhmc inspect registration --event 742 [--player smith]  # the event's registrations, or a player's (name, GHIN, or email)
+pnpm -s bhmc inspect registration 51234 --event 742              # one registration: slots, fees, payments, live Stripe check, change log
 ```
 
 Use `-s` (silent) so pnpm's own banner doesn't mix with the JSON output.

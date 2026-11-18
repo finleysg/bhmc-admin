@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.db.models import QuerySet
 
+from core.admin_mixins import ReadOnlyAdminMixin
 from core.util import current_season
 from register.admin import CurrentSeasonFilter
 
@@ -20,23 +21,6 @@ from .models import (
 )
 
 logger = structlog.get_logger(__name__)
-
-
-class ReadOnlyAdminMixin:
-    """
-    Shows records without allowing changes. Event setup (events, their fees,
-    courses, and sessions) is done in the admin site's event workspace, backed
-    by the NestJS API, which validates and audits every change.
-    """
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 
 class TournamentResultEventFilter(SimpleListFilter):

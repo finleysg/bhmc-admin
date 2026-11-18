@@ -4,6 +4,7 @@ import { CoursesModule } from "../courses/courses.module"
 import { DatabaseModule } from "../database/database.module"
 import { EventsModule } from "../events/events.module"
 import { MailModule } from "../mail/mail.module"
+import { PublicSiteModule } from "../public-site"
 import { StripeModule } from "../stripe/stripe.module"
 import {
 	AdminRegistrationController,
@@ -25,6 +26,9 @@ import {
 	PlayerService,
 	CleanupService,
 	StalePaymentService,
+	InspectorController,
+	InspectorRepository,
+	InspectorService,
 } from "./"
 
 @Module({
@@ -33,10 +37,12 @@ import {
 		DatabaseModule,
 		EventsModule,
 		MailModule,
+		PublicSiteModule,
 		forwardRef(() => StripeModule),
 	],
 	controllers: [
 		AdminRegistrationController,
+		InspectorController,
 		RegistrationLiveController,
 		UserPaymentsController,
 		UserRegistrationController,
@@ -46,6 +52,8 @@ import {
 		ChangeLogRepository,
 		ChangeLogService,
 		CleanupService,
+		InspectorRepository,
+		InspectorService,
 		PaymentsRepository,
 		PaymentsService,
 		PlayerService,

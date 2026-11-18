@@ -6,6 +6,7 @@ import {
 	type CommandContext,
 	dismissWarning,
 	feesChange,
+	inspectRegistration,
 	login,
 	logout,
 	readiness,
@@ -143,6 +144,19 @@ program
 			eventType?: string
 			apply?: boolean
 		}) => run((ctx) => feesChange(ctx, options))(),
+	)
+
+program
+	.command("inspect")
+	.description("Diagnostics")
+	.command("registration [id]")
+	.description(
+		"One registration of an event with its slots, fees, payments, live Stripe check, and change log; without an id, the event's registrations",
+	)
+	.requiredOption("--event <id>", "the event")
+	.option("--player <text>", "only registrations of players matching a name, GHIN, or email")
+	.action((id: string | undefined, options: { event: string; player?: string }) =>
+		run((ctx) => inspectRegistration(ctx, { id, ...options }))(),
 	)
 
 void program.parseAsync()

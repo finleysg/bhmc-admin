@@ -45,6 +45,22 @@ export function fromClubLocalInput(local: string): string | null {
 	return new Date(utc).toISOString()
 }
 
+const displayFormatter = new Intl.DateTimeFormat("en-US", {
+	timeZone: CLUB_TIME_ZONE,
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+	hour: "numeric",
+	minute: "2-digit",
+})
+
+/** A UTC database datetime ("2027-04-28 14:00:00.000000") as club time, e.g. "Apr 28, 2027, 9:00 AM". */
+export function formatClubDateTime(value: string | null | undefined): string | null {
+	if (!value) return null
+	const ms = Date.parse(`${value.slice(0, 19).replace(" ", "T")}Z`)
+	return Number.isNaN(ms) ? value : displayFormatter.format(ms)
+}
+
 const DAY_MS = 86_400_000
 
 /** Whole days from one ISO date ("2027-05-05") to another; null if either is missing. */

@@ -67,6 +67,29 @@ describe("StripeService", () => {
 	})
 
 	// =========================================================================
+	// paymentDashboardUrl
+	// =========================================================================
+
+	describe("paymentDashboardUrl", () => {
+		it("links to the test-mode dashboard for a test key", () => {
+			expect(service.paymentDashboardUrl("pi_123")).toBe(
+				"https://dashboard.stripe.com/test/payments/pi_123",
+			)
+		})
+
+		it("links to the live dashboard for a live key", () => {
+			mockConfigService.get.mockImplementation((key: string, defaultValue?: string) =>
+				key === "STRIPE_SECRET_KEY" ? "sk_live_xxx" : defaultValue,
+			)
+			const live = new StripeService(mockConfigService as never)
+
+			expect(live.paymentDashboardUrl("pi_123")).toBe(
+				"https://dashboard.stripe.com/payments/pi_123",
+			)
+		})
+	})
+
+	// =========================================================================
 	// createRefund
 	// =========================================================================
 

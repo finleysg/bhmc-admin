@@ -2,6 +2,7 @@ import structlog
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 
+from core.admin_mixins import ReadOnlyAdminMixin
 from core.util import current_season
 from events.models import Event
 
@@ -29,7 +30,7 @@ class CurrentSeasonFilter(SimpleListFilter):
             return queryset
 
 
-class RegistrationFeeInline(admin.TabularInline):
+class RegistrationFeeInline(ReadOnlyAdminMixin, admin.TabularInline):
     model = RegistrationFee
     extra = 0
     show_change_link = False
@@ -39,17 +40,10 @@ class RegistrationFeeInline(admin.TabularInline):
         "amount",
         "is_paid",
     ]
-    readonly_fields = [
-        "event_fee",
-    ]
-
-    def has_add_permission(self, request, obj=None):
-        return False
 
 
-class RegistrationSlotInline(admin.TabularInline):
+class RegistrationSlotInline(ReadOnlyAdminMixin, admin.TabularInline):
     model = RegistrationSlot
-    can_delete = True
     extra = 0
     show_change_link = True
     verbose_name_plural = "Registration details (slots)"
@@ -203,31 +197,27 @@ class RegistrationAdmin(admin.ModelAdmin):
             initial["event"] = filters.split("=")[1]
         return initial
 
-    def save_formset(self, request, form, formset, change):
-        instances = formset.save(commit=False)
-        for instance in instances:
-            instance.event_id = instance.registration.event_id
-            instance.status = "R"
-            instance.save()
-        formset.save_m2m()
 
+class RegistrationSlotAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
+    """
+    Read-only. Slot statuses and fees are repaired in the admin site's Registration
+    Inspector, backed by the NestJS API, which audits every change.
+    """
 
-class RegistrationSlotAdmin(admin.ModelAdmin):
     model = RegistrationSlot
-    can_delete = True
-    save_on_top = True
 
     fieldsets = (
         (
             "Event",
             {
+                "description": "Read-only. Repair slots in the Registration Inspector on the admin site.",
                 "fields": (
                     "event",
                     "registration",
                     "session",
                     "hole",
                     "starting_order",
-                )
+                ),
             },
         ),
         (
@@ -263,13 +253,6 @@ class RegistrationSlotAdmin(admin.ModelAdmin):
     ordering = [
         "id",
     ]
-
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        form.base_fields["registration"].queryset = Registration.objects.filter(
-            event__id=obj.event_id
-        )
-        return form
 
 
 class RegistrationFeeAdmin(admin.ModelAdmin):

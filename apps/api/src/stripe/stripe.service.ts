@@ -9,6 +9,8 @@ import { AmountDue, PaymentIntentMetadata } from "@repo/domain/types"
 export class StripeService {
 	private stripe: Stripe
 	private webhookSecret: string
+	/** A test key (sk_test_..., rk_test_...) works against Stripe's test mode. */
+	private testMode: boolean
 
 	constructor(@Inject(ConfigService) private configService: ConfigService) {
 		const secretKey = this.configService.get<string>("STRIPE_SECRET_KEY")
@@ -20,6 +22,7 @@ export class StripeService {
 			"2025-12-15.clover",
 		) as Stripe.LatestApiVersion
 		this.stripe = new Stripe(secretKey, { apiVersion })
+		this.testMode = secretKey.includes("_test_")
 		this.webhookSecret = this.configService.getOrThrow<string>("STRIPE_WEBHOOK_SECRET")
 	}
 
@@ -108,6 +111,21 @@ export class StripeService {
 		}
 
 		return paymentIntent
+	}
+
+	/** The PaymentIntent's page in the Stripe dashboard, in test or live mode to match the key. */
+	paymentDashboardUrl(paymentIntentId: string): string {
+		return `https://dashboard.stripe.com${this.testMode ? "/test" : ""}/payments/${paymentIntentId}`
+	}
+
+	/** Retrieves a PaymentIntent with its latest charge, to compare with the database. */
+	async retrievePaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
+		return this.stripe.paymentIntents.retrieve(paymentIntentId, { expand: ["latest_charge"] })
+	}
+
+	/** Retrieves a refund, to compare with the database. */
+	async retrieveRefund(refundId: string): Promise<Stripe.Refund> {
+		return this.stripe.refunds.retrieve(refundId)
 	}
 
 	/**

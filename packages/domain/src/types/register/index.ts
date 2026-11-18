@@ -1,5 +1,6 @@
 export * from "./admin-registration"
 export * from "./available-slot-group"
+export * from "./inspector"
 export * from "./choices"
 export * from "./payment"
 export * from "./player"

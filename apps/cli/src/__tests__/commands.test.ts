@@ -7,6 +7,7 @@ import {
 	type CommandContext,
 	dismissWarning,
 	feesChange,
+	inspectRegistration,
 	login,
 	logout,
 	readiness,
@@ -381,6 +382,42 @@ describe("CLI commands", () => {
 			await expect(
 				feesChange(ctx, { season: "2027", feeType: "Carts", from: "14", to: "15" }),
 			).rejects.toThrow('No fee type named "Carts". Fee types: Cart Fee')
+		})
+	})
+
+	describe("inspectRegistration", () => {
+		beforeEach(async () => {
+			await ctx.credentials.set("http://api.test", { token: "tok-1", email: "ops@example.com" })
+		})
+
+		it("inspects one registration of the event", async () => {
+			fetchMock.mockReturnValueOnce(respond(200, { id: 51 }))
+
+			expect(await inspectRegistration(ctx, { event: "742", id: "51" })).toEqual({ id: 51 })
+			expect(fetchMock.mock.calls[0]![0]).toBe(
+				"http://api.test/registration-inspector/events/742/registrations/51",
+			)
+		})
+
+		it("lists the event's registrations, or a player's", async () => {
+			fetchMock.mockReturnValue(respond(200, []))
+
+			await inspectRegistration(ctx, { event: "742" })
+			await inspectRegistration(ctx, { event: "742", player: "Smith" })
+			expect(fetchMock.mock.calls[0]![0]).toBe(
+				"http://api.test/registration-inspector/events/742/search",
+			)
+			expect(fetchMock.mock.calls[1]![0]).toBe(
+				"http://api.test/registration-inspector/events/742/search?q=Smith",
+			)
+		})
+
+		it("refuses a bad event or registration id", async () => {
+			await expect(inspectRegistration(ctx, { event: "x" })).rejects.toThrow("Not an event id")
+			await expect(inspectRegistration(ctx, { event: "742", id: "abc" })).rejects.toThrow(
+				"Not a registration id",
+			)
+			expect(fetchMock).not.toHaveBeenCalled()
 		})
 	})
 })

@@ -35,6 +35,7 @@ export async function closeTestDb(): Promise<void> {
 const RESET_TABLES = [
 	"register_registrationchangelog",
 	"register_registrationfee",
+	"payments_refund",
 	"payments_payment",
 	"register_registrationslot",
 	"register_registration",

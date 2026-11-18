@@ -33,6 +33,13 @@ export default async function EventHubPage({ params }: { params: Promise<{ event
 				/>
 
 				<LinkCard
+					title="Registration Inspector"
+					description="Diagnose a registration: slots, fees, payments, and Stripe."
+					href={`/events/${eventId}/inspector`}
+					icon={"🔍"}
+				/>
+
+				<LinkCard
 					title="Golf Genius Integration"
 					description="Sync and integrate with Golf Genius."
 					href={`/events/${eventId}/golf-genius`}
